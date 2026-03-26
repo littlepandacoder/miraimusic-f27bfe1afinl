@@ -35,10 +35,9 @@ const Navbar = () => {
             <Link to="/blog/sight-reading" className="nav-link font-semibold">
               Sight Reading
             </Link>
-            <Link 
-              to="/login" 
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
-            >
+            <Link to="/note_naming.html" className="nav-link font-semibold">
+              Note Naming
+            </Link>
               <LogIn className="w-4 h-4" />
               Portal Login
             </Link>
@@ -88,10 +87,12 @@ const Navbar = () => {
               Sight Reading
             </Link>
             <Link
-              to="/login"
-              className="flex items-center gap-2 nav-link py-2 font-medium"
+              to="/note_naming.html"
+              className="nav-link py-2 font-semibold"
               onClick={() => setIsOpen(false)}
             >
+              Note Naming
+            </Link>
               <LogIn className="w-4 h-4" />
               Portal Login
             </Link>
