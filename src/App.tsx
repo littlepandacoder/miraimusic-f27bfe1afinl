@@ -12,6 +12,7 @@ import AuthDebug from "./pages/AuthDebug";
 import Pricing from "./pages/Pricing";
 import PianoTheory from "./pages/PianoTheory";
 import SightReading from "./pages/SightReading";
+import NoteNaming from "./pages/NoteNaming";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/blog/piano-theory" element={<PianoTheory />} />
             <Route path="/blog/sight-reading" element={<SightReading />} />
+            <Route path="/blog/note-naming" element={<NoteNaming />} />
             <Route path="/book-class" element={<BookClass />} />
             <Route path="/booking-success" element={<BookingSuccess />} />
             <Route path="/login" element={<Login />} />
