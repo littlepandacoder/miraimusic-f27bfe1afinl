@@ -734,48 +734,51 @@ async function runAIAnalysis() {
   const errs   = Object.entries(state.noteErrors).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([n,c])=>`${n}(${c}x)`).join(', ')||'none';
   const mode   = {name:'Name the Note',find:'Find the Key',octave:'With Octave'}[state.mode];
 
-  const prompt = `You are a supportive piano teacher giving brief, specific feedback on a student's note naming practice session.
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-Session data:
-- Mode: ${mode}
-- Accuracy: ${acc}% (${state.correct}/${state.totalQ} correct)
-- Average response time: ${avgT}s
-- Best streak: ${state.bestStreak}
-- Notes with most errors: ${errs}
-- Incorrect answers: ${errors}
+  // Generate personalized feedback based on session data
+  let feedback = '';
+  const chips = [];
 
-Give 2-3 short sentences of personalised feedback. Be encouraging but honest. Point out specific notes to practise if errors exist. Keep it under 80 words.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:200,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data = await res.json();
-    const text = data?.content?.[0]?.text || 'Unable to get analysis.';
-
-    // Build chips
-    const chips = [];
-    if (acc >= 90) chips.push({cls:'good',label:'Excellent accuracy'});
-    else if (acc < 60) chips.push({cls:'warn',label:'Needs more practice'});
-    if (parseFloat(avgT) < 1.5) chips.push({cls:'good',label:'Fast responses'});
-    else if (parseFloat(avgT) > 3) chips.push({cls:'warn',label:'Work on speed'});
-    if (state.bestStreak >= 5) chips.push({cls:'good',label:`${state.bestStreak}🔥 Streak`});
-
-    const chipHTML = chips.length
-      ? `<div class="ai-chips">${chips.map(c=>`<span class="ai-chip ${c.cls}">${c.label}</span>`).join('')}</div>`
-      : '';
-
-    body.innerHTML = `<p>${text.replace(/\n/g,'</p><p>')}</p>${chipHTML}`;
-  } catch(e) {
-    body.innerHTML = `<p style="color:var(--muted2)">Analysis unavailable — check your connection.</p>`;
-    btn.disabled = false;
+  if (acc >= 90) {
+    feedback = `Excellent work! Your ${acc}% accuracy shows strong note recognition skills. `;
+    chips.push({cls:'good',label:'Excellent accuracy'});
+  } else if (acc >= 75) {
+    feedback = `Good progress! You're getting ${acc}% correct with room for improvement. `;
+    chips.push({cls:'good',label:'Good accuracy'});
+  } else if (acc >= 60) {
+    feedback = `You're making progress at ${acc}% accuracy. Keep practicing to build confidence. `;
+  } else {
+    feedback = `You're working on building your note recognition skills. Every session helps! `;
+    chips.push({cls:'warn',label:'Needs more practice'});
   }
+
+  if (parseFloat(avgT) < 1.5 && parseFloat(avgT) !== 'n/a') {
+    feedback += `Your lightning-fast ${avgT}s average response time is impressive! `;
+    chips.push({cls:'good',label:'Fast responses'});
+  } else if (parseFloat(avgT) > 3 && parseFloat(avgT) !== 'n/a') {
+    feedback += `Focus on building speed - your ${avgT}s average can be faster with practice. `;
+    chips.push({cls:'warn',label:'Work on speed'});
+  }
+
+  if (state.bestStreak >= 5) {
+    feedback += `That ${state.bestStreak} note streak is fantastic! `;
+    chips.push({cls:'good',label:`${state.bestStreak}🔥 Streak`});
+  }
+
+  if (errs !== 'none') {
+    const weakNotes = Object.entries(state.noteErrors).sort((a,b)=>b[1]-a[1]).slice(0,2);
+    feedback += `Spend extra time on ${weakNotes.map(([n,c])=>n).join(' and ')} to strengthen those areas.`;
+  } else if (acc >= 80) {
+    feedback += `No weak areas detected - you're doing great across all notes!`;
+  }
+
+  const chipHTML = chips.length
+    ? `<div class="ai-chips">${chips.map(c=>`<span class="ai-chip ${c.cls}">${c.label}</span>`).join('')}</div>`
+    : '';
+
+  body.innerHTML = `<p>${feedback}</p>${chipHTML}`;
 }
 
 /* ═══════════════════════════════════════════════════════

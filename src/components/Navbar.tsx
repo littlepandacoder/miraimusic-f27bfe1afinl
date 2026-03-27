@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [gamesDropdownOpen, setGamesDropdownOpen] = useState(false);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
@@ -29,15 +30,21 @@ const Navbar = () => {
             <Link to="/pricing" className="nav-link font-semibold">
               Pricing
             </Link>
-            <Link to="/blog/piano-theory" className="nav-link font-semibold">
-              Piano Theory
-            </Link>
-            <Link to="/blog/sight-reading" className="nav-link font-semibold">
-              Sight Reading
-            </Link>
-            <Link to="/blog/note-naming" className="nav-link font-semibold">
-              Note Naming
-            </Link>
+            <div className="relative">
+              <button
+                onClick={() => setGamesDropdownOpen(!gamesDropdownOpen)}
+                className="nav-link font-semibold flex items-center gap-1"
+              >
+                GAMES <ChevronDown className="w-4 h-4" />
+              </button>
+              {gamesDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 bg-background border border-border rounded-md shadow-lg py-2 min-w-[200px]">
+                  <a href="/note_naming.html" className="block px-4 py-2 text-foreground hover:bg-accent">Note Naming</a>
+                  <a href="/sight-reading.html" className="block px-4 py-2 text-foreground hover:bg-accent">Sight Reading</a>
+                  <a href="/piano-theory.html" className="block px-4 py-2 text-foreground hover:bg-accent">Piano Theory</a>
+                </div>
+              )}
+            </div>
             <Link 
               to="/login" 
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
@@ -76,27 +83,16 @@ const Navbar = () => {
             >
               Pricing
             </Link>
-            <Link
-              to="/blog/piano-theory"
-              className="nav-link py-2 font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Piano Theory
-            </Link>
-            <Link
-              to="/blog/sight-reading"
-              className="nav-link py-2 font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Sight Reading
-            </Link>
-            <Link
-              to="/blog/note-naming"
-              className="nav-link py-2 font-semibold"
-              onClick={() => setIsOpen(false)}
-            >
-              Note Naming
-            </Link>
+            <button onClick={() => setGamesDropdownOpen(!gamesDropdownOpen)} className="nav-link py-2 font-semibold text-left flex items-center justify-between">
+              GAMES <ChevronDown className={`w-4 h-4 transition-transform ${gamesDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {gamesDropdownOpen && (
+              <div className="ml-4 flex flex-col gap-2">
+                <a href="/note_naming.html" className="nav-link py-1" onClick={() => setIsOpen(false)}>Note Naming</a>
+                <a href="/sight-reading.html" className="nav-link py-1" onClick={() => setIsOpen(false)}>Sight Reading</a>
+                <a href="/piano-theory.html" className="nav-link py-1" onClick={() => setIsOpen(false)}>Piano Theory</a>
+              </div>
+            )}
             <Link
               to="/login"
               className="flex items-center gap-2 nav-link py-2 font-medium"
