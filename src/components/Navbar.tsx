@@ -25,7 +25,7 @@ const Navbar = () => {
  <div className="flex-1 flex justify-center">
             <div className="hidden md:flex items-center gap-8">
               {isHomePage && navLinks.map((link, index) => (
-                <a key={link.href} href={link.href} className={`nav-link ${index === 0 ? 'ml-5' : ''}`}>
+                <a key={link.href} href={link.href} className={`nav-link ${index === 0 ? 'ml-10' : ''}`}>
                   {link.label}
                 </a>
       
