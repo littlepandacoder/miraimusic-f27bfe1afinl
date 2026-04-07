@@ -1123,6 +1123,61 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 }
 .room-back-btn:hover { color: var(--off-white); border-color: rgba(255,255,255,.2); }
 
+/* ── Student visibility toggle ── */
+.student-visibility-btn {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  padding: .25rem .6rem;
+  cursor: pointer;
+  transition: all .18s;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.student-visibility-btn:hover {
+  border-color: rgba(0,212,255,.4);
+  color: var(--sky);
+  background: rgba(0,212,255,.08);
+}
+.student-visibility-btn.hidden-state {
+  background: rgba(239,68,68,.1);
+  border-color: rgba(239,68,68,.3);
+  color: var(--red);
+}
+.student-visibility-btn.hidden-state:hover {
+  background: rgba(239,68,68,.18);
+  border-color: rgba(239,68,68,.55);
+}
+.student-piano-body {
+  transition: max-height .3s ease, opacity .3s ease;
+  max-height: 200px;
+  opacity: 1;
+  overflow: hidden;
+}
+.student-piano-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.student-hidden-banner {
+  display: none;
+  align-items: center;
+  gap: .5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  color: var(--red);
+  padding: .3rem .8rem .5rem;
+  opacity: .7;
+}
+.student-hidden-banner.visible { display: flex; }
+
 .admin-stat {
   background:rgba(255,45,120,.08);
   border:1px solid rgba(255,45,120,.2);
@@ -3473,7 +3528,9 @@ function onMidiMessage(msg) {
   const isOff = cmd === 0x80 || (cmd === 0x90 && velocity === 0);
 
   if (document.getElementById('inputModal').classList.contains('active')) return;
-  if (modal.selectedInput !== 'midi' && modal.selectedInput !== null) return;
+  // In the Piano Room, MIDI always works regardless of modal input setting
+  const isRoomScreen = currentScreen() === 'room';
+  if (!isRoomScreen && modal.selectedInput !== 'midi' && modal.selectedInput !== null) return;
 
   if (isOn) {
     startAudio();
@@ -3481,12 +3538,17 @@ function onMidiMessage(msg) {
       practiceKeyPress(note);
     } else if (currentScreen() === 'game') {
       gameKeyPress(note);
+    } else if (currentScreen() === 'room') {
+      playPianoNote(note, 0.5);
+      roomHandleMidiNoteOn(note);
     }
   } else if (isOff) {
     if (currentScreen() === 'play') {
       practiceKeyRelease(note);
     } else if (currentScreen() === 'game') {
       gameKeyRelease(note);
+    } else if (currentScreen() === 'room') {
+      roomHandleMidiNoteOff(note);
     }
   }
 }
@@ -7738,20 +7800,51 @@ function roomTeacherHandleMsg(e) {
     const st = ROOM.students.get(sender);
     if (st) {
       st.heldNotes.add(midi);
-      roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
-      roomAddNotePill('studentPianoNotes-' + sender, midi, false);
-      playPianoNote(midi, 0.15);
+      // Only show piano feedback and play audio if student is not hidden
+      if (!st.hidden) {
+        roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+        roomAddNotePill('studentPianoNotes-' + sender, midi, false);
+        playPianoNote(midi, 0.15);
+      }
     }
   } else if (type === 'note_off' && midi != null) {
     const st = ROOM.students.get(sender);
     if (st) {
       st.heldNotes.delete(midi);
-      roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+      if (!st.hidden) {
+        roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+      }
     }
   }
 }
 
 /* ── Teacher: add a student piano panel ───────────────────── */
+function roomTeacherToggleStudentVisibility(sid) {
+  const st = ROOM.students.get(sid);
+  if (!st) return;
+  st.hidden = !st.hidden;
+
+  const btn    = document.getElementById('studentVisBtn-' + sid);
+  const body   = document.getElementById('studentBody-' + sid);
+  const banner = document.getElementById('studentHiddenBanner-' + sid);
+
+  if (st.hidden) {
+    btn?.classList.add('hidden-state');
+    if (btn) btn.innerHTML = '🚫 Hidden';
+    body?.classList.add('collapsed');
+    banner?.classList.add('visible');
+  } else {
+    btn?.classList.remove('hidden-state');
+    if (btn) btn.innerHTML = '👁 Visible';
+    body?.classList.remove('collapsed');
+    banner?.classList.remove('visible');
+    // Redraw their piano after un-hiding
+    setTimeout(() => {
+      if (st.canvas) { roomSizePiano(st.canvas); roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false); }
+    }, 50);
+  }
+}
+
 function roomTeacherAddStudent(sid, name) {
   if (ROOM.students.has(sid)) {
     ROOM.students.get(sid).lastSeen = Date.now();
@@ -7763,18 +7856,29 @@ function roomTeacherAddStudent(sid, name) {
   const wrap = document.createElement('div');
   wrap.className = 'room-piano-section student-piano';
   wrap.id = 'studentWrap-' + sid;
-  wrap.style.cssText = 'border-color:' + color + '33;min-height:130px';
+  wrap.style.cssText = 'border-color:' + color + '33;min-height:0';
   wrap.innerHTML = `
     <div class="room-piano-label">
       <span style="color:${color}">🎓 ${name}</span>
       <span class="badge badge-student" style="border-color:${color}55;color:${color}">STUDENT</span>
       <div id="studentPianoNotes-${sid}" class="room-notes-strip" style="margin-left:.6rem"></div>
-      <div class="room-student-chip active" style="margin-left:auto;border-color:${color}55;background:${color}15;color:${color}">
+      <div class="room-student-chip active" style="border-color:${color}55;background:${color}15;color:${color}">
         <div class="room-student-dot" style="background:${color};box-shadow:0 0 6px ${color}88"></div>
         <span>Live</span>
       </div>
+      <button
+        id="studentVisBtn-${sid}"
+        class="student-visibility-btn"
+        onclick="roomTeacherToggleStudentVisibility('${sid}')"
+        title="Show or hide this student on your dashboard"
+      >👁 Visible</button>
     </div>
-    <canvas id="studentPiano-${sid}" class="room-piano-canvas" style="height:90px"></canvas>
+    <div class="student-hidden-banner" id="studentHiddenBanner-${sid}">
+      <span>🚫</span><span>${name} is hidden — their piano and feedback are suppressed</span>
+    </div>
+    <div class="student-piano-body" id="studentBody-${sid}">
+      <canvas id="studentPiano-${sid}" class="room-piano-canvas" style="height:90px"></canvas>
+    </div>
   `;
 
   const container = document.getElementById('roomStudentPianos');
@@ -7787,7 +7891,7 @@ function roomTeacherAddStudent(sid, name) {
   const ctx    = canvas.getContext('2d');
   setTimeout(() => { roomSizePiano(canvas); roomDrawPiano(canvas, ctx, new Set(), false); }, 50);
 
-  ROOM.students.set(sid, { name, canvas, ctx, heldNotes: new Set(), lastSeen: Date.now() });
+  ROOM.students.set(sid, { name, canvas, ctx, heldNotes: new Set(), lastSeen: Date.now(), hidden: false });
 
   // Update student chips in header
   roomUpdateStudentChips();
@@ -7830,7 +7934,9 @@ function roomUpdateStudentChips() {
   ROOM.students.forEach(st => {
     const chip = document.createElement('div');
     chip.className = 'room-student-chip active';
-    chip.innerHTML = `<div class="room-student-dot"></div><span>${st.name}</span>`;
+    chip.style.opacity = st.hidden ? '0.4' : '1';
+    chip.title = st.hidden ? st.name + ' (hidden)' : st.name;
+    chip.innerHTML = `<div class="room-student-dot"></div><span>${st.hidden ? '🚫 ' : ''}${st.name}</span>`;
     el.appendChild(chip);
   });
 }
@@ -8181,6 +8287,7 @@ window.addEventListener('resize', () => {
     roomDrawPiano(c, c.getContext('2d'), notes, isT);
   });
   ROOM.students.forEach(st => {
+    if (st.hidden) return; // skip hidden students
     roomSizePiano(st.canvas);
     roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
   });
