@@ -485,6 +485,668 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   background:rgba(255,45,120,.6);pointer-events:none;
   box-shadow:0 0 10px rgba(255,45,120,.4);
 }
+
+/* ═══ ADMIN SCREEN ═════════════════════════════════════════ */
+#screen-admin {
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(255,45,120,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(0,212,255,.06) 0%, transparent 60%),
+    var(--bg);
+  overflow-y:auto;
+  padding:1.5rem;
+}
+
+.admin-container { max-width:1200px; margin:0 auto; }
+
+.admin-header {
+  font-family:'Orbitron',monospace;
+  font-size:1.8rem;font-weight:900;
+  color:var(--white);
+  margin-bottom:2rem;
+}
+
+.admin-header span {
+  color:var(--pink);
+  text-shadow:0 0 20px rgba(255,45,120,.4);
+}
+
+.admin-grid {
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:2rem;
+  margin-bottom:2rem;
+}
+
+@media (max-width:900px) {
+  .admin-grid { grid-template-columns:1fr; }
+}
+
+.admin-sidebar {
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1.5rem;
+  height:fit-content;
+  position:sticky;top:1.5rem;
+}
+
+.admin-sidebar-title {
+  font-family:'Orbitron',monospace;
+  font-size:.95rem;font-weight:700;
+  color:var(--white);
+  margin-bottom:1.2rem;
+  border-bottom:1px solid var(--border);
+  padding-bottom:.8rem;
+}
+
+.admin-sidebar-item {
+  padding:.7rem;margin-bottom:.5rem;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.04);
+  border-radius:8px;
+  cursor:pointer;
+  font-family:'DM Mono',monospace;
+  font-size:.78rem;
+  color:var(--muted);
+  transition:all .2s;
+}
+
+.admin-sidebar-item:hover {
+  background:rgba(255,45,120,.1);
+  border-color:rgba(255,45,120,.3);
+  color:var(--pink);
+}
+
+.admin-sidebar-item.active {
+  background:rgba(255,45,120,.15);
+  border-color:var(--pink);
+  color:var(--pink);
+  box-shadow:0 0 16px rgba(255,45,120,.2);
+}
+
+.admin-content {
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:2rem;
+}
+
+.admin-form-group { margin-bottom:1.5rem; }
+
+.admin-label {
+  display:block;
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  margin-bottom:.6rem;
+  font-weight:500;
+}
+
+.admin-input,.admin-select,.admin-textarea {
+  width:100%;
+  padding:.8rem 1rem;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--off-white);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.85rem;
+  transition:all .2s;
+}
+
+.admin-input:focus,.admin-select:focus,.admin-textarea:focus {
+  outline:none;
+  border-color:var(--pink);
+  background:rgba(255,45,120,.08);
+  box-shadow:0 0 16px rgba(255,45,120,.15);
+}
+
+.admin-textarea { resize:vertical; min-height:120px; }
+
+.admin-staff {
+  background:rgba(0,0,0,.3);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  padding:1rem;
+  margin:1.5rem 0;
+}
+
+#adminStaffCanvas {
+  display:block;
+  width:100%;
+  height:auto;
+  cursor:crosshair;
+  border-radius:8px;
+  background:rgba(10,8,18,.6);
+  border:1px solid rgba(0,212,255,.2);
+}
+
+.admin-controls {
+  display:flex;
+  gap:1rem;
+  margin-top:1rem;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.admin-info {
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;
+  color:var(--sky);
+  flex:1;
+  min-width:200px;
+  background:rgba(0,212,255,.08);
+  border:1px solid rgba(0,212,255,.2);
+  padding:.6rem .9rem;
+  border-radius:6px;
+}
+
+.admin-btn {
+  padding:.55rem 1.2rem;
+  background:var(--pink);
+  color:#fff;
+  font-family:'DM Mono',monospace;
+  font-size:.78rem;
+  font-weight:500;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .2s;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  box-shadow:0 0 20px rgba(255,45,120,.2);
+}
+
+.admin-btn:hover {
+  opacity:.9;
+  transform:translateY(-1px);
+  box-shadow:0 4px 24px rgba(255,45,120,.35);
+}
+
+.admin-btn.secondary {
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  box-shadow:none;
+  border:1px solid var(--border);
+}
+
+.admin-btn.secondary:hover {
+  background:rgba(255,255,255,.08);
+  color:var(--off-white);
+}
+
+.admin-btn.danger {
+  background:rgba(239,68,68,.15);
+  color:var(--red);
+  border:1px solid rgba(239,68,68,.3);
+  box-shadow:none;
+}
+
+.admin-btn.danger:hover {
+  background:rgba(239,68,68,.25);
+  color:#fff;
+}
+
+/* ── Note editor toolbar buttons ── */
+.rhythm-btn, .acc-btn {
+  padding:.28rem .55rem;
+  font-size:.68rem;
+  font-family:'DM Mono',monospace;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.rhythm-btn:hover, .acc-btn:hover {
+  background:rgba(255,255,255,.09);
+  color:var(--off-white);
+}
+.rhythm-btn.active {
+  background:rgba(255,45,120,.2);
+  border-color:rgba(255,45,120,.6);
+  color:var(--pink);
+  box-shadow:0 0 10px rgba(255,45,120,.25);
+}
+.acc-btn.active {
+  background:rgba(0,212,255,.15);
+  border-color:rgba(0,212,255,.5);
+  color:var(--sky);
+  box-shadow:0 0 10px rgba(0,212,255,.2);
+}
+
+.admin-table {
+  width:100%;
+  border-collapse:collapse;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+}
+
+.admin-table thead {
+  background:rgba(255,45,120,.08);
+  border:1px solid rgba(255,45,120,.15);
+}
+
+.admin-table th {
+  padding:.8rem 1rem;
+  text-align:left;
+  color:var(--pink);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  font-size:.7rem;
+}
+
+.admin-table td {
+  padding:.8rem 1rem;
+  border-bottom:1px solid var(--border);
+  color:var(--off-white);
+}
+
+.admin-table tr:hover {
+  background:rgba(255,45,120,.06);
+}
+
+.admin-upload-zone {
+  border:2px dashed var(--border);
+  border-radius:12px;
+  padding:2rem;
+  text-align:center;
+  transition:all .3s;
+  cursor:pointer;
+  background:rgba(0,212,255,.02);
+}
+
+.admin-upload-zone:hover {
+  border-color:var(--sky);
+  background:rgba(0,212,255,.08);
+}
+
+.admin-upload-zone.dragover {
+  border-color:var(--sky);
+  background:rgba(0,212,255,.12);
+  box-shadow:0 0 30px rgba(0,212,255,.2);
+}
+
+.admin-upload-zone input[type="file"] {
+  display:none;
+}
+
+.admin-upload-text {
+  font-size:.9rem;
+  color:var(--muted);
+  margin-bottom:.5rem;
+}
+
+.admin-upload-hint {
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;
+  color:var(--muted);
+  margin-top:.5rem;
+}
+
+.admin-alert {
+  padding:1rem;
+  border-radius:10px;
+  margin-bottom:1rem;
+  font-family:'DM Mono',monospace;
+  font-size:.78rem;
+  animation:slideIn .3s ease;
+}
+
+.admin-alert.success {
+  background:rgba(57,217,138,.1);
+  border:1px solid rgba(57,217,138,.3);
+  color:var(--green);
+}
+
+.admin-alert.error {
+  background:rgba(239,68,68,.1);
+  border:1px solid rgba(239,68,68,.3);
+  color:var(--red);
+}
+
+/* ═══ PIANO ROOM ════════════════════════════════════════════ */
+#screen-room {
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 20%, rgba(0,212,255,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(168,85,247,.06) 0%, transparent 60%),
+    var(--bg);
+  overflow-y: auto;
+}
+.room-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+/* ── Role selector ── */
+.room-role-pick {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.room-role-card {
+  flex: 1;
+  min-width: 220px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+}
+.room-role-card:hover { border-color: var(--sky); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,255,.15); }
+.room-role-card.teacher:hover { border-color: var(--pink); box-shadow: 0 8px 32px rgba(255,45,120,.15); }
+.room-role-icon { font-size: 3rem; margin-bottom: .8rem; }
+.room-role-title { font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: .4rem; }
+.room-role-desc { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted); line-height: 1.6; }
+/* ── Teacher dashboard ── */
+.room-teacher-dash {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+.room-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--white);
+}
+.room-title span { color: var(--sky); }
+.room-link-box {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  background: rgba(0,212,255,.08);
+  border: 1px solid rgba(0,212,255,.3);
+  border-radius: 10px;
+  padding: .5rem 1rem;
+  flex-wrap: wrap;
+}
+.room-link-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.room-link-url {
+  font-family: 'DM Mono', monospace;
+  font-size: .72rem;
+  color: var(--sky);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-link-copy {
+  background: var(--sky);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: .3rem .7rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.room-link-copy:hover { opacity: .8; }
+/* ── Students bar ── */
+.room-students-bar {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem 1rem;
+}
+.room-students-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-right: .3rem;
+}
+.room-student-chip {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  background: rgba(168,85,247,.12);
+  border: 1px solid rgba(168,85,247,.3);
+  border-radius: 100px;
+  padding: .22rem .7rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  color: var(--purple);
+  transition: all .3s;
+}
+.room-student-chip.active {
+  background: rgba(57,217,138,.12);
+  border-color: rgba(57,217,138,.4);
+  color: var(--green);
+}
+.room-student-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--purple);
+}
+.room-student-chip.active .room-student-dot {
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(57,217,138,.8);
+  animation: micPulse .8s ease-in-out infinite alternate;
+}
+/* ── Piano layout ── */
+.room-pianos {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+  flex: 1;
+}
+.room-piano-section {
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.room-piano-section.teacher-piano { border-color: rgba(255,45,120,.25); }
+.room-piano-section.student-piano { border-color: rgba(0,212,255,.2); }
+.room-piano-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.room-piano-label .badge {
+  padding: .15rem .55rem;
+  border-radius: 100px;
+  font-size: .6rem;
+  font-weight: 600;
+}
+.badge-teacher { background: rgba(255,45,120,.15); border: 1px solid rgba(255,45,120,.3); color: var(--pink); }
+.badge-student { background: rgba(0,212,255,.12); border: 1px solid rgba(0,212,255,.3); color: var(--sky); }
+.badge-you { background: rgba(57,217,138,.12); border: 1px solid rgba(57,217,138,.3); color: var(--green); }
+.room-piano-canvas {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* ── Recent notes display ── */
+.room-notes-strip {
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+  min-height: 24px;
+  align-items: center;
+}
+.room-note-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: .15rem .5rem;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  font-weight: 600;
+  animation: notePopIn .15s ease-out;
+  transition: opacity .4s;
+}
+@keyframes notePopIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+/* ── Connection status ── */
+.room-status {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  color: var(--muted);
+}
+.room-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.room-status-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(57,217,138,.8); animation: micPulse .8s ease-in-out infinite alternate; }
+.room-status-dot.connecting { background: var(--amber); animation: micPulse .5s ease-in-out infinite alternate; }
+/* ── Student view ── */
+.room-student-view {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+.room-join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.room-join-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--white);
+  text-align: center;
+}
+.room-input {
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .8rem 1rem;
+  color: var(--off-white);
+  font-family: 'DM Mono', monospace;
+  font-size: .85rem;
+  outline: none;
+  transition: all .2s;
+  width: 100%;
+}
+.room-input:focus { border-color: var(--sky); background: rgba(0,212,255,.06); }
+.room-join-btn {
+  padding: .75rem;
+  background: var(--sky);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Orbitron', monospace;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.room-join-btn:hover { opacity: .85; }
+/* ── Feedback overlay ── */
+.room-feedback {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', monospace;
+  font-size: .8rem;
+  font-weight: 700;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+/* ── Back button ── */
+.room-back-btn {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: .35rem .85rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .72rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.room-back-btn:hover { color: var(--off-white); border-color: rgba(255,255,255,.2); }
+
+.admin-stat {
+  background:rgba(255,45,120,.08);
+  border:1px solid rgba(255,45,120,.2);
+  border-radius:10px;
+  padding:1rem;
+  margin-bottom:.8rem;
+}
+
+.admin-stat-label {
+  font-family:'DM Mono',monospace;
+  font-size:.65rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-bottom:.3rem;
+}
+
+.admin-stat-value {
+  font-family:'Orbitron',monospace;
+  font-size:1.6rem;
+  font-weight:900;
+  color:var(--pink);
+  text-shadow:0 0 20px rgba(255,45,120,.4);
+}
 </style>
 </head>
 <body>
@@ -497,6 +1159,8 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showScreen('play')">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
+    <button class="nav-tab" onclick="showScreen('room')">🎹 Piano Room</button>
+    <button class="nav-tab" onclick="showScreen('admin')">⚙ Admin</button>
   </div>
   <div class="nav-right">
     <div class="midi-badge">
@@ -757,6 +1421,423 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 <div class="screen" id="screen-songs">
   <div class="page-title">Choose a <span>Song</span></div>
   <div class="songs-grid" id="songsGrid"></div>
+</div>
+
+<!-- SCREEN 5: PIANO ROOM -->
+<div class="screen" id="screen-room">
+  <div class="room-container">
+
+    <!-- ── Role picker (shown first) ── -->
+    <div id="roomRolePick">
+      <div style="font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:var(--white);margin-bottom:.3rem">🎹 Piano <span style="color:var(--sky)">Room</span></div>
+      <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:1.5rem">Real-time shared piano — teacher broadcasts live, students follow along</div>
+      <div class="room-role-pick">
+        <div class="room-role-card teacher" onclick="roomChooseTeacher()">
+          <div class="room-role-icon">👨‍🏫</div>
+          <div class="room-role-title">I'm a Teacher</div>
+          <div class="room-role-desc">Create a room · share a link · students join and see your keys in real time · broadcast to multiple students at once</div>
+          <div style="margin-top:1.2rem">
+            <span style="display:inline-block;background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:8px;padding:.35rem 1rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600">Start a Class →</span>
+          </div>
+        </div>
+        <div class="room-role-card" onclick="roomChooseStudent()">
+          <div class="room-role-icon">🎓</div>
+          <div class="room-role-title">I'm a Student</div>
+          <div class="room-role-desc">Enter a room code from your teacher · see their piano at the top · play on yours below · your teacher sees every key you press</div>
+          <div style="margin-top:1.2rem">
+            <span style="display:inline-block;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--sky);border-radius:8px;padding:.35rem 1rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600">Join a Class →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Teacher dashboard ── -->
+    <div id="roomTeacherDash" style="display:none;flex-direction:column;gap:1rem;flex:1">
+      <!-- Header row -->
+      <div class="room-header">
+        <div>
+          <div class="room-title">📡 Teaching <span id="roomIdDisplay">—</span></div>
+          <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:.2rem">Students connect to you live · your keystrokes broadcast instantly</div>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+          <div class="room-status">
+            <div class="room-status-dot connected" id="teacherStatusDot"></div>
+            <span id="teacherStatusText">Room active</span>
+          </div>
+          <button class="room-back-btn" onclick="roomLeave()">✕ End Class</button>
+        </div>
+      </div>
+
+      <!-- Share link -->
+      <div class="room-link-box">
+        <div>
+          <div class="room-link-label">Student join link</div>
+          <div class="room-link-url" id="roomShareUrl">—</div>
+        </div>
+        <button class="room-link-copy" id="roomCopyBtn" onclick="roomCopyLink()">📋 Copy</button>
+        <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted)">or share code: <span id="roomCodeDisplay" style="color:var(--amber);font-weight:700">—</span></div>
+      </div>
+
+      <!-- Connected students -->
+      <div class="room-students-bar">
+        <span class="room-students-label">Students online:</span>
+        <div id="roomStudentChips" style="display:flex;gap:.4rem;flex-wrap:wrap">
+          <span style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted)">None yet — share your link!</span>
+        </div>
+        <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)" id="roomStudentCount">0 connected</div>
+      </div>
+
+      <!-- Pianos -->
+      <div class="room-pianos" style="flex:1">
+        <!-- Teacher piano -->
+        <div class="room-piano-section teacher-piano" style="flex:1;min-height:140px">
+          <div class="room-piano-label">
+            <span>Your Piano</span>
+            <span class="badge badge-teacher">TEACHER</span>
+            <span class="badge badge-you">YOU</span>
+            <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Click keys or use your MIDI keyboard · broadcasts to all students</div>
+          </div>
+          <div id="teacherRecentNotes" class="room-notes-strip"></div>
+          <div style="position:relative;flex:1">
+            <div id="teacherFeedback" class="room-feedback" style="color:var(--pink)"></div>
+            <canvas id="teacherPianoCanvas" class="room-piano-canvas" style="height:100px"></canvas>
+          </div>
+        </div>
+
+        <!-- Divider with label -->
+        <div style="display:flex;align-items:center;gap:.8rem">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);white-space:nowrap">👇 Students see teacher above · play below</div>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <!-- Students' pianos (one per student) -->
+        <div id="roomStudentPianos" style="display:flex;flex-direction:column;gap:.6rem;flex:1">
+          <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-align:center;padding:1.5rem 0;border:1px dashed rgba(255,255,255,.06);border-radius:12px">
+            Waiting for students to join…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Student view ── -->
+    <div id="roomStudentView" style="display:none;flex-direction:column;gap:1rem;flex:1">
+
+      <!-- Join form (shown before connecting) -->
+      <div id="roomJoinForm" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding-top:1rem">
+        <div class="room-join-form">
+          <div class="room-join-title">🎓 Join a Piano Room</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-align:center">Enter the room code or paste the link from your teacher</div>
+          <input class="room-input" id="studentRoomCode" placeholder="Room code (e.g. PIANO-4829)" maxlength="24" oninput="this.value=this.value.toUpperCase()">
+          <input class="room-input" id="studentName" placeholder="Your name (e.g. Alex)" maxlength="20">
+          <button class="room-join-btn" onclick="roomStudentJoin()">🎹 Join Room</button>
+          <button class="room-back-btn" style="align-self:center" onclick="roomLeave()">← Back</button>
+        </div>
+      </div>
+
+      <!-- In-room student layout (shown after connecting) -->
+      <div id="roomStudentActive" style="display:none;flex-direction:column;gap:1rem;flex:1">
+        <div class="room-header">
+          <div>
+            <div class="room-title">🎓 Room <span id="studentRoomIdDisplay">—</span></div>
+            <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:.2rem">You are connected to your teacher's room</div>
+          </div>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <div class="room-status">
+              <div class="room-status-dot connected" id="studentStatusDot"></div>
+              <span id="studentStatusText">Connected</span>
+            </div>
+            <button class="room-back-btn" onclick="roomLeave()">✕ Leave</button>
+          </div>
+        </div>
+
+        <div class="room-pianos" style="flex:1">
+          <!-- Teacher's piano (read-only, top) -->
+          <div class="room-piano-section teacher-piano" style="flex:1;min-height:140px">
+            <div class="room-piano-label">
+              <span>Teacher's Piano</span>
+              <span class="badge badge-teacher">TEACHER</span>
+              <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Live from your teacher — watch and listen</div>
+            </div>
+            <div id="teacherRemoteNotes" class="room-notes-strip"></div>
+            <canvas id="teacherRemotePiano" class="room-piano-canvas" style="height:100px"></canvas>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:.8rem">
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+            <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);white-space:nowrap">🎹 Your piano — teacher can see your keys</div>
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+          </div>
+
+          <!-- Student's own piano (bottom) -->
+          <div class="room-piano-section student-piano" style="flex:1;min-height:140px">
+            <div class="room-piano-label">
+              <span id="studentPianoLabel">Your Piano</span>
+              <span class="badge badge-you">YOU</span>
+              <span class="badge badge-student">STUDENT</span>
+            </div>
+            <div id="studentRecentNotes" class="room-notes-strip"></div>
+            <div style="position:relative;flex:1">
+              <div id="studentFeedback" class="room-feedback" style="color:var(--sky)"></div>
+              <canvas id="studentPianoCanvas" class="room-piano-canvas" style="height:100px"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCREEN 4: ADMIN PANEL -->
+<div class="screen" id="screen-admin">
+  <div class="admin-container">
+    <div class="admin-header">🎼 Song <span>Admin</span></div>
+
+    <div class="admin-grid">
+      <!-- Sidebar -->
+      <div class="admin-sidebar">
+        <div class="admin-sidebar-title">📊 Stats</div>
+        <div class="admin-stat">
+          <div class="admin-stat-label">Total Songs</div>
+          <div class="admin-stat-value" id="adminStatTotal">0</div>
+        </div>
+        <div class="admin-stat">
+          <div class="admin-stat-label">Total Notes</div>
+          <div class="admin-stat-value" id="adminStatNotes">0</div>
+        </div>
+
+        <div class="admin-sidebar-title" style="margin-top:2rem">🎵 Songs</div>
+        <div id="adminSongsList"></div>
+
+        <div class="admin-sidebar-title" style="margin-top:2rem">⚙️ Tools</div>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="admin-btn secondary" style="width:100%;padding:.5rem;font-size:.7rem" onclick="adminQuickNoteEntry()">Quick Entry (Ctrl+Q)</button>
+          <button class="admin-btn secondary" style="width:100%;padding:.5rem;font-size:.7rem" onclick="adminShowStorageInfo()">Storage Info</button>
+          <button class="admin-btn secondary" style="width:100%;padding:.5rem;font-size:.7rem" onclick="adminShowDataValidator()">Data Validator</button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="admin-content">
+        <!-- Create new song section -->
+        <div id="adminCreateSection" style="display:block">
+          <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;color:var(--white)">Create New Song</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="admin-form-group">
+              <label class="admin-label">Song Name</label>
+              <input type="text" class="admin-input" id="adminNewName" placeholder="Song name">
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Composer</label>
+              <input type="text" class="admin-input" id="adminNewComposer" placeholder="Composer">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+            <div class="admin-form-group">
+              <label class="admin-label">BPM</label>
+              <input type="number" class="admin-input" id="adminNewBpm" value="100" min="30" max="240">
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Difficulty</label>
+              <select class="admin-select" id="adminNewDiff">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Color</label>
+              <input type="text" class="admin-input" id="adminNewColor" value="#FF2D78" placeholder="#FF2D78">
+            </div>
+          </div>
+
+          <button class="admin-btn" onclick="adminCreateNewSong()">Create Song</button>
+        </div>
+
+        <!-- Edit song section -->
+        <div id="adminEditSection" style="display:none">
+          <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;color:var(--white)" id="adminEditTitle">Edit Song</div>
+
+          <div id="adminAlerts"></div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="admin-form-group">
+              <label class="admin-label">Song Name</label>
+              <input type="text" class="admin-input" id="adminEditName" onchange="adminUpdateField('name')">
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Composer</label>
+              <input type="text" class="admin-input" id="adminEditComposer" onchange="adminUpdateField('composer')">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+            <div class="admin-form-group">
+              <label class="admin-label">BPM</label>
+              <input type="number" class="admin-input" id="adminEditBpm" onchange="adminUpdateField('bpm')">
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Difficulty</label>
+              <select class="admin-select" id="adminEditDiff" onchange="adminUpdateField('difficulty')">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="admin-form-group">
+              <label class="admin-label">Color</label>
+              <input type="text" class="admin-input" id="adminEditColor" onchange="adminUpdateField('color')">
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:1.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+              <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--white)">🎼 Note Editor</div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                <button class="admin-btn secondary" style="font-size:.7rem;padding:.35rem .7rem" onclick="adminAddBar()">+ Add Bar</button>
+                <button class="admin-btn secondary" style="font-size:.7rem;padding:.35rem .7rem" onclick="adminRemoveLastBar()">− Remove Bar</button>
+                <span style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);align-self:center">Bars: <span id="adminBarCount" style="color:var(--sky)">4</span> &nbsp;|&nbsp; Time: <span id="adminTimeSig" style="color:var(--amber)">4/4</span></span>
+                <select id="adminTimeSigSelect" class="admin-select" style="padding:.3rem .5rem;font-size:.7rem;width:auto" onchange="adminChangeTimeSig(this.value)">
+                  <option value="4">4/4</option>
+                  <option value="3">3/4</option>
+                  <option value="2">2/4</option>
+                  <option value="6">6/8</option>
+                </select>
+                <label class="admin-btn secondary" style="font-size:.7rem;padding:.35rem .7rem;cursor:pointer" title="Import MIDI file">
+                  🎹 Import MIDI
+                  <input type="file" id="adminMidiInput" accept=".mid,.midi" style="display:none" onchange="adminHandleMidiImport(event)">
+                </label>
+                <label class="admin-btn secondary" style="font-size:.7rem;padding:.35rem .7rem;cursor:pointer" title="Import XML/MusicXML">
+                  📄 Import XML
+                  <input type="file" id="adminXmlNoteInput" accept=".xml,.musicxml" style="display:none" onchange="adminHandleXmlNoteImport(event)">
+                </label>
+              </div>
+            </div>
+
+            <!-- Toolbar: Rhythm, Accidentals, Beat -->
+            <div id="noteEditorToolbar" style="display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:.8rem;padding:.8rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px">
+
+              <!-- Rhythm value -->
+              <div style="display:flex;flex-direction:column;gap:.25rem">
+                <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Rhythm (1-7)</div>
+                <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+                  <button class="rhythm-btn active" data-dur="16" onclick="adminSetRhythm(this,16)" title="Whole note — key 1">𝅝 Whole</button>
+                  <button class="rhythm-btn" data-dur="8" onclick="adminSetRhythm(this,8)" title="Half note — key 2">𝅗 Half</button>
+                  <button class="rhythm-btn" data-dur="4" onclick="adminSetRhythm(this,4)" title="Quarter — key 3">♩ Quarter</button>
+                  <button class="rhythm-btn" data-dur="2" onclick="adminSetRhythm(this,2)" title="8th — key 4">♪ 8th</button>
+                  <button class="rhythm-btn" data-dur="1" onclick="adminSetRhythm(this,1)" title="16th — key 5">𝅘𝅥𝅯 16th</button>
+                  <button class="rhythm-btn" data-dur="6" onclick="adminSetRhythm(this,6)" title="Dotted quarter — key 6">♩. Dot.Q</button>
+                  <button class="rhythm-btn" data-dur="3" onclick="adminSetRhythm(this,3)" title="Dotted 8th — key 7">♪. Dot.8</button>
+                </div>
+              </div>
+
+              <div style="width:1px;height:36px;background:var(--border)"></div>
+
+              <!-- Accidentals -->
+              <div style="display:flex;flex-direction:column;gap:.25rem">
+                <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Accidental (S/F/N)</div>
+                <div style="display:flex;gap:.3rem">
+                  <button class="acc-btn active" data-acc="0" onclick="adminSetAccidental(this,0)">♮ Natural</button>
+                  <button class="acc-btn" data-acc="1" onclick="adminSetAccidental(this,1)">♯ Sharp</button>
+                  <button class="acc-btn" data-acc="-1" onclick="adminSetAccidental(this,-1)">♭ Flat</button>
+                </div>
+              </div>
+
+              <div style="width:1px;height:36px;background:var(--border)"></div>
+
+              <!-- View controls -->
+              <div style="display:flex;flex-direction:column;gap:.25rem">
+                <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">View</div>
+                <div style="display:flex;align-items:center;gap:.5rem">
+                  <button onclick="adminScrollBars(-1)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">◀</button>
+                  <span id="adminViewBarDisplay" style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--sky);white-space:nowrap">Bars 1–4</span>
+                  <button onclick="adminScrollBars(1)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">▶</button>
+                  <button onclick="adminScrollBars(-999)" style="padding:.25rem .4rem;font-size:.65rem;background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:5px;cursor:pointer">|◀</button>
+                </div>
+              </div>
+
+              <div style="width:1px;height:36px;background:var(--border)"></div>
+
+              <!-- Beat cursor -->
+              <div style="display:flex;flex-direction:column;gap:.25rem">
+                <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Beat Cursor (←/→)</div>
+                <div style="display:flex;align-items:center;gap:.4rem">
+                  <button onclick="adminMoveBeat(-adminStaffState.beatsPerBar)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">◀◀</button>
+                  <button onclick="adminMoveBeat(-1)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">◀</button>
+                  <span id="adminBeatCursorDisplay" style="font-family:'Orbitron',monospace;font-size:.85rem;color:var(--sky);min-width:2.2rem;text-align:center">0</span>
+                  <button onclick="adminMoveBeat(1)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">▶</button>
+                  <button onclick="adminMoveBeat(adminStaffState.beatsPerBar)" style="padding:.25rem .5rem;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:5px;cursor:pointer">▶▶</button>
+                  <button onclick="adminResetBeat()" style="padding:.25rem .5rem;font-size:.65rem;background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:5px;cursor:pointer">Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scrollable staff canvas wrapper -->
+            <div class="admin-staff" style="position:relative;overflow:hidden;cursor:crosshair" id="adminStaffWrap">
+              <canvas id="adminStaffCanvas" width="900" height="340" style="display:block;width:100%;border-radius:8px"></canvas>
+              <div id="adminStaffHoverLabel" style="position:absolute;top:6px;right:10px;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--sky);pointer-events:none;opacity:0;transition:opacity .15s;background:rgba(10,8,18,.7);padding:.2rem .5rem;border-radius:4px"></div>
+            </div>
+
+            <div class="admin-controls" style="margin-top:.6rem">
+              <div class="admin-info" id="adminStaffInfo">Click staff · Right-click remove · Keys: 1-7=rhythm S/F/N=accidental ←/→=beat</div>
+              <button class="admin-btn secondary" onclick="adminPlayback()">▶ Preview</button>
+              <button class="admin-btn secondary" onclick="adminClearAllNotes()">🗑 Clear All</button>
+              <button class="admin-btn secondary" onclick="adminExportNotes()">⬇ Export XML</button>
+              <button class="admin-btn" onclick="adminSaveAndGoToSongs()" style="background:var(--green);box-shadow:0 0 20px rgba(57,217,138,.3)">✓ Save &amp; Play</button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:1.5rem">
+            <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;margin-bottom:1rem;color:var(--white)">📝 Notes List</div>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Note</th>
+                  <th>Beat</th>
+                  <th>Duration</th>
+                  <th>MIDI</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminNotesTableBody"></tbody>
+            </table>
+          </div>
+
+                    <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-top:1.5rem;display:flex;gap:1rem">
+            <button class="admin-btn danger" onclick="adminDeleteSong()" style="flex:1">🗑 Delete</button>
+            <button class="admin-btn secondary" onclick="adminDuplicateSong(adminCurrentSongId)" style="flex:1">📋 Duplicate</button>
+            <button class="admin-btn secondary" onclick="adminCloseSong()" style="flex:1">← Back</button>
+            <button class="admin-btn" onclick="adminSaveAndGoToSongs()" style="flex:2;background:var(--green);box-shadow:0 0 20px rgba(57,217,138,.25)">✓ Save &amp; Play</button>
+          </div>
+        </div>
+
+        <!-- Import section -->
+        <div id="adminImportSection" style="display:none">
+          <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;color:var(--white)">Import Songs from XML</div>
+
+          <div class="admin-upload-zone" onclick="document.getElementById('adminXmlInput').click()">
+            <div class="admin-upload-text">📥 Click to upload XML file or drag & drop</div>
+            <div class="admin-upload-hint">Supports .xml files with song and note data</div>
+            <input type="file" id="adminXmlInput" accept=".xml" onchange="adminHandleXmlUpload(event)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick action buttons -->
+    <div style="display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap">
+      <button class="admin-btn" onclick="adminShowCreateForm()">+ New Song</button>
+      <button class="admin-btn secondary" onclick="adminShowTemplates()">⚡ Templates</button>
+      <button class="admin-btn secondary" onclick="document.getElementById('adminXmlInput2').click()">📥 Import XML</button>
+      <button class="admin-btn secondary" onclick="adminExportAllSongs()">⬇ Export JSON</button>
+      <button class="admin-btn secondary" onclick="adminShowAnalytics()">📊 Analytics</button>
+      <button class="admin-btn secondary" onclick="adminShowHelp()">❓ Help</button>
+      <input type="file" id="adminXmlInput2" accept=".xml" style="display:none" onchange="adminHandleXmlUpload(event)">
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1220,9 +2301,11 @@ function launchPractice(song, waitMode, inputMode) {
   pr.hitNotes      = 0;
   pr.totalNotes    = song.notes.length;
   pr.beatDur       = (60000 / song.bpm) / 2;
-  pr.totalBeats    = song.notes.reduce((mx,n) => Math.max(mx, n[1]+n[2]), 0) + 8;
+  // Normalize notes to arrays in case they're objects (from in-session editor)
+  const normNotes  = song.notes.map(n => Array.isArray(n) ? n : [n.midi, n.beat, n.dur]);
+  pr.totalBeats    = normNotes.reduce((mx,n) => Math.max(mx, n[1]+n[2]), 0) + 8;
 
-  pr.notes = song.notes.map(([midi, beat, dur]) => ({
+  pr.notes = normNotes.map(([midi, beat, dur]) => ({
     midi, beat, dur,
     hit: false, missed: false,
     color: NOTE_COLORS[NOTE_NAMES[midi%12].replace('#','')] || '#FF2D78',
@@ -1534,6 +2617,12 @@ function updateStaffParticles(ctx) {
 }
 
 // ── Staff renderer ────────────────────────────────────────
+// Beaming rules (matches reference image):
+//  • Beam groups span HALF a bar (4 eighth-note units in 4/4)
+//  • Cross-staff notes share ONE beam in the inter-staff gap
+//  • Semiquavers (dur<=0.5) get a double beam
+//  • Stems normalised to a nearly-flat beam line
+//  • Stem direction: avg note Y below staff mid → stems up
 function drawPracticeStaff() {
   prCtx.clearRect(0, 0, PR_W, PR_H);
   prCtx.fillStyle = '#0a0812';
@@ -1550,108 +2639,155 @@ function drawPracticeStaff() {
   const RY = Math.round(LG * 0.46);
 
   // ── Layout zones ─────────────────────────────────────────
-  // CLEF_ZONE: fixed-width area at far left for clef symbols (never scrolls)
-  // ← EDIT LG * 5.5 here if you resize the clefs and need more/less space
-  const CLEF_ZONE   = Math.round(LG * 5.5);   // width reserved for clef symbols
-  const STAFF_START = CLEF_ZONE + 6;           // staff lines begin here
+  const CLEF_ZONE   = Math.round(LG * 5.5);
+  const STAFF_START = CLEF_ZONE + 6;
 
   // ── 5 staff lines (treble) ────────────────────────────────
   prCtx.strokeStyle = '#3a5570';
   prCtx.lineWidth   = 1.6;
   for (let i = 0; i < 5; i++) {
     const y = geo.tTop + i * LG;
-    prCtx.beginPath();
-    prCtx.moveTo(STAFF_START, y);
-    prCtx.lineTo(PR_W, y);
-    prCtx.stroke();
+    prCtx.beginPath(); prCtx.moveTo(STAFF_START, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
   }
   // ── 5 staff lines (bass) ─────────────────────────────────
   for (let i = 0; i < 5; i++) {
     const y = geo.bTop + i * LG;
-    prCtx.beginPath();
-    prCtx.moveTo(STAFF_START, y);
-    prCtx.lineTo(PR_W, y);
-    prCtx.stroke();
+    prCtx.beginPath(); prCtx.moveTo(STAFF_START, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
   }
 
-  // ── System barline (joins both staves on the left) ───────
-  prCtx.strokeStyle = '#4a6070';
-  prCtx.lineWidth   = 2.5;
+  // ── System barline ────────────────────────────────────────
+  prCtx.strokeStyle = '#4a6070'; prCtx.lineWidth = 2.5;
   prCtx.beginPath();
   prCtx.moveTo(STAFF_START, geo.tTop);
   prCtx.lineTo(STAFF_START, geo.bTop + 4 * LG);
   prCtx.stroke();
 
-  // ── CLEF SYMBOLS — fixed to left, outside scroll area ────
-  // Treble clef: sky blue #00D4FF  (Musicable branding)
+  // ── CLEF SYMBOLS ─────────────────────────────────────────
   drawTrebleClef(prCtx, 4, geo.tTop, LG, '#00D4FF');
-  // Bass clef:   pink   #FF2D78   (Musicable branding)
   drawBassClef  (prCtx, 4, geo.bTop, LG, '#FF2D78');
 
-  // ── Cursor / playhead — 40px wide ────────────────────────
+  // ── Cursor / playhead ─────────────────────────────────────
   const cTop = geo.tTop - LG * 1.0;
   const cBot = geo.bTop + LG * 5.0;
   prCtx.save();
-  prCtx.strokeStyle = 'rgba(255,45,120,0.18)';
-  prCtx.lineWidth   = 40;
-  prCtx.lineCap     = 'butt';
-  prCtx.shadowColor = 'rgba(255,45,120,0.5)';
-  prCtx.shadowBlur  = 24;
-  prCtx.beginPath();
-  prCtx.moveTo(cursorX, cTop);
-  prCtx.lineTo(cursorX, cBot);
-  prCtx.stroke();
-  prCtx.strokeStyle = '#FF2D78';
-  prCtx.lineWidth   = 3;
-  prCtx.shadowBlur  = 14;
-  prCtx.beginPath();
-  prCtx.moveTo(cursorX, cTop);
-  prCtx.lineTo(cursorX, cBot);
-  prCtx.stroke();
+  prCtx.strokeStyle = 'rgba(255,45,120,0.18)'; prCtx.lineWidth = 40; prCtx.lineCap = 'butt';
+  prCtx.shadowColor = 'rgba(255,45,120,0.5)'; prCtx.shadowBlur = 24;
+  prCtx.beginPath(); prCtx.moveTo(cursorX, cTop); prCtx.lineTo(cursorX, cBot); prCtx.stroke();
+  prCtx.strokeStyle = '#FF2D78'; prCtx.lineWidth = 3; prCtx.shadowBlur = 14;
+  prCtx.beginPath(); prCtx.moveTo(cursorX, cTop); prCtx.lineTo(cursorX, cBot); prCtx.stroke();
   prCtx.restore();
 
   // ── Wait-mode border pulse ────────────────────────────────
   if (pr.waitingForNote && pr.waitTarget) {
     const pulse = 0.45 + 0.3 * Math.sin(Date.now() / 180);
     prCtx.save();
-    prCtx.strokeStyle = `rgba(0,212,255,${pulse})`;
-    prCtx.lineWidth   = 3;
+    prCtx.strokeStyle = `rgba(0,212,255,${pulse})`; prCtx.lineWidth = 3;
     prCtx.strokeRect(2, 2, PR_W - 4, PR_H - 4);
     prCtx.restore();
   }
 
-  // ── Notes ─────────────────────────────────────────────────
-  pr.notes.forEach(n => {
-    if (n.missed || n.hit) return;
-    const beatFromCursor = n.beat - curBeat;
-    const noteX = cursorX + beatFromCursor * pxPerBeat;
-    if (noteX < STAFF_START || noteX > PR_W + 60) return;
+  // ──────────────────────────────────────────────────────────
+  // Collect visible notes with geometry
+  // ──────────────────────────────────────────────────────────
+  const STEM_LEN = LG * 3.5;
+  const stemW    = Math.max(2.5, LG * 0.14);
 
-    const step      = diatonicStep(n.midi);
-    const noteY     = noteYFromStep(step, geo);
+  /** Get X pixel for a beat position */
+  const beatToX = beat => cursorX + (beat - curBeat) * pxPerBeat;
+
+  /** Get Y pixel for a midi note */
+  const midiToY = midi => {
+    const step = diatonicStep(midi);
+    return noteYFromStep(step, geo);
+  };
+
+  /** Stem direction: below staff middle → up */
+  const stemDir = (midi, useTreble) => {
+    const staffMidY = (useTreble ? geo.tTop : geo.bTop) + 2 * LG;
+    return midiToY(midi) >= staffMidY ? 1 : -1; // 1=up, -1=down
+  };
+
+  // Build enriched visible note array
+  const visible = pr.notes
+    .filter(n => !n.missed && !n.hit)
+    .map(n => {
+      const x        = beatToX(n.beat);
+      const step     = diatonicStep(n.midi);
+      const useT     = step >= -1;
+      const y        = noteYFromStep(step, geo);
+      const sd       = stemDir(n.midi, useT);
+      const stemX    = sd > 0 ? x + RX * 0.85 : x - RX * 0.85;
+      const stemTip  = y - sd * STEM_LEN;
+      return { ...n, x, y, step, useT, sd, stemX, stemTip, _isSolo: false };
+    })
+    .filter(n => n.x >= STAFF_START - 20 && n.x <= PR_W + 80);
+
+  // ──────────────────────────────────────────────────────────
+  // Music-theory beaming
+  //  Groups: quavers+semiquavers within each quarter-note span
+  //  (quarter = 2 eighth-note units). Cross-staff notes split.
+  // ──────────────────────────────────────────────────────────
+  const QUARTER_SPAN = 2; // eighth-note units per quarter
+  const beamable     = visible.filter(n => n.dur <= 1);
+
+  // Build groups keyed by (quarterIdx, staff)
+  const groupMap = new Map();
+  beamable.forEach(n => {
+    const qi  = Math.floor(n.beat / QUARTER_SPAN);
+    const key = `${qi}-${n.useT ? 'T' : 'B'}`;
+    if (!groupMap.has(key)) groupMap.set(key, []);
+    groupMap.get(key).push(n);
+  });
+
+  // Mark solos; keep multi-note groups
+  const beamGroups = [];
+  groupMap.forEach(items => {
+    items.sort((a, b) => a.beat - b.beat);
+    if (items.length >= 2) {
+      beamGroups.push(items);
+    } else {
+      items[0]._isSolo = true; // gets individual flag
+    }
+  });
+
+  // Build set of beamed notes
+  const beamedSet = new Set();
+  beamGroups.forEach(g => g.forEach(n => beamedSet.add(n)));
+
+  // ──────────────────────────────────────────────────────────
+  // For beamed groups, normalise all stem tips to a slanted
+  // beam line (first-to-last note stem tips, slope-capped).
+  // ──────────────────────────────────────────────────────────
+  beamGroups.forEach(group => {
+    const first = group[0], last = group[group.length - 1];
+    const dx    = last.stemX - first.stemX || 1;
+    const rawSlope = (last.stemTip - first.stemTip) / dx;
+    const maxSlope = LG * 0.35 / Math.max(1, Math.abs(dx));
+    const slope    = Math.max(-maxSlope, Math.min(maxSlope, rawSlope));
+
+    group.forEach(n => {
+      n.stemTip = first.stemTip + slope * (n.stemX - first.stemX);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // DRAW PASS 1: ledger lines, note heads, accidentals, dots
+  // ──────────────────────────────────────────────────────────
+  visible.forEach(n => {
+    const { x: noteX, y: noteY, useT, step } = n;
     const isSharp   = NOTE_NAMES[n.midi % 12].includes('#');
     const isWait    = pr.waitingForNote && pr.waitTarget === n;
-    const useTreble = step >= -1;
+    const color     = isWait ? '#00D4FF' : n.color;
 
-    const color = n.hit ? '#39D98A' : isWait ? '#00D4FF' : n.color;
-    prCtx.globalAlpha = 1.0;
-
-    // Note value (8th-note units)
-    const isWhole  = n.dur >= 8;
-    const isHalf   = n.dur >= 4 && n.dur < 8;
-    const isEighth = n.dur < 2;
-    const isDotted = n.dur === 3 || n.dur === 6;
-
-    // Stem direction
-    const staffMidY = (useTreble ? geo.tTop : geo.bTop) + 2 * LG;
-    const stemUp    = !isWhole && noteY >= staffMidY;
+    const isWhole   = n.dur >= 8;
+    const isHalf    = n.dur >= 4 && n.dur < 8;
+    const isDotted  = n.dur === 3 || n.dur === 6 || n.dur === 1.5;
 
     // ── Ledger lines ─────────────────────────────────────────
-    const lTop = useTreble ? geo.tTop : geo.bTop;
+    const lTop = useT ? geo.tTop : geo.bTop;
     const lBot = lTop + 4 * LG;
     prCtx.save();
-    prCtx.strokeStyle = '#4a6070';
-    prCtx.lineWidth   = 1.6;
+    prCtx.strokeStyle = '#4a6070'; prCtx.lineWidth = 1.6;
     if (noteY > lBot + LG * 0.4) {
       for (let ly = lBot + LG; ly <= noteY + LG * 0.4; ly += LG) {
         prCtx.beginPath(); prCtx.moveTo(noteX - RX - 5, ly); prCtx.lineTo(noteX + RX + 5, ly); prCtx.stroke();
@@ -1665,11 +2801,10 @@ function drawPracticeStaff() {
     prCtx.restore();
 
     // ── Glow ─────────────────────────────────────────────────
-    const glowSize = isWait ? 40 : 22;
     prCtx.shadowColor = color;
-    prCtx.shadowBlur  = glowSize;
+    prCtx.shadowBlur  = isWait ? 40 : 22;
 
-    // ── Note head (pill shape) ────────────────────────────────
+    // ── Note head ────────────────────────────────────────────
     const drawPill = (cx, cy, rx, ry, fill) => {
       const r = ry;
       prCtx.beginPath();
@@ -1691,7 +2826,6 @@ function drawPracticeStaff() {
     } else {
       drawPill(noteX, noteY, RX, RY, color);
       prCtx.shadowBlur = 0;
-      // Inner highlight
       prCtx.save();
       prCtx.globalAlpha = 0.35;
       const hiGrad = prCtx.createLinearGradient(noteX, noteY - RY, noteX, noteY);
@@ -1703,56 +2837,32 @@ function drawPracticeStaff() {
       prCtx.restore();
     }
 
-    // Outer ring badge effect
+    // Outer ring badge
     prCtx.save();
     prCtx.strokeStyle = color; prCtx.lineWidth = Math.max(2, LG * 0.12);
     prCtx.shadowColor = color; prCtx.shadowBlur = 8; prCtx.globalAlpha = 0.7;
     drawPill(noteX, noteY, RX + Math.max(2, LG * 0.12), RY + Math.max(1.5, LG * 0.08), null);
     prCtx.restore();
 
-    // ── Stem ──────────────────────────────────────────────────
-    if (!isWhole) {
-      const stemW = Math.max(2.5, LG * 0.16);
-      const stemLen = LG * 3.8;
-      const stemX = stemUp ? noteX + RX : noteX - RX;
-      const stemY1 = noteY;
-      const stemY2 = stemUp ? noteY - stemLen : noteY + stemLen;
-      prCtx.save();
-      prCtx.strokeStyle = color; prCtx.lineWidth = stemW; prCtx.lineCap = 'round';
-      prCtx.shadowColor = color; prCtx.shadowBlur = 6;
-      prCtx.beginPath(); prCtx.moveTo(stemX, stemY1); prCtx.lineTo(stemX, stemY2); prCtx.stroke();
-
-      if (isEighth) {
-        const d = stemUp ? 1 : -1;
-        prCtx.lineWidth = Math.max(2.5, LG * 0.16); prCtx.lineCap = 'round';
-        prCtx.beginPath(); prCtx.moveTo(stemX, stemY2);
-        prCtx.bezierCurveTo(
-          stemX + LG * 1.1 * d, stemY2 + LG * 0.6 * d,
-          stemX + LG * 0.9 * d, stemY2 + LG * 1.9 * d,
-          stemX + LG * 0.1 * d, stemY2 + LG * 2.6 * d
-        );
-        prCtx.stroke();
-      }
-      prCtx.restore();
-    }
-
     // ── Dot ───────────────────────────────────────────────────
     if (isDotted) {
       const dotR = Math.max(4, Math.round(LG * 0.28));
       const dotX = noteX + RX + dotR * 1.8;
-      const onLine = Math.abs((noteY - geo.tTop) % LG) < 2 || Math.abs((noteY - geo.bTop) % LG) < 2;
-      const dotY  = onLine ? noteY - LG * 0.38 : noteY;
-      prCtx.save(); prCtx.fillStyle = color; prCtx.shadowColor = color; prCtx.shadowBlur = 8;
-      prCtx.beginPath(); prCtx.arc(dotX, dotY, dotR, 0, Math.PI * 2); prCtx.fill(); prCtx.restore();
+      const dotY = noteY;
+      prCtx.save(); prCtx.fillStyle = color;
+      prCtx.shadowColor = color; prCtx.shadowBlur = 8;
+      prCtx.beginPath(); prCtx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      prCtx.fill(); prCtx.restore();
     }
 
-    // ── Sharp ─────────────────────────────────────────────────
+    // ── Accidental ────────────────────────────────────────────
     if (isSharp) {
       prCtx.save(); prCtx.fillStyle = color;
       prCtx.font = `bold ${Math.round(LG * 1.4)}px sans-serif`;
       prCtx.textAlign = 'right'; prCtx.textBaseline = 'middle';
       prCtx.shadowColor = color; prCtx.shadowBlur = 8;
-      prCtx.fillText('\u266f', noteX - RX - 5, noteY); prCtx.restore();
+      prCtx.fillText('\u266f', noteX - RX - 5, noteY);
+      prCtx.restore();
     }
 
     // ── Note letter inside head ────────────────────────────────
@@ -1766,6 +2876,128 @@ function drawPracticeStaff() {
     }
 
     prCtx.globalAlpha = 1;
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // DRAW PASS 2: stems + individual flags (non-beamed notes)
+  // ──────────────────────────────────────────────────────────
+  visible.forEach(n => {
+    const isWhole  = n.dur >= 8;
+    if (isWhole) return; // no stem on whole notes
+
+    const color  = (pr.waitingForNote && pr.waitTarget === n) ? '#00D4FF' : n.color;
+    const inBeam = beamedSet.has(n);
+
+    prCtx.save();
+    prCtx.strokeStyle = color; prCtx.lineWidth = stemW; prCtx.lineCap = 'round';
+    prCtx.shadowColor = color; prCtx.shadowBlur = 5;
+    prCtx.beginPath();
+    prCtx.moveTo(n.stemX, n.y + (n.sd > 0 ? -RY * 0.3 : RY * 0.3));
+    prCtx.lineTo(n.stemX, n.stemTip);
+    prCtx.stroke();
+    prCtx.restore();
+
+    // Individual flag (solo quaver/semiquaver not in a beam group)
+    const needsFlag = n.dur <= 1 && (!inBeam || n._isSolo);
+    if (needsFlag) {
+      const numFlags = n.dur <= 0.5 ? 2 : 1; // semiquaver=2, quaver=1
+      const d = n.sd; // 1=stem-up, -1=stem-down
+      for (let f = 0; f < numFlags; f++) {
+        const fy = n.stemTip + f * LG * 0.85 * d;
+        prCtx.save();
+        prCtx.strokeStyle = color; prCtx.lineWidth = stemW; prCtx.lineCap = 'round';
+        prCtx.shadowColor = color; prCtx.shadowBlur = 5;
+        prCtx.beginPath();
+        prCtx.moveTo(n.stemX, fy);
+        prCtx.bezierCurveTo(
+          n.stemX + d * LG * 1.2, fy + d * LG * 0.6,
+          n.stemX + d * LG * 1.0, fy + d * LG * 1.8,
+          n.stemX,                fy + d * LG * 2.4
+        );
+        prCtx.stroke();
+        prCtx.restore();
+      }
+    }
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // DRAW PASS 3: beams
+  // Primary beam connects all notes in a group.
+  // Secondary beam connects consecutive semiquavers only.
+  // ──────────────────────────────────────────────────────────
+  const BEAM_H    = Math.max(3.5, LG * 0.2); // beam thickness
+  const BEAM_GAP  = BEAM_H + 2;               // gap between double beam
+
+  beamGroups.forEach(group => {
+    if (group.length < 2) return;
+    const first = group[0], last = group[group.length - 1];
+    const color = first.color;
+
+    // Slope from first to last normalised stem tips
+    const x1 = first.stemX, y1 = first.stemTip;
+    const x2 = last.stemX,  y2 = last.stemTip;
+    const slope = (x2 - x1) > 0.5 ? (y2 - y1) / (x2 - x1) : 0;
+
+    // Beam Y at any X
+    const beamY = (x) => y1 + slope * (x - x1);
+
+    // ── Primary beam (one beam for all quavers+semiquavers) ──
+    const beamOffset = first.sd > 0 ? 0 : 0; // direction-agnostic for primary
+    prCtx.save();
+    prCtx.strokeStyle = color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
+    prCtx.shadowColor = color; prCtx.shadowBlur = 6;
+    prCtx.beginPath();
+    prCtx.moveTo(x1, beamY(x1));
+    prCtx.lineTo(x2, beamY(x2));
+    prCtx.stroke();
+    prCtx.restore();
+
+    // ── Secondary beam for semiquavers ────────────────────────
+    // Direction: if stems go up, second beam is below first beam;
+    // if stems go down, second beam is above.
+    const secOff = first.sd > 0 ? BEAM_GAP : -BEAM_GAP;
+
+    // Find runs of consecutive semiquavers
+    let i = 0;
+    while (i < group.length) {
+      if (group[i].dur <= 0.5) {
+        let j = i;
+        while (j < group.length && group[j].dur <= 0.5) j++;
+        const run = group.slice(i, j);
+
+        if (run.length >= 2) {
+          // Full secondary beam across the run
+          const rx1 = run[0].stemX, rx2 = run[run.length - 1].stemX;
+          prCtx.save();
+          prCtx.strokeStyle = run[0].color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
+          prCtx.shadowColor = run[0].color; prCtx.shadowBlur = 6;
+          prCtx.beginPath();
+          prCtx.moveTo(rx1, beamY(rx1) + secOff);
+          prCtx.lineTo(rx2, beamY(rx2) + secOff);
+          prCtx.stroke();
+          prCtx.restore();
+        } else {
+          // Single semiquaver in a mixed group — draw a stub beam
+          const sn   = run[0];
+          const stub = Math.min(pxPerBeat * 0.9, LG * 1.0);
+          // Stub goes toward the nearest neighbour
+          const prevIsQ = i > 0;
+          const sx1 = prevIsQ ? sn.stemX - stub : sn.stemX;
+          const sx2 = prevIsQ ? sn.stemX        : sn.stemX + stub;
+          prCtx.save();
+          prCtx.strokeStyle = sn.color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
+          prCtx.shadowColor = sn.color; prCtx.shadowBlur = 6;
+          prCtx.beginPath();
+          prCtx.moveTo(sx1, beamY(sx1) + secOff);
+          prCtx.lineTo(sx2, beamY(sx2) + secOff);
+          prCtx.stroke();
+          prCtx.restore();
+        }
+        i = j;
+      } else {
+        i++;
+      }
+    }
   });
 
   // ── Staff firework particles ──────────────────────────────
@@ -2267,7 +3499,7 @@ if (IS_SECURE) initMidi();
 // Each note: [midiNum, beatOffset, duration_beats]
 // beatOffset and duration in 8th note units (2 = quarter)
 
-const SONGS = [
+let SONGS = [
   // ── EASY ──────────────────────────────────────────────────
   {
     id: 'ode',
@@ -2761,6 +3993,35 @@ const SONGS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════
+   PERSISTENCE — saveSongs / loadSongs
+═══════════════════════════════════════════════════════════ */
+const STORAGE_KEY = 'pianoHeroSongs_v2';
+
+function saveSongs() {
+  try {
+    const custom = SONGS.filter(s => s.id && (
+      s.id.startsWith('song-admin-') || s.id.startsWith('song-import-') ||
+      s.id.startsWith('song-dup-')   || s.id.startsWith('song-tmpl-')
+    ));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
+  } catch(e) { console.warn('saveSongs failed:', e); }
+}
+
+function loadSavedSongs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return;
+    saved.forEach(song => {
+      if (!SONGS.find(s => s.id === song.id)) SONGS.push(song);
+    });
+  } catch(e) { console.warn('loadSavedSongs failed:', e); }
+}
+
+loadSavedSongs(); // merge persisted custom songs on startup
+
+/* ═══════════════════════════════════════════════════════════
    SONG SELECT
 ═══════════════════════════════════════════════════════════ */
 function buildSongList() {
@@ -2817,6 +4078,49 @@ function hexToRgb(hex) {
   const b = parseInt(hex.slice(5,7),16);
   return `${r},${g},${b}`;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   SONG PERSISTENCE (localStorage)
+═══════════════════════════════════════════════════════════ */
+function saveSongs() {
+  try {
+    // Normalize all notes to [midi, beat, dur] array format (game engine expects arrays)
+    const toSave = SONGS.map(s => ({
+      ...s,
+      notes: (s.notes || []).map(n => {
+        if (Array.isArray(n)) return n;
+        return [n.midi, n.beat, n.dur];
+      })
+    }));
+    localStorage.setItem('pianoHeroSongs', JSON.stringify(toSave));
+  } catch(e) {
+    console.warn('saveSongs failed:', e);
+  }
+}
+
+function loadSongs() {
+  try {
+    const raw = localStorage.getItem('pianoHeroSongs');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Array.isArray(saved) && saved.length > 0) {
+      // Merge: add any saved songs not already in built-in list
+      saved.forEach(s => {
+        if (!SONGS.find(b => b.id === s.id)) SONGS.push(s);
+        else {
+          // Overwrite built-in with saved version (user edits)
+          const idx = SONGS.findIndex(b => b.id === s.id);
+          SONGS[idx] = s;
+        }
+      });
+    }
+  } catch(e) {
+    console.warn('loadSongs failed:', e);
+  }
+}
+
+// Load persisted songs immediately
+loadSongs();
 
 /* ═══════════════════════════════════════════════════════════
    GUITAR HERO GAME ENGINE
@@ -3185,12 +4489,15 @@ function launchGame(song, waitMode = false) {
   // ms per 8th note unit
   game.beatDur = (60000 / song.bpm) / 2;
 
+  // Normalize notes to arrays in case they're objects (from in-session editor)
+  const normNotes = song.notes.map(n => Array.isArray(n) ? n : [n.midi, n.beat, n.dur]);
+
   // Total song length in beats
-  const lastNote   = song.notes.reduce((max, n) => Math.max(max, n[1] + n[2]), 0);
+  const lastNote   = normNotes.reduce((max, n) => Math.max(max, n[1] + n[2]), 0);
   game.totalBeats  = lastNote + 8;
 
   // Build note objects
-  game.notes = song.notes.map(([midi, beat, dur]) => {
+  game.notes = normNotes.map(([midi, beat, dur]) => {
     const note  = NOTE_NAMES[midi % 12];
     const base  = note.replace('#','');
     const color = NOTE_COLORS[base] || '#FF2D78';
@@ -3918,6 +5225,2966 @@ function copyCmd(el) {
 
 // Init: build practice song list on first load
 buildPracticeSongList();
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN PANEL FUNCTIONS
+═══════════════════════════════════════════════════════════ */
+
+let adminCurrentSongId = null;
+let adminCurrentSong = null;
+let adminStaffState = {
+  canvas: null,
+  ctx: null,
+  notes: [],
+  // Editor state
+  staffTarget: 'treble',
+  selectedDur: 4,           // default: quarter note
+  accidental: 0,
+  beatCursor: 0,
+  hoverNote: null,
+  // Bar system
+  numBars: 4,               // number of bars in this song
+  beatsPerBar: 8,           // 8th-note units per bar (4/4 = 4 quarters = 8 units)
+  timeSigNum: 4,            // numerator (4 in 4/4)
+  viewBarStart: 0,          // which bar is leftmost in view (0-indexed)
+  barsVisible: 4,           // how many bars to show at once
+  playbackActive: false,
+  playbackTimer: null,
+};
+
+// Grand staff geometry
+const ADMIN_CANVAS_H = 340;
+const ADMIN_LG = 18;
+const ADMIN_T_TOP = 30;
+const ADMIN_B_TOP = ADMIN_T_TOP + 4 * ADMIN_LG + ADMIN_LG * 2.8;
+const ADMIN_CLEF_W = 52;
+
+function adminMaxBeats() {
+  return adminStaffState.numBars * adminStaffState.beatsPerBar;
+}
+
+function adminUpdateStats() {
+  document.getElementById('adminStatTotal').textContent = SONGS.length;
+  const totalNotes = SONGS.reduce((sum, s) => sum + s.notes.length, 0);
+  document.getElementById('adminStatNotes').textContent = totalNotes;
+}
+
+function adminRenderSongsList() {
+  const list = document.getElementById('adminSongsList');
+  list.innerHTML = '';
+
+  if (SONGS.length === 0) {
+    list.innerHTML = '<div style="padding:1rem;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.75rem;text-align:center">No songs</div>';
+    return;
+  }
+
+  SONGS.forEach(song => {
+    const div = document.createElement('div');
+    div.className = `admin-sidebar-item ${adminCurrentSongId === song.id ? 'active' : ''}`;
+    div.innerHTML = `
+      <div style="font-weight:500;font-size:.8rem">${song.name}</div>
+      <div style="font-size:.65rem;color:var(--muted);margin-top:.2rem">${song.notes.length} notes</div>
+    `;
+    div.onclick = () => adminSelectSong(song.id);
+    list.appendChild(div);
+  });
+}
+
+function adminShowCreateForm() {
+  adminStopPlayback();
+  document.getElementById('adminCreateSection').style.display = 'block';
+  document.getElementById('adminEditSection').style.display = 'none';
+  adminCurrentSongId = null;
+  adminCurrentSong = null;
+  adminStaffState.canvas = null;
+  adminStaffState.ctx = null;
+  adminStaffState.notes = [];
+  adminStaffState.beatCursor = 0;
+  adminStaffState.numBars = 4;
+  adminStaffState.viewBarStart = 0;
+  adminRenderSongsList();
+}
+
+function adminCreateNewSong() {
+  const name = document.getElementById('adminNewName').value.trim();
+  const composer = document.getElementById('adminNewComposer').value.trim();
+  const bpm = parseInt(document.getElementById('adminNewBpm').value) || 100;
+  const difficulty = document.getElementById('adminNewDiff').value;
+  const color = document.getElementById('adminNewColor').value || '#FF2D78';
+
+  if (!name) {
+    adminShowAlert('Song name is required', 'error');
+    return;
+  }
+
+  const song = {
+    id: 'song-admin-' + Date.now(),
+    name,
+    composer: composer || 'Unknown',
+    bpm,
+    difficulty,
+    color,
+    notes: [],
+  };
+
+  SONGS.push(song);
+  saveSongs();
+  adminUpdateStats();
+  adminRenderSongsList();
+  adminSelectSong(song.id);
+  adminShowAlert(`Created "${name}" — now add notes on the staff below!`, 'success');
+
+  // Clear form
+  document.getElementById('adminNewName').value = '';
+  document.getElementById('adminNewComposer').value = '';
+  document.getElementById('adminNewBpm').value = '100';
+  document.getElementById('adminNewDiff').value = 'medium';
+  document.getElementById('adminNewColor').value = '#FF2D78';
+}
+
+function adminSelectSong(songId) {
+  adminCurrentSongId = songId;
+  adminCurrentSong = SONGS.find(s => s.id === songId);
+  if (!adminCurrentSong) return;
+
+  document.getElementById('adminCreateSection').style.display = 'none';
+  document.getElementById('adminEditSection').style.display = 'block';
+
+  // Populate fields
+  document.getElementById('adminEditTitle').textContent = `Edit: ${adminCurrentSong.name}`;
+  document.getElementById('adminEditName').value = adminCurrentSong.name;
+  document.getElementById('adminEditComposer').value = adminCurrentSong.composer;
+  document.getElementById('adminEditBpm').value = adminCurrentSong.bpm;
+  document.getElementById('adminEditDiff').value = adminCurrentSong.difficulty;
+  document.getElementById('adminEditColor').value = adminCurrentSong.color;
+
+  // Reset editor state
+  adminStaffState.beatCursor = 0;
+  adminStaffState.selectedDur = 4;
+  adminStaffState.accidental = 0;
+  adminStaffState.viewBarStart = 0;
+  adminStaffState.notes = JSON.parse(JSON.stringify(adminCurrentSong.notes || []));
+
+  // Normalize old-format notes (arrays) to objects
+  adminStaffState.notes = adminStaffState.notes.map(n => {
+    if (Array.isArray(n)) return { midi: n[0], beat: n[1], dur: n[2], accidental: 0 };
+    return { ...n, accidental: n.accidental || 0 };
+  });
+
+  // Restore saved bar/time-sig state, or auto-size from notes
+  if (adminCurrentSong._timeSigNum) {
+    adminStaffState.timeSigNum  = adminCurrentSong._timeSigNum;
+    adminStaffState.beatsPerBar = adminCurrentSong._beatsPerBar || 8;
+  }
+  if (adminCurrentSong._numBars) {
+    adminStaffState.numBars = adminCurrentSong._numBars;
+  } else if (adminStaffState.notes.length) {
+    const maxBeat = Math.max(...adminStaffState.notes.map(n => n.beat + n.dur));
+    adminStaffState.numBars = Math.max(4, Math.ceil(maxBeat / adminStaffState.beatsPerBar) + 1);
+  } else {
+    adminStaffState.numBars = 4;
+  }
+
+  // Setup staff canvas — must be visible first
+  adminStaffState.canvas = document.getElementById('adminStaffCanvas');
+  adminStaffState.ctx = adminStaffState.canvas.getContext('2d');
+  // Let DOM update before reading dimensions
+  requestAnimationFrame(() => {
+    adminSetupStaffCanvas();
+    adminUpdateBarUI();
+    adminRenderStaffNotes();
+    // Sync bar UI selects
+    const ts = document.getElementById('adminTimeSigSelect');
+    if (ts) ts.value = adminStaffState.timeSigNum;
+    const bcd = document.getElementById('adminBeatCursorDisplay');
+    if (bcd) bcd.textContent = adminStaffState.beatCursor;
+  });
+
+  adminRenderNotesTable();
+  document.getElementById('adminBeatCursorDisplay').textContent = '0';
+
+  // Re-sync toolbar to defaults
+  document.querySelectorAll('.rhythm-btn').forEach(b => b.classList.toggle('active', b.dataset.dur == '16'));
+  document.querySelectorAll('.acc-btn').forEach(b => b.classList.toggle('active', b.dataset.acc == '0'));
+
+  // Scroll to content
+  document.querySelector('.admin-content').scrollTop = 0;
+  adminRenderSongsList();
+}
+
+function adminSetupStaffCanvas() {
+  const canvas = adminStaffState.canvas;
+  // Remove old listeners to avoid stacking
+  canvas.replaceWith(canvas.cloneNode(true));
+  adminStaffState.canvas = document.getElementById('adminStaffCanvas');
+  adminStaffState.ctx = adminStaffState.canvas.getContext('2d');
+  const c = adminStaffState.canvas;
+  c.width = c.parentElement.clientWidth - 32;
+  c.height = ADMIN_CANVAS_H;
+  c.addEventListener('click', adminHandleStaffClick);
+  c.addEventListener('contextmenu', adminHandleStaffRightClick);
+  c.addEventListener('mousemove', adminHandleStaffHover);
+  c.addEventListener('mouseleave', () => {
+    adminStaffState.hoverNote = null;
+    adminRenderStaffNotes();
+  });
+  // Mouse wheel scrolls bars left/right
+  c.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    adminScrollBars(e.deltaY > 0 ? 1 : -1);
+  }, { passive: false });
+}
+
+/* ─── Admin Grand Staff Helpers ────────────────────────────── */
+
+// ══════════════════════════════════════════════════════════════
+//  NOTE SIZE TUNING — change these two values to resize notes
+//  RX_FACTOR : horizontal radius as a fraction of ADMIN_LG
+//              default 0.52  →  smaller = 0.40, larger = 0.65
+//  RY_FACTOR : vertical  radius as a fraction of ADMIN_LG
+//              default 0.32  →  smaller = 0.24, larger = 0.42
+//  Both are then additionally clamped by beatPx (bar width /
+//  beats per bar) so notes never overflow into adjacent beats.
+// ══════════════════════════════════════════════════════════════
+const NOTE_RX_FACTOR = 0.42;
+const NOTE_RY_FACTOR = 0.22;
+
+// Compute note head radii given canvas geometry
+// beatPx  = pixels per one beat unit at current zoom
+function noteRadii(beatPx) {
+  const LG  = ADMIN_LG;
+  // Base size from line-gap
+  let rx = LG * NOTE_RX_FACTOR;
+  let ry = LG * NOTE_RY_FACTOR;
+  // Hard cap: head must fit inside one beat slot (with 10 % margin)
+  const maxRx = beatPx * 0.45;
+  if (rx > maxRx) { const s = maxRx / rx; rx *= s; ry *= s; }
+  return { rx, ry };
+}
+
+// Returns canvas pixel coords for a given diatonic step (C4=0)
+// Treble clef: E4 = bottom line (diaStep=2), G4=diaStep=4 on line 2, B4=diaStep=6 on line 3, D5=8 on line 4, F5=10 on line 5
+//   → Bottom line of treble = E4 = diaStep 2  → Y = ADMIN_T_TOP + 4*LG
+//   → Each step = LG/2 upward
+// Bass clef: G2 = bottom line (diaStep=-12), B2=-10, D3=-8, F3=-6, A3=-4
+//   → Bottom line of bass = G2 = diaStep -12 → Y = ADMIN_B_TOP + 4*LG
+function adminNoteY(diaStep, staffTarget) {
+  const LG = ADMIN_LG;
+  if (staffTarget === 'treble') {
+    // Bottom line = E4 = diaStep 2, Y = ADMIN_T_TOP + 4*LG
+    const E4y = ADMIN_T_TOP + 4 * LG;
+    return E4y - (diaStep - 2) * (LG / 2);
+  } else {
+    // Bottom line = G2 = diaStep -12, Y = ADMIN_B_TOP + 4*LG
+    const G2y = ADMIN_B_TOP + 4 * LG;
+    return G2y - (diaStep - (-12)) * (LG / 2);
+  }
+}
+
+// Convert pixel Y → diatonic step for a staff (inverse of adminNoteY)
+function adminYtoDiaStep(y, staffTarget) {
+  const LG = ADMIN_LG;
+  if (staffTarget === 'treble') {
+    const E4y = ADMIN_T_TOP + 4 * LG;
+    return Math.round((E4y - y) / (LG / 2)) + 2;
+  } else {
+    const G2y = ADMIN_B_TOP + 4 * LG;
+    return Math.round((G2y - y) / (LG / 2)) + (-12);
+  }
+}
+
+// Diatonic step (C4=0) → midi number, applying accidental
+function diaStepToMidi(step, accidental) {
+  const whites  = [0,2,4,5,7,9,11];
+  const octave  = Math.floor(step / 7);
+  const noteIdx = ((step % 7) + 7) % 7;
+  const midi    = 60 + octave * 12 + whites[noteIdx] + accidental;
+  return Math.max(21, Math.min(108, midi));
+}
+
+// Midi → diatonic step from C4
+// Sharps occupy the same diatonic line/space as their natural (C#4 = same step as C4)
+// This is correct: accidentals don't change the staff position, only the pitch
+function midiToDiaStep(midi) {
+  // Map each chromatic index to its diatonic white-key position (0=C,1=D,2=E,3=F,4=G,5=A,6=B)
+  // Sharps share the diatonic slot of their lower natural
+  const CHROMA_TO_DIA = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6]; // C,C#→0, D,D#→1, E→2, F,F#→3, G,G#→4, A,A#→5, B→6
+  const chroma = midi % 12;
+  const oct    = Math.floor(midi / 12) - 1;
+  return (oct - 4) * 7 + CHROMA_TO_DIA[chroma];
+}
+
+// Which staff owns a Y coordinate — midpoint between staves
+function adminYtoStaff(y) {
+  const LG = ADMIN_LG;
+  const tMid = ADMIN_T_TOP + 2 * LG;   // center of treble staff
+  const bMid = ADMIN_B_TOP + 2 * LG;   // center of bass staff
+  const mid  = (tMid + bMid) / 2;
+  return y < mid ? 'treble' : 'bass';
+}
+
+// Beat X — accounts for view window
+function adminBeatX(beat, canvasW) {
+  const ss = adminStaffState;
+  const viewStart = ss.viewBarStart * ss.beatsPerBar;
+  const viewEnd   = (ss.viewBarStart + ss.barsVisible) * ss.beatsPerBar;
+  const totalW    = canvasW - ADMIN_CLEF_W - 20;
+  return ADMIN_CLEF_W + ((beat - viewStart) / (viewEnd - viewStart)) * totalW;
+}
+
+// Canvas X → beat number (snapped to 0.5 for 16th-note precision)
+function adminXtoBeat(x, canvasW) {
+  const ss = adminStaffState;
+  const viewStart = ss.viewBarStart * ss.beatsPerBar;
+  const viewEnd   = (ss.viewBarStart + ss.barsVisible) * ss.beatsPerBar;
+  const totalW    = canvasW - ADMIN_CLEF_W - 20;
+  const raw       = viewStart + ((x - ADMIN_CLEF_W) / totalW) * (viewEnd - viewStart);
+  // Snap to 0.5 (16th-note grid) for fine placement; integer for larger values
+  const snap = (ss.selectedDur <= 1) ? 0.5 : 1;
+  const snapped = Math.round(raw / snap) * snap;
+  return Math.max(0, Math.min(adminMaxBeats(), snapped));
+}
+
+// pixels per one beat unit at current zoom
+function adminBeatPx(canvasW) {
+  const ss = adminStaffState;
+  const totalW  = canvasW - ADMIN_CLEF_W - 20;
+  return totalW / (ss.barsVisible * ss.beatsPerBar);
+}
+
+// ── Note head ────────────────────────────────────────────────
+function adminDrawNoteHead(ctx, x, y, dur, color, isHover, rx, ry) {
+  const isWhole = dur >= 16;
+  const isHalf  = dur >= 8 && dur < 16;
+
+  ctx.shadowColor = color;
+  ctx.shadowBlur  = isHover ? 14 : 6;
+
+  if (isWhole) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = Math.max(1.5, ry * 0.55);
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, -0.3, 0, Math.PI * 2);
+    ctx.stroke();
+    // hollow centre
+    ctx.fillStyle = '#0a0812';
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx * 0.52, ry * 0.55, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (isHalf) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0812';
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx * 0.48, ry * 0.52, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ── Accidental symbol ─────────────────────────────────────────
+function adminDrawAccidental(ctx, x, y, accidental, color, rx) {
+  if (accidental === 0) return;
+  const LG = ADMIN_LG;
+  ctx.fillStyle = color;
+  ctx.font = `bold ${Math.max(8, LG * 0.9)}px serif`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(accidental === 1 ? '♯' : '♭', x - rx - 2, y);
+}
+
+// ── Stem ──────────────────────────────────────────────────────
+// Returns { stemX, stemTipY, stemUp } for use by beam drawing
+function adminDrawStem(ctx, x, y, dur, staffTarget, color, rx, drawFlag) {
+  if (dur >= 16) return null; // whole note — no stem
+  const LG     = ADMIN_LG;
+  const top    = staffTarget === 'treble' ? ADMIN_T_TOP : ADMIN_B_TOP;
+  const mid    = top + 2 * LG;
+  const stemUp = y >= mid;
+  const stemX  = stemUp ? x + rx * 0.9 : x - rx * 0.9;
+  const stemY1 = stemUp ? y - ry_from_rx(rx) * 0.35 : y + ry_from_rx(rx) * 0.35;
+  const stemY2 = stemUp ? y - LG * 3.2 : y + LG * 3.2;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = Math.max(1, rx * 0.22);
+  ctx.beginPath();
+  ctx.moveTo(stemX, stemY1);
+  ctx.lineTo(stemX, stemY2);
+  ctx.stroke();
+
+  // Draw flag only when explicitly requested (i.e. note is NOT beamed)
+  // dur <= 1 = 8th or shorter; dur <= 0.5 = 16th (2 flags)
+  if (drawFlag && dur <= 1) {
+    const numFlags = dur <= 0.5 ? 2 : 1; // 16th = 2 flags, 8th = 1 flag
+    for (let f = 0; f < numFlags; f++) {
+      const fy = stemUp
+        ? stemY2 + f * LG * 0.85
+        : stemY2 - f * LG * 0.85;
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = Math.max(1, rx * 0.22);
+      ctx.beginPath();
+      ctx.moveTo(stemX, fy);
+      ctx.bezierCurveTo(
+        stemX + (stemUp ? 1 : -1) * LG * 1.6, fy + LG * 0.7,
+        stemX + (stemUp ? 1 : -1) * LG * 1.4, fy + LG * 1.5,
+        stemX, fy + LG * 1.2
+      );
+      ctx.stroke();
+    }
+  }
+
+  return { stemX, stemTipY: stemY2, stemUp };
+}
+
+// Helper — approximate ry from rx (mirrors noteRadii relationship)
+function ry_from_rx(rx) { return rx * (NOTE_RY_FACTOR / NOTE_RX_FACTOR); }
+
+// ── Augmentation dot ─────────────────────────────────────────
+function adminDrawDot(ctx, x, y, color, rx) {
+  const r = Math.max(1.5, rx * 0.18);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x + rx + r + 2, y - ry_from_rx(rx) * 0.25, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ── Ledger lines ──────────────────────────────────────────────
+function adminDrawLedgers(ctx, noteX, noteY, staffTarget, rx) {
+  const LG  = ADMIN_LG;
+  const top = staffTarget === 'treble' ? ADMIN_T_TOP : ADMIN_B_TOP;
+  const bot = top + 4 * LG;
+  ctx.strokeStyle = '#4a6070';
+  ctx.lineWidth   = 1.2;
+  const pad = rx + 5;
+
+  // Ledger lines BELOW staff (every LG step below bot)
+  for (let ly = bot + LG; ly <= noteY + LG * 0.1; ly += LG) {
+    ctx.beginPath(); ctx.moveTo(noteX - pad, ly); ctx.lineTo(noteX + pad, ly); ctx.stroke();
+  }
+  // Ledger lines ABOVE staff (every LG step above top)
+  for (let ly = top - LG; ly >= noteY - LG * 0.1; ly -= LG) {
+    ctx.beginPath(); ctx.moveTo(noteX - pad, ly); ctx.lineTo(noteX + pad, ly); ctx.stroke();
+  }
+  // Middle C ledger line (C4 = diaStep 0)
+  // For treble: C4 is one LG below top (at top + 5*LG = bot + LG)
+  // For bass:   C4 is one LG above top (at ADMIN_B_TOP - LG)
+  // These are already covered by the loops above
+}
+
+// ── Beaming ───────────────────────────────────────────────────
+// Music-theory beaming for 4/4 (and other time sigs):
+//   • Beam group span = HALF a bar (beatsPerBar / 2 eighth-note units)
+//     → 4/4: 4 eighth-note units per half-bar  (beats 1-2, beats 3-4)
+//     → 3/4: beatsPerBar=6 → 3 units per half-bar
+//     → 6/8: beatsPerBar=6 → 3 units per half-bar
+//   • Cross-staff notes ARE beamed together (matches reference image)
+//   • Semiquavers (dur<=0.5) get a secondary (double) beam
+//   • Solo notes that can't be beamed get individual flags
+function buildBeamGroups(notes, visibleNotes, canvasW, beatsPerBar) {
+  const HALF_BAR = Math.max(2, beatsPerBar / 2);
+  const groups   = [];
+  let current    = null;
+
+  const sorted = visibleNotes
+    .filter(n => n.dur <= 1)
+    .sort((a, b) => a.beat - b.beat || a.midi - b.midi);
+
+  sorted.forEach(n => {
+    const groupId = Math.floor(n.beat / HALF_BAR);
+    if (!current || current.groupId !== groupId) {
+      if (current) {
+        if (current.items.length >= 2) groups.push(current);
+        else current.items[0]._isSolo = true;
+      }
+      current = { groupId, items: [] };
+    }
+    current.items.push(n);
+  });
+  if (current) {
+    if (current.items.length >= 2) groups.push(current);
+    else if (current.items.length === 1) current.items[0]._isSolo = true;
+  }
+
+  return groups;
+}
+
+/* ─── Main render function ────────────────────────────────── */
+function adminRenderStaffNotes() {
+  const ss  = adminStaffState;
+  const ctx = ss.ctx;
+  if (!ctx) return;
+  const w   = ctx.canvas.width;
+  const h   = ctx.canvas.height;
+  const LG  = ADMIN_LG;
+
+  const viewStart = ss.viewBarStart * ss.beatsPerBar;
+  const viewEnd   = (ss.viewBarStart + ss.barsVisible) * ss.beatsPerBar;
+
+  // Background
+  ctx.fillStyle = '#0a0812';
+  ctx.fillRect(0, 0, w, h);
+
+  // ── Alternating bar shading ───────────────────────────────
+  for (let b = ss.viewBarStart; b < ss.viewBarStart + ss.barsVisible; b++) {
+    if (b % 2 === 1) {
+      const bx1 = adminBeatX(b * ss.beatsPerBar, w);
+      const bx2 = adminBeatX((b + 1) * ss.beatsPerBar, w);
+      ctx.fillStyle = 'rgba(255,255,255,.018)';
+      ctx.fillRect(bx1, 0, bx2 - bx1, h);
+    }
+  }
+
+  // ── Draw both staves ──────────────────────────────────────
+  const drawStaff = (top, label) => {
+    ctx.strokeStyle = '#3a5570';
+    ctx.lineWidth   = 1.5;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.moveTo(ADMIN_CLEF_W, top + i * LG);
+      ctx.lineTo(w - 8, top + i * LG);
+      ctx.stroke();
+    }
+    // Clef
+    ctx.fillStyle = label === 'treble' ? '#00D4FF' : '#FF2D78';
+    ctx.font = `bold ${LG * 2.8}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label === 'treble' ? '\u{1D11E}' : '\u{1D122}', ADMIN_CLEF_W / 2,
+      top + (label === 'treble' ? 2 : 1.8) * LG);
+    // Time sig
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.font = `bold ${LG * 1.1}px serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(ss.timeSigNum, ADMIN_CLEF_W - 4, top + LG * 1.2);
+    ctx.fillText('4', ADMIN_CLEF_W - 4, top + LG * 2.8);
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,.15)';
+    ctx.font = `9px "DM Mono"`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label === 'treble' ? 'TREBLE' : 'BASS', ADMIN_CLEF_W + 4, top - 13);
+  };
+  drawStaff(ADMIN_T_TOP, 'treble');
+  drawStaff(ADMIN_B_TOP, 'bass');
+
+  // System barline (left edge)
+  ctx.strokeStyle = '#4a6070';
+  ctx.lineWidth   = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(ADMIN_CLEF_W, ADMIN_T_TOP);
+  ctx.lineTo(ADMIN_CLEF_W, ADMIN_B_TOP + 4 * LG);
+  ctx.stroke();
+
+  // ── Bar lines + bar numbers ───────────────────────────────
+  for (let b = ss.viewBarStart; b <= ss.viewBarStart + ss.barsVisible; b++) {
+    if (b > ss.numBars) break;
+    const bx = adminBeatX(b * ss.beatsPerBar, w);
+    // Bar line through both staves
+    ctx.strokeStyle = b === ss.numBars ? '#6a8090' : '#2a4055';
+    ctx.lineWidth   = b === ss.numBars ? 3 : 1.2;
+    ctx.beginPath();
+    ctx.moveTo(bx, ADMIN_T_TOP);
+    ctx.lineTo(bx, ADMIN_B_TOP + 4 * LG);
+    ctx.stroke();
+    // Bar number label
+    if (b < ss.numBars) {
+      ctx.fillStyle = 'rgba(255,255,255,.28)';
+      ctx.font = '10px "DM Mono"';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`${b + 1}`, bx + 3, ADMIN_T_TOP - 2);
+    }
+  }
+
+  // ── Beat subdivision grid (faint) ─────────────────────────
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  ctx.lineWidth   = 0.8;
+  for (let beat = viewStart; beat < viewEnd; beat++) {
+    if (beat % ss.beatsPerBar === 0) continue; // already drawn as bar line
+    const bx = adminBeatX(beat, w);
+    // Only draw quarter beat subdivisions
+    if (beat % 2 === 0) {
+      ctx.beginPath();
+      ctx.moveTo(bx, ADMIN_T_TOP);
+      ctx.lineTo(bx, ADMIN_T_TOP + 4 * LG);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(bx, ADMIN_B_TOP);
+      ctx.lineTo(bx, ADMIN_B_TOP + 4 * LG);
+      ctx.stroke();
+    }
+  }
+
+  // ── Beat cursor ───────────────────────────────────────────
+  if (ss.beatCursor >= viewStart && ss.beatCursor <= viewEnd) {
+    const cursorX = adminBeatX(ss.beatCursor, w);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,45,120,0.22)';
+    ctx.lineWidth   = 16;
+    ctx.lineCap     = 'butt';
+    ctx.beginPath();
+    ctx.moveTo(cursorX, ADMIN_T_TOP - LG);
+    ctx.lineTo(cursorX, ADMIN_B_TOP + 5 * LG);
+    ctx.stroke();
+    ctx.strokeStyle = '#FF2D78';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.moveTo(cursorX, ADMIN_T_TOP - LG);
+    ctx.lineTo(cursorX, ADMIN_B_TOP + 5 * LG);
+    ctx.stroke();
+    // Triangle marker at top
+    ctx.fillStyle = '#FF2D78';
+    ctx.beginPath();
+    ctx.moveTo(cursorX - 5, ADMIN_T_TOP - LG - 2);
+    ctx.lineTo(cursorX + 5, ADMIN_T_TOP - LG - 2);
+    ctx.lineTo(cursorX, ADMIN_T_TOP - LG + 6);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ── Compute geometry for this zoom level ─────────────────
+  const beatPx  = adminBeatPx(w);
+  const { rx, ry } = noteRadii(beatPx);
+
+  // ── Annotate each note with render geometry (mutates temporarily) ──
+  ss.notes.forEach(n => {
+    const diaStep  = midiToDiaStep(n.midi);
+    // Split: middle C (C4, step=0) and above up to treble; B3 (step=-1) also treble
+    // A3 and below (step <=-2) go to bass clef
+    const staffTgt = diaStep >= -1 ? 'treble' : 'bass';
+    n._x     = adminBeatX(n.beat, w);
+    n._y     = adminNoteY(diaStep, staffTgt);
+    n._staff = staffTgt;
+    n._dia   = diaStep;
+    n._isSolo = false;
+  });
+
+  const visNotes = ss.notes
+    .filter(n => n._x >= ADMIN_CLEF_W - 20 && n._x <= w + 20)
+    .map(n => ({ n, staffTgt: n._staff, noteX: n._x, noteY: n._y }));
+
+  // ── Build beam groups ──────────────────────────────────────
+  const beamGroups = buildBeamGroups(ss.notes, ss.notes, w, ss.beatsPerBar);
+
+  // Collect beamed note set (original objects)
+  const beamedSet = new Set();
+  beamGroups.forEach(g => g.items.forEach(n => beamedSet.add(n)));
+
+  // ── First pass: ledgers + stems + heads ───────────────────
+  // We need stem geometry before drawing beams, so collect stem info
+  const stemInfo = new Map(); // note object → {stemX, stemTipY, stemUp}
+
+  visNotes.forEach(({ n, staffTgt, noteX, noteY }) => {
+    if (noteX < ADMIN_CLEF_W - 20 || noteX > w + 20) return;
+    const isSharp = NOTE_NAMES[n.midi % 12].includes('#');
+    const accMark = n.accidental || (isSharp ? 1 : 0);
+    const color   = NOTE_COLORS[NOTE_NAMES[n.midi % 12].replace('#','')] || '#FF2D78';
+    const inBeam  = beamedSet.has(n);
+    // Draw flag if: note is 8th/16th AND not in a beam group (or is a solo)
+    const drawFlag = (n.dur <= 1) && (!inBeam || n._isSolo);
+
+    adminDrawLedgers(ctx, noteX, noteY, staffTgt, rx);
+    const si = adminDrawStem(ctx, noteX, noteY, n.dur, staffTgt, color, rx, drawFlag);
+    if (si) stemInfo.set(n, si);
+    adminDrawNoteHead(ctx, noteX, noteY, n.dur, color, false, rx, ry);
+    if (accMark !== 0) adminDrawAccidental(ctx, noteX, noteY, accMark, color, rx);
+    if (n.dur === 6 || n.dur === 3) adminDrawDot(ctx, noteX, noteY, color, rx);
+
+    // Note name
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.font = `${Math.max(6, rx * 0.85)}px "DM Mono"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(NOTE_NAMES[n.midi % 12] + (Math.floor(n.midi / 12) - 1), noteX, noteY + ry + 2);
+  });
+
+  // ── Second pass: draw beams ───────────────────────────────
+  // Rules from reference image:
+  //  • All notes in a half-bar group share ONE beam, even cross-staff
+  //  • Beam position: if all stems up → beam at top of stems (above)
+  //                   if all stems down → beam at bottom of stems (below)
+  //                   cross-staff → beam in the gap between staves
+  //  • Slope: cap at ±LG*0.015 per pixel (nearly flat like reference)
+  //  • Semiquavers get a second beam parallel to the first, closer to heads
+  beamGroups.forEach(group => {
+    if (group.items.length < 2) return;
+
+    // Determine if cross-staff group
+    const hasT = group.items.some(n => n._staff === 'treble');
+    const hasB = group.items.some(n => n._staff === 'bass');
+    const isCrossStaff = hasT && hasB;
+
+    // Uniform stem direction for the whole group:
+    // cross-staff → stems always go AWAY from the other staff
+    //   treble notes: stem up; bass notes: stem down
+    // single-staff → majority vote (or standard: below mid → up)
+    let groupStemUp;
+    if (isCrossStaff) {
+      // Cross-staff: we'll draw two beams (one per staff) connected
+      // Actually: draw one spanning beam in the inter-staff gap
+      // All treble note stems go UP, all bass stems go DOWN
+      groupStemUp = null; // handled per-note below
+    } else {
+      const allUp = group.items.every(n => stemInfo.get(n)?.stemUp);
+      const allDn = group.items.every(n => !stemInfo.get(n)?.stemUp);
+      groupStemUp = allUp ? true : allDn ? false :
+        // majority vote
+        group.items.filter(n => stemInfo.get(n)?.stemUp).length >= group.items.length / 2;
+    }
+
+    const beamThickness = Math.max(2.5, ry * 0.6);
+    const beamGap       = beamThickness + Math.max(2, ry * 0.35);
+
+    if (isCrossStaff) {
+      // ── Cross-staff beam ──────────────────────────────────
+      // Place primary beam in the gap between treble bottom and bass top
+      // (between ADMIN_T_TOP+4*LG and ADMIN_B_TOP), centred
+      const gapMid = (ADMIN_T_TOP + 4 * LG + ADMIN_B_TOP) / 2;
+      // Treble stems go UP → beam is above noteheads → tip above
+      // Bass stems go DOWN → beam is below noteheads → tip below
+      // We fix beam at gapMid regardless of notes
+
+      const tNotes = group.items.filter(n => n._staff === 'treble');
+      const bNotes = group.items.filter(n => n._staff === 'bass');
+
+      // Redraw all treble stems upward to gapMid
+      tNotes.forEach(n => {
+        const col = NOTE_COLORS[NOTE_NAMES[n.midi % 12].replace('#','')] || '#FF2D78';
+        const si  = stemInfo.get(n);
+        if (!si) return;
+        const sX = n._x + rx * 0.9; // stem up = right side
+        ctx.strokeStyle = col;
+        ctx.lineWidth   = Math.max(1, rx * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(sX, n._y - ry * 0.35);
+        ctx.lineTo(sX, gapMid);
+        ctx.stroke();
+        stemInfo.set(n, { ...si, stemX: sX, stemTipY: gapMid, stemUp: true });
+      });
+      // Redraw all bass stems downward to gapMid
+      bNotes.forEach(n => {
+        const col = NOTE_COLORS[NOTE_NAMES[n.midi % 12].replace('#','')] || '#FF2D78';
+        const si  = stemInfo.get(n);
+        if (!si) return;
+        const sX = n._x - rx * 0.9; // stem down = left side
+        ctx.strokeStyle = col;
+        ctx.lineWidth   = Math.max(1, rx * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(sX, n._y + ry * 0.35);
+        ctx.lineTo(sX, gapMid);
+        ctx.stroke();
+        stemInfo.set(n, { ...si, stemX: sX, stemTipY: gapMid, stemUp: false });
+      });
+
+      // All stems now at gapMid — draw primary flat beam spanning all notes
+      const allSorted = group.items.slice().sort((a,b) => a._x - b._x);
+      const x1all = stemInfo.get(allSorted[0])?.stemX ?? allSorted[0]._x;
+      const x2all = stemInfo.get(allSorted[allSorted.length-1])?.stemX ?? allSorted[allSorted.length-1]._x;
+      const primaryColor = NOTE_COLORS[NOTE_NAMES[allSorted[0].midi % 12].replace('#','')] || '#FF2D78';
+
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth   = beamThickness;
+      ctx.lineCap     = 'square';
+      ctx.beginPath();
+      ctx.moveTo(x1all, gapMid);
+      ctx.lineTo(x2all, gapMid);
+      ctx.stroke();
+
+      // Secondary beam for semiquavers (cross-staff)
+      const hasSemi = group.items.some(n => n.dur <= 0.5);
+      if (hasSemi) {
+        // Draw secondary beams per-staff segment
+        // For treble notes: second beam is BELOW primary (toward noteheads, i.e. +beamGap)
+        // For bass notes: second beam is ABOVE primary (toward noteheads, i.e. -beamGap)
+        const drawSemiBeamRun = (runItems, offset) => {
+          if (runItems.length < 2) {
+            // Stub
+            const sn = runItems[0];
+            const si = stemInfo.get(sn);
+            if (!si) return;
+            const stub = Math.min(beatPx * 0.9, LG * 0.8);
+            const col  = NOTE_COLORS[NOTE_NAMES[sn.midi % 12].replace('#','')] || '#FF2D78';
+            ctx.strokeStyle = col; ctx.lineWidth = beamThickness; ctx.lineCap = 'square';
+            ctx.beginPath();
+            ctx.moveTo(si.stemX, gapMid + offset);
+            ctx.lineTo(si.stemX + stub, gapMid + offset);
+            ctx.stroke();
+            return;
+          }
+          runItems.sort((a,b) => a._x - b._x);
+          const rSI1 = stemInfo.get(runItems[0]);
+          const rSI2 = stemInfo.get(runItems[runItems.length-1]);
+          if (!rSI1 || !rSI2) return;
+          const col = NOTE_COLORS[NOTE_NAMES[runItems[0].midi % 12].replace('#','')] || '#FF2D78';
+          ctx.strokeStyle = col; ctx.lineWidth = beamThickness; ctx.lineCap = 'square';
+          ctx.beginPath();
+          ctx.moveTo(rSI1.stemX, gapMid + offset);
+          ctx.lineTo(rSI2.stemX, gapMid + offset);
+          ctx.stroke();
+        };
+        // Treble semiquavers: offset = +beamGap (below beam, toward treble notes)
+        const tSemis = tNotes.filter(n => n.dur <= 0.5);
+        if (tSemis.length) drawSemiBeamRun(tSemis, beamGap);
+        // Bass semiquavers: offset = -beamGap (above beam, toward bass notes)
+        const bSemis = bNotes.filter(n => n.dur <= 0.5);
+        if (bSemis.length) drawSemiBeamRun(bSemis, -beamGap);
+      }
+      return; // done with cross-staff group
+    }
+
+    // ── Single-staff beam ──────────────────────────────────
+    const staff = group.items[0]._staff;
+    const staffNotes = group.items.slice().sort((a,b) => a._x - b._x);
+
+    // Re-determine stem direction uniformly for this group
+    const staffMid = (staff === 'treble' ? ADMIN_T_TOP : ADMIN_B_TOP) + 2 * LG;
+    // Average Y of notes
+    const avgY = staffNotes.reduce((s, n) => s + n._y, 0) / staffNotes.length;
+    const stemUp = avgY >= staffMid;
+
+    // Recompute stem X and tip for uniform direction
+    const STEM_LEN = LG * 3.2;
+    staffNotes.forEach(n => {
+      const col = NOTE_COLORS[NOTE_NAMES[n.midi % 12].replace('#','')] || '#FF2D78';
+      const sX  = stemUp ? n._x + rx * 0.9 : n._x - rx * 0.9;
+      const sY1 = stemUp ? n._y - ry * 0.35 : n._y + ry * 0.35;
+      const sY2 = stemUp ? n._y - STEM_LEN   : n._y + STEM_LEN;
+      ctx.strokeStyle = col;
+      ctx.lineWidth   = Math.max(1, rx * 0.22);
+      ctx.beginPath();
+      ctx.moveTo(sX, sY1);
+      ctx.lineTo(sX, sY2);
+      ctx.stroke();
+      stemInfo.set(n, { stemX: sX, stemTipY: sY2, stemUp });
+    });
+
+    // Beam position: at the stem tips, with a gentle slope
+    const first = staffNotes[0],  last = staffNotes[staffNotes.length - 1];
+    const si1   = stemInfo.get(first), si2 = stemInfo.get(last);
+    if (!si1 || !si2) return;
+
+    const x1 = si1.stemX, rawY1 = si1.stemTipY;
+    const x2 = si2.stemX, rawY2 = si2.stemTipY;
+    const dx  = x2 - x1 || 1;
+
+    // Cap slope: max ±LG*0.4 over the whole group width (nearly flat)
+    const rawSlope = (rawY2 - rawY1) / dx;
+    const maxSlopeAbs = (LG * 0.4) / Math.max(1, Math.abs(dx));
+    const slope = Math.max(-maxSlopeAbs, Math.min(maxSlopeAbs, rawSlope));
+
+    // Adjust all stem tips to lie on the beam line; redraw stems
+    staffNotes.forEach(n => {
+      const si  = stemInfo.get(n);
+      if (!si) return;
+      const col    = NOTE_COLORS[NOTE_NAMES[n.midi % 12].replace('#','')] || '#FF2D78';
+      const beamY  = rawY1 + slope * (si.stemX - x1);
+      const stemY1 = stemUp ? n._y - ry * 0.35 : n._y + ry * 0.35;
+      ctx.strokeStyle = col;
+      ctx.lineWidth   = Math.max(1, rx * 0.22);
+      ctx.beginPath();
+      ctx.moveTo(si.stemX, stemY1);
+      ctx.lineTo(si.stemX, beamY);
+      ctx.stroke();
+      stemInfo.set(n, { ...si, stemTipY: beamY });
+    });
+
+    // Primary beam
+    const beamColor = NOTE_COLORS[NOTE_NAMES[first.midi % 12].replace('#','')] || '#FF2D78';
+    ctx.strokeStyle = beamColor;
+    ctx.lineWidth   = beamThickness;
+    ctx.lineCap     = 'square';
+    ctx.beginPath();
+    ctx.moveTo(x1, rawY1 + slope * (x1 - x1)); // = rawY1
+    ctx.lineTo(x2, rawY1 + slope * (x2 - x1));
+    ctx.stroke();
+
+    // Secondary beam for semiquavers (dur <= 0.5)
+    // Offset: stemUp → beam is above notes → secondary beam is BELOW primary (toward notes)
+    //         stemDown → beam is below notes → secondary beam is ABOVE primary (toward notes)
+    const secOffset = stemUp ? beamGap : -beamGap;
+
+    let i = 0;
+    while (i < staffNotes.length) {
+      if (staffNotes[i].dur <= 0.5) {
+        let j = i;
+        while (j < staffNotes.length && staffNotes[j].dur <= 0.5) j++;
+        const run = staffNotes.slice(i, j);
+
+        if (run.length >= 2) {
+          const rSI1 = stemInfo.get(run[0]);
+          const rSI2 = stemInfo.get(run[run.length - 1]);
+          if (rSI1 && rSI2) {
+            const rCol = NOTE_COLORS[NOTE_NAMES[run[0].midi % 12].replace('#','')] || '#FF2D78';
+            ctx.strokeStyle = rCol;
+            ctx.lineWidth   = beamThickness;
+            ctx.lineCap     = 'square';
+            ctx.beginPath();
+            ctx.moveTo(rSI1.stemX, rawY1 + slope * (rSI1.stemX - x1) + secOffset);
+            ctx.lineTo(rSI2.stemX, rawY1 + slope * (rSI2.stemX - x1) + secOffset);
+            ctx.stroke();
+          }
+        } else {
+          // Stub beam for lone semiquaver
+          const sn  = run[0];
+          const si  = stemInfo.get(sn);
+          if (si) {
+            const stub = Math.min(beatPx * 0.9, LG * 0.8);
+            const col  = NOTE_COLORS[NOTE_NAMES[sn.midi % 12].replace('#','')] || '#FF2D78';
+            const prevIdx = i - 1;
+            const stubDir = prevIdx >= 0 ? -1 : 1; // stub toward previous note
+            ctx.strokeStyle = col;
+            ctx.lineWidth   = beamThickness;
+            ctx.lineCap     = 'square';
+            ctx.beginPath();
+            ctx.moveTo(si.stemX, rawY1 + slope * (si.stemX - x1) + secOffset);
+            ctx.lineTo(si.stemX + stubDir * stub, rawY1 + slope * (si.stemX + stubDir * stub - x1) + secOffset);
+            ctx.stroke();
+          }
+        }
+        i = j;
+      } else { i++; }
+    }
+  });
+
+  // ── Hover preview ─────────────────────────────────────────
+  if (ss.hoverNote) {
+    const { diaStep, staffTgt, beat } = ss.hoverNote;
+    if (beat >= viewStart && beat <= viewEnd) {
+      const midi  = diaStepToMidi(diaStep, ss.accidental);
+      const hX    = adminBeatX(beat, w);
+      const hY    = adminNoteY(diaStep, staffTgt);
+      const color = NOTE_COLORS[NOTE_NAMES[midi % 12].replace('#','')] || '#FF2D78';
+      ctx.globalAlpha = 0.45;
+      adminDrawLedgers(ctx, hX, hY, staffTgt, rx);
+      adminDrawStem(ctx, hX, hY, ss.selectedDur, staffTgt, color, rx, true);
+      adminDrawNoteHead(ctx, hX, hY, ss.selectedDur, color, true, rx, ry);
+      if (ss.accidental !== 0) adminDrawAccidental(ctx, hX, hY, ss.accidental, color, rx);
+      if (ss.selectedDur === 6 || ss.selectedDur === 3) adminDrawDot(ctx, hX, hY, color, rx);
+      ctx.globalAlpha = 1.0;
+
+      const noteName = NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
+      const durNames = {16:'Whole',8:'Half',4:'Quarter',2:'8th',1:'16th',6:'Dot.Q',3:'Dot.8'};
+      const barNum   = Math.floor(beat / ss.beatsPerBar) + 1;
+      const beatInBar = (beat % ss.beatsPerBar) + 1;
+      const el = document.getElementById('adminStaffHoverLabel');
+      if (el) {
+        el.textContent = `${noteName} · ${durNames[ss.selectedDur] || ''} · Bar ${barNum} Beat ${beatInBar}`;
+        el.style.opacity = '1';
+      }
+    }
+  } else {
+    const el = document.getElementById('adminStaffHoverLabel');
+    if (el) el.style.opacity = '0';
+  }
+
+  // ── View bar label ────────────────────────────────────────
+  const vbd = document.getElementById('adminViewBarDisplay');
+  if (vbd) vbd.textContent = `Bars ${ss.viewBarStart + 1}–${Math.min(ss.numBars, ss.viewBarStart + ss.barsVisible)}`;
+}
+
+
+/* ─── Click / hover handlers ──────────────────────────────── */
+function adminGetNoteFromEvent(e) {
+  const canvas = adminStaffState.canvas;
+  const rect   = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x      = (e.clientX - rect.left) * scaleX;
+  const y      = (e.clientY - rect.top)  * scaleY;
+  if (x < ADMIN_CLEF_W) return null;
+  const beat    = adminXtoBeat(x, canvas.width);
+  const staffTgt = adminYtoStaff(y);
+  const diaStep = adminYtoDiaStep(y, staffTgt);
+  return { x, y, beat, staffTgt, diaStep };
+}
+
+function adminHandleStaffHover(e) {
+  const info = adminGetNoteFromEvent(e);
+  if (!info) { adminStaffState.hoverNote = null; adminRenderStaffNotes(); return; }
+  adminStaffState.hoverNote = info;
+  adminRenderStaffNotes();
+}
+
+function adminHandleStaffClick(e) {
+  const info = adminGetNoteFromEvent(e);
+  if (!info) return;
+  const { beat, staffTgt, diaStep } = info;
+  const ss   = adminStaffState;
+  const midi = diaStepToMidi(diaStep, ss.accidental);
+  if (midi < 21 || midi > 108) return;
+
+  const newNote = { midi, beat, dur: ss.selectedDur, accidental: ss.accidental };
+  ss.notes.push(newNote);
+  ss.notes.sort((a, b) => a.beat - b.beat);
+  adminCurrentSong.notes = ss.notes;
+
+  // Auto-extend bars if note goes beyond current range
+  const noteEnd = beat + ss.selectedDur;
+  const neededBars = Math.ceil(noteEnd / ss.beatsPerBar);
+  if (neededBars > ss.numBars) {
+    ss.numBars = neededBars + 1;
+    adminUpdateBarUI();
+  }
+
+  // Auto-advance beat cursor
+  const nextBeat = beat + ss.selectedDur;
+  ss.beatCursor = Math.min(adminMaxBeats(), nextBeat);
+  document.getElementById('adminBeatCursorDisplay').textContent = ss.beatCursor;
+
+  // Auto-scroll view to follow cursor
+  const cursorBar = Math.floor(ss.beatCursor / ss.beatsPerBar);
+  if (cursorBar >= ss.viewBarStart + ss.barsVisible) {
+    ss.viewBarStart = Math.max(0, cursorBar - ss.barsVisible + 1);
+  }
+
+  saveSongs();
+  adminRenderStaffNotes();
+  adminRenderNotesTable();
+  const noteName = NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
+  adminShowAlert(`${noteName} · beat ${beat}`, 'info');
+  playPianoNote(midi, 0.25);
+}
+
+function adminHandleStaffRightClick(e) {
+  e.preventDefault();
+  const info = adminGetNoteFromEvent(e);
+  if (!info) return;
+  const { x, y } = info;
+  const canvas = adminStaffState.canvas;
+  const w      = canvas.width;
+  const rect   = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx     = (e.clientX - rect.left) * scaleX;
+  const cy     = (e.clientY - rect.top) * scaleY;
+
+  let closest = null, closestDist = 22;
+  adminStaffState.notes.forEach((note, idx) => {
+    const diaStep  = midiToDiaStep(note.midi);
+    const staffTgt = diaStep >= -1 ? 'treble' : 'bass';  // match render logic
+    const noteX    = adminBeatX(note.beat, w);
+    const noteY    = adminNoteY(diaStep, staffTgt);
+    const dist     = Math.hypot(cx - noteX, cy - noteY);
+    if (dist < closestDist) { closestDist = dist; closest = idx; }
+  });
+
+  if (closest !== null) {
+    const removed = adminStaffState.notes.splice(closest, 1)[0];
+    adminCurrentSong.notes = adminStaffState.notes;
+    saveSongs();
+    adminRenderStaffNotes();
+    adminRenderNotesTable();
+    const noteName = NOTE_NAMES[removed.midi % 12] + (Math.floor(removed.midi / 12) - 1);
+    adminShowAlert(`Removed ${noteName}`, 'info');
+  }
+}
+
+/* ─── Toolbar control functions ───────────────────────────── */
+/* ─── Bar management ──────────────────────────────────────── */
+function adminUpdateBarUI() {
+  const ss = adminStaffState;
+  const bc = document.getElementById('adminBarCount');
+  const ts = document.getElementById('adminTimeSig');
+  if (bc) bc.textContent = ss.numBars;
+  if (ts) ts.textContent = ss.timeSigNum + '/4';
+  // Clamp view
+  ss.viewBarStart = Math.max(0, Math.min(ss.viewBarStart, Math.max(0, ss.numBars - ss.barsVisible)));
+  adminRenderStaffNotes();
+}
+
+function adminAddBar() {
+  adminStaffState.numBars++;
+  adminUpdateBarUI();
+  adminShowAlert(`Added bar — now ${adminStaffState.numBars} bars`, 'info');
+}
+
+function adminRemoveLastBar() {
+  if (adminStaffState.numBars <= 1) { adminShowAlert('Need at least 1 bar', 'error'); return; }
+  const lastBarBeat = (adminStaffState.numBars - 1) * adminStaffState.beatsPerBar;
+  // Remove notes in the last bar
+  const removed = adminStaffState.notes.filter(n => n.beat >= lastBarBeat).length;
+  adminStaffState.notes = adminStaffState.notes.filter(n => n.beat < lastBarBeat);
+  adminStaffState.numBars--;
+  adminStaffState.beatCursor = Math.min(adminStaffState.beatCursor, adminMaxBeats());
+  if (adminCurrentSong) { adminCurrentSong.notes = adminStaffState.notes; saveSongs(); }
+  adminUpdateBarUI();
+  adminRenderNotesTable();
+  if (removed) adminShowAlert(`Removed bar + ${removed} note(s)`, 'info');
+  else adminShowAlert(`Removed last bar`, 'info');
+}
+
+function adminChangeTimeSig(val) {
+  const num = parseInt(val);
+  adminStaffState.timeSigNum = num;
+  // 4/4=8, 3/4=6, 2/4=4, 6/8=6 (in 8th note units)
+  const unitMap = { 4:8, 3:6, 2:4, 6:6 };
+  adminStaffState.beatsPerBar = unitMap[num] || 8;
+  adminUpdateBarUI();
+}
+
+function adminScrollBars(delta) {
+  if (delta === -999) { adminStaffState.viewBarStart = 0; }
+  else {
+    adminStaffState.viewBarStart = Math.max(0,
+      Math.min(adminStaffState.numBars - adminStaffState.barsVisible,
+               adminStaffState.viewBarStart + delta));
+  }
+  adminUpdateBarUI();
+}
+
+/* ─── Save & go to songs ──────────────────────────────────── */
+function adminSaveAndGoToSongs() {
+  if (!adminCurrentSong) { adminShowAlert('No song to save', 'error'); return; }
+  // Sync notes from editor state → song → storage
+  adminCurrentSong.notes = adminStaffState.notes;
+  // Save numBars on song for future re-opens
+  adminCurrentSong._numBars = adminStaffState.numBars;
+  adminCurrentSong._beatsPerBar = adminStaffState.beatsPerBar;
+  adminCurrentSong._timeSigNum = adminStaffState.timeSigNum;
+  saveSongs();
+  // Rebuild all song lists
+  buildPracticeSongList();
+  if (typeof buildSongList === 'function') buildSongList();
+  const savedName = adminCurrentSong.name;
+  const savedId   = adminCurrentSong.id;
+  adminShowAlert(`"${savedName}" saved — opening Practice…`, 'success');
+  // Navigate to practice screen
+  setTimeout(() => {
+    showScreen('play');
+    // Highlight and scroll to the saved song card
+    requestAnimationFrame(() => {
+      const grid = document.getElementById('practiceSongGrid');
+      if (!grid) return;
+      // Find the card by song id stored on play button
+      const btn = grid.querySelector(`[onclick*="${savedId}"]`);
+      if (btn) {
+        const card = btn.closest('.song-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.style.transition = 'box-shadow .3s, transform .3s';
+          card.style.boxShadow  = '0 0 40px rgba(57,217,138,.6)';
+          card.style.transform  = 'scale(1.03)';
+          setTimeout(() => {
+            card.style.boxShadow = '';
+            card.style.transform = '';
+          }, 2000);
+        }
+      }
+    });
+  }, 500);
+}
+
+/* ─── Playback preview ────────────────────────────────────── */
+function adminPlayback() {
+  if (!adminCurrentSong || !adminStaffState.notes.length) {
+    adminShowAlert('No notes to preview', 'error');
+    return;
+  }
+  if (adminStaffState.playbackActive) {
+    adminStopPlayback();
+    return;
+  }
+  startAudio().then(() => {
+    adminStaffState.playbackActive = true;
+    const btn = document.querySelector('.admin-controls .admin-btn.secondary');
+    // Find preview button
+    document.querySelectorAll('.admin-controls button').forEach(b => {
+      if (b.textContent.includes('Preview')) b.textContent = '⏹ Stop';
+    });
+
+    const bpm     = adminCurrentSong.bpm || 100;
+    const msPerUnit = (60000 / bpm) / 2; // ms per 8th-note unit
+    const notes   = [...adminStaffState.notes].sort((a,b) => a.beat - b.beat);
+
+    notes.forEach(n => {
+      const midi = Array.isArray(n) ? n[0] : n.midi;
+      const beat = Array.isArray(n) ? n[1] : n.beat;
+      const dur  = Array.isArray(n) ? n[2] : n.dur;
+      const t    = beat * msPerUnit;
+      const durSec = dur * msPerUnit / 1000;
+      const timer  = setTimeout(() => {
+        if (!adminStaffState.playbackActive) return;
+        playPianoNote(midi, Math.max(0.1, durSec));
+        // Advance view to follow playback
+        const barOfNote = Math.floor(beat / adminStaffState.beatsPerBar);
+        if (barOfNote >= adminStaffState.viewBarStart + adminStaffState.barsVisible ||
+            barOfNote < adminStaffState.viewBarStart) {
+          adminStaffState.viewBarStart = barOfNote;
+          adminRenderStaffNotes();
+        }
+      }, t);
+      adminStaffState._playTimers = adminStaffState._playTimers || [];
+      adminStaffState._playTimers.push(timer);
+    });
+
+    // Stop after last note
+    const lastBeat = Math.max(...notes.map(n => (Array.isArray(n) ? n[1]+n[2] : n.beat+n.dur)));
+    const stopTimer = setTimeout(() => adminStopPlayback(), lastBeat * msPerUnit + 500);
+    adminStaffState._playTimers.push(stopTimer);
+  });
+}
+
+function adminStopPlayback() {
+  adminStaffState.playbackActive = false;
+  (adminStaffState._playTimers || []).forEach(t => clearTimeout(t));
+  adminStaffState._playTimers = [];
+  document.querySelectorAll('.admin-controls button').forEach(b => {
+    if (b.textContent.includes('Stop')) b.textContent = '▶ Preview';
+  });
+}
+
+/* ─── MIDI import ─────────────────────────────────────────── */
+function adminHandleMidiImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const bytes  = new Uint8Array(evt.target.result);
+      const parsed = parseMidi(bytes);
+      if (!parsed) throw new Error('Could not parse MIDI file');
+
+      const { notes, bpm, name } = parsed;
+      if (!notes.length) throw new Error('No notes found in MIDI file');
+
+      if (!adminCurrentSong) {
+        adminShowAlert('Open a song first, then import MIDI notes into it', 'error');
+        return;
+      }
+
+      if (adminStaffState.notes.length > 0) {
+        if (!confirm(`Replace the ${adminStaffState.notes.length} existing notes with ${notes.length} notes from MIDI?`)) return;
+      }
+
+      // Apply notes
+      adminStaffState.notes = notes;
+      adminCurrentSong.notes = notes;
+      if (bpm) { adminCurrentSong.bpm = bpm; document.getElementById('adminEditBpm').value = bpm; }
+
+      // Auto-size bars to fit
+      const maxBeat = Math.max(...notes.map(n => n.beat + n.dur));
+      adminStaffState.numBars = Math.ceil(maxBeat / adminStaffState.beatsPerBar) + 1;
+      adminStaffState.viewBarStart = 0;
+
+      saveSongs();
+      adminUpdateBarUI();
+      adminRenderNotesTable();
+      adminShowAlert(`Imported ${notes.length} notes from MIDI${bpm ? ' @ ' + bpm + ' BPM' : ''}`, 'success');
+    } catch (err) {
+      adminShowAlert('MIDI import failed: ' + err.message, 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MIDI FILE PARSER — Type 0, 1, 2 — full tempo map
+   Internal unit: 8th-note unit (1 quarter = 2 units).
+   16th notes (semiquavers) = 0.5 units → stored as 0.5 float.
+   Valid duration grid: 0.5, 1, 1.5, 2, 3, 4, 6, 8, 16
+   (16th, 8th, dotted-8th, quarter, dotted-Q, half, dotted-H, whole)
+═══════════════════════════════════════════════════════════ */
+function parseMidi(bytes) {
+  let pos = 0;
+  const read = (n) => { let v = 0; for (let i = 0; i < n; i++) v = (v << 8) | bytes[pos++]; return v; };
+  const readVLQ = () => {
+    let v = 0, b;
+    do { b = bytes[pos++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80);
+    return v;
+  };
+
+  // ── Header ────────────────────────────────────────────────
+  if (read(4) !== 0x4D546864) throw new Error('Not a MIDI file');
+  const hlen    = read(4); pos += hlen - 6;
+  const fmt     = read(2);
+  const ntracks = read(2);
+  const tpb     = read(2); // ticks per quarter note
+
+  // ── Pass 1: collect all events (notes + tempo changes) ───
+  // For Type 1, tempo track is track 0; notes in subsequent tracks.
+  // We merge everything by absolute tick.
+  const tempoMap = [{ tick: 0, usPerBeat: 500000 }]; // default 120 BPM
+  const rawNotes = []; // { startTick, endTick, midi }
+
+  for (let t = 0; t < ntracks; t++) {
+    if (pos + 8 > bytes.length) break;
+    const chunkId = read(4);
+    const tlen    = read(4);
+    if (chunkId !== 0x4D54726B) { pos += tlen; continue; } // skip non-MTrk
+
+    const tend     = pos + tlen;
+    let tick       = 0;
+    let lastStatus = 0;
+    const active   = new Map(); // midi → { startTick, vel }
+
+    while (pos < tend) {
+      const dt = readVLQ();
+      tick += dt;
+
+      let status = bytes[pos];
+      if (status & 0x80) { lastStatus = status; pos++; }
+      else { status = lastStatus; } // running status
+
+      const type = (status >> 4) & 0xf;
+
+      if (type === 0x9 || type === 0x8) {          // Note on / Note off
+        const note = bytes[pos++];
+        const vel  = bytes[pos++];
+        if (type === 0x9 && vel > 0) {
+          // Note on — record only the first onset (ignore re-triggers)
+          if (!active.has(note)) active.set(note, tick);
+        } else {
+          // Note off (or note-on vel=0)
+          const startTick = active.get(note);
+          if (startTick !== undefined) {
+            active.delete(note);
+            rawNotes.push({ startTick, endTick: tick, midi: note });
+          }
+        }
+      } else if (type === 0xa) { pos += 2; }        // polyphonic aftertouch
+      else if (type === 0xb) { pos += 2; }           // CC
+      else if (type === 0xc) { pos += 1; }           // program change
+      else if (type === 0xd) { pos += 1; }           // channel pressure
+      else if (type === 0xe) { pos += 2; }           // pitch bend
+      else if (status === 0xff) {                    // Meta event
+        const mtype = bytes[pos++];
+        const mlen  = readVLQ();
+        if (mtype === 0x51 && mlen === 3) {          // Tempo change
+          const us = (bytes[pos] << 16) | (bytes[pos + 1] << 8) | bytes[pos + 2];
+          // Only add if different from last tempo
+          if (tempoMap.length === 0 || tempoMap[tempoMap.length - 1].tick !== tick) {
+            tempoMap.push({ tick, usPerBeat: us });
+          }
+        }
+        pos += mlen;
+      } else if (status === 0xf0 || status === 0xf7) { // SysEx
+        const slen = readVLQ(); pos += slen;
+      } else {
+        pos++; // unknown / skip
+      }
+    }
+
+    // Close any notes that were never note-off'd (truncated MIDI)
+    active.forEach((startTick, note) => {
+      rawNotes.push({ startTick, endTick: tick, midi: note });
+    });
+
+    pos = tend;
+  }
+
+  if (!rawNotes.length) return null;
+
+  // ── Tempo map: convert ticks → seconds ───────────────────
+  // Build cumulative time table
+  tempoMap.sort((a, b) => a.tick - b.tick);
+  function ticksToSeconds(tick) {
+    let secs = 0;
+    for (let i = 0; i < tempoMap.length; i++) {
+      const from = tempoMap[i].tick;
+      const to   = (i + 1 < tempoMap.length) ? tempoMap[i + 1].tick : Infinity;
+      const us   = tempoMap[i].usPerBeat;
+      if (tick <= from) break;
+      const segEnd = Math.min(tick, to);
+      secs += ((segEnd - from) / tpb) * (us / 1e6);
+      if (tick <= to) break;
+    }
+    return secs;
+  }
+
+  // ── Representative BPM (first non-zero tempo) ────────────
+  const firstUs = tempoMap[tempoMap.length > 1 ? 1 : 0].usPerBeat || 500000;
+  const globalBpm = Math.round(60000000 / firstUs);
+
+  // ── Convert ticks → 8th-note units ───────────────────────
+  // 1 quarter = 2 units → 1 sixteenth = 0.5 units
+  // We snap to the nearest valid grid point: 0.5 increments
+  const SNAP = 0.5;           // smallest unit = 16th note
+  const unitsPerTick = 2 / tpb;
+
+  function snapTo(val, grid) {
+    return Math.round(val / grid) * grid;
+  }
+
+  // Valid duration values the app understands:
+  // 0.5=16th, 1=8th, 1.5=dotted-8th, 2=quarter, 3=dotted-Q, 4=half,
+  // 6=dotted-half, 8=dotted? actually: dur=6 is dotted-quarter (3 8ths),
+  // dur=3 is dotted-8th.  8=half, 16=whole (per toolbar).
+  // Re-mapping toolbar: 16=whole,8=half,4=quarter,2=8th,1=16th,6=dot-Q,3=dot-8
+  // So in 8th-note units: 16th=0.5,8th=1,dotted-8th=1.5,quarter=2,dot-quarter=3,half=4,dot-half=6,whole=8
+  // BUT the toolbar uses: dur=1=16th,dur=2=8th,dur=4=quarter,dur=8=half,dur=16=whole
+  // This is the EXISTING system — we must match it.
+  // Existing system: unit = 8th note, dur=2 = quarter (2 eighths), dur=1 = 16th = 0.5 eighths
+  // So dur=1 is WRONG in the existing system for 16th — it should be 0.5 units.
+  // The existing code treats dur=1 as "occupies 1 grid slot" but
+  // the GRID is 8th-note units, so a 16th note actually takes 0.5 units.
+  //
+  // RESOLUTION: we store beat as float (0.5-snapped), and dur as float (0.5 minimum).
+  // The display code already handles dur<=2 → small note head, dur<=1 → 16th flags.
+  // Playback uses beat*msPerUnit which works fine with floats.
+
+  const VALID_DURS = [0.5, 1, 1.5, 2, 3, 4, 6, 8, 16];
+  function snapDur(rawUnits) {
+    if (rawUnits < 0.25) return 0.5; // minimum = 16th
+    // Find closest valid duration
+    let best = VALID_DURS[0], bestDist = Math.abs(rawUnits - VALID_DURS[0]);
+    for (const d of VALID_DURS) {
+      const dist = Math.abs(rawUnits - d);
+      if (dist < bestDist) { bestDist = dist; best = d; }
+    }
+    return best;
+  }
+
+  const minTick = Math.min(...rawNotes.map(n => n.startTick));
+
+  const notes = rawNotes
+    .filter(n => n.midi >= 21 && n.midi <= 108)
+    .map(n => {
+      const rawBeat = (n.startTick - minTick) * unitsPerTick;
+      const rawDur  = (n.endTick - n.startTick) * unitsPerTick;
+      const beat    = snapTo(rawBeat, SNAP);
+      const dur     = snapDur(rawDur);
+      const isSharp = NOTE_NAMES[n.midi % 12].includes('#');
+      return { midi: n.midi, beat, dur, accidental: isSharp ? 1 : 0 };
+    })
+    .sort((a, b) => a.beat - b.beat || a.midi - b.midi);
+
+  return { notes, bpm: globalBpm };
+}
+
+/* ─── XML / MusicXML note import ─────────────────────────── */
+function adminHandleXmlNoteImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const text = evt.target.result;
+      const xml  = new DOMParser().parseFromString(text, 'application/xml');
+      if (xml.querySelector('parseerror')) throw new Error('Invalid XML');
+
+      // Detect format: MusicXML vs our custom format
+      const isMusicXml = !!xml.querySelector('score-partwise, score-timewise, note');
+      const notes = isMusicXml ? parseMusicXml(xml) : parseCustomXml(xml);
+
+      if (!notes || !notes.length) throw new Error('No notes found in file');
+      if (!adminCurrentSong) { adminShowAlert('Open or create a song first', 'error'); return; }
+
+      if (adminStaffState.notes.length > 0) {
+        if (!confirm(`Replace ${adminStaffState.notes.length} existing notes with ${notes.length} from XML?`)) return;
+      }
+
+      adminStaffState.notes = notes;
+      adminCurrentSong.notes = notes;
+      const maxBeat = Math.max(...notes.map(n => n.beat + n.dur));
+      adminStaffState.numBars = Math.ceil(maxBeat / adminStaffState.beatsPerBar) + 1;
+      adminStaffState.viewBarStart = 0;
+      saveSongs();
+      adminUpdateBarUI();
+      adminRenderNotesTable();
+      adminShowAlert(`Imported ${notes.length} notes from XML`, 'success');
+    } catch (err) {
+      adminShowAlert('XML import failed: ' + err.message, 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCustomXml(xml) {
+  // Our own format: <note><midi>60</midi><beat>0</beat><dur>4</dur></note>
+  const noteEls = xml.querySelectorAll('note');
+  return Array.from(noteEls).map(el => ({
+    midi: parseInt(el.querySelector('midi')?.textContent) || 60,
+    beat: parseFloat(el.querySelector('beat')?.textContent) || 0,
+    dur:  parseInt(el.querySelector('dur')?.textContent)  || 4,
+    accidental: NOTE_NAMES[(parseInt(el.querySelector('midi')?.textContent)||60)%12].includes('#') ? 1 : 0,
+  })).filter(n => n.midi >= 21 && n.midi <= 108);
+}
+
+function parseMusicXml(xml) {
+  // MusicXML: <score-partwise> with <measure><note><pitch><step><octave><alter>
+  const divisions = parseInt(xml.querySelector('divisions')?.textContent) || 1;
+  const notes = [];
+  let currentBeat = 0; // in 8th-note units
+
+  xml.querySelectorAll('measure').forEach(measure => {
+    let measureBeat = currentBeat;
+    let maxInMeasure = 0;
+
+    measure.querySelectorAll('note').forEach(noteEl => {
+      if (noteEl.querySelector('rest')) {
+        const dur = parseInt(noteEl.querySelector('duration')?.textContent) || divisions;
+        if (!noteEl.querySelector('chord')) measureBeat += (dur / divisions) * 2;
+        maxInMeasure = Math.max(maxInMeasure, measureBeat - currentBeat);
+        return;
+      }
+
+      const step    = noteEl.querySelector('step')?.textContent || 'C';
+      const octave  = parseInt(noteEl.querySelector('octave')?.textContent) || 4;
+      const alter   = parseFloat(noteEl.querySelector('alter')?.textContent) || 0;
+      const dur     = parseInt(noteEl.querySelector('duration')?.textContent) || divisions;
+      const isChord = !!noteEl.querySelector('chord');
+
+      const noteIdx = ['C','D','E','F','G','A','B'].indexOf(step);
+      if (noteIdx < 0) return;
+      const semis  = [0,2,4,5,7,9,11][noteIdx] + Math.round(alter);
+      const midi   = (octave + 1) * 12 + semis;
+      if (midi < 21 || midi > 108) return;
+
+      const beat8th = Math.round((dur / divisions) * 2);
+
+      if (!isChord) {
+        notes.push({ midi, beat: Math.round(measureBeat), dur: Math.max(1, beat8th), accidental: alter !== 0 ? Math.sign(alter) : 0 });
+        measureBeat += beat8th;
+        maxInMeasure = Math.max(maxInMeasure, measureBeat - currentBeat);
+      } else {
+        // Chord: same beat as previous note
+        const prevBeat = notes.length ? notes[notes.length-1].beat : Math.round(measureBeat);
+        notes.push({ midi, beat: prevBeat, dur: Math.max(1, beat8th), accidental: alter !== 0 ? Math.sign(alter) : 0 });
+      }
+    });
+
+    currentBeat += maxInMeasure || (adminStaffState.beatsPerBar);
+  });
+
+  return notes.sort((a,b) => a.beat - b.beat);
+}
+
+function adminSetStaffTarget(target) {
+  adminStaffState.staffTarget = target;
+  document.getElementById('staffBtnTreble').style.background = target === 'treble' ? 'rgba(0,212,255,.18)' : 'rgba(255,255,255,.04)';
+  document.getElementById('staffBtnTreble').style.borderColor = target === 'treble' ? 'rgba(0,212,255,.5)' : 'var(--border)';
+  document.getElementById('staffBtnTreble').style.color = target === 'treble' ? 'var(--sky)' : 'var(--muted)';
+  document.getElementById('staffBtnBass').style.background = target === 'bass' ? 'rgba(255,45,120,.18)' : 'rgba(255,255,255,.04)';
+  document.getElementById('staffBtnBass').style.borderColor = target === 'bass' ? 'rgba(255,45,120,.5)' : 'var(--border)';
+  document.getElementById('staffBtnBass').style.color = target === 'bass' ? 'var(--pink)' : 'var(--muted)';
+}
+
+function adminSetRhythm(btn, dur) {
+  adminStaffState.selectedDur = dur;
+  document.querySelectorAll('.rhythm-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function adminSetAccidental(btn, acc) {
+  adminStaffState.accidental = acc;
+  document.querySelectorAll('.acc-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function adminMoveBeat(delta) {
+  const ss = adminStaffState;
+  // When editing 16th notes, move in 0.5 steps for precise placement
+  const step = (ss.selectedDur <= 0.5) ? 0.5 * Math.sign(delta) : delta;
+  ss.beatCursor = Math.max(0, Math.min(adminMaxBeats(),
+    Math.round((ss.beatCursor + step) * 2) / 2)); // keep on 0.5 grid
+  document.getElementById('adminBeatCursorDisplay').textContent = ss.beatCursor;
+  // Auto-scroll view to follow cursor
+  const cursorBar = Math.floor(ss.beatCursor / ss.beatsPerBar);
+  if (cursorBar >= ss.viewBarStart + ss.barsVisible) {
+    ss.viewBarStart = Math.max(0, cursorBar - ss.barsVisible + 1);
+  } else if (cursorBar < ss.viewBarStart) {
+    ss.viewBarStart = cursorBar;
+  }
+  adminRenderStaffNotes();
+}
+
+function adminResetBeat() {
+  adminStaffState.beatCursor = 0;
+  adminStaffState.viewBarStart = 0;
+  document.getElementById('adminBeatCursorDisplay').textContent = '0';
+  adminRenderStaffNotes();
+}
+
+function adminAutoAdvanceBeat() {
+  const ss = adminStaffState;
+  const last = ss.notes.length ? Math.max(...ss.notes.map(n => n.beat + n.dur)) : 0;
+  ss.beatCursor = Math.min(adminMaxBeats(), last);
+  document.getElementById('adminBeatCursorDisplay').textContent = ss.beatCursor;
+  const cursorBar = Math.floor(ss.beatCursor / ss.beatsPerBar);
+  ss.viewBarStart = Math.max(0, cursorBar - ss.barsVisible + 1);
+  adminRenderStaffNotes();
+  adminShowAlert('Cursor after last note', 'info');
+}
+
+function adminRenderNotesTable() {
+  const tbody = document.getElementById('adminNotesTableBody');
+  tbody.innerHTML = '';
+  const durNames = {16:'Whole',8:'Half',4:'Quarter',2:'8th',1:'8th',0.5:'16th',1.5:'Dot.8',3:'Dot.Q',6:'Dot.H'};
+
+  adminStaffState.notes.forEach((note, idx) => {
+    const tr = document.createElement('tr');
+    const noteName = NOTE_NAMES[note.midi % 12];
+    const octave = Math.floor(note.midi / 12) - 1;
+    const accStr = note.accidental === 1 ? '♯' : note.accidental === -1 ? '♭' : '♮';
+    const durStr = durNames[note.dur] || note.dur;
+    tr.innerHTML = `
+      <td>${noteName}${octave} <span style="color:var(--muted);font-size:.65rem">${accStr}</span></td>
+      <td>${note.beat}</td>
+      <td>${durStr}</td>
+      <td>${note.midi}</td>
+      <td><button class="admin-btn" style="padding:.3rem .6rem;font-size:.65rem" onclick="adminDeleteNote(${idx})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (adminStaffState.notes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No notes — click on the staff to add</td></tr>';
+  }
+}
+
+function adminDeleteNote(idx) {
+  adminStaffState.notes.splice(idx, 1);
+  adminCurrentSong.notes = adminStaffState.notes;
+  saveSongs();
+  adminRenderStaffNotes();
+  adminRenderNotesTable();
+  adminShowAlert('Note removed', 'info');
+}
+
+function adminClearAllNotes() {
+  if (!confirm('Clear all notes from this song?')) return;
+  adminStaffState.notes = [];
+  adminCurrentSong.notes = [];
+  saveSongs();
+  adminRenderStaffNotes();
+  adminRenderNotesTable();
+  adminShowAlert('All notes cleared', 'info');
+}
+
+function adminUpdateField(field) {
+  let value;
+  if (field === 'bpm') {
+    value = parseInt(document.getElementById('adminEditBpm').value) || 100;
+  } else if (field === 'name') {
+    value = document.getElementById('adminEditName').value;
+  } else if (field === 'composer') {
+    value = document.getElementById('adminEditComposer').value;
+  } else if (field === 'difficulty') {
+    value = document.getElementById('adminEditDiff').value;
+  } else if (field === 'color') {
+    value = document.getElementById('adminEditColor').value;
+  }
+
+  adminCurrentSong[field] = value;
+  saveSongs();
+  adminRenderSongsList();
+}
+
+function adminExportNotes() {
+  const notes = adminStaffState.notes;
+  if (!adminCurrentSong || !notes.length) {
+    adminShowAlert('No notes to export', 'error');
+    return;
+  }
+  const rows = notes.map(n => {
+    const midi = Array.isArray(n) ? n[0] : n.midi;
+    const beat = Array.isArray(n) ? n[1] : n.beat;
+    const dur  = Array.isArray(n) ? n[2] : n.dur;
+    return '    <note>\n      <midi>' + midi + '</midi>\n      <beat>' + beat + '</beat>\n      <dur>' + dur + '</dur>\n    </note>';
+  }).join('\n');
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<song>\n  <n>' + adminCurrentSong.name + '</n>\n  <composer>' + adminCurrentSong.composer + '</composer>\n  <bpm>' + adminCurrentSong.bpm + '</bpm>\n  <difficulty>' + adminCurrentSong.difficulty + '</difficulty>\n  <color>' + adminCurrentSong.color + '</color>\n  <notes>\n' + rows + '\n  </notes>\n</song>';
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = adminCurrentSong.name.replace(/\s+/g, '_') + '.xml';
+  a.click();
+  URL.revokeObjectURL(url);
+  adminShowAlert('Exported XML', 'success');
+}
+
+function adminExportAllSongs() {
+  const json = JSON.stringify(SONGS, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `songs-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  adminShowAlert('Exported all songs', 'success');
+}
+
+function adminHandleXmlUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const xml = new DOMParser().parseFromString(evt.target.result, 'application/xml');
+      if (xml.parseError) throw new Error('Invalid XML');
+
+      const songEl = xml.querySelector('song');
+      const song = {
+        id: 'song-import-' + Date.now(),
+        name: songEl?.querySelector('name')?.textContent || 'Imported Song',
+        composer: songEl?.querySelector('composer')?.textContent || 'Unknown',
+        bpm: parseInt(songEl?.querySelector('bpm')?.textContent) || 100,
+        difficulty: songEl?.querySelector('difficulty')?.textContent || 'medium',
+        color: songEl?.querySelector('color')?.textContent || '#FF2D78',
+        notes: [],
+      };
+
+      songEl?.querySelectorAll('note').forEach(noteEl => {
+        song.notes.push({
+          midi: parseInt(noteEl.querySelector('midi')?.textContent) || 60,
+          beat: parseInt(noteEl.querySelector('beat')?.textContent) || 0,
+          dur: parseInt(noteEl.querySelector('dur')?.textContent) || 2,
+        });
+      });
+
+      // Normalize notes to object format
+      song.notes = song.notes.map(n => Array.isArray(n)
+        ? { midi: n[0], beat: n[1], dur: n[2], accidental: 0 }
+        : { ...n, accidental: n.accidental || 0 });
+
+      SONGS.push(song);
+      saveSongs();
+      adminUpdateStats();
+      adminRenderSongsList();
+      buildPracticeSongList();
+      adminSelectSong(song.id);
+      adminShowAlert(`Imported "${song.name}" (${song.notes.length} notes)`, 'success');
+    } catch (err) {
+      adminShowAlert(`Import failed: ${err.message}`, 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function adminDeleteSong() {
+  if (!adminCurrentSong) return;
+  if (!confirm(`Delete "${adminCurrentSong.name}"?`)) return;
+
+  SONGS = SONGS.filter(s => s.id !== adminCurrentSong.id);
+  saveSongs();
+  adminCurrentSongId = null;
+  adminCurrentSong = null;
+  adminShowAlert('Song deleted', 'success');
+  adminUpdateStats();
+  adminRenderSongsList();
+  adminShowCreateForm();
+}
+
+function adminCloseSong() {
+  adminStopPlayback();
+  adminCurrentSongId = null;
+  adminCurrentSong = null;
+  document.getElementById('adminCreateSection').style.display = 'block';
+  document.getElementById('adminEditSection').style.display = 'none';
+  adminRenderSongsList();
+  adminUpdateStats();
+}
+
+function adminShowAlert(message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `admin-alert ${type}`;
+  alertDiv.textContent = message;
+  
+  const container = document.getElementById('adminAlerts');
+  container.insertBefore(alertDiv, container.firstChild);
+
+  setTimeout(() => {
+    alertDiv.style.opacity = '0';
+    alertDiv.style.transition = 'opacity .3s';
+    setTimeout(() => alertDiv.remove(), 300);
+  }, 3000);
+}
+
+// Initialize admin panel
+adminUpdateStats();
+adminRenderSongsList();
+adminShowCreateForm();
+
+/* ═══════════════════════════════════════════════════════════
+   ADVANCED ADMIN FEATURES
+═══════════════════════════════════════════════════════════ */
+
+// ── SONG TEMPLATES ─────────────────────────────────────────
+const songTemplates = [
+  {
+    name: 'Blank Canvas',
+    description: 'Empty song ready for notes',
+    config: { difficulty: 'easy', bpm: 100, notes: [] }
+  },
+  {
+    name: 'Quick Study - Easy',
+    description: 'Pre-configured for beginner practice',
+    config: { difficulty: 'easy', bpm: 80, notes: [] }
+  },
+  {
+    name: 'Quick Study - Medium',
+    description: 'Intermediate difficulty template',
+    config: { difficulty: 'medium', bpm: 120, notes: [] }
+  },
+  {
+    name: 'Quick Study - Hard',
+    description: 'Advanced playthrough template',
+    config: { difficulty: 'hard', bpm: 140, notes: [] }
+  },
+];
+
+function adminShowTemplates() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(10,8,18,.95);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:rgba(21,18,40,.95);border:1px solid rgba(255,45,120,.25);
+      border-radius:16px;padding:2rem;max-width:600px;width:90%;
+      max-height:80vh;overflow-y:auto;
+    ">
+      <div style="
+        font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
+        color:var(--white);margin-bottom:1.5rem;
+      ">🎵 Song Templates</div>
+
+      ${songTemplates.map((t, i) => `
+        <div style="
+          background:rgba(255,255,255,.02);border:1px solid var(--border);
+          border-radius:10px;padding:1rem;margin-bottom:1rem;cursor:pointer;
+          transition:all .2s;
+        " onmouseover="this.style.background='rgba(255,45,120,.08)'" 
+           onmouseout="this.style.background='rgba(255,255,255,.02)'"
+           onclick="adminCreateFromTemplate(${i}, window.templateModal)">
+          <div style="font-weight:600;color:var(--white)">${t.name}</div>
+          <div style="font-size:.85rem;color:var(--muted);margin-top:.3rem">${t.description}</div>
+        </div>
+      `).join('')}
+
+      <button class="admin-btn secondary" style="width:100%;margin-top:1rem" onclick="this.closest('div').parentElement.parentElement.remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  window.templateModal = modal;
+}
+
+function adminCreateFromTemplate(idx, modal) {
+  const template = songTemplates[idx];
+  const name = prompt(`Song Name (${template.name}):`, 'My ' + template.name);
+  if (!name) return;
+
+  const song = {
+    id: 'song-template-' + Date.now(),
+    name: name.trim(),
+    composer: 'Your Name',
+    bpm: template.config.bpm,
+    difficulty: template.config.difficulty,
+    color: '#FF2D78',
+    notes: template.config.notes,
+  };
+
+  SONGS.push(song);
+  saveSongs();
+  adminUpdateStats();
+  adminRenderSongsList();
+  adminSelectSong(song.id);
+  adminShowAlert(`Created from template: "${name}"`, 'success');
+  if (modal) modal.remove();
+}
+
+// ── ANALYTICS ──────────────────────────────────────────────
+function adminShowAnalytics() {
+  const analyzeAllSongs = () => {
+    let totalNotes = 0;
+    let totalBeats = 0;
+    let diffDistribution = { easy: 0, medium: 0, hard: 0 };
+    let noteFreq = {};
+    let bpmMin = Infinity, bpmMax = -Infinity;
+
+    SONGS.forEach(song => {
+      totalNotes += song.notes.length;
+      diffDistribution[song.difficulty]++;
+      bpmMin = Math.min(bpmMin, song.bpm);
+      bpmMax = Math.max(bpmMax, song.bpm);
+
+      song.notes.forEach(note => {
+        const midi = Array.isArray(note) ? note[0] : note.midi;
+        const beat = Array.isArray(note) ? note[1] : note.beat;
+        totalBeats = Math.max(totalBeats, beat);
+        const noteName = NOTE_NAMES[midi % 12];
+        noteFreq[noteName] = (noteFreq[noteName] || 0) + 1;
+      });
+    });
+
+    const avgNotes = SONGS.length > 0 ? (totalNotes / SONGS.length).toFixed(1) : 0;
+    const topNote = Object.entries(noteFreq).sort((a,b) => b[1]-a[1])[0];
+
+    return {
+      totalSongs: SONGS.length,
+      totalNotes,
+      avgNotes,
+      diffDistribution,
+      topNote: topNote ? topNote[0] : 'N/A',
+      topNoteCount: topNote ? topNote[1] : 0,
+      bpmRange: `${bpmMin === Infinity ? 0 : bpmMin}-${bpmMax === -Infinity ? 0 : bpmMax}`,
+      totalBeats,
+    };
+  };
+
+  const stats = analyzeAllSongs();
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(10,8,18,.95);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+    padding:1rem;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:rgba(21,18,40,.95);border:1px solid rgba(255,45,120,.25);
+      border-radius:16px;padding:2rem;max-width:700px;width:100%;
+      max-height:80vh;overflow-y:auto;
+    ">
+      <div style="
+        font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;
+        color:var(--white);margin-bottom:2rem;
+      ">📊 Song Analytics</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem">
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1.2rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Total Songs</div>
+          <div style="font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--pink)">${stats.totalSongs}</div>
+        </div>
+
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1.2rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Total Notes</div>
+          <div style="font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--pink)">${stats.totalNotes}</div>
+        </div>
+
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1.2rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Avg Notes/Song</div>
+          <div style="font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--pink)">${stats.avgNotes}</div>
+        </div>
+
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1.2rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">BPM Range</div>
+          <div style="font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--pink)">${stats.bpmRange}</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1.5rem;margin-bottom:1.5rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:1rem">Difficulty Distribution</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+          <div style="background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.3);border-radius:8px;padding:.8rem;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--green)">EASY</div>
+            <div style="font-size:1.8rem;font-weight:900;color:var(--green)">${stats.diffDistribution.easy}</div>
+          </div>
+          <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.8rem;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--amber)">MEDIUM</div>
+            <div style="font-size:1.8rem;font-weight:900;color:var(--amber)">${stats.diffDistribution.medium}</div>
+          </div>
+          <div style="background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.3);border-radius:8px;padding:.8rem;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--pink)">HARD</div>
+            <div style="font-size:1.8rem;font-weight:900;color:var(--pink)">${stats.diffDistribution.hard}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1.5rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:.8rem">Most Used Note</div>
+        <div style="background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:8px;padding:1rem">
+          <div style="font-family:'Orbitron',monospace;font-size:1.8rem;color:var(--sky)">${stats.topNote}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-top:.3rem">Used ${stats.topNoteCount} times</div>
+        </div>
+      </div>
+
+      <button class="admin-btn secondary" style="width:100%;margin-top:1.5rem" onclick="this.closest('div').parentElement.parentElement.remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// ── BATCH OPERATIONS ───────────────────────────────────────
+function adminBatchChangeDifficulty() {
+  if (SONGS.length === 0) {
+    adminShowAlert('No songs to modify', 'error');
+    return;
+  }
+
+  const diff = prompt('Change all songs to difficulty:\n(easy/medium/hard)', 'medium');
+  if (!['easy', 'medium', 'hard'].includes(diff)) return;
+
+  let count = 0;
+  SONGS.forEach(song => {
+    song.difficulty = diff;
+    count++;
+  });
+  saveSongs();
+  adminRenderSongsList();
+  adminShowAlert(`Updated ${count} songs to ${diff}`, 'success');
+}
+
+function adminDuplicateSong(songId) {
+  const song = SONGS.find(s => s.id === songId);
+  if (!song) return;
+
+  const copy = JSON.parse(JSON.stringify(song));
+  copy.id = 'song-dup-' + Date.now();
+  copy.name = copy.name + ' (Copy)';
+
+  SONGS.push(copy);
+  saveSongs();
+  adminUpdateStats();
+  adminRenderSongsList();
+  adminSelectSong(copy.id);
+  adminShowAlert(`Duplicated "${song.name}"`, 'success');
+}
+
+// ── QUICK NOTE ENTRY ───────────────────────────────────────
+function adminQuickNoteEntry() {
+  if (!adminCurrentSong) {
+    adminShowAlert('Select a song first', 'error');
+    return;
+  }
+
+  const input = prompt(
+    'Quick entry format: midi,beat,dur midi,beat,dur ...\nExample: 60,0,2 62,2,2 64,4,4',
+    ''
+  );
+
+  if (!input) return;
+
+  try {
+    const notes = input.trim().split(/\s+/).map(n => {
+      const [midi, beat, dur] = n.split(',').map(v => parseInt(v));
+      if (!midi || beat === undefined || !dur) throw new Error('Invalid format');
+      return { midi, beat, dur };
+    });
+
+    adminStaffState.notes.push(...notes);
+    adminCurrentSong.notes = adminStaffState.notes;
+    saveSongs();
+    adminRenderStaffNotes();
+    adminRenderNotesTable();
+    adminShowAlert(`Added ${notes.length} notes`, 'success');
+  } catch (err) {
+    adminShowAlert('Invalid format: ' + err.message, 'error');
+  }
+}
+
+// ── EXPORT STATS ───────────────────────────────────────────
+function adminExportStats() {
+  const stats = (() => {
+    let totalNotes = 0;
+    const diffDistribution = { easy: 0, medium: 0, hard: 0 };
+    const songs = SONGS.map(song => {
+      totalNotes += song.notes.length;
+      diffDistribution[song.difficulty]++;
+      return {
+        id: song.id,
+        name: song.name,
+        composer: song.composer,
+        bpm: song.bpm,
+        difficulty: song.difficulty,
+        noteCount: song.notes.length,
+      };
+    });
+
+    return {
+      exportDate: new Date().toISOString(),
+      totalSongs: SONGS.length,
+      totalNotes,
+      diffDistribution,
+      songs,
+    };
+  })();
+
+  const json = JSON.stringify(stats, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `piano-hero-stats-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  adminShowAlert('Stats exported', 'success');
+}
+
+// ── KEYBOARD SHORTCUTS ────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (currentScreen() !== 'admin') return;
+
+  // Ctrl+N: New song
+  if (e.ctrlKey && e.key === 'n') {
+    e.preventDefault();
+    adminShowCreateForm();
+  }
+
+  // Ctrl+E: Export current song
+  if (e.ctrlKey && e.key === 'e') {
+    e.preventDefault();
+    if (adminCurrentSong) adminExportNotes();
+  }
+
+  // Ctrl+D: Duplicate song
+  if (e.ctrlKey && e.key === 'd') {
+    e.preventDefault();
+    if (adminCurrentSongId) adminDuplicateSong(adminCurrentSongId);
+  }
+
+  // Ctrl+Q: Quick note entry
+  if (e.ctrlKey && e.key === 'q') {
+    e.preventDefault();
+    adminQuickNoteEntry();
+  }
+
+  // Number keys for rhythm (1=whole 2=half 3=quarter 4=8th 5=16th 6=dotQ 7=dot8)
+  if (!e.ctrlKey && !e.altKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+    const rhythmMap = {'1':16,'2':8,'3':4,'4':2,'5':1,'6':6,'7':3};
+    if (rhythmMap[e.key]) {
+      const dur = rhythmMap[e.key];
+      adminStaffState.selectedDur = dur;
+      document.querySelectorAll('.rhythm-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.dur) === dur);
+      });
+    }
+    // S=sharp, F=flat, N=natural
+    if (e.key === 's' || e.key === 'S') {
+      adminStaffState.accidental = 1;
+      document.querySelectorAll('.acc-btn').forEach(b => b.classList.toggle('active', b.dataset.acc === '1'));
+    }
+    if (e.key === 'f' || e.key === 'F') {
+      adminStaffState.accidental = -1;
+      document.querySelectorAll('.acc-btn').forEach(b => b.classList.toggle('active', b.dataset.acc === '-1'));
+    }
+    if (e.key === 'n' || e.key === 'N') {
+      adminStaffState.accidental = 0;
+      document.querySelectorAll('.acc-btn').forEach(b => b.classList.toggle('active', b.dataset.acc === '0'));
+    }
+    // Arrow keys for beat cursor
+    if (e.key === 'ArrowRight') { e.preventDefault(); adminMoveBeat(adminStaffState.selectedDur || 1); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); adminMoveBeat(-(adminStaffState.selectedDur || 1)); }
+  }
+});
+
+// ── HELP MODAL ─────────────────────────────────────────────
+function adminShowHelp() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(10,8,18,.95);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+    padding:1rem;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:rgba(21,18,40,.95);border:1px solid rgba(255,45,120,.25);
+      border-radius:16px;padding:2rem;max-width:700px;width:100%;
+      max-height:90vh;overflow-y:auto;
+    ">
+      <div style="
+        font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;
+        color:var(--white);margin-bottom:1.5rem;
+      ">❓ Admin Help & Keyboard Shortcuts</div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:1rem">⌨️ Keyboard Shortcuts</div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;font-family:'DM Mono',monospace;font-size:.78rem;line-height:1.8">
+            <div><strong style="color:var(--sky)">Ctrl+N</strong> New song</div>
+            <div><strong style="color:var(--sky)">Ctrl+E</strong> Export song</div>
+            <div><strong style="color:var(--sky)">Ctrl+D</strong> Duplicate</div>
+            <div><strong style="color:var(--sky)">Ctrl+Q</strong> Quick entry</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:1rem">🎼 Note Editor</div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:.78rem;line-height:1.8">
+          <div><strong style="color:var(--sky)">Click</strong> on staff to add note</div>
+          <div><strong style="color:var(--sky)">Right-click</strong> to remove note</div>
+          <div style="margin-top:.5rem;color:var(--muted)">Notes snap to the grid (0-64 beats). Vertical position = MIDI note (C4-C8).</div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:1rem">📥 Import Format</div>
+        <div style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);border-radius:8px;padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.7rem">
+&lt;song&gt;
+  &lt;name&gt;Song Name&lt;/name&gt;
+  &lt;composer&gt;Composer&lt;/composer&gt;
+  &lt;bpm&gt;120&lt;/bpm&gt;
+  &lt;difficulty&gt;medium&lt;/difficulty&gt;
+  &lt;color&gt;#FF2D78&lt;/color&gt;
+  &lt;notes&gt;
+    &lt;note&gt;
+      &lt;midi&gt;60&lt;/midi&gt;
+      &lt;beat&gt;0&lt;/beat&gt;
+      &lt;dur&gt;2&lt;/dur&gt;
+    &lt;/note&gt;
+  &lt;/notes&gt;
+&lt;/song&gt;
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem">
+        <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:1rem">💡 Tips</div>
+        <ul style="margin:0;padding-left:1.5rem;font-size:.78rem;line-height:1.8;color:var(--muted)">
+          <li>Songs created in Admin are playable immediately in Practice & Game modes</li>
+          <li>All data is saved to browser localStorage - no server needed</li>
+          <li>Export JSON to backup all songs, or XML for individual songs</li>
+          <li>Templates provide quick-start configurations</li>
+          <li>Analytics show distribution and usage patterns</li>
+        </ul>
+      </div>
+
+      <button class="admin-btn secondary" style="width:100%;margin-top:1.5rem" onclick="this.closest('div').parentElement.parentElement.remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Duplicate init removed — canonical init is at line ~4846
+
+/* ═══════════════════════════════════════════════════════════
+   DATA VALIDATION & REPAIR
+═══════════════════════════════════════════════════════════ */
+
+function adminValidateData() {
+  const issues = [];
+  const fixes = [];
+
+  SONGS.forEach((song, idx) => {
+    // Check required fields
+    if (!song.name || song.name.trim() === '') {
+      issues.push(`Song ${idx}: Missing name`);
+      fixes.push(() => { song.name = 'Unnamed Song' + idx; });
+    }
+
+    if (!song.bpm || song.bpm < 20 || song.bpm > 300) {
+      issues.push(`Song ${song.name}: Invalid BPM (${song.bpm})`);
+      fixes.push(() => { song.bpm = 120; });
+    }
+
+    if (!['easy', 'medium', 'hard'].includes(song.difficulty)) {
+      issues.push(`Song ${song.name}: Invalid difficulty (${song.difficulty})`);
+      fixes.push(() => { song.difficulty = 'medium'; });
+    }
+
+    // Check notes
+    if (!Array.isArray(song.notes)) {
+      issues.push(`Song ${song.name}: Notes is not an array`);
+      fixes.push(() => { song.notes = []; });
+    } else {
+      song.notes.forEach((note, nidx) => {
+        const midi = Array.isArray(note) ? note[0] : note.midi;
+        const beat = Array.isArray(note) ? note[1] : note.beat;
+        const dur  = Array.isArray(note) ? note[2] : note.dur;
+        if (midi < 0 || midi > 127) {
+          issues.push(`Song ${song.name}: Note ${nidx} MIDI out of range (${midi})`);
+          fixes.push(() => { song.notes.splice(nidx, 1); });
+        }
+        if (typeof beat !== 'number' || beat < 0) {
+          issues.push(`Song ${song.name}: Note ${nidx} invalid beat (${beat})`);
+          fixes.push(() => { if (!Array.isArray(note)) note.beat = 0; });
+        }
+        if (typeof dur !== 'number' || dur <= 0) {
+          issues.push(`Song ${song.name}: Note ${nidx} invalid duration (${dur})`);
+          fixes.push(() => { if (!Array.isArray(note)) note.dur = 1; });
+        }
+      });
+    }
+  });
+
+  return { issues, fixes };
+}
+
+function adminShowDataValidator() {
+  const { issues, fixes } = adminValidateData();
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(10,8,18,.95);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+    padding:1rem;
+  `;
+
+  const hasIssues = issues.length > 0;
+
+  modal.innerHTML = `
+    <div style="
+      background:rgba(21,18,40,.95);border:1px solid ${hasIssues ? 'rgba(239,68,68,.25)' : 'rgba(57,217,138,.25)'};
+      border-radius:16px;padding:2rem;max-width:600px;width:100%;
+      max-height:80vh;overflow-y:auto;
+    ">
+      <div style="
+        font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
+        color:var(--white);margin-bottom:1.5rem;
+      ">🔍 Data Validator</div>
+
+      ${hasIssues ? `
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:1rem;margin-bottom:1.5rem">
+          <div style="color:var(--red);font-weight:600;margin-bottom:.8rem">${issues.length} Issue${issues.length !== 1 ? 's' : ''} Found</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);max-height:200px;overflow-y:auto">
+            ${issues.map(i => `<div style="margin-bottom:.4rem">⚠ ${i}</div>`).join('')}
+          </div>
+        </div>
+
+        <button class="admin-btn" style="width:100%;margin-bottom:1rem" onclick="adminRepairData(); this.parentElement.parentElement.remove()">
+          🔧 Auto-Repair All Issues
+        </button>
+      ` : `
+        <div style="background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.3);border-radius:10px;padding:1.5rem;text-align:center">
+          <div style="color:var(--green);font-size:2rem;margin-bottom:.5rem">✓</div>
+          <div style="color:var(--green);font-weight:600">All data is valid!</div>
+        </div>
+      `}
+
+      <button class="admin-btn secondary" style="width:100%;margin-top:1rem" onclick="this.closest('div').parentElement.parentElement.remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function adminRepairData() {
+  const { fixes } = adminValidateData();
+  fixes.forEach(fix => fix());
+  saveSongs();
+  adminRenderSongsList();
+  adminUpdateStats();
+  adminShowAlert(`Repaired ${fixes.length} issue${fixes.length !== 1 ? 's' : ''}`, 'success');
+}
+
+// ── STORAGE INFO ────────────────────────────────────────────
+function adminShowStorageInfo() {
+  const jsonStr = JSON.stringify(SONGS);
+  const bytes = new Blob([jsonStr]).size;
+  const kb = (bytes / 1024).toFixed(2);
+  const mb = (bytes / 1024 / 1024).toFixed(3);
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(10,8,18,.95);backdrop-filter:blur(10px);
+    display:flex;align-items:center;justify-content:center;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:rgba(21,18,40,.95);border:1px solid rgba(255,45,120,.25);
+      border-radius:16px;padding:2rem;max-width:500px;width:90%;
+    ">
+      <div style="
+        font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;
+        color:var(--white);margin-bottom:1.5rem;
+      ">💾 Storage Info</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:.5rem">SIZE</div>
+          <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;color:var(--pink)">${kb} KB</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">${mb} MB</div>
+        </div>
+
+        <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1rem">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:.5rem">LOCATION</div>
+          <div style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--pink)">localStorage</div>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:1rem;margin-bottom:1.5rem">
+        <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:.5rem">KEY</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--sky);word-break:break-all">pianoHeroSongs</div>
+      </div>
+
+      <div style="display:flex;gap:1rem">
+        <button class="admin-btn secondary" style="flex:1" onclick="adminShowDataValidator()">🔍 Validate Data</button>
+        <button class="admin-btn secondary" style="flex:1" onclick="this.closest('div').parentElement.parentElement.remove()">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+/* ═══════════════════════════════════════════════════════════
+   PIANO ROOM — Real-time shared piano via BroadcastChannel
+   + localStorage pub/sub for same-origin cross-tab sync.
+   Architecture:
+     • Teacher creates a room → generates a room code
+     • Students open the app, go to Piano Room, enter code
+     • BroadcastChannel("pianoRoom-<CODE>") carries events:
+         { type:"note_on",  midi, vel, sender, name }
+         { type:"note_off", midi, sender, name }
+         { type:"heartbeat", sender, name, role }
+         { type:"join",  sender, name }
+         { type:"leave", sender, name }
+     • Teacher also listens to student channels to show per-student pianos
+     • Teacher's channel = "pianoRoom-<CODE>-teacher"
+     • Each student's channel = "pianoRoom-<CODE>-<studentId>"
+   Because BroadcastChannel is same-origin only, the "share link"
+   encodes the room code in the URL hash so students can open the
+   same page in another tab and auto-join.
+═══════════════════════════════════════════════════════════ */
+
+const ROOM = {
+  role:         null,   // 'teacher' | 'student'
+  code:         null,   // e.g. "PIANO-4829"
+  myId:         null,   // uuid
+  myName:       null,
+  channel:      null,   // BroadcastChannel (teacher broadcast)
+  studentCh:    null,   // student's own channel
+  students:     new Map(), // id → { name, channel, heldNotes, lastSeen, canvas, ctx }
+  teacherNotes: new Set(), // currently held midi notes on teacher piano
+  myNotes:      new Set(), // student's own held notes
+  hbInterval:   null,
+  cleanupInt:   null,
+};
+
+/* ── Helpers ──────────────────────────────────────────────── */
+function roomGenId()   { return Math.random().toString(36).slice(2,10); }
+function roomGenCode() { return 'PIANO-' + Math.floor(1000 + Math.random()*9000); }
+
+function roomBuildShareUrl(code) {
+  const base = location.href.split('#')[0];
+  return base + '#room=' + code;
+}
+
+/* ── Screen entry ─────────────────────────────────────────── */
+function roomOnShow() {
+  // Auto-join from URL hash
+  const hash = location.hash;
+  const m    = hash.match(/[#&]room=([A-Z0-9-]+)/);
+  if (m) {
+    const code = m[1];
+    document.getElementById('roomRolePick').style.display    = 'none';
+    document.getElementById('roomStudentView').style.display = 'flex';
+    document.getElementById('studentRoomCode').value         = code;
+    document.getElementById('roomJoinForm').style.display    = 'flex';
+  } else {
+    document.getElementById('roomRolePick').style.display    = 'block';
+    document.getElementById('roomTeacherDash').style.display = 'none';
+    document.getElementById('roomStudentView').style.display = 'none';
+  }
+}
+
+/* ── Role selection ───────────────────────────────────────── */
+function roomChooseTeacher() {
+  ROOM.role   = 'teacher';
+  ROOM.myId   = roomGenId();
+  ROOM.myName = 'Teacher';
+  ROOM.code   = roomGenCode();
+
+  document.getElementById('roomRolePick').style.display    = 'none';
+  document.getElementById('roomTeacherDash').style.display = 'flex';
+  document.getElementById('roomStudentView').style.display = 'none';
+
+  document.getElementById('roomIdDisplay').textContent   = ROOM.code;
+  document.getElementById('roomCodeDisplay').textContent = ROOM.code;
+  document.getElementById('roomShareUrl').textContent    = roomBuildShareUrl(ROOM.code);
+
+  // Open teacher broadcast channel
+  ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
+  ROOM.channel.onmessage = roomTeacherHandleMsg;
+
+  // Init teacher piano canvas
+  roomInitPiano('teacherPianoCanvas', 'teacher');
+
+  // Heartbeat so students know teacher is alive
+  ROOM.hbInterval = setInterval(() => {
+    ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' });
+  }, 3000);
+
+  // Cleanup dead students
+  ROOM.cleanupInt = setInterval(roomCleanupStudents, 8000);
+
+  roomUpdateStudentCount();
+}
+
+function roomChooseStudent() {
+  ROOM.role = 'student';
+  document.getElementById('roomRolePick').style.display    = 'none';
+  document.getElementById('roomStudentView').style.display = 'flex';
+  document.getElementById('roomJoinForm').style.display    = 'flex';
+  document.getElementById('roomStudentActive').style.display = 'none';
+}
+
+/* ── Teacher: handle incoming messages from students ──────── */
+function roomTeacherHandleMsg(e) {
+  const { type, sender, name, midi, vel } = e.data;
+  if (!sender || sender === ROOM.myId) return;
+
+  if (type === 'join') {
+    roomTeacherAddStudent(sender, name);
+  } else if (type === 'heartbeat' && e.data.role === 'student') {
+    // Refresh student last-seen
+    if (ROOM.students.has(sender)) {
+      ROOM.students.get(sender).lastSeen = Date.now();
+    } else {
+      roomTeacherAddStudent(sender, name || 'Student');
+    }
+  } else if (type === 'leave') {
+    roomTeacherRemoveStudent(sender);
+  } else if (type === 'note_on' && midi != null) {
+    const st = ROOM.students.get(sender);
+    if (st) {
+      st.heldNotes.add(midi);
+      roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+      roomAddNotePill('studentPianoNotes-' + sender, midi, false);
+      playPianoNote(midi, 0.15);
+    }
+  } else if (type === 'note_off' && midi != null) {
+    const st = ROOM.students.get(sender);
+    if (st) {
+      st.heldNotes.delete(midi);
+      roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+    }
+  }
+}
+
+/* ── Teacher: add a student piano panel ───────────────────── */
+function roomTeacherAddStudent(sid, name) {
+  if (ROOM.students.has(sid)) {
+    ROOM.students.get(sid).lastSeen = Date.now();
+    return;
+  }
+
+  const color = ['#00D4FF','#A855F7','#39D98A','#F59E0B','#FF6B35'][ROOM.students.size % 5];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'room-piano-section student-piano';
+  wrap.id = 'studentWrap-' + sid;
+  wrap.style.cssText = 'border-color:' + color + '33;min-height:130px';
+  wrap.innerHTML = `
+    <div class="room-piano-label">
+      <span style="color:${color}">🎓 ${name}</span>
+      <span class="badge badge-student" style="border-color:${color}55;color:${color}">STUDENT</span>
+      <div id="studentPianoNotes-${sid}" class="room-notes-strip" style="margin-left:.6rem"></div>
+      <div class="room-student-chip active" style="margin-left:auto;border-color:${color}55;background:${color}15;color:${color}">
+        <div class="room-student-dot" style="background:${color};box-shadow:0 0 6px ${color}88"></div>
+        <span>Live</span>
+      </div>
+    </div>
+    <canvas id="studentPiano-${sid}" class="room-piano-canvas" style="height:90px"></canvas>
+  `;
+
+  const container = document.getElementById('roomStudentPianos');
+  // Remove placeholder if present
+  const ph = container.querySelector('div[style*="dashed"]');
+  if (ph) ph.remove();
+  container.appendChild(wrap);
+
+  const canvas = document.getElementById('studentPiano-' + sid);
+  const ctx    = canvas.getContext('2d');
+  setTimeout(() => { roomSizePiano(canvas); roomDrawPiano(canvas, ctx, new Set(), false); }, 50);
+
+  ROOM.students.set(sid, { name, canvas, ctx, heldNotes: new Set(), lastSeen: Date.now() });
+
+  // Update student chips in header
+  roomUpdateStudentChips();
+  roomUpdateStudentCount();
+
+  // Announce we're alive
+  ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' });
+}
+
+function roomTeacherRemoveStudent(sid) {
+  if (!ROOM.students.has(sid)) return;
+  ROOM.students.delete(sid);
+  const el = document.getElementById('studentWrap-' + sid);
+  if (el) el.remove();
+  if (ROOM.students.size === 0) {
+    document.getElementById('roomStudentPianos').innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-align:center;padding:1.5rem 0;border:1px dashed rgba(255,255,255,.06);border-radius:12px">
+        Waiting for students to join…
+      </div>`;
+  }
+  roomUpdateStudentChips();
+  roomUpdateStudentCount();
+}
+
+function roomCleanupStudents() {
+  const now = Date.now();
+  ROOM.students.forEach((st, sid) => {
+    if (now - st.lastSeen > 12000) roomTeacherRemoveStudent(sid);
+  });
+}
+
+function roomUpdateStudentChips() {
+  const el = document.getElementById('roomStudentChips');
+  if (!el) return;
+  if (ROOM.students.size === 0) {
+    el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:.68rem;color:var(--muted)">None yet — share your link!</span>';
+    return;
+  }
+  el.innerHTML = '';
+  ROOM.students.forEach(st => {
+    const chip = document.createElement('div');
+    chip.className = 'room-student-chip active';
+    chip.innerHTML = `<div class="room-student-dot"></div><span>${st.name}</span>`;
+    el.appendChild(chip);
+  });
+}
+
+function roomUpdateStudentCount() {
+  const el = document.getElementById('roomStudentCount');
+  if (el) el.textContent = ROOM.students.size + ' connected';
+}
+
+/* ── Student: join a room ─────────────────────────────────── */
+function roomStudentJoin() {
+  const codeRaw = document.getElementById('studentRoomCode').value.trim().toUpperCase();
+  const nameRaw = document.getElementById('studentName').value.trim() || 'Student';
+  if (!codeRaw) { alert('Please enter a room code'); return; }
+
+  ROOM.code   = codeRaw;
+  ROOM.myId   = roomGenId();
+  ROOM.myName = nameRaw;
+
+  // Subscribe to teacher's broadcast channel
+  ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
+  ROOM.channel.onmessage = roomStudentHandleTeacher;
+
+  // Student's own channel for sending to teacher
+  ROOM.studentCh = ROOM.channel; // same channel, teacher listens to all
+
+  // Show active view
+  document.getElementById('roomJoinForm').style.display     = 'none';
+  document.getElementById('roomStudentActive').style.display = 'flex';
+  document.getElementById('studentRoomIdDisplay').textContent = ROOM.code;
+  document.getElementById('studentPianoLabel').textContent   = nameRaw + "'s Piano";
+
+  // Init canvases
+  roomInitPiano('studentPianoCanvas', 'student');
+  setTimeout(() => {
+    const tc = document.getElementById('teacherRemotePiano');
+    const tCtx = tc?.getContext('2d');
+    if (tc && tCtx) { roomSizePiano(tc); roomDrawPiano(tc, tCtx, new Set(), true); }
+  }, 80);
+
+  // Announce join
+  ROOM.channel.postMessage({ type:'join', sender:ROOM.myId, name:ROOM.myName });
+
+  // Heartbeat so teacher sees us
+  ROOM.hbInterval = setInterval(() => {
+    ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'student' });
+  }, 4000);
+}
+
+/* ── Student: handle teacher's notes ─────────────────────── */
+function roomStudentHandleTeacher(e) {
+  const { type, sender, midi } = e.data;
+  if (!sender || sender === ROOM.myId) return;
+  if (e.data.role === 'student') return; // ignore other students on this channel
+
+  const tc  = document.getElementById('teacherRemotePiano');
+  const tCtx = tc?.getContext('2d');
+
+  if (type === 'note_on' && midi != null) {
+    ROOM.teacherNotes.add(midi);
+    if (tc && tCtx) roomDrawPiano(tc, tCtx, ROOM.teacherNotes, true);
+    roomAddNotePill('teacherRemoteNotes', midi, true);
+    playPianoNote(midi, 0.2);
+  } else if (type === 'note_off' && midi != null) {
+    ROOM.teacherNotes.delete(midi);
+    if (tc && tCtx) roomDrawPiano(tc, tCtx, ROOM.teacherNotes, true);
+  } else if (type === 'heartbeat' && e.data.role === 'teacher') {
+    document.getElementById('studentStatusDot').className = 'room-status-dot connected';
+    document.getElementById('studentStatusText').textContent = 'Connected';
+  }
+}
+
+/* ── Leave / cleanup ─────────────────────────────────────── */
+function roomLeave() {
+  if (ROOM.channel) {
+    ROOM.channel.postMessage({ type:'leave', sender:ROOM.myId, name:ROOM.myName });
+    ROOM.channel.close();
+    ROOM.channel = null;
+  }
+  clearInterval(ROOM.hbInterval);
+  clearInterval(ROOM.cleanupInt);
+  ROOM.students.clear();
+  ROOM.teacherNotes.clear();
+  ROOM.myNotes.clear();
+  ROOM.role = null;
+  ROOM.code = null;
+
+  // Reset UI
+  document.getElementById('roomRolePick').style.display     = 'block';
+  document.getElementById('roomTeacherDash').style.display  = 'none';
+  document.getElementById('roomStudentView').style.display  = 'none';
+  document.getElementById('roomJoinForm').style.display     = 'flex';
+  document.getElementById('roomStudentActive').style.display = 'none';
+  document.getElementById('roomStudentPianos').innerHTML    = `
+    <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-align:center;padding:1.5rem 0;border:1px dashed rgba(255,255,255,.06);border-radius:12px">
+      Waiting for students to join…
+    </div>`;
+
+  // Clear URL hash
+  history.replaceState(null, '', location.pathname + location.search);
+}
+
+/* ── Copy link ─────────────────────────────────────────────── */
+function roomCopyLink() {
+  const url = roomBuildShareUrl(ROOM.code);
+  navigator.clipboard?.writeText(url).then(() => {
+    const btn = document.getElementById('roomCopyBtn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '📋 Copy', 1800); }
+  }).catch(() => {
+    prompt('Copy this link and share with students:', url);
+  });
+}
+
+/* ── Piano canvas helpers ─────────────────────────────────── */
+function roomSizePiano(canvas) {
+  const pr = canvas.parentElement;
+  if (!pr) return;
+  const w = pr.clientWidth || 800;
+  canvas.width  = w;
+  canvas.height = canvas.style.height ? parseInt(canvas.style.height) : 100;
+}
+
+function roomInitPiano(canvasId, who) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  setTimeout(() => {
+    roomSizePiano(canvas);
+    const ctx = canvas.getContext('2d');
+    roomDrawPiano(canvas, ctx, new Set(), who === 'teacher');
+
+    // Input handling
+    const getKey = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const cx   = ((e.touches?.[0]?.clientX ?? e.clientX) - rect.left) * (canvas.width / rect.width);
+      const cy   = ((e.touches?.[0]?.clientY ?? e.clientY) - rect.top)  * (canvas.height / rect.height);
+      const { keys, wkw } = buildKeyLayout(canvas.width);
+      const bkw = wkw * 0.62, bkh = canvas.height * 0.62;
+      if (cy < bkh) {
+        for (const k of keys.filter(k => k.isSharp)) {
+          if (cx >= k.x && cx <= k.x + bkw) return k.midi;
+        }
+      }
+      const wi = Math.floor(cx / wkw);
+      const wk = keys.filter(k => !k.isSharp)[wi];
+      return wk?.midi ?? null;
+    };
+
+    let held = null;
+    const onDown = (e) => {
+      e.preventDefault();
+      startAudio();
+      const midi = getKey(e);
+      if (midi == null) return;
+      held = midi;
+      if (who === 'teacher') {
+        ROOM.myNotes.add(midi);
+        roomDrawPiano(canvas, ctx, ROOM.myNotes, true);
+        roomAddNotePill('teacherRecentNotes', midi, true);
+        playPianoNote(midi, 0.5);
+        ROOM.channel?.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+      } else {
+        ROOM.myNotes.add(midi);
+        roomDrawPiano(canvas, ctx, ROOM.myNotes, false);
+        roomAddNotePill('studentRecentNotes', midi, false);
+        playPianoNote(midi, 0.5);
+        ROOM.channel?.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+        roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
+      }
+    };
+    const onUp = (e) => {
+      if (held == null) return;
+      const midi = held;
+      held = null;
+      ROOM.myNotes.delete(midi);
+      roomDrawPiano(canvas, ctx, ROOM.myNotes, who === 'teacher');
+      ROOM.channel?.postMessage({ type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName });
+    };
+
+    canvas.addEventListener('mousedown',  onDown);
+    canvas.addEventListener('mouseup',    onUp);
+    canvas.addEventListener('mouseleave', onUp);
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+    canvas.addEventListener('touchend',   onUp);
+  }, 100);
+}
+
+/* ── MIDI keyboard → room broadcast ─────────────────────────
+   Hook into the existing MIDI engine so a connected MIDI
+   keyboard also broadcasts to the room.                    */
+function roomHandleMidiNoteOn(midi) {
+  if (!ROOM.role || !ROOM.channel) return;
+  ROOM.myNotes.add(midi);
+  const isT = ROOM.role === 'teacher';
+  const cId  = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const notesId = isT ? 'teacherRecentNotes' : 'studentRecentNotes';
+  const canvas = document.getElementById(cId);
+  if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
+  roomAddNotePill(notesId, midi, isT);
+  ROOM.channel.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+  if (!isT) roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
+}
+function roomHandleMidiNoteOff(midi) {
+  if (!ROOM.role || !ROOM.channel) return;
+  ROOM.myNotes.delete(midi);
+  const isT  = ROOM.role === 'teacher';
+  const cId  = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const canvas = document.getElementById(cId);
+  if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
+  ROOM.channel.postMessage({ type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName });
+}
+
+/* ── Draw a room piano canvas ────────────────────────────── */
+function roomDrawPiano(canvas, ctx, heldNotes, isTeacher) {
+  if (!canvas || !ctx) return;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0812';
+  ctx.fillRect(0, 0, W, H);
+
+  const { keys, wkw } = buildKeyLayout(W);
+  const bkh  = H * 0.62;
+  const bkw  = wkw * 0.62;
+  const accentColor = isTeacher ? '#FF2D78' : '#00D4FF';
+
+  // White keys
+  keys.filter(k => !k.isSharp).forEach(k => {
+    const note  = NOTE_NAMES[k.midi % 12];
+    const isLit = heldNotes.has(k.midi);
+    const color = isLit ? (NOTE_COLORS[note] || accentColor) : (note === 'C' ? '#f0edd8' : '#f5f2ec');
+    if (isLit) { ctx.shadowColor = color; ctx.shadowBlur = 18; }
+    const r = 4;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(k.x + 1, 0); ctx.lineTo(k.x + wkw - 1, 0);
+    ctx.lineTo(k.x + wkw - 1, H - r);
+    ctx.arcTo(k.x + wkw - 1, H, k.x + wkw - 1 - r, H, r);
+    ctx.lineTo(k.x + 1 + r, H);
+    ctx.arcTo(k.x + 1, H, k.x + 1, H - r, r);
+    ctx.lineTo(k.x + 1, 0); ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#1a1428'; ctx.lineWidth = 0.7; ctx.stroke();
+
+    // C label
+    if (note === 'C') {
+      ctx.fillStyle = isLit ? '#fff' : '#8a6030';
+      ctx.font = `bold ${Math.max(7, wkw * 0.34)}px "DM Mono",monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText('C' + (Math.floor(k.midi / 12) - 1), k.x + wkw / 2, H - 5);
+    }
+    // Note name on lit keys
+    if (isLit && note !== 'C') {
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.max(8, wkw * 0.38)}px "DM Mono",monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(note, k.x + wkw / 2, H - 5);
+    }
+  });
+
+  // Black keys
+  keys.filter(k => k.isSharp).forEach(k => {
+    const note   = NOTE_NAMES[k.midi % 12];
+    const base   = note.replace('#', '');
+    const isLit  = heldNotes.has(k.midi);
+    const color  = isLit ? (SHARP_COLORS[base] || accentColor) : '#1a1428';
+    if (isLit) { ctx.shadowColor = color; ctx.shadowBlur = 14; }
+    const r = 3;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(k.x, 0); ctx.lineTo(k.x + bkw, 0);
+    ctx.lineTo(k.x + bkw, bkh - r);
+    ctx.arcTo(k.x + bkw, bkh, k.x + bkw - r, bkh, r);
+    ctx.lineTo(k.x + r, bkh);
+    ctx.arcTo(k.x, bkh, k.x, bkh - r, r);
+    ctx.lineTo(k.x, 0); ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5; ctx.stroke();
+  });
+
+  // Top border accent
+  ctx.fillStyle = isTeacher ? 'rgba(255,45,120,.5)' : 'rgba(0,212,255,.4)';
+  ctx.fillRect(0, 0, W, 2);
+}
+
+/* ── Note pills ──────────────────────────────────────────── */
+function roomAddNotePill(containerId, midi, isTeacher) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const note  = NOTE_NAMES[midi % 12];
+  const color = NOTE_COLORS[note.replace('#', '')] || '#FF2D78';
+  const pill  = document.createElement('span');
+  pill.className = 'room-note-pill';
+  pill.style.cssText = `background:${color}22;border:1px solid ${color}55;color:${color}`;
+  pill.textContent   = note + (Math.floor(midi / 12) - 1);
+  el.appendChild(pill);
+  // Max 8 pills
+  while (el.children.length > 8) el.removeChild(el.firstChild);
+  // Fade old pills
+  setTimeout(() => { pill.style.opacity = '0'; setTimeout(() => pill.remove(), 400); }, 2500);
+}
+
+/* ── Feedback label ──────────────────────────────────────── */
+function roomShowFeedback(elId, text) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = text;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 600);
+}
+
+/* ── showScreen hook — call roomOnShow when entering Piano Room ── */
+const _origShowScreen = showScreen;
+showScreen = function(id) {
+  _origShowScreen(id);
+  if (id === 'room') roomOnShow();
+};
+
+/* ── Computer keyboard → room piano ─────────────────────────── */
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('screen-room')?.classList.contains('active')) return;
+  if (e.repeat || e.target.tagName === 'INPUT') return;
+  const MAP = { a:60, w:61, s:62, e:63, d:64, f:65, t:66, g:67, y:68, h:69, u:70, j:71, k:72 };
+  const midi = MAP[e.key.toLowerCase()];
+  if (!midi) return;
+  if (ROOM.myNotes.has(midi)) return;
+  startAudio().then(() => playPianoNote(midi, 0.5));
+  roomHandleMidiNoteOn(midi);
+});
+document.addEventListener('keyup', (e) => {
+  if (!document.getElementById('screen-room')?.classList.contains('active')) return;
+  const MAP = { a:60, w:61, s:62, e:63, d:64, f:65, t:66, g:67, y:68, h:69, u:70, j:71, k:72 };
+  const midi = MAP[e.key.toLowerCase()];
+  if (!midi) return;
+  roomHandleMidiNoteOff(midi);
+});
+
+/* ── Resize room canvases ────────────────────────────────────── */
+window.addEventListener('resize', () => {
+  if (!document.getElementById('screen-room')?.classList.contains('active')) return;
+  ['teacherPianoCanvas','studentPianoCanvas','teacherRemotePiano'].forEach(id => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    roomSizePiano(c);
+    const isT  = id !== 'studentPianoCanvas';
+    const notes = id === 'teacherRemotePiano' ? ROOM.teacherNotes : ROOM.myNotes;
+    roomDrawPiano(c, c.getContext('2d'), notes, isT);
+  });
+  ROOM.students.forEach(st => {
+    roomSizePiano(st.canvas);
+    roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
+  });
+});
 </script>
 </body>
 </html>
