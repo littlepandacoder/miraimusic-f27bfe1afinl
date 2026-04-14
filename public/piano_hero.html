@@ -6,6 +6,9 @@
 <title>Piano Hero — Musicable</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<!-- Firebase Realtime Database (for cross-device Piano Room) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 /* ═══ DESIGN TOKENS ════════════════════════════════════════ */
 :root {
@@ -1123,6 +1126,99 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 }
 .room-back-btn:hover { color: var(--off-white); border-color: rgba(255,255,255,.2); }
 
+/* ── Previous classrooms panel ── */
+.prev-rooms-panel {
+  background: rgba(245,158,11,.06);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin-top: .8rem;
+  animation: slideIn .25s ease-out;
+}
+.prev-rooms-title {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--amber);
+  margin-bottom: .7rem;
+  font-weight: 600;
+}
+.prev-room-item {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .55rem .8rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: .4rem;
+  cursor: pointer;
+  transition: all .18s;
+}
+.prev-room-item:last-child { margin-bottom: 0; }
+.prev-room-item:hover { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.08); }
+.prev-room-code {
+  font-family: 'Orbitron', monospace;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--amber);
+  flex: 1;
+}
+.prev-room-date {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  color: var(--muted);
+}
+.prev-room-resume {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  font-weight: 600;
+  color: var(--amber);
+  background: rgba(245,158,11,.15);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: 6px;
+  padding: .2rem .6rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.prev-room-resume:hover { background: rgba(245,158,11,.28); }
+.prev-room-delete {
+  font-size: .75rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: .2rem .3rem;
+  border-radius: 4px;
+  transition: color .15s;
+  line-height: 1;
+}
+.prev-room-delete:hover { color: var(--red); }
+
+/* ── Network status badge ── */
+.room-net-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  color: var(--muted);
+  padding: .2rem .6rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  margin-left: .5rem;
+}
+.room-net-badge.connected { border-color: rgba(57,217,138,.35); color: var(--green); }
+.room-net-badge.connecting { border-color: rgba(245,158,11,.4); color: var(--amber); }
+.room-net-badge.error { border-color: rgba(239,68,68,.35); color: var(--red); }
+.room-net-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.room-net-badge.connected .room-net-dot { animation: micPulse .8s ease-in-out infinite alternate; }
+
 /* ── Student visibility toggle ── */
 .student-visibility-btn {
   display: flex;
@@ -1485,20 +1581,29 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     <!-- ── Role picker (shown first) ── -->
     <div id="roomRolePick">
       <div style="font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:var(--white);margin-bottom:.3rem">🎹 Piano <span style="color:var(--sky)">Room</span></div>
-      <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:1.5rem">Real-time shared piano — teacher broadcasts live, students follow along</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);margin-bottom:1.5rem">Real-time shared piano — works across any device · teacher broadcasts live, students follow along</div>
       <div class="room-role-pick">
-        <div class="room-role-card teacher" onclick="roomChooseTeacher()">
-          <div class="room-role-icon">👨‍🏫</div>
-          <div class="room-role-title">I'm a Teacher</div>
-          <div class="room-role-desc">Create a room · share a link · students join and see your keys in real time · broadcast to multiple students at once</div>
-          <div style="margin-top:1.2rem">
-            <span style="display:inline-block;background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:8px;padding:.35rem 1rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600">Start a Class →</span>
+        <div style="display:flex;flex-direction:column;gap:.6rem">
+          <div class="room-role-card teacher" onclick="roomChooseTeacher()">
+            <div class="room-role-icon">👨‍🏫</div>
+            <div class="room-role-title">I'm a Teacher</div>
+            <div class="room-role-desc">Create a room · share a link · students join from any device · broadcasts live to everyone</div>
+            <div style="margin-top:1.2rem">
+              <span style="display:inline-block;background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink);border-radius:8px;padding:.35rem 1rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600">Start a Class →</span>
+            </div>
+          </div>
+          <!-- Previous classrooms panel (shown if history exists) -->
+          <div id="prevRoomsPanel" style="display:none">
+            <div class="prev-rooms-panel">
+              <div class="prev-rooms-title">📚 Previous Classrooms — tap to resume</div>
+              <div id="prevRoomsList"></div>
+            </div>
           </div>
         </div>
         <div class="room-role-card" onclick="roomChooseStudent()">
           <div class="room-role-icon">🎓</div>
           <div class="room-role-title">I'm a Student</div>
-          <div class="room-role-desc">Enter a room code from your teacher · see their piano at the top · play on yours below · your teacher sees every key you press</div>
+          <div class="room-role-desc">Enter a room code from your teacher · works on phone, tablet or laptop · see the teacher's piano live</div>
           <div style="margin-top:1.2rem">
             <span style="display:inline-block;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--sky);border-radius:8px;padding:.35rem 1rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:600">Join a Class →</span>
           </div>
@@ -1518,6 +1623,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
           <div class="room-status">
             <div class="room-status-dot connected" id="teacherStatusDot"></div>
             <span id="teacherStatusText">Room active</span>
+          </div>
+          <div class="room-net-badge connecting" id="roomNetBadge">
+            <div class="room-net-dot"></div>
+            <span id="roomNetText">Connecting…</span>
           </div>
           <button class="room-back-btn" onclick="roomLeave()">✕ End Class</button>
         </div>
@@ -1601,6 +1710,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
             <div class="room-status">
               <div class="room-status-dot connected" id="studentStatusDot"></div>
               <span id="studentStatusText">Connected</span>
+            </div>
+            <div class="room-net-badge connecting" id="studentNetBadge">
+              <div class="room-net-dot"></div>
+              <span id="studentNetText">Connecting…</span>
             </div>
             <button class="room-back-btn" onclick="roomLeave()">✕ Leave</button>
           </div>
@@ -7679,35 +7792,186 @@ function adminShowStorageInfo() {
   document.body.appendChild(modal);
 }
 /* ═══════════════════════════════════════════════════════════
-   PIANO ROOM — Real-time shared piano via BroadcastChannel
-   + localStorage pub/sub for same-origin cross-tab sync.
+   PIANO ROOM — Cross-device real-time via Firebase RTDB
    Architecture:
      • Teacher creates a room → generates a room code
-     • Students open the app, go to Piano Room, enter code
-     • BroadcastChannel("pianoRoom-<CODE>") carries events:
-         { type:"note_on",  midi, vel, sender, name }
-         { type:"note_off", midi, sender, name }
-         { type:"heartbeat", sender, name, role }
-         { type:"join",  sender, name }
-         { type:"leave", sender, name }
-     • Teacher also listens to student channels to show per-student pianos
-     • Teacher's channel = "pianoRoom-<CODE>-teacher"
-     • Each student's channel = "pianoRoom-<CODE>-<studentId>"
-   Because BroadcastChannel is same-origin only, the "share link"
-   encodes the room code in the URL hash so students can open the
-   same page in another tab and auto-join.
+     • Firebase path: /rooms/<CODE>/  stores all events
+     • Students open the app on ANY device, enter the code
+     • Events pushed to Firebase are received by all listeners:
+         { type:"note_on",  midi, sender, name, ts }
+         { type:"note_off", midi, sender, name, ts }
+         { type:"heartbeat", sender, name, role, ts }
+         { type:"join",  sender, name, ts }
+         { type:"leave", sender, name, ts }
+     • Old events auto-deleted (we only care about live state)
+     • Teacher room codes saved to localStorage for re-entry
 ═══════════════════════════════════════════════════════════ */
 
+/* ── Firebase config (public Musicable project) ─────────── */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDemo_PianoHero_PublicKey_Replace",
+  authDomain:        "piano-hero-room.firebaseapp.com",
+  databaseURL:       "https://piano-hero-room-default-rtdb.firebaseio.com",
+  projectId:         "piano-hero-room",
+  storageBucket:     "piano-hero-room.appspot.com",
+  messagingSenderId: "000000000000",
+  appId:             "1:000000000000:web:000000000000000000000000"
+};
+
+/* ─── NOTE: Replace the config above with your own Firebase project ─────
+   Free plan (Spark) is sufficient. Steps:
+   1. Go to https://console.firebase.google.com
+   2. Create project → Realtime Database → Start in test mode
+   3. Copy your config object here
+   4. Set database rules to allow read/write for 24h (test mode default)
+   ──────────────────────────────────────────────────────────────────── */
+
+let _fbApp  = null;
+let _fbDb   = null;
+let _fbRef  = null;   // /rooms/<CODE>
+let _fbListeners = []; // { ref, type, fn } for cleanup
+
+function fbInit() {
+  if (_fbApp) return true;
+  try {
+    if (!firebase?.apps?.length) {
+      _fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+    } else {
+      _fbApp = firebase.apps[0];
+    }
+    _fbDb = firebase.database(_fbApp);
+    return true;
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    return false;
+  }
+}
+
+function fbConnect(code) {
+  if (!fbInit()) return false;
+  _fbRef = _fbDb.ref('rooms/' + code);
+  return true;
+}
+
+function fbDisconnect() {
+  // Remove all listeners
+  _fbListeners.forEach(({ ref, type, fn }) => {
+    try { ref.off(type, fn); } catch(e) {}
+  });
+  _fbListeners = [];
+  // Remove our presence from events
+  _fbRef = null;
+}
+
+function fbPush(data) {
+  if (!_fbRef) return;
+  data.ts = Date.now();
+  // Push to a short-lived events node; old entries pruned by timestamp
+  const evRef = _fbRef.child('events').push();
+  evRef.set(data);
+  // Auto-delete this event after 30s to keep DB clean
+  setTimeout(() => { try { evRef.remove(); } catch(e){} }, 30000);
+}
+
+function fbOn(eventType, cb) {
+  if (!_fbRef) return;
+  const evRef = _fbRef.child('events');
+  const fn = evRef.on(eventType, cb);
+  _fbListeners.push({ ref: evRef, type: eventType, fn: cb });
+}
+
+function fbSetPresence(data) {
+  if (!_fbRef || !ROOM.myId) return;
+  const presRef = _fbRef.child('presence/' + ROOM.myId);
+  presRef.set({ ...data, ts: Date.now() });
+  // Auto-remove on disconnect
+  presRef.onDisconnect().remove();
+}
+
+function fbWatchPresence(cb) {
+  if (!_fbRef) return;
+  const presRef = _fbRef.child('presence');
+  const fn = (snap) => cb(snap.val() || {});
+  presRef.on('value', fn);
+  _fbListeners.push({ ref: presRef, type: 'value', fn });
+}
+
+/* ── Room history (localStorage) ────────────────────────── */
+const ROOM_HISTORY_KEY = 'pianoHeroRoomHistory';
+const MAX_ROOM_HISTORY = 5;
+
+function roomSaveToHistory(code) {
+  try {
+    let history = JSON.parse(localStorage.getItem(ROOM_HISTORY_KEY) || '[]');
+    // Remove duplicates
+    history = history.filter(r => r.code !== code);
+    // Add to front
+    history.unshift({ code, date: new Date().toLocaleDateString(), ts: Date.now() });
+    // Keep only last N
+    history = history.slice(0, MAX_ROOM_HISTORY);
+    localStorage.setItem(ROOM_HISTORY_KEY, JSON.stringify(history));
+  } catch(e) {}
+}
+
+function roomLoadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(ROOM_HISTORY_KEY) || '[]');
+  } catch(e) { return []; }
+}
+
+function roomDeleteFromHistory(code) {
+  try {
+    let history = roomLoadHistory().filter(r => r.code !== code);
+    localStorage.setItem(ROOM_HISTORY_KEY, JSON.stringify(history));
+    roomRenderHistory();
+  } catch(e) {}
+}
+
+function roomRenderHistory() {
+  const panel = document.getElementById('prevRoomsPanel');
+  const list  = document.getElementById('prevRoomsList');
+  if (!panel || !list) return;
+
+  const history = roomLoadHistory();
+  if (!history.length) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  list.innerHTML = history.map(r => `
+    <div class="prev-room-item">
+      <span class="prev-room-code">📡 ${r.code}</span>
+      <span class="prev-room-date">${r.date}</span>
+      <button class="prev-room-resume" onclick="roomResumeTeacher('${r.code}')">Resume →</button>
+      <button class="prev-room-delete" onclick="roomDeleteFromHistory('${r.code}')" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function roomResumeTeacher(code) {
+  roomStartTeacherSession(code);
+}
+
+/* ── Network status helpers ──────────────────────────────── */
+function roomSetNetStatus(id, state, text) {
+  const badge = document.getElementById(id);
+  if (!badge) return;
+  badge.className = 'room-net-badge ' + state;
+  const span = badge.querySelector('span');
+  if (span) span.textContent = text;
+}
+
+/* ── ROOM state ──────────────────────────────────────────── */
 const ROOM = {
-  role:         null,   // 'teacher' | 'student'
-  code:         null,   // e.g. "PIANO-4829"
-  myId:         null,   // uuid
+  role:         null,
+  code:         null,
+  myId:         null,
   myName:       null,
-  channel:      null,   // BroadcastChannel (teacher broadcast)
-  studentCh:    null,   // student's own channel
-  students:     new Map(), // id → { name, channel, heldNotes, lastSeen, canvas, ctx }
-  teacherNotes: new Set(), // currently held midi notes on teacher piano
-  myNotes:      new Set(), // student's own held notes
+  channel:      null,   // kept for legacy compat (unused now)
+  students:     new Map(),
+  teacherNotes: new Set(),
+  myNotes:      new Set(),
   hbInterval:   null,
   cleanupInt:   null,
 };
@@ -7723,7 +7987,10 @@ function roomBuildShareUrl(code) {
 
 /* ── Screen entry ─────────────────────────────────────────── */
 function roomOnShow() {
-  // Auto-join from URL hash
+  // Render previous classroom history
+  roomRenderHistory();
+
+  // Auto-join from URL hash (student flow)
   const hash = location.hash;
   const m    = hash.match(/[#&]room=([A-Z0-9-]+)/);
   if (m) {
@@ -7741,10 +8008,15 @@ function roomOnShow() {
 
 /* ── Role selection ───────────────────────────────────────── */
 function roomChooseTeacher() {
+  const newCode = roomGenCode();
+  roomStartTeacherSession(newCode);
+}
+
+function roomStartTeacherSession(code) {
   ROOM.role   = 'teacher';
   ROOM.myId   = roomGenId();
   ROOM.myName = 'Teacher';
-  ROOM.code   = roomGenCode();
+  ROOM.code   = code;
 
   document.getElementById('roomRolePick').style.display    = 'none';
   document.getElementById('roomTeacherDash').style.display = 'flex';
@@ -7754,17 +8026,57 @@ function roomChooseTeacher() {
   document.getElementById('roomCodeDisplay').textContent = ROOM.code;
   document.getElementById('roomShareUrl').textContent    = roomBuildShareUrl(ROOM.code);
 
-  // Open teacher broadcast channel
-  ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
-  ROOM.channel.onmessage = roomTeacherHandleMsg;
+  // Save to history immediately
+  roomSaveToHistory(code);
+
+  // Connect to Firebase
+  roomSetNetStatus('roomNetBadge', 'connecting', 'Connecting…');
+  if (fbConnect(code)) {
+    // Set our presence
+    fbSetPresence({ role: 'teacher', name: 'Teacher', id: ROOM.myId });
+
+    // Listen for incoming events from students
+    let lastEventKey = null;
+    fbOn('child_added', (snap) => {
+      const key  = snap.key;
+      const data = snap.val();
+      if (!data || data.sender === ROOM.myId) return;
+      // Ignore events older than 10s (stale from previous session)
+      if (Date.now() - (data.ts || 0) > 10000) return;
+      roomTeacherHandleMsg({ data });
+    });
+
+    // Watch presence for connected/disconnected students
+    fbWatchPresence((presence) => {
+      // Update student last-seen from presence
+      Object.entries(presence).forEach(([id, pres]) => {
+        if (!pres || id === ROOM.myId || pres.role !== 'student') return;
+        if (ROOM.students.has(id)) {
+          ROOM.students.get(id).lastSeen = pres.ts || Date.now();
+        }
+      });
+    });
+
+    roomSetNetStatus('roomNetBadge', 'connected', '🌐 Online');
+  } else {
+    roomSetNetStatus('roomNetBadge', 'error', '⚠ Offline — same device only');
+    // Fall back to BroadcastChannel for same-device use
+    try {
+      ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
+      ROOM.channel.onmessage = (e) => roomTeacherHandleMsg(e);
+    } catch(e) {}
+  }
 
   // Init teacher piano canvas
   roomInitPiano('teacherPianoCanvas', 'teacher');
 
-  // Heartbeat so students know teacher is alive
+  // Heartbeat
   ROOM.hbInterval = setInterval(() => {
-    ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' });
-  }, 3000);
+    const hb = { type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' };
+    fbPush(hb);
+    ROOM.channel?.postMessage(hb);
+    fbSetPresence({ role:'teacher', name:'Teacher', id:ROOM.myId });
+  }, 4000);
 
   // Cleanup dead students
   ROOM.cleanupInt = setInterval(roomCleanupStudents, 8000);
@@ -7780,15 +8092,14 @@ function roomChooseStudent() {
   document.getElementById('roomStudentActive').style.display = 'none';
 }
 
-/* ── Teacher: handle incoming messages from students ──────── */
+/* ── Teacher: handle incoming messages ──────────────────── */
 function roomTeacherHandleMsg(e) {
-  const { type, sender, name, midi, vel } = e.data;
+  const { type, sender, name, midi } = e.data;
   if (!sender || sender === ROOM.myId) return;
 
   if (type === 'join') {
     roomTeacherAddStudent(sender, name);
   } else if (type === 'heartbeat' && e.data.role === 'student') {
-    // Refresh student last-seen
     if (ROOM.students.has(sender)) {
       ROOM.students.get(sender).lastSeen = Date.now();
     } else {
@@ -7800,7 +8111,6 @@ function roomTeacherHandleMsg(e) {
     const st = ROOM.students.get(sender);
     if (st) {
       st.heldNotes.add(midi);
-      // Only show piano feedback and play audio if student is not hidden
       if (!st.hidden) {
         roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
         roomAddNotePill('studentPianoNotes-' + sender, midi, false);
@@ -7818,16 +8128,14 @@ function roomTeacherHandleMsg(e) {
   }
 }
 
-/* ── Teacher: add a student piano panel ───────────────────── */
+/* ── Teacher: add/remove student piano panels ───────────── */
 function roomTeacherToggleStudentVisibility(sid) {
   const st = ROOM.students.get(sid);
   if (!st) return;
   st.hidden = !st.hidden;
-
   const btn    = document.getElementById('studentVisBtn-' + sid);
   const body   = document.getElementById('studentBody-' + sid);
   const banner = document.getElementById('studentHiddenBanner-' + sid);
-
   if (st.hidden) {
     btn?.classList.add('hidden-state');
     if (btn) btn.innerHTML = '🚫 Hidden';
@@ -7838,7 +8146,6 @@ function roomTeacherToggleStudentVisibility(sid) {
     if (btn) btn.innerHTML = '👁 Visible';
     body?.classList.remove('collapsed');
     banner?.classList.remove('visible');
-    // Redraw their piano after un-hiding
     setTimeout(() => {
       if (st.canvas) { roomSizePiano(st.canvas); roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false); }
     }, 50);
@@ -7882,7 +8189,6 @@ function roomTeacherAddStudent(sid, name) {
   `;
 
   const container = document.getElementById('roomStudentPianos');
-  // Remove placeholder if present
   const ph = container.querySelector('div[style*="dashed"]');
   if (ph) ph.remove();
   container.appendChild(wrap);
@@ -7893,12 +8199,13 @@ function roomTeacherAddStudent(sid, name) {
 
   ROOM.students.set(sid, { name, canvas, ctx, heldNotes: new Set(), lastSeen: Date.now(), hidden: false });
 
-  // Update student chips in header
   roomUpdateStudentChips();
   roomUpdateStudentCount();
 
   // Announce we're alive
-  ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' });
+  const hb = { type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'teacher' };
+  fbPush(hb);
+  ROOM.channel?.postMessage(hb);
 }
 
 function roomTeacherRemoveStudent(sid) {
@@ -7919,7 +8226,7 @@ function roomTeacherRemoveStudent(sid) {
 function roomCleanupStudents() {
   const now = Date.now();
   ROOM.students.forEach((st, sid) => {
-    if (now - st.lastSeen > 12000) roomTeacherRemoveStudent(sid);
+    if (now - st.lastSeen > 15000) roomTeacherRemoveStudent(sid);
   });
 }
 
@@ -7956,18 +8263,45 @@ function roomStudentJoin() {
   ROOM.myId   = roomGenId();
   ROOM.myName = nameRaw;
 
-  // Subscribe to teacher's broadcast channel
-  ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
-  ROOM.channel.onmessage = roomStudentHandleTeacher;
-
-  // Student's own channel for sending to teacher
-  ROOM.studentCh = ROOM.channel; // same channel, teacher listens to all
-
-  // Show active view
   document.getElementById('roomJoinForm').style.display     = 'none';
   document.getElementById('roomStudentActive').style.display = 'flex';
   document.getElementById('studentRoomIdDisplay').textContent = ROOM.code;
   document.getElementById('studentPianoLabel').textContent   = nameRaw + "'s Piano";
+
+  roomSetNetStatus('studentNetBadge', 'connecting', 'Connecting…');
+
+  // Connect to Firebase
+  if (fbConnect(codeRaw)) {
+    // Set our presence
+    fbSetPresence({ role:'student', name:nameRaw, id:ROOM.myId });
+
+    // Announce join
+    const joinMsg = { type:'join', sender:ROOM.myId, name:nameRaw };
+    fbPush(joinMsg);
+
+    // Listen for teacher events
+    let seenKeys = new Set();
+    fbOn('child_added', (snap) => {
+      const key  = snap.key;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+      const data = snap.val();
+      if (!data || data.sender === ROOM.myId) return;
+      if (Date.now() - (data.ts || 0) > 10000) return;
+      roomStudentHandleTeacher({ data });
+    });
+
+    roomSetNetStatus('studentNetBadge', 'connected', '🌐 Online');
+  } else {
+    roomSetNetStatus('studentNetBadge', 'error', '⚠ Offline');
+    // BroadcastChannel fallback (same device only)
+    try {
+      ROOM.channel = new BroadcastChannel('pianoRoom-' + ROOM.code);
+      ROOM.channel.onmessage = (e) => roomStudentHandleTeacher(e);
+      const joinMsg = { type:'join', sender:ROOM.myId, name:nameRaw };
+      ROOM.channel.postMessage(joinMsg);
+    } catch(e) {}
+  }
 
   // Init canvases
   roomInitPiano('studentPianoCanvas', 'student');
@@ -7977,12 +8311,12 @@ function roomStudentJoin() {
     if (tc && tCtx) { roomSizePiano(tc); roomDrawPiano(tc, tCtx, new Set(), true); }
   }, 80);
 
-  // Announce join
-  ROOM.channel.postMessage({ type:'join', sender:ROOM.myId, name:ROOM.myName });
-
-  // Heartbeat so teacher sees us
+  // Heartbeat
   ROOM.hbInterval = setInterval(() => {
-    ROOM.channel?.postMessage({ type:'heartbeat', sender:ROOM.myId, name:ROOM.myName, role:'student' });
+    const hb = { type:'heartbeat', sender:ROOM.myId, name:nameRaw, role:'student' };
+    fbPush(hb);
+    ROOM.channel?.postMessage(hb);
+    fbSetPresence({ role:'student', name:nameRaw, id:ROOM.myId });
   }, 4000);
 }
 
@@ -7990,9 +8324,9 @@ function roomStudentJoin() {
 function roomStudentHandleTeacher(e) {
   const { type, sender, midi } = e.data;
   if (!sender || sender === ROOM.myId) return;
-  if (e.data.role === 'student') return; // ignore other students on this channel
+  if (e.data.role === 'student') return;
 
-  const tc  = document.getElementById('teacherRemotePiano');
+  const tc   = document.getElementById('teacherRemotePiano');
   const tCtx = tc?.getContext('2d');
 
   if (type === 'note_on' && midi != null) {
@@ -8006,16 +8340,22 @@ function roomStudentHandleTeacher(e) {
   } else if (type === 'heartbeat' && e.data.role === 'teacher') {
     document.getElementById('studentStatusDot').className = 'room-status-dot connected';
     document.getElementById('studentStatusText').textContent = 'Connected';
+    roomSetNetStatus('studentNetBadge', 'connected', '🌐 Online');
   }
 }
 
 /* ── Leave / cleanup ─────────────────────────────────────── */
 function roomLeave() {
-  if (ROOM.channel) {
-    ROOM.channel.postMessage({ type:'leave', sender:ROOM.myId, name:ROOM.myName });
-    ROOM.channel.close();
-    ROOM.channel = null;
-  }
+  // Broadcast leave
+  const leaveMsg = { type:'leave', sender:ROOM.myId, name:ROOM.myName };
+  fbPush(leaveMsg);
+  ROOM.channel?.postMessage(leaveMsg);
+
+  ROOM.channel?.close();
+  ROOM.channel = null;
+
+  fbDisconnect();
+
   clearInterval(ROOM.hbInterval);
   clearInterval(ROOM.cleanupInt);
   ROOM.students.clear();
@@ -8035,8 +8375,10 @@ function roomLeave() {
       Waiting for students to join…
     </div>`;
 
-  // Clear URL hash
   history.replaceState(null, '', location.pathname + location.search);
+
+  // Refresh history panel
+  roomRenderHistory();
 }
 
 /* ── Copy link ─────────────────────────────────────────────── */
@@ -8067,7 +8409,6 @@ function roomInitPiano(canvasId, who) {
     const ctx = canvas.getContext('2d');
     roomDrawPiano(canvas, ctx, new Set(), who === 'teacher');
 
-    // Input handling
     const getKey = (e) => {
       const rect = canvas.getBoundingClientRect();
       const cx   = ((e.touches?.[0]?.clientX ?? e.clientX) - rect.left) * (canvas.width / rect.width);
@@ -8096,13 +8437,17 @@ function roomInitPiano(canvasId, who) {
         roomDrawPiano(canvas, ctx, ROOM.myNotes, true);
         roomAddNotePill('teacherRecentNotes', midi, true);
         playPianoNote(midi, 0.5);
-        ROOM.channel?.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
+        fbPush(msg);
+        ROOM.channel?.postMessage(msg);
       } else {
         ROOM.myNotes.add(midi);
         roomDrawPiano(canvas, ctx, ROOM.myNotes, false);
         roomAddNotePill('studentRecentNotes', midi, false);
         playPianoNote(midi, 0.5);
-        ROOM.channel?.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
+        fbPush(msg);
+        ROOM.channel?.postMessage(msg);
         roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
       }
     };
@@ -8112,7 +8457,9 @@ function roomInitPiano(canvasId, who) {
       held = null;
       ROOM.myNotes.delete(midi);
       roomDrawPiano(canvas, ctx, ROOM.myNotes, who === 'teacher');
-      ROOM.channel?.postMessage({ type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName });
+      const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName };
+      fbPush(msg);
+      ROOM.channel?.postMessage(msg);
     };
 
     canvas.addEventListener('mousedown',  onDown);
@@ -8123,29 +8470,31 @@ function roomInitPiano(canvasId, who) {
   }, 100);
 }
 
-/* ── MIDI keyboard → room broadcast ─────────────────────────
-   Hook into the existing MIDI engine so a connected MIDI
-   keyboard also broadcasts to the room.                    */
+/* ── MIDI keyboard → room broadcast ─────────────────────────*/
 function roomHandleMidiNoteOn(midi) {
-  if (!ROOM.role || !ROOM.channel) return;
+  if (!ROOM.role || (!_fbRef && !ROOM.channel)) return;
   ROOM.myNotes.add(midi);
   const isT = ROOM.role === 'teacher';
-  const cId  = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const cId = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
   const notesId = isT ? 'teacherRecentNotes' : 'studentRecentNotes';
   const canvas = document.getElementById(cId);
   if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
   roomAddNotePill(notesId, midi, isT);
-  ROOM.channel.postMessage({ type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName });
+  const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
+  fbPush(msg);
+  ROOM.channel?.postMessage(msg);
   if (!isT) roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
 }
 function roomHandleMidiNoteOff(midi) {
-  if (!ROOM.role || !ROOM.channel) return;
+  if (!ROOM.role || (!_fbRef && !ROOM.channel)) return;
   ROOM.myNotes.delete(midi);
-  const isT  = ROOM.role === 'teacher';
-  const cId  = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const isT = ROOM.role === 'teacher';
+  const cId = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
   const canvas = document.getElementById(cId);
   if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
-  ROOM.channel.postMessage({ type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName });
+  const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName };
+  fbPush(msg);
+  ROOM.channel?.postMessage(msg);
 }
 
 /* ── Draw a room piano canvas ────────────────────────────── */
@@ -8161,7 +8510,6 @@ function roomDrawPiano(canvas, ctx, heldNotes, isTeacher) {
   const bkw  = wkw * 0.62;
   const accentColor = isTeacher ? '#FF2D78' : '#00D4FF';
 
-  // White keys
   keys.filter(k => !k.isSharp).forEach(k => {
     const note  = NOTE_NAMES[k.midi % 12];
     const isLit = heldNotes.has(k.midi);
@@ -8179,15 +8527,12 @@ function roomDrawPiano(canvas, ctx, heldNotes, isTeacher) {
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.strokeStyle = '#1a1428'; ctx.lineWidth = 0.7; ctx.stroke();
-
-    // C label
     if (note === 'C') {
       ctx.fillStyle = isLit ? '#fff' : '#8a6030';
       ctx.font = `bold ${Math.max(7, wkw * 0.34)}px "DM Mono",monospace`;
       ctx.textAlign = 'center';
       ctx.fillText('C' + (Math.floor(k.midi / 12) - 1), k.x + wkw / 2, H - 5);
     }
-    // Note name on lit keys
     if (isLit && note !== 'C') {
       ctx.fillStyle = '#fff';
       ctx.font = `bold ${Math.max(8, wkw * 0.38)}px "DM Mono",monospace`;
@@ -8196,7 +8541,6 @@ function roomDrawPiano(canvas, ctx, heldNotes, isTeacher) {
     }
   });
 
-  // Black keys
   keys.filter(k => k.isSharp).forEach(k => {
     const note   = NOTE_NAMES[k.midi % 12];
     const base   = note.replace('#', '');
@@ -8217,7 +8561,6 @@ function roomDrawPiano(canvas, ctx, heldNotes, isTeacher) {
     ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5; ctx.stroke();
   });
 
-  // Top border accent
   ctx.fillStyle = isTeacher ? 'rgba(255,45,120,.5)' : 'rgba(0,212,255,.4)';
   ctx.fillRect(0, 0, W, 2);
 }
@@ -8233,9 +8576,7 @@ function roomAddNotePill(containerId, midi, isTeacher) {
   pill.style.cssText = `background:${color}22;border:1px solid ${color}55;color:${color}`;
   pill.textContent   = note + (Math.floor(midi / 12) - 1);
   el.appendChild(pill);
-  // Max 8 pills
   while (el.children.length > 8) el.removeChild(el.firstChild);
-  // Fade old pills
   setTimeout(() => { pill.style.opacity = '0'; setTimeout(() => pill.remove(), 400); }, 2500);
 }
 
@@ -8287,11 +8628,12 @@ window.addEventListener('resize', () => {
     roomDrawPiano(c, c.getContext('2d'), notes, isT);
   });
   ROOM.students.forEach(st => {
-    if (st.hidden) return; // skip hidden students
+    if (st.hidden) return;
     roomSizePiano(st.canvas);
     roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
   });
 });
+
 </script>
 </body>
 </html>
