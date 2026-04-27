@@ -88,6 +88,28 @@
 
     <!-- Meta Pixel is now loaded by `src/initMetaPixel.ts` only in production -->
     <!-- If you need to run Meta Pixel in development, enable it explicitly in the initializer. -->
+
+    <!-- CookieHub Consent Management -->
+    <script src="https://cdn.cookiehub.eu/c2/b2cf9ce5.js"></script>
+    <script type="text/javascript">
+      document.addEventListener("DOMContentLoaded", function(event) {
+        var cpm = {};
+        window.cookiehub.load(cpm);
+      });
+    </script>
+
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    n!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MB67FCZQ"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <ew Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MB67FCZQ');</script>
+    <!-- End Google Tag Manager -->
   </head>
 
   <body>
