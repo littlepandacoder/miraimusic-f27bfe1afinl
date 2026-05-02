@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -21,7 +20,10 @@
     "migrate:foundation:local": "supabase db push --local",
     "migrate:status": "supabase status",
     "db:link": "supabase link --project-ref ugpgsctazvnhkasqpclg",
-    "db:push": "bash scripts/run_foundation_migration.sh"
+    "db:push": "bash scripts/run_foundation_migration.sh",
+     "dev": "vite",
+  "tunnel": "ngrok http 8080",
+  "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "migrationScripts": {
     "pgToMongo": "scripts/migrate_postgres_to_mongo.cjs"
