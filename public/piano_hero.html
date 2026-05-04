@@ -821,13 +821,23 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   overflow-y: auto;
 }
 .room-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.5rem;
+  width: 100%;
+  padding: 1.5rem 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+/* Non-piano room content stays inset; piano canvases go full-bleed */
+.room-header,
+.room-link-box,
+.room-students-bar,
+.room-role-pick,
+.room-join-form,
+#roomRolePick > div:first-child,
+.prev-rooms-panel {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
 }
 /* ── Role selector ── */
 .room-role-pick {
@@ -968,9 +978,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 }
 .room-piano-section {
   background: rgba(255,255,255,.02);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1rem;
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: .8rem 1.5rem .6rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1001,7 +1014,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 .room-piano-canvas {
   display: block;
   width: 100%;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
 }
 /* ── Recent notes display ── */
@@ -1897,11 +1910,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
             <span class="badge badge-teacher">TEACHER</span>
             <span class="badge badge-you">YOU</span>
             <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Click keys or use your MIDI keyboard · broadcasts to all students</div>
+            <button onclick="kbSettingsOpen()" title="Keyboard range settings" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#8b7fb8;border-radius:6px;padding:.2rem .5rem;font-size:.75rem;cursor:pointer;transition:all .15s;margin-left:.5rem;font-family:'DM Mono',monospace" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(0,212,255,.4)'" onmouseout="this.style.color='#8b7fb8';this.style.borderColor='rgba(255,255,255,.12)'">⚙ Range</button>
           </div>
           <div id="teacherRecentNotes" class="room-notes-strip"></div>
           <div style="position:relative;flex:1">
             <div id="teacherFeedback" class="room-feedback" style="color:var(--pink)"></div>
-            <canvas id="teacherPianoCanvas" class="room-piano-canvas" style="height:100px"></canvas>
+            <canvas id="teacherPianoCanvas" class="room-piano-canvas"></canvas>
           </div>
         </div>
 
@@ -1965,7 +1979,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
               <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Live from your teacher — watch and listen</div>
             </div>
             <div id="teacherRemoteNotes" class="room-notes-strip"></div>
-            <canvas id="teacherRemotePiano" class="room-piano-canvas" style="height:100px"></canvas>
+            <canvas id="teacherRemotePiano" class="room-piano-canvas"></canvas>
           </div>
 
           <div style="display:flex;align-items:center;gap:.8rem">
@@ -1974,23 +1988,80 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
             <div style="flex:1;height:1px;background:var(--border)"></div>
           </div>
 
-          <!-- Student's own piano (bottom) -->
-          <div class="room-piano-section student-piano" style="flex:1;min-height:140px">
+          <!-- Student's own piano (bottom) -->\n          <div class="room-piano-section student-piano" style="flex:1;min-height:140px">
             <div class="room-piano-label">
               <span id="studentPianoLabel">Your Piano</span>
               <span class="badge badge-you">YOU</span>
               <span class="badge badge-student">STUDENT</span>
+              <button onclick="kbSettingsOpen()" title="Keyboard range settings" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#8b7fb8;border-radius:6px;padding:.2rem .5rem;font-size:.75rem;cursor:pointer;transition:all .15s;margin-left:auto;font-family:'DM Mono',monospace" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(0,212,255,.4)'" onmouseout="this.style.color='#8b7fb8';this.style.borderColor='rgba(255,255,255,.12)'">⚙ Range</button>
             </div>
             <div id="studentRecentNotes" class="room-notes-strip"></div>
             <div style="position:relative;flex:1">
               <div id="studentFeedback" class="room-feedback" style="color:var(--sky)"></div>
-              <canvas id="studentPianoCanvas" class="room-piano-canvas" style="height:100px"></canvas>
+              <canvas id="studentPianoCanvas" class="room-piano-canvas"></canvas>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── Keyboard Range Settings Modal ── -->
+<div id="kbSettingsModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);align-items:center;justify-content:center;backdrop-filter:blur(6px)">
+  <div style="background:#151228;border:1px solid rgba(0,212,255,.3);border-radius:18px;padding:2rem;width:min(480px,92vw);display:flex;flex-direction:column;gap:1.4rem;box-shadow:0 0 60px rgba(0,212,255,.15)">
+    <!-- Title -->
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:#fff">⚙ Keyboard Range</div>
+      <button onclick="kbSettingsClose()" style="background:none;border:none;color:#666;font-size:1.2rem;cursor:pointer;padding:.2rem .5rem;border-radius:6px;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">✕</button>
+    </div>
+
+    <!-- Start octave -->
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <label style="font-family:'DM Mono',monospace;font-size:.72rem;color:#8b7fb8;text-transform:uppercase;letter-spacing:.08em">Start note</label>
+        <span id="kbStartLabel" style="font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;color:#00D4FF">C0</span>
+      </div>
+      <input id="kbStartOct" type="range" min="-1" max="7" step="1" value="0"
+        oninput="kbSettingsUpdateLabels()"
+        style="width:100%;accent-color:#00D4FF;height:6px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.6rem;color:#4a4060">
+        <span>C-1</span><span>C0</span><span>C1</span><span>C2</span><span>C3</span><span>C4</span><span>C5</span><span>C6</span><span>C7</span>
+      </div>
+    </div>
+
+    <!-- End octave -->
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <label style="font-family:'DM Mono',monospace;font-size:.72rem;color:#8b7fb8;text-transform:uppercase;letter-spacing:.08em">End note</label>
+        <span id="kbEndLabel" style="font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;color:#FF2D78">C8</span>
+      </div>
+      <input id="kbEndOct" type="range" min="0" max="8" step="1" value="8"
+        oninput="kbSettingsUpdateLabels()"
+        style="width:100%;accent-color:#FF2D78;height:6px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:.6rem;color:#4a4060">
+        <span>C0</span><span>C1</span><span>C2</span><span>C3</span><span>C4</span><span>C5</span><span>C6</span><span>C7</span><span>C8</span>
+      </div>
+    </div>
+
+    <!-- Key count info -->
+    <div style="text-align:center;font-family:'DM Mono',monospace;font-size:.72rem;color:#00D4FF;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:.5rem 1rem" id="kbKeyCount">— white keys</div>
+    <div id="kbRangeWarn" style="display:none;text-align:center;font-family:'DM Mono',monospace;font-size:.68rem;color:#FF2D78">⚠ End octave must be greater than start octave</div>
+
+    <!-- Presets -->
+    <div style="display:flex;flex-direction:column;gap:.4rem">
+      <div style="font-family:'DM Mono',monospace;font-size:.65rem;color:#8b7fb8;text-transform:uppercase;letter-spacing:.08em">Presets</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button onclick="kbPreset(0,8)" style="flex:1;min-width:0;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00D4FF;border-radius:8px;padding:.4rem .6rem;font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(0,212,255,.2)'" onmouseout="this.style.background='rgba(0,212,255,.1)'">C0–C8 (9 oct)</button>
+        <button onclick="kbSettings88()" style="flex:1;min-width:0;background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.3);color:#FF2D78;border-radius:8px;padding:.4rem .6rem;font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,45,120,.2)'" onmouseout="this.style.background='rgba(255,45,120,.1)'">88-key (A0–C8)</button>
+        <button onclick="kbPreset(3,6)" style="flex:1;min-width:0;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:#A855F7;border-radius:8px;padding:.4rem .6rem;font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(168,85,247,.2)'" onmouseout="this.style.background='rgba(168,85,247,.1)'">Mid 3 oct (C3–C6)</button>
+        <button onclick="kbPreset(4,5)" style="flex:1;min-width:0;background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.3);color:#39D98A;border-radius:8px;padding:.4rem .6rem;font-family:'DM Mono',monospace;font-size:.68rem;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(57,217,138,.2)'" onmouseout="this.style.background='rgba(57,217,138,.1)'">1 oct (C4–C5)</button>
+      </div>
+    </div>
+
+    <!-- Apply -->
+    <button onclick="kbSettingsApply()" style="background:linear-gradient(135deg,#00D4FF,#A855F7);border:none;border-radius:10px;padding:.7rem;font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:#fff;cursor:pointer;transition:opacity .2s;letter-spacing:.05em" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Apply Range</button>
   </div>
 </div>
 
@@ -2502,7 +2573,7 @@ function midiToToneNote(midi) {
 
 // ── ATTACK: key pressed — start sample + open envelope gate ──
 function noteAttack(midi) {
-  if (midi < 21 || midi > 108) return;
+  if (midi < PIANO_START || midi > PIANO_END) return;
 
   const doAttack = () => {
     const note = midiToToneNote(midi);
@@ -2523,7 +2594,7 @@ function noteAttack(midi) {
 
 // ── RELEASE: key released — close envelope gate immediately ──
 function noteRelease(midi) {
-  if (midi < 21 || midi > 108) return;
+  if (midi < PIANO_START || midi > PIANO_END) return;
   if (Tone.context.state !== 'running') return;
 
   const note = midiToToneNote(midi);
@@ -2560,7 +2631,7 @@ function releaseAllNotes() {
 
 // ── Duration-based play (game feedback, song preview) ──
 function playPianoNote(midi, dur = 0.35) {
-  if (midi < 21 || midi > 108) return;
+  if (midi < PIANO_START || midi > PIANO_END) return;
   const doPlay = () => {
     const note = midiToToneNote(midi);
     const now  = Tone.now();
@@ -2636,16 +2707,27 @@ function showScreen(id) {
 /* ═══════════════════════════════════════════════════════════
    PIANO KEYBOARD (shared builder)
 ═══════════════════════════════════════════════════════════ */
-const PIANO_START = 21; // A0
-const PIANO_END   = 108; // C8
-const TOTAL_KEYS  = PIANO_END - PIANO_START + 1;
+// ── Keyboard range (dynamic — changed by settings) ────────
+// Default: C0 (12) to C8 (108) = full 88-key + extra low octave
+let PIANO_START = 12; // C0
+let PIANO_END   = 108; // C8
 
-// Compute white keys
-const WHITE_KEYS = [];
-for (let m = PIANO_START; m <= PIANO_END; m++) {
-  if (!NOTE_NAMES[m % 12].includes('#')) WHITE_KEYS.push(m);
+// Recomputed whenever range changes
+let WHITE_KEYS = [];
+let N_WHITE    = 0;
+
+function recomputeKeyRange() {
+  WHITE_KEYS = [];
+  for (let m = PIANO_START; m <= PIANO_END; m++) {
+    if (!NOTE_NAMES[m % 12].includes('#')) WHITE_KEYS.push(m);
+  }
+  N_WHITE = WHITE_KEYS.length;
 }
-const N_WHITE = WHITE_KEYS.length; // 52
+recomputeKeyRange();
+
+// Full 88-key standard piano: A0 (21) → C8 (108)
+const STANDARD_88_START = 21;
+const STANDARD_88_END   = 108;
 
 function buildKeyLayout(canvasWidth) {
   const wkw  = canvasWidth / N_WHITE;
@@ -2664,6 +2746,93 @@ function buildKeyLayout(canvasWidth) {
     }
   }
   return { keys, wkw };
+}
+
+/* ── Keyboard range settings modal ───────────────────────── */
+function kbSettingsOpen() {
+  // Populate sliders from current range
+  const startOct = Math.floor(PIANO_START / 12) - 1;
+  const endOct   = Math.floor(PIANO_END   / 12) - 1;
+  document.getElementById('kbStartOct').value = startOct;
+  document.getElementById('kbEndOct').value   = endOct;
+  kbSettingsUpdateLabels();
+  document.getElementById('kbSettingsModal').style.display = 'flex';
+}
+function kbSettingsClose() {
+  document.getElementById('kbSettingsModal').style.display = 'none';
+}
+function kbSettingsUpdateLabels() {
+  const s = parseInt(document.getElementById('kbStartOct').value);
+  const e = parseInt(document.getElementById('kbEndOct').value);
+  document.getElementById('kbStartLabel').textContent = 'C' + s;
+  document.getElementById('kbEndLabel').textContent   = 'C' + e;
+  const startMidi = (s + 1) * 12;
+  const endMidi   = (e + 1) * 12;
+  let whites = 0;
+  for (let m = startMidi; m <= endMidi; m++) {
+    if (!NOTE_NAMES[m % 12].includes('#')) whites++;
+  }
+  document.getElementById('kbKeyCount').textContent = whites + ' white keys · ' + (endMidi - startMidi + 1) + ' total';
+  document.getElementById('kbRangeWarn').style.display = e <= s ? 'block' : 'none';
+  // Live real-time preview — apply immediately as sliders move
+  if (e > s) {
+    PIANO_START = startMidi;
+    PIANO_END   = endMidi;
+    recomputeKeyRange();
+    kbSettingsRedrawAll();
+  }
+}
+function kbSettingsApply() {
+  const s = parseInt(document.getElementById('kbStartOct').value);
+  const e = parseInt(document.getElementById('kbEndOct').value);
+  if (e <= s) return;
+  PIANO_START = (s + 1) * 12;
+  PIANO_END   = (e + 1) * 12;
+  recomputeKeyRange();
+  kbSettingsClose();
+  kbSettingsRedrawAll();
+  kbBroadcastRange();
+}
+function kbSettings88() {
+  PIANO_START = STANDARD_88_START;
+  PIANO_END   = STANDARD_88_END;
+  recomputeKeyRange();
+  kbSettingsClose();
+  kbSettingsRedrawAll();
+  kbBroadcastRange();
+}
+function kbBroadcastRange() {
+  if (!ROOM.code) return;
+  const msg = { type: 'range_change', sender: ROOM.myId, name: ROOM.myName,
+                pianoStart: PIANO_START, pianoEnd: PIANO_END };
+  fbPush(msg);
+  ROOM.channel?.postMessage(msg);
+}
+function kbPreset(startOct, endOct) {
+  document.getElementById('kbStartOct').value = startOct;
+  document.getElementById('kbEndOct').value   = endOct;
+  kbSettingsUpdateLabels();
+  kbSettingsApply();
+}
+function kbSettingsRedrawAll() {
+  // Redraw all active room canvases
+  ['teacherPianoCanvas','studentPianoCanvas','teacherRemotePiano'].forEach(id => {
+    const c = document.getElementById(id);
+    if (!c || !c.offsetParent) return;
+    roomSizePiano(c);
+    const isT = id !== 'studentPianoCanvas';
+    const notes = id === 'teacherRemotePiano' ? ROOM.teacherNotes : ROOM.myNotes;
+    roomDrawPiano(c, c.getContext('2d'), notes, isT);
+  });
+  if (typeof ROOM !== 'undefined') {
+    ROOM.students && ROOM.students.forEach && ROOM.students.forEach(st => {
+      if (st.canvas) { roomSizePiano(st.canvas); roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false); }
+    });
+  }
+  // Redraw practice keyboard if visible
+  if (typeof drawPracticeKeyboard === 'function') drawPracticeKeyboard();
+  // Redraw game keyboard if game active
+  if (typeof renderGameKeyboard === 'function') renderGameKeyboard();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -5743,7 +5912,7 @@ function micPitchLoop() {
   // ── 5. MIDI conversion + piano key clamp
   const midiRaw  = 12 * Math.log2(freq / 440) + 69;
   const midi     = Math.round(midiRaw);
-  if (midi < 21 || midi > 108) return;
+  if (midi < PIANO_START || midi > PIANO_END) return;
 
   // ── 6. Stability filter — require 2 consecutive frames on same note
   //    before firing (eliminates single-frame glitches)
@@ -6863,7 +7032,7 @@ function adminHandleStaffClick(e) {
   const { beat, staffTgt, diaStep } = info;
   const ss   = adminStaffState;
   const midi = diaStepToMidi(diaStep, ss.accidental);
-  if (midi < 21 || midi > 108) return;
+  if (midi < PIANO_START || midi > PIANO_END) return;
 
   const newNote = { midi, beat, dur: ss.selectedDur, accidental: ss.accidental };
   ss.notes.push(newNote);
@@ -7292,7 +7461,7 @@ function parseMidi(bytes) {
   const minTick = Math.min(...rawNotes.map(n => n.startTick));
 
   const notes = rawNotes
-    .filter(n => n.midi >= 21 && n.midi <= 108)
+    .filter(n => n.midi >= PIANO_START && n.midi <= PIANO_END)
     .map(n => {
       const rawBeat = (n.startTick - minTick) * unitsPerTick;
       const rawDur  = (n.endTick - n.startTick) * unitsPerTick;
@@ -7355,7 +7524,7 @@ function parseCustomXml(xml) {
     beat: parseFloat(el.querySelector('beat')?.textContent) || 0,
     dur:  parseInt(el.querySelector('dur')?.textContent)  || 4,
     accidental: NOTE_NAMES[(parseInt(el.querySelector('midi')?.textContent)||60)%12].includes('#') ? 1 : 0,
-  })).filter(n => n.midi >= 21 && n.midi <= 108);
+  })).filter(n => n.midi >= PIANO_START && n.midi <= PIANO_END);
 }
 
 function parseMusicXml(xml) {
@@ -7386,7 +7555,7 @@ function parseMusicXml(xml) {
       if (noteIdx < 0) return;
       const semis  = [0,2,4,5,7,9,11][noteIdx] + Math.round(alter);
       const midi   = (octave + 1) * 12 + semis;
-      if (midi < 21 || midi > 108) return;
+      if (midi < PIANO_START || midi > PIANO_END) return;
 
       const beat8th = Math.round((dur / divisions) * 2);
 
@@ -8279,14 +8448,14 @@ function adminShowStorageInfo() {
 
 /* ── Firebase config (public Musicable project) ─────────── */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCXwMBQpMXLrWbPvPdmkbXhFw_qK2v_-oM",
-  authDomain: "musiscableapp.firebaseapp.com",
-  databaseURL: "https://musiscableapp-default-rtdb.firebaseio.com",
-  projectId: "musiscableapp",
-  storageBucket: "musiscableapp.firebasestorage.app",
+  apiKey:            "AIzaSyCXwMBQpMXLrWbPvPdmkbXhFw_qK2v_-oM",
+  authDomain:        "musiscableapp.firebaseapp.com",
+  databaseURL:       "https://musiscableapp-default-rtdb.firebaseio.com",
+  projectId:         "musiscableapp",
+  storageBucket:     "musiscableapp.firebasestorage.app",
   messagingSenderId: "737643035932",
-  appId: "1:737643035932:web:b428bb3dfc7a64847eced9",
-  measurementId: "G-VKTN926TCJ"
+  appId:             "1:737643035932:web:b428bb3dfc7a64847eced9",
+  measurementId:     "G-VKTN926TCJ"
 };
 
 /* ─── NOTE: Replace the config above with your own Firebase project ─────
@@ -8582,10 +8751,11 @@ function roomTeacherHandleMsg(e) {
     const st = ROOM.students.get(sender);
     if (st) {
       st.heldNotes.add(midi);
+      // Always play audio at full volume so teacher can hear student
+      playPianoNote(midi, 0.5);
       if (!st.hidden) {
         roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
         roomAddNotePill('studentPianoNotes-' + sender, midi, false);
-        playPianoNote(midi, 0.15);
       }
     }
   } else if (type === 'note_off' && midi != null) {
@@ -8596,6 +8766,11 @@ function roomTeacherHandleMsg(e) {
         roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
       }
     }
+  } else if (type === 'range_change' && e.data.pianoStart != null) {
+    PIANO_START = e.data.pianoStart;
+    PIANO_END   = e.data.pianoEnd;
+    recomputeKeyRange();
+    kbSettingsRedrawAll();
   }
 }
 
@@ -8655,7 +8830,7 @@ function roomTeacherAddStudent(sid, name) {
       <span>🚫</span><span>${name} is hidden — their piano and feedback are suppressed</span>
     </div>
     <div class="student-piano-body" id="studentBody-${sid}">
-      <canvas id="studentPiano-${sid}" class="room-piano-canvas" style="height:90px"></canvas>
+      <canvas id="studentPiano-${sid}" class="room-piano-canvas"></canvas>
     </div>
   `;
 
@@ -8795,16 +8970,20 @@ function roomStudentJoin() {
 function roomStudentHandleTeacher(e) {
   const { type, sender, midi } = e.data;
   if (!sender || sender === ROOM.myId) return;
-  if (e.data.role === 'student') return;
+  // Filter out student-role heartbeats but allow note events from anyone in the room
+  if (type === 'heartbeat' && e.data.role === 'student') return;
 
   const tc   = document.getElementById('teacherRemotePiano');
   const tCtx = tc?.getContext('2d');
 
   if (type === 'note_on' && midi != null) {
+    // Could be teacher note or echoed student note — always play at full volume
+    const isTeacher = (e.data.role === 'teacher' || e.data.sender !== ROOM.myId);
     ROOM.teacherNotes.add(midi);
     if (tc && tCtx) roomDrawPiano(tc, tCtx, ROOM.teacherNotes, true);
     roomAddNotePill('teacherRemoteNotes', midi, true);
-    playPianoNote(midi, 0.2);
+    // Play at full volume — teacher's keys should be clearly audible on student side
+    playPianoNote(midi, 0.5);
   } else if (type === 'note_off' && midi != null) {
     ROOM.teacherNotes.delete(midi);
     if (tc && tCtx) roomDrawPiano(tc, tCtx, ROOM.teacherNotes, true);
@@ -8812,6 +8991,11 @@ function roomStudentHandleTeacher(e) {
     document.getElementById('studentStatusDot').className = 'room-status-dot connected';
     document.getElementById('studentStatusText').textContent = 'Connected';
     roomSetNetStatus('studentNetBadge', 'connected', '🌐 Online');
+  } else if (type === 'range_change' && e.data.pianoStart != null) {
+    PIANO_START = e.data.pianoStart;
+    PIANO_END   = e.data.pianoEnd;
+    recomputeKeyRange();
+    kbSettingsRedrawAll();
   }
 }
 
@@ -8865,11 +9049,12 @@ function roomCopyLink() {
 
 /* ── Piano canvas helpers ─────────────────────────────────── */
 function roomSizePiano(canvas) {
-  const pr = canvas.parentElement;
-  if (!pr) return;
-  const w = pr.clientWidth || 800;
+  const w = window.innerWidth;
+  // Height scales proportionally — same aspect ratio as Song mode (90px at 900px wide)
+  const h = Math.round(w * (90 / 900));
   canvas.width  = w;
-  canvas.height = canvas.style.height ? parseInt(canvas.style.height) : 100;
+  canvas.height = h;
+  canvas.style.height = h + 'px';
 }
 
 function roomInitPiano(canvasId, who) {
@@ -8908,7 +9093,7 @@ function roomInitPiano(canvasId, who) {
         roomDrawPiano(canvas, ctx, ROOM.myNotes, true);
         roomAddNotePill('teacherRecentNotes', midi, true);
         playPianoNote(midi, 0.5);
-        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
+        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName, role:'teacher' };
         fbPush(msg);
         ROOM.channel?.postMessage(msg);
       } else {
@@ -8916,7 +9101,7 @@ function roomInitPiano(canvasId, who) {
         roomDrawPiano(canvas, ctx, ROOM.myNotes, false);
         roomAddNotePill('studentRecentNotes', midi, false);
         playPianoNote(midi, 0.5);
-        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
+        const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName, role:'student' };
         fbPush(msg);
         ROOM.channel?.postMessage(msg);
         roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
@@ -8927,8 +9112,13 @@ function roomInitPiano(canvasId, who) {
       const midi = held;
       held = null;
       ROOM.myNotes.delete(midi);
-      roomDrawPiano(canvas, ctx, ROOM.myNotes, who === 'teacher');
-      const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName };
+      if (who === 'teacher') {
+        roomDrawPiano(canvas, ctx, ROOM.myNotes, true);
+      } else {
+        roomDrawPiano(canvas, ctx, ROOM.myNotes, false);
+      }
+      const role = who === 'teacher' ? 'teacher' : 'student';
+      const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName, role };
       fbPush(msg);
       ROOM.channel?.postMessage(msg);
     };
@@ -8943,29 +9133,53 @@ function roomInitPiano(canvasId, who) {
 
 /* ── MIDI keyboard → room broadcast ─────────────────────────*/
 function roomHandleMidiNoteOn(midi) {
-  if (!ROOM.role || (!_fbRef && !ROOM.channel)) return;
+  // Guard: must be in a room role, but always draw locally regardless of network state
+  if (!ROOM.role) return;
+
   ROOM.myNotes.add(midi);
-  const isT = ROOM.role === 'teacher';
-  const cId = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const isT     = ROOM.role === 'teacher';
+  const cId     = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
   const notesId = isT ? 'teacherRecentNotes' : 'studentRecentNotes';
-  const canvas = document.getElementById(cId);
-  if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
+  const canvas  = document.getElementById(cId);
+
+  // ── Always draw locally so keyboard/MIDI always lights up keys ──
+  if (canvas) {
+    if (isT) {
+      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, true);
+    } else {
+      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, false);
+    }
+  }
   roomAddNotePill(notesId, midi, isT);
-  const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName };
-  fbPush(msg);
-  ROOM.channel?.postMessage(msg);
   if (!isT) roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
+
+  // ── Broadcast to remote peers (only if connected) ──
+  const msg = { type:'note_on', midi, sender:ROOM.myId, name:ROOM.myName, role: isT ? 'teacher' : 'student' };
+  if (_fbRef)        fbPush(msg);
+  if (ROOM.channel)  ROOM.channel.postMessage(msg);
 }
+
 function roomHandleMidiNoteOff(midi) {
-  if (!ROOM.role || (!_fbRef && !ROOM.channel)) return;
+  if (!ROOM.role) return;
+
   ROOM.myNotes.delete(midi);
-  const isT = ROOM.role === 'teacher';
-  const cId = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+  const isT    = ROOM.role === 'teacher';
+  const cId    = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
   const canvas = document.getElementById(cId);
-  if (canvas) roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, isT);
-  const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName };
-  fbPush(msg);
-  ROOM.channel?.postMessage(msg);
+
+  // ── Always redraw locally ──
+  if (canvas) {
+    if (isT) {
+      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, true);
+    } else {
+      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, false);
+    }
+  }
+
+  // ── Broadcast to remote peers (only if connected) ──
+  const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName, role: isT ? 'teacher' : 'student' };
+  if (_fbRef)        fbPush(msg);
+  if (ROOM.channel)  ROOM.channel.postMessage(msg);
 }
 
 /* ── Draw a room piano canvas ────────────────────────────── */
@@ -9105,44 +9319,31 @@ window.addEventListener('resize', () => {
   });
 });
 
+/* ── Auto-open Piano Room on page load if URL has #room= ── */
+(function() {
+  const m = location.hash.match(/[#&]room=([A-Z0-9-]+)/);
+  if (!m) return;
+  const code = m[1];
+  // Navigate straight to Piano Room
+  showScreen('room');
+  // Pre-fill the code and skip straight to the join form
+  document.getElementById('roomRolePick').style.display    = 'none';
+  document.getElementById('roomStudentView').style.display = 'flex';
+  document.getElementById('roomJoinForm').style.display    = 'flex';
+  document.getElementById('roomStudentActive').style.display = 'none';
+  document.getElementById('studentRoomCode').value = code;
+  // Focus the name field so the student just types their name and hits Join
+  setTimeout(() => document.getElementById('studentName')?.focus(), 100);
+})();
+
 </script>
 
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCXwMBQpMXLrWbPvPdmkbXhFw_qK2v_-oM",
-  authDomain: "musiscableapp.firebaseapp.com",
-  databaseURL: "https://musiscableapp-default-rtdb.firebaseio.com",
-  projectId: "musiscableapp",
-  storageBucket: "musiscableapp.firebasestorage.app",
-  messagingSenderId: "737643035932",
-  appId: "1:737643035932:web:b428bb3dfc7a64847eced9",
-  measurementId: "G-VKTN926TCJ"
-};
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+<!-- Firebase Analytics handled by compat SDK above -->
 
 
 
 
-<script src="https://cdn.cookiehub.eu/c2/b2cf9ce5.js"></script>
-<script type="text/javascript">
-document.addEventListener("DOMContentLoaded", function(event) {
-var cpm = {};
-window.cookiehub.load(cpm);
-});
-</script>
+
 
 
 </body></html>
