@@ -26,8 +26,6 @@ if (apiKey) {
   } catch (e) {
     console.warn("[firebase] Initialization failed — Firestore logging will be skipped.", e instanceof Error ? e.message : e);
   }
-} else {
-  console.warn("[firebase] VITE_FIREBASE_API_KEY is not set. Restart the dev server after editing .env.local.");
 }
 
 export { db };

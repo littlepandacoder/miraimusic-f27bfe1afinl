@@ -19,14 +19,16 @@ export const IS_SANDBOX = PAYPAL_MODE === "sandbox";
 
 // Client IDs
 const CLIENT_ID_SANDBOX =
-  import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX || "";
+  import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX ||
+  "AfnMfp3KJ3SSN2jJUuaRmqwFw5y1zcEprZeaJMD9tpxsx8sops-apbq0cYyoRNjyJbyS3W8Gham915X8";
 const CLIENT_ID_LIVE =
   import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE ||
   "AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr";
 
 // Plan IDs
 const PLAN_ID_SANDBOX =
-  import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX || "";
+  import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX ||
+  "P-4L07924847135773VNIAMVRA";
 const PLAN_ID_LIVE =
   import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE ||
   "P-17K32045868578318NHXU6LA";
