@@ -74,18 +74,11 @@ const MusicCursor = () => {
       }
     };
 
-    // Inject cursor-hide style
-    const style = document.createElement("style");
-    style.id = "music-cursor-style";
-    style.textContent = `* { cursor: none !important; }`;
-    document.head.appendChild(style);
-
     document.addEventListener("mousemove", onMove);
 
     return () => {
       document.removeEventListener("mousemove", onMove);
       if (raf.current) cancelAnimationFrame(raf.current);
-      document.getElementById("music-cursor-style")?.remove();
     };
   }, []);
 

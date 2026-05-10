@@ -26,10 +26,11 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <>
+    <MusicCursor />
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <MusicCursor />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -58,6 +59,7 @@ const App = () => (
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </>
 );
 
 export default App;

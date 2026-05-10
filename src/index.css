@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide the default cursor globally so the custom music cursor shows everywhere */
+*, *::before, *::after {
+  cursor: none !important;
+}
+
 /* Google Font (correct placement: AFTER tailwind or better moved to index.html) */
 
 @layer base {
