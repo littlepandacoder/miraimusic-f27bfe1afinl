@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
+import { PAYPAL_SDK_URL, PAYPAL_PLAN_ID, IS_SANDBOX } from "@/lib/paypal";
 
 declare global {
   interface Window {
@@ -26,10 +27,9 @@ interface TrialBillingProps {
   onComplete: () => void;
 }
 
-const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBillingProps) => {
+const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplete }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [paypalReady, setPaypalReady] = useState(false);
   const [processingPaypal, setProcessingPaypal] = useState(false);
@@ -52,10 +52,16 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
       }
     };
 
+    // Remove any previously loaded script if the SDK URL changed (e.g. sandbox ↔ live switch)
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existing && existing.src !== PAYPAL_SDK_URL) {
+      existing.remove();
+    }
+
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
-      script.src = "https://www.paypal.com/sdk/js?client-id=AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr&vault=true&intent=subscription";
+      script.src = PAYPAL_SDK_URL;
       script.async = true;
       document.body.appendChild(script);
       script.onload = loadButtons;
@@ -66,6 +72,7 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderPayPalButton = () => {
@@ -95,7 +102,12 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
           return actions.resolve();
         },
         createSubscription: (_data: any, actions: any) => {
-          return actions.subscription.create({ plan_id: "P-17K32045868578318NHXU6LA" });
+          if (!PAYPAL_PLAN_ID) {
+            console.error("[paypal] No plan ID configured. Set VITE_PAYPAL_PLAN_ID_SANDBOX or VITE_PAYPAL_PLAN_ID_LIVE in .env.local");
+            setError("Payment configuration error. Please contact support.");
+            return actions.reject();
+          }
+          return actions.subscription.create({ plan_id: PAYPAL_PLAN_ID });
         },
         onApprove: async (data: any) => {
           setProcessingPaypal(true);
@@ -103,41 +115,64 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
             const subscriptionId = data.subscriptionID;
             const pw = passwordRef.current;
 
-            // Create Supabase account
+            // 1. Create or sign in to Supabase account
+            let userId: string | undefined;
+
             const { data: authData, error: signUpError } = await supabase.auth.signUp({
               email,
               password: pw,
             });
 
             if (signUpError) {
-              // If user already exists, try signing them in instead
-              if (signUpError.message.includes("already registered") || signUpError.message.includes("already exists")) {
-                const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: pw });
+              if (
+                signUpError.message.includes("already registered") ||
+                signUpError.message.includes("already exists")
+              ) {
+                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                  email,
+                  password: pw,
+                });
                 if (signInError) {
                   setError("Account already exists. Please log in at /login.");
                   setProcessingPaypal(false);
                   return;
                 }
+                userId = signInData?.user?.id;
               } else {
                 setError(signUpError.message);
                 setProcessingPaypal(false);
                 return;
               }
+            } else {
+              userId = authData?.user?.id;
             }
 
-            // Save subscription to Supabase
-            const userId = authData?.user?.id ?? (await supabase.auth.getUser()).data.user?.id;
+            // Fallback: get user id from current session
+            if (!userId) {
+              userId = (await supabase.auth.getUser()).data.user?.id;
+            }
+
             if (userId) {
-              await (supabase as any).from("user_subscriptions").insert({
-                user_id: userId,
-                subscription_id: subscriptionId,
-                plan_id: "P-17K32045868578318NHXU6LA",
-                status: "active",
+              // 2. Record subscription + assign student role via SECURITY DEFINER RPC
+              //    (bypasses RLS — safe because the function validates user_id internally)
+              const { error: rpcError } = await (supabase as any).rpc("record_paypal_subscription", {
+                p_user_id: userId,
+                p_sub_id: subscriptionId,
+                p_plan_id: PAYPAL_PLAN_ID || "",
               });
+              if (rpcError) {
+                console.error("[paypal] record_paypal_subscription RPC error:", rpcError);
+                // Non-fatal: subscription was paid; Dashboard will detect it next time user logs in
+              }
             }
 
-            // Save to Firestore as backup
-            await saveSubscriptionInfo(docId, subscriptionId, "trial");
+            // 4. Save to Firestore as backup
+            try {
+              await saveSubscriptionInfo(docId, subscriptionId, "trial");
+            } catch (fsErr) {
+              // Non-blocking — Supabase is the source of truth
+              console.warn("[paypal] Firestore backup failed (non-blocking):", fsErr);
+            }
 
             setTimeout(() => onComplete(), 500);
           } catch (err: any) {
@@ -163,6 +198,12 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
           <ArrowLeft size={20} /> Back
         </Button>
 
+        {IS_SANDBOX && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2 text-yellow-600 dark:text-yellow-400 text-sm font-medium">
+            🧪 Sandbox mode — use PayPal test credentials, no real charges will be made.
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-6">
             <h1 className="text-3xl font-bold">Create Your Account</h1>
@@ -182,7 +223,7 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
                 <input
                   type="password"
                   placeholder="Minimum 6 characters"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -192,7 +233,7 @@ const TrialBilling = ({ email, docId, onboardingData, onComplete }: TrialBilling
                 <input
                   type="password"
                   placeholder="Repeat password"
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />

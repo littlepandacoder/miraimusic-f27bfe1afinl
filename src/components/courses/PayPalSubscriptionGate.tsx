@@ -1,82 +1,126 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Lock, Music, Users, Zap } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { Lock, Music, Users, Zap, Loader2 } from "lucide-react";
+import { PAYPAL_SDK_URL, PAYPAL_PLAN_ID, IS_SANDBOX } from "@/lib/paypal";
+
+declare global {
+  interface Window {
+    paypal: any;
+  }
+}
 
 const PayPalSubscriptionGate = () => {
   const { user } = useAuth();
   const [subscriptionProcessing, setSubscriptionProcessing] = useState(false);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [error, setError] = useState("");
+  const buttonRendered = useRef(false);
 
   useEffect(() => {
-    // Load PayPal script
-    const script = document.createElement("script");
-    script.src =
-      "https://www.paypal.com/sdk/js?client-id=AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr&vault=true&intent=subscription";
-    script.async = true;
-    document.body.appendChild(script);
+    const scriptId = "paypal-sdk-script";
+    let isMounted = true;
 
-    // Initialize PayPal after script loads
-    script.onload = () => {
-      if (window.paypal) {
-        window.paypal
-          .Buttons({
-            style: {
-              shape: "pill",
-              color: "gold",
-              layout: "vertical",
-              label: "subscribe",
-            },
-            createSubscription: function (data: any, actions: any) {
-              return actions.subscription.create({
-                plan_id: "P-17K32045868578318NHXU6LA",
+    const renderButton = () => {
+      if (!window.paypal || buttonRendered.current || !isMounted) return;
+
+      const container = document.getElementById("paypal-button-container");
+      if (!container) return;
+
+      buttonRendered.current = true;
+      container.innerHTML = "";
+
+      window.paypal
+        .Buttons({
+          style: {
+            shape: "pill",
+            color: "gold",
+            layout: "vertical",
+            label: "subscribe",
+          },
+          createSubscription: (_data: any, actions: any) => {
+            if (!PAYPAL_PLAN_ID) {
+              setError("Payment configuration error. Please contact support.");
+              return actions.reject();
+            }
+            return actions.subscription.create({ plan_id: PAYPAL_PLAN_ID });
+          },
+          onApprove: async (data: any) => {
+            if (!user) return;
+            setSubscriptionProcessing(true);
+            setError("");
+            try {
+              // Record subscription + assign student role via SECURITY DEFINER RPC
+              const { error: rpcError } = await (supabase as any).rpc("record_paypal_subscription", {
+                p_user_id: user.id,
+                p_sub_id: data.subscriptionID,
+                p_plan_id: PAYPAL_PLAN_ID || "",
               });
-            },
-            onApprove: async function (data: any) {
-              setSubscriptionProcessing(true);
-              try {
-                if (user) {
-                  await (supabase as any).from("user_subscriptions").insert({
-                    user_id: user.id,
-                    subscription_id: data.subscriptionID,
-                    status: "active",
-                    plan_id: "P-17K32045868578318NHXU6LA",
-                  });
-
-                  // Redirect to dashboard course library
-                  window.location.href = "/dashboard/courses";
-                }
-              } catch (err) {
-                console.error("Subscription error:", err);
-                alert("Error processing subscription. Please try again.");
-              } finally {
+              if (rpcError) {
+                console.error("[paypal] record_paypal_subscription RPC error:", rpcError);
+                setError("Error recording subscription. Please contact support.");
                 setSubscriptionProcessing(false);
+                return;
               }
-            },
-            onError: function (err: any) {
-              console.error("PayPal error:", err);
-              alert("Payment error. Please try again.");
+
+              // Redirect to course library
+              window.location.href = "/dashboard/courses";
+            } catch (err: any) {
+              console.error("Subscription error:", err);
+              setError("Error processing subscription. Please try again.");
               setSubscriptionProcessing(false);
-            },
-          })
-          .render("#paypal-button-container");
-      }
+            }
+          },
+          onError: (err: any) => {
+            console.error("PayPal error:", err);
+            setError("Payment error. Please try again.");
+            buttonRendered.current = false;
+            setSubscriptionProcessing(false);
+          },
+        })
+        .render("#paypal-button-container");
+
+      if (isMounted) setPaypalReady(true);
     };
+
+    // Remove stale script if SDK URL changed (e.g. sandbox ↔ live switch)
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existing && existing.src !== PAYPAL_SDK_URL) {
+      existing.remove();
+      buttonRendered.current = false;
+    }
+
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = PAYPAL_SDK_URL;
+      script.async = true;
+      script.onload = () => renderButton();
+      document.body.appendChild(script);
+    } else if (window.paypal) {
+      renderButton();
+    }
 
     return () => {
-      document.body.removeChild(script);
+      isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/30">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/" className="text-2xl font-black text-foreground">
             Musicable
           </a>
+          {IS_SANDBOX && (
+            <span className="text-xs font-semibold bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 px-3 py-1 rounded-full">
+              🧪 Sandbox — test mode
+            </span>
+          )}
         </div>
       </nav>
 
@@ -103,9 +147,7 @@ const PayPalSubscriptionGate = () => {
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               {/* Features */}
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-foreground mb-6">
-                  What You Get
-                </h2>
+                <h2 className="text-2xl font-bold text-foreground mb-6">What You Get</h2>
 
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
@@ -159,7 +201,7 @@ const PayPalSubscriptionGate = () => {
               {/* Payment Card */}
               <Card className="bg-gradient-to-br from-pink/10 to-navy/5 border-pink/30 p-8 flex flex-col justify-center">
                 <div className="text-center mb-6">
-                  <div className="inline-block w-16 h-16 rounded-full bg-pink/20 flex items-center justify-center mb-4">
+                  <div className="inline-flex w-16 h-16 rounded-full bg-pink/20 items-center justify-center mb-4">
                     <Lock className="w-8 h-8 text-pink" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground">
@@ -171,10 +213,17 @@ const PayPalSubscriptionGate = () => {
                 </div>
 
                 {/* PayPal Button */}
-                <div
-                  id="paypal-button-container"
-                  className="mb-4"
-                />
+                <div id="paypal-button-container" className="mb-4 min-h-[80px]">
+                  {!paypalReady && !subscriptionProcessing && (
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="w-6 h-6 animate-spin text-pink" />
+                    </div>
+                  )}
+                </div>
+
+                {error && (
+                  <p className="text-red-500 text-sm text-center mb-2">{error}</p>
+                )}
 
                 {subscriptionProcessing && (
                   <div className="flex items-center justify-center gap-2 text-pink py-4">
@@ -183,8 +232,9 @@ const PayPalSubscriptionGate = () => {
                   </div>
                 )}
 
-                <div className="text-center text-xs text-muted-foreground">
+                <div className="text-center text-xs text-muted-foreground mt-2">
                   💳 Secure payment powered by PayPal
+                  {IS_SANDBOX && " (Sandbox — test mode)"}
                 </div>
               </Card>
             </div>
@@ -200,42 +250,30 @@ const PayPalSubscriptionGate = () => {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <div>
-                <h3 className="font-bold text-foreground mb-2">
-                  Can I cancel anytime?
-                </h3>
+                <h3 className="font-bold text-foreground mb-2">Can I cancel anytime?</h3>
                 <p className="text-muted-foreground">
-                  Yes! You can cancel your subscription at any time through your
-                  PayPal account. No questions asked.
+                  Yes! You can cancel your subscription at any time through your PayPal account. No questions asked.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-bold text-foreground mb-2">
-                  Do you offer a trial?
-                </h3>
+                <h3 className="font-bold text-foreground mb-2">Do you offer a trial?</h3>
                 <p className="text-muted-foreground">
-                  Check back soon! We'll be offering a free trial period for new
-                  members in the near future.
+                  Check back soon! We'll be offering a free trial period for new members in the near future.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-bold text-foreground mb-2">
-                  What if I have questions?
-                </h3>
+                <h3 className="font-bold text-foreground mb-2">What if I have questions?</h3>
                 <p className="text-muted-foreground">
-                  Our community and instructors are available 24/7 to help you
-                  succeed in your piano journey.
+                  Our community and instructors are available 24/7 to help you succeed in your piano journey.
                 </p>
               </div>
 
               <div>
-                <h3 className="font-bold text-foreground mb-2">
-                  Will I get certificates?
-                </h3>
+                <h3 className="font-bold text-foreground mb-2">Will I get certificates?</h3>
                 <p className="text-muted-foreground">
-                  Yes! Complete courses and earn certificates to showcase your
-                  achievements.
+                  Yes! Complete courses and earn certificates to showcase your achievements.
                 </p>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
@@ -18,8 +19,14 @@ const SubscriptionGate = () => (
         You need an active subscription to access the Music Learning Portal. Choose a plan to start your musical journey.
       </p>
       <Button asChild size="lg" className="w-full">
-        <Link to="/pricing">View Plans</Link>
+        <Link to="/signup">Start Free Trial</Link>
       </Button>
+      <p className="text-sm text-muted-foreground">
+        Already subscribed?{" "}
+        <Link to="/courses" className="underline text-primary">
+          Activate access
+        </Link>
+      </p>
     </div>
   </div>
 );
@@ -27,7 +34,6 @@ const SubscriptionGate = () => (
 const Dashboard = () => {
   const { user, loading, hasRole, roles } = useAuth();
   const navigate = useNavigate();
-  // TODO: Replace with real Stripe subscription check
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
 
@@ -38,15 +44,49 @@ const Dashboard = () => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (!loading && user) {
-      // Admins, teachers, and students (assigned via signup trigger) get access
-      if (hasRole("admin") || hasRole("teacher") || hasRole("student")) {
-        setSubscribed(true);
-      } else {
-        setSubscribed(false);
-      }
+    if (loading || !user) return;
+
+    // Admins and teachers always get access via role
+    if (hasRole("admin") || hasRole("teacher")) {
+      setSubscribed(true);
       setCheckingSubscription(false);
+      return;
     }
+
+    // Students: role check first (fast), then fall back to user_subscriptions table
+    if (hasRole("student")) {
+      setSubscribed(true);
+      setCheckingSubscription(false);
+      return;
+    }
+
+    // No role yet — check user_subscriptions table directly (handles race between
+    // PayPal onApprove saving subscription and the auth session refreshing roles)
+    const checkPayPalSubscription = async () => {
+      try {
+        const { data, error } = await (supabase as any)
+          .from("user_subscriptions")
+          .select("id, status")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.warn("[dashboard] Could not verify subscription:", error.message);
+          setSubscribed(false);
+        } else {
+          setSubscribed(!!data);
+        }
+      } catch (err) {
+        console.warn("[dashboard] Subscription check failed:", err);
+        setSubscribed(false);
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+
+    checkPayPalSubscription();
   }, [loading, user, roles, hasRole]);
 
   if (loading || checkingSubscription) {

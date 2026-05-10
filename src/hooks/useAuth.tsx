@@ -62,10 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (import.meta.env.DEV) {
-          // Helpful debug in dev to trace silent auth state changes
-          // Do not log secrets; only show event and user identifier
           // eslint-disable-next-line no-console
           console.debug(`[auth] onAuthStateChange event=${event} user=${session?.user?.email ?? session?.user?.id ?? 'null'}`);
+        }
+
+        // When Supabase fires SIGNED_OUT (including after a failed token refresh),
+        // ensure stale tokens are removed so they don't cause 400s on next load.
+        if (event === 'SIGNED_OUT') {
+          clearSupabaseStorage();
         }
 
         setSession(session);
@@ -128,7 +132,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        // Invalid / revoked refresh token — clear stale localStorage so the 400 doesn't
+        // repeat on every page reload, then treat the user as logged out.
+        clearSupabaseStorage();
+        setUser(null);
+        setSession(null);
+        setRoles([]);
+        setLoading(false);
+        return;
+      }
+
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.debug(`[auth] getSession returned user=${session?.user?.email ?? session?.user?.id ?? 'null'}`);
