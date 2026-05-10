@@ -59,147 +59,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Fetch roles with one automatic retry to survive transient lock contention.
+    const fetchRoles = async (userId: string): Promise<UserRole[]> => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 600));
+          const { data, error } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId);
+          if (error) throw error;
+          return (data?.map(r => r.role as UserRole)) ?? [];
+        } catch (err: any) {
+          if (attempt === 1) {
+            console.warn("[auth] Could not fetch user roles after retry:", err?.message ?? err);
+          }
+        }
+      }
+      return [];
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (import.meta.env.DEV) {
-          // eslint-disable-next-line no-console
-          console.debug(`[auth] onAuthStateChange event=${event} user=${session?.user?.email ?? session?.user?.id ?? 'null'}`);
+          console.debug(`[auth] event=${event} user=${session?.user?.email ?? 'null'}`);
         }
 
-        // When Supabase fires SIGNED_OUT (including after a failed token refresh),
-        // ensure stale tokens are removed so they don't cause 400s on next load.
+        // Supabase fires SIGNED_OUT when a refresh token is invalid or signOut() is called.
+        // Clear stale storage so the bad token doesn't cause repeated 400s.
         if (event === 'SIGNED_OUT') {
           clearSupabaseStorage();
         }
 
-setSession(session);
+        setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
-          // Ensure the user has baseline lesson_progress rows (first-login initialization)
-          // This is best-effort: if the table doesn't exist or the insert fails we do not block login.
-          (async function ensureUserProgress() {
+          // Best-effort: seed lesson_progress rows on first login
+          (async () => {
             try {
-              const userId = session.user.id;
-              const { data: existing, error: existErr } = await (supabase as any).from('lesson_progress').select('id').eq('student_id', userId).limit(1);
-              if (existErr) return;
-              if (!existing || existing.length === 0) {
+              const uid = session.user.id;
+              const { data: existing } = await (supabase as any)
+                .from('lesson_progress').select('id').eq('student_id', uid).limit(1);
+              if (!existing?.length) {
                 const { data: lessons } = await (supabase as any).from('module_lessons').select('id');
-                if (lessons && lessons.length > 0) {
-                  const payload = lessons.map((l: any) => ({ lesson_id: l.id, student_id: userId, completed: false, watched_seconds: 0 }));
-                  // Use upsert to be idempotent
-                  await (supabase as any).from('lesson_progress').upsert(payload, { onConflict: ['lesson_id', 'student_id'] });
+                if (lessons?.length) {
+                  await (supabase as any).from('lesson_progress').upsert(
+                    lessons.map((l: any) => ({ lesson_id: l.id, student_id: uid, completed: false, watched_seconds: 0 })),
+                    { onConflict: ['lesson_id', 'student_id'] }
+                  );
                 }
               }
             } catch (e) {
-              // don't block auth on errors
               console.debug('ensureUserProgress failed (non-blocking):', e);
             }
           })();
 
-          try {
-            // Fetch user roles with timeout to prevent hanging
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-            
-            const { data: rolesData, error: rolesError } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", session.user.id);
-            
-            clearTimeout(timeoutId);
-            
-            if (rolesError) {
-              console.warn("Warning: Could not fetch user roles:", rolesError.message);
-              // Don't block login if roles can't be fetched
-              setRoles([]);
-            } else {
-              const userRoles = (rolesData?.map(r => r.role as UserRole)) || [];
-              setRoles(userRoles);
-              if (import.meta.env.DEV) {
-                console.debug(`[auth] User roles loaded:`, userRoles, `for user:`, session.user.email);
-              }
-            }
-          } catch (err) {
-            console.warn("Warning: Error fetching roles:", err);
-            // Don't block login if roles fetch fails
-            setRoles([]);
-          }
+          const userRoles = await fetchRoles(session.user.id);
+          setRoles(userRoles);
         } else {
           setRoles([]);
         }
+
         setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (error) {
-        // Invalid / revoked refresh token — clear stale localStorage so the 400 doesn't
-        // repeat on every page reload, then treat the user as logged out.
-        clearSupabaseStorage();
-        setUser(null);
-        setSession(null);
-        setRoles([]);
-        setLoading(false);
-        return;
-      }
-
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.debug(`[auth] getSession returned user=${session?.user?.email ?? session?.user?.id ?? 'null'}`);
-      }
-
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Same ensure-on-first-login behavior for the initial session read
-        (async function ensureUserProgress() {
-          try {
-            const userId = session.user.id;
-            const { data: existing, error: existErr } = await (supabase as any).from('lesson_progress').select('id').eq('student_id', userId).limit(1);
-            if (existErr) return;
-            if (!existing || existing.length === 0) {
-              const { data: lessons } = await (supabase as any).from('module_lessons').select('id');
-              if (lessons && lessons.length > 0) {
-                const payload = lessons.map((l: any) => ({ lesson_id: l.id, student_id: userId, completed: false, watched_seconds: 0 }));
-                await (supabase as any).from('lesson_progress').upsert(payload, { onConflict: ['lesson_id', 'student_id'] });
-              }
-            }
-          } catch (e) {
-            console.debug('ensureUserProgress failed (non-blocking):', e);
-          }
-        })();
-
-        try {
-          // Fetch user roles with timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000);
-          
-          const { data: rolesData, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
-          
-          clearTimeout(timeoutId);
-          
-          if (rolesError) {
-            console.warn("Warning: Could not fetch user roles:", rolesError.message);
-            setRoles([]);
-          } else {
-            const userRoles = (rolesData?.map(r => r.role as UserRole)) || [];
-            setRoles(userRoles);
-            if (import.meta.env.DEV) {
-              console.debug(`[auth] User roles loaded on init:`, userRoles, `for user:`, session.user.email);
-            }
-          }
-        } catch (err) {
-          console.warn("Warning: Error fetching roles:", err);
-          setRoles([]);
-        }
-      }
-      setLoading(false);
-    });
+    // NOTE: getSession() is intentionally NOT called here.
+    // Supabase v2 fires INITIAL_SESSION through onAuthStateChange automatically,
+    // so a separate getSession() call would race for the same internal lock and
+    // cause "lock was stolen" errors that break role fetching.
 
     return () => subscription.unsubscribe();
   }, []);

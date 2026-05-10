@@ -16,9 +16,10 @@ const Index = () => {
   useEffect(() => {
     if (loading) return;
     if (!user) return;
-    // Logged-in user landed on the home page (e.g. after OAuth redirect).
-    // Send them straight to the right destination.
-    navigate(roles.length > 0 ? "/dashboard" : "/signup", { replace: true });
+    // Authenticated user on the marketing page → send to the app.
+    // Default to /dashboard even when roles are empty (transient fetch failure)
+    // to avoid wrongly routing paying users to /signup.
+    navigate("/dashboard", { replace: true });
   }, [user, roles, loading, navigate]);
 
   return (
