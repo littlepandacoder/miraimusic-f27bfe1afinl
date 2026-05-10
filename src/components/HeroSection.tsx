@@ -20,15 +20,6 @@ const HeroSection = () => {
             >
               START FREE
             </a>
-            <a 
-              href="https://www.skool.com/pianomastery90days/about?ref=76fa2e8809594da080da4f38ee98471a"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-8 py-4 bg-transparent border-2 border-pink text-pink font-bold text-lg rounded-full hover:bg-pink hover:text-background transition-all duration-300 animate-slide-up"
-              style={{ animationDelay: "0.25s" }}
-            >
-              JOIN SKOOL COMMUNITY
-            </a>
           </div>
         </div>
 
