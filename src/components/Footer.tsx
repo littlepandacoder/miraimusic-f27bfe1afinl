@@ -5,7 +5,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <h3 className="text-2xl font-black text-foreground mb-4">Miraimusic</h3>
+            <h3 className="text-2xl font-black text-foreground mb-4">Musicable</h3>
             <p className="text-muted-foreground text-sm">
               Transform your piano journey with our innovative AI-powered learning platform.
               100% guaranteed exam success.
@@ -18,7 +18,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><a href="#home" className="text-muted-foreground hover:text-primary transition-colors text-sm">Home</a></li>
               <li><a href="#about" className="text-muted-foreground hover:text-primary transition-colors text-sm">About Us</a></li>
-              <li><a href="#assessment" className="text-muted-foreground hover:text-primary transition-colors text-sm">Book Assessment</a></li>
+              <li><a href="/signup" className="text-muted-foreground hover:text-primary transition-colors text-sm">Start Free Trial</a></li>
               <li><a href="#contact" className="text-muted-foreground hover:text-primary transition-colors text-sm">Contact</a></li>
             </ul>
           </div>
@@ -29,7 +29,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-muted-foreground text-sm">
                 <Mail className="w-4 h-4 text-primary" />
-                info@miraimusic.com
+                info@musicableapp.com
               </li>
               <li className="flex items-center gap-3 text-muted-foreground text-sm">​<Phone className="w-4 h-4 text-primary" />
                 +971562102658​
@@ -60,7 +60,7 @@ const Footer = () => {
 
         <div className="border-t border-border/30 pt-8 text-center">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Miraimusic. All rights reserved.
+            © {new Date().getFullYear()} Musicableapp. All rights reserved.
           </p>
         </div>
       </div>

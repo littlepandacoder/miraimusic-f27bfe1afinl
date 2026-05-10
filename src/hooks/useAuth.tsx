@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearSupabaseStorage();
         }
 
-        setSession(session);
+setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {

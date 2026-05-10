@@ -8,12 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Miraimusic - Learn Piano Smarter | 100% Guaranteed Trinity Exam Pass</title>
-    <meta name="description" content="Master piano with AI-powered gamified lessons. 100% guaranteed to pass your Trinity Piano Exam. Book your free assessment today!" />
-    <meta name="author" content="Miraimusic" />
+    <title>Musicableapp - Learn Piano Smarter | 100% Guaranteed Trinity Exam Pass</title>
+    <meta name="description" content="Master piano with AI-powered gamified lessons. 100% guaranteed to pass your Trinity Piano Exam." />
+    <meta name="author" content="Musicableapp" />
     <meta name="keywords" content="piano lessons, Trinity exam, music education, AI learning, sight reading, piano course" />
 
-    <meta property="og:title" content="Miraimusic - Learn Piano Smarter" />
+    <meta property="og:title" content="Musicableapp - Learn Piano Smarter" />
     <meta property="og:description" content="Master piano with AI-powered gamified lessons. 100% guaranteed to pass your Trinity Piano Exam." />
     <meta property="og:type" content="website" />
 
@@ -66,7 +66,7 @@
               if (span) span.textContent = origin + ' (see console for stack)';
               el.style.display = 'block';
               // Also log stack to console to keep details available
-              console.warn('[miraimusic] blocked registration of "unload" event listener. origin=' + origin, stack);
+              console.warn('[musicableapp] blocked registration of "unload" event listener. origin=' + origin, stack);
             } catch(e){ /* ignore */ }
           }
 
@@ -79,7 +79,7 @@
                 showOrigin(origin, stack);
               } else {
                 // Keep a minimal console warning when diagnostics are off
-                console.warn('[miraimusic] blocked registration of "unload" event listener.');
+                console.warn('[musicableapp] blocked registration of "unload" event listener.');
               }
               return;
             }
@@ -98,7 +98,19 @@
     <script src="https://cdn.cookiehub.eu/c2/b2cf9ce5.js"></script>
     <script type="text/javascript">
       document.addEventListener("DOMContentLoaded", function(event) {
-        var cpm = {};
+        // If the user already made a choice, skip the banner entirely.
+        try {
+          if (localStorage.getItem('cookieConsent')) return;
+        } catch(e) {}
+
+        var cpm = {
+          onAllow: function() {
+            try { localStorage.setItem('cookieConsent', 'accepted'); } catch(e) {}
+          },
+          onDecline: function() {
+            try { localStorage.setItem('cookieConsent', 'declined'); } catch(e) {}
+          }
+        };
         window.cookiehub.load(cpm);
       });
     </script>

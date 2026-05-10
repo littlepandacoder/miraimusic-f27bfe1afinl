@@ -93,8 +93,8 @@ export default {
           "50%": { transform: "translateY(-10px)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--pink) / 0.4)" },
-          "50%": { boxShadow: "0 0 40px hsl(var(--pink) / 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 30px hsl(var(--pink) / 0.6), 0 0 60px hsl(var(--pink) / 0.3), 0 4px 20px hsl(var(--pink) / 0.5)" },
+          "50%": { boxShadow: "0 0 60px hsl(var(--pink) / 0.9), 0 0 120px hsl(var(--pink) / 0.5), 0 8px 40px hsl(var(--pink) / 0.7)" },
         },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(20px)" },

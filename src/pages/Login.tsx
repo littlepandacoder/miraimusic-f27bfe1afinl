@@ -19,15 +19,19 @@ const Login = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
 
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, user, roles, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user && !authLoading) {
-      navigate("/dashboard");
+      if (roles.length > 0) {
+        navigate("/dashboard");
+      } else {
+        navigate("/signup");
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, roles, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +45,8 @@ const Login = () => {
       if (error) {
         toast({ title: "Login failed", description: error.message || "Invalid email or password", variant: "destructive" });
       } else {
-        toast({ title: "Welcome back!", description: "You have successfully logged in." });
+        const firstName = email.split("@")[0];
+        toast({ title: `Welcome back, ${firstName}!`, description: "You have successfully logged in." });
       }
     } catch (err) {
       toast({ title: "Error", description: "An unexpected error occurred. Please try again.", variant: "destructive" });
@@ -54,7 +59,7 @@ const Login = () => {
     setIsGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
       toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
@@ -90,7 +95,7 @@ const Login = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {showForgot ? "Reset Password" : "Welcome to Miraimusic"}
+            {showForgot ? "Reset Password" : "Welcome to Musicable"}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {showForgot ? "We'll send a reset link to your email" : "Sign in to access your dashboard"}

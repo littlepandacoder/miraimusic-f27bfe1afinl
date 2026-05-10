@@ -28,7 +28,10 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/login");
+    // Full reload guarantees React state is flushed before Login page checks auth.
+    // Without this, navigate("/login") can arrive while user is still set in memory,
+    // causing Login to redirect straight back to the dashboard.
+    window.location.href = "/login";
   };
 
   const [publishedAvailable, setPublishedAvailable] = useState(false);
@@ -101,7 +104,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold">Miraimusic</span>
+            <span className="text-xl font-bold">Musicable</span>
           </Link>
         </div>
         

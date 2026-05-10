@@ -25,10 +25,10 @@
   function showDiagnosticBanner(origin: string, stack?: string) {
     try {
       if (!diagnosticsEnabled() || bannerDismissed()) return;
-      if (document.getElementById("miraimusic-unload-diagnostic-banner")) return;
+      if (document.getElementById("musicableapp-unload-diagnostic-banner")) return;
 
       const banner = document.createElement("div");
-      banner.id = "miraimusic-unload-diagnostic-banner";
+      banner.id = "musicableapp-unload-diagnostic-banner";
       banner.style.position = "fixed";
       banner.style.bottom = "12px";
       banner.style.right = "12px";
@@ -96,7 +96,7 @@
         const origin = extMatch ? extMatch[0] : "unknown";
         // eslint-disable-next-line no-console
         console.warn(
-          `[miraimusic] blocked registration of 'unload' event listener. origin=${origin}`,
+          `[musicableapp] blocked registration of 'unload' event listener. origin=${origin}`,
           stack
         );
         try {
@@ -104,7 +104,7 @@
         } catch (e) {}
       } else {
         // eslint-disable-next-line no-console
-        console.warn("[miraimusic] blocked registration of 'unload' event listener.");
+        console.warn("[musicableapp] blocked registration of 'unload' event listener.");
       }
 
       return;

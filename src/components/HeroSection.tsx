@@ -15,7 +15,7 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="/signup"
-              className="btn-primary inline-block animate-slide-up animate-pulse-glow"
+              className="btn-hero inline-block animate-slide-up animate-pulse-glow"
               style={{ animationDelay: "0.2s" }}
             >
               START FREE

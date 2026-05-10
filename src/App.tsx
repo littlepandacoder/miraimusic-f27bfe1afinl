@@ -18,6 +18,9 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import Signup from "./pages/Signup";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
+import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
+import MusicCursor from "./components/MusicCursor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,10 +29,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
+        <MusicCursor />
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <PageTracking />
+          <OAuthRedirectHandler />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -43,6 +48,7 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             {/* Temporary debug route for auth troubleshooting (remove before production) */}
             <Route path="/auth-debug" element={<AuthDebug />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
