@@ -13,7 +13,7 @@
  */
 
 export const PAYPAL_MODE: "sandbox" | "live" =
-  (import.meta.env.VITE_PAYPAL_MODE as "sandbox" | "live") || "sandbox";
+  (import.meta.env.VITE_PAYPAL_MODE as "sandbox" | "live") || "live";
 
 export const IS_SANDBOX = PAYPAL_MODE === "sandbox";
 
