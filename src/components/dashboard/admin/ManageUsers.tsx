@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Trash2, Shield } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -27,79 +27,77 @@ const ManageUsers = () => {
   const { toast } = useToast();
 
   const fetchUsers = async () => {
-    const { data: profiles, error } = await supabase
-      .from("profiles")
-      .select("user_id, email, full_name, created_at");
+    setLoading(true);
+    try {
+      // Use the admin RPC to get all user roles (bypasses RLS without recursion)
+      const { data: roleRows, error: roleError } = await (supabase as any)
+        .rpc("admin_get_all_user_roles");
 
-    if (error) {
-      console.error("Error fetching profiles:", error);
-      return;
-    }
+      if (roleError) {
+        console.error("Error fetching roles:", roleError);
+        toast({ title: "Error loading users", description: roleError.message, variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
-    const usersWithRoles: UserWithRole[] = [];
+      // Fetch profiles for display names
+      const { data: profiles } = await (supabase as any)
+        .from("profiles")
+        .select("user_id, email, full_name, created_at");
 
-    for (const profile of profiles || []) {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", profile.user_id)
-        .single();
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
 
-      usersWithRoles.push({
-        id: profile.user_id,
-        email: profile.email,
-        full_name: profile.full_name,
-        role: roles?.role || "student",
-        created_at: profile.created_at,
+      // Merge roles with profile info
+      const merged: UserWithRole[] = (roleRows || []).map((r: any) => {
+        const profile = profileMap[r.user_id];
+        return {
+          id: r.user_id,
+          email: profile?.email || r.user_id,
+          full_name: profile?.full_name || "—",
+          role: r.role,
+          created_at: profile?.created_at || new Date().toISOString(),
+        };
       });
-    }
 
-    setUsers(usersWithRoles);
-    setLoading(false);
+      // Deduplicate by user_id, keeping highest-privilege role
+      const roleOrder: Record<string, number> = { admin: 3, teacher: 2, student: 1 };
+      const deduped: Record<string, UserWithRole> = {};
+      for (const u of merged) {
+        if (!deduped[u.id] || (roleOrder[u.role] || 0) > (roleOrder[deduped[u.id].role] || 0)) {
+          deduped[u.id] = u;
+        }
+      }
+
+      setUsers(Object.values(deduped));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const handleCreateUser = async () => {
     if (!newUser.email || !newUser.full_name || !newUser.password) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
 
     setIsCreating(true);
-
     try {
       const { data, error } = await supabase.functions.invoke("create-user", {
-        body: {
-          email: newUser.email,
-          password: newUser.password,
-          full_name: newUser.full_name,
-          role: newUser.role,
-        },
+        body: { email: newUser.email, password: newUser.password, full_name: newUser.full_name, role: newUser.role },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      toast({
-        title: "User created",
-        description: `Successfully created account for ${newUser.email}`,
-      });
-
+      toast({ title: "User created", description: `Account created for ${newUser.email}` });
       setNewUser({ email: "", full_name: "", password: "", role: "student" });
       setIsDialogOpen(false);
       fetchUsers();
     } catch (error: any) {
-      toast({
-        title: "Error creating user",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error creating user", description: error.message, variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
@@ -107,29 +105,15 @@ const ManageUsers = () => {
 
   const handleChangeRole = async (userId: string, newRole: string) => {
     try {
-      // Delete existing role
-      await supabase.from("user_roles").delete().eq("user_id", userId);
-
-      // Insert new role
-      const { error } = await supabase.from("user_roles").insert([{
-        user_id: userId,
-        role: newRole as "admin" | "teacher" | "student",
-      }]);
-
+      // Use admin RPC functions — direct writes to user_roles are blocked by RLS
+      await (supabase as any).rpc("admin_remove_role", { _user_id: userId, _role: users.find(u => u.id === userId)?.role || "student" });
+      const { error } = await (supabase as any).rpc("admin_assign_role", { _user_id: userId, _role: newRole });
       if (error) throw error;
 
-      toast({
-        title: "Role updated",
-        description: "User role has been updated successfully.",
-      });
-
-      fetchUsers();
+      toast({ title: "Role updated" });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
     } catch (error: any) {
-      toast({
-        title: "Error updating role",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error updating role", description: error.message, variant: "destructive" });
     }
   };
 
@@ -192,7 +176,7 @@ const ManageUsers = () => {
                 </Select>
               </div>
               <Button onClick={handleCreateUser} disabled={isCreating} className="w-full btn-primary">
-                {isCreating ? "Creating..." : "Create User"}
+                {isCreating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : "Create User"}
               </Button>
             </div>
           </DialogContent>
@@ -205,7 +189,11 @@ const ManageUsers = () => {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-muted-foreground">Loading users...</p>
+            <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading users...
+            </div>
+          ) : users.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No users found.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -214,7 +202,6 @@ const ManageUsers = () => {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -236,11 +223,6 @@ const ManageUsers = () => {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(user.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon">
-                        <Shield className="w-4 h-4" />
-                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

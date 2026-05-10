@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Require an Authorization: Bearer <access_token> header and check that the calling user is an admin.
     const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
@@ -24,27 +23,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify token and ensure the caller has admin role
+    // Verify caller is an admin
     const { data: userResult, error: userError } = await supabaseAdmin.auth.getUser(accessToken);
     if (userError || !userResult?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
-    const callerId = userResult.user.id;
 
-    const { data: roleRow, error: roleError } = await supabaseAdmin
+    const { data: roleRow } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", callerId)
+      .eq("user_id", userResult.user.id)
       .eq("role", "admin")
       .single();
 
-    if (roleError || !roleRow) {
+    if (!roleRow) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
     const { email, password, full_name, role } = await req.json();
 
-    // Create auth user
+    // Create auth user (this also triggers handle_new_user which inserts 'student' role)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -55,18 +53,16 @@ serve(async (req) => {
 
     const userId = authData.user.id;
 
+    // Remove the auto-assigned student role and set the correct one
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+    await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
+
     // Create profile
-    await supabaseAdmin.from("profiles").insert({
+    await supabaseAdmin.from("profiles").upsert({
       user_id: userId,
       email,
-      full_name,
-    });
-
-    // Assign role
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: userId,
-      role,
-    });
+      full_name: full_name || "",
+    }, { onConflict: "user_id" });
 
     return new Response(JSON.stringify({ success: true, userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

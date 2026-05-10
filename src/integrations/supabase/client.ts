@@ -11,6 +11,17 @@ const stripQuotes = (s?: string) => s?.trim().replace(/^['"]|['"]$/g, "") || "";
 const SUPABASE_URL = stripQuotes(rawUrl);
 const SUPABASE_PUBLISHABLE_KEY = stripQuotes(rawKey);
 
+// Remove stale auth tokens from any previous Supabase project — prevents users needing to clear cache.
+try {
+  const currentRef = "tychkyunjfbkksyxknhn";
+  const stale: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("sb-") && !k.includes(currentRef)) stale.push(k);
+  }
+  stale.forEach(k => localStorage.removeItem(k));
+} catch (_) {}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

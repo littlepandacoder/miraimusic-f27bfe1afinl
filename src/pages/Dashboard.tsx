@@ -39,15 +39,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!loading && user) {
-      // Admins and teachers bypass subscription check
-      if (hasRole("admin") || hasRole("teacher")) {
+      // Admins, teachers, and students (assigned via signup trigger) get access
+      if (hasRole("admin") || hasRole("teacher") || hasRole("student")) {
         setSubscribed(true);
-        setCheckingSubscription(false);
-        return;
+      } else {
+        setSubscribed(false);
       }
-      // TODO: Wire to Stripe check-subscription edge function
-      // For now, students need a subscription — set to false to gate access
-      setSubscribed(false);
       setCheckingSubscription(false);
     }
   }, [loading, user, roles, hasRole]);

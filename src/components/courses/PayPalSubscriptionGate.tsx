@@ -36,27 +36,16 @@ const PayPalSubscriptionGate = () => {
             onApprove: async function (data: any) {
               setSubscriptionProcessing(true);
               try {
-                // Save subscription to Supabase
                 if (user) {
-                  const { error } = await supabase.from("user_subscriptions").insert({
+                  await (supabase as any).from("user_subscriptions").insert({
                     user_id: user.id,
                     subscription_id: data.subscriptionID,
                     status: "active",
                     plan_id: "P-17K32045868578318NHXU6LA",
-                    created_at: new Date().toISOString(),
                   });
 
-                  if (error) {
-                    console.error("Error saving subscription:", error);
-                    alert("Error saving subscription. Please contact support.");
-                    return;
-                  }
-
-                  // Reload page to refresh subscription status
-                  alert(
-                    "Subscription successful! Redirecting to courses..."
-                  );
-                  window.location.reload();
+                  // Redirect to dashboard course library
+                  window.location.href = "/dashboard/courses";
                 }
               } catch (err) {
                 console.error("Subscription error:", err);

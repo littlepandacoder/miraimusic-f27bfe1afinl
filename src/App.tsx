@@ -16,6 +16,7 @@ import SightReading from "./pages/SightReading";
 import NoteNaming from "./pages/NoteNaming";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
+import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/book-class" element={<BookClass />} />
             <Route path="/booking-success" element={<BookingSuccess />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
             {/* Temporary debug route for auth troubleshooting (remove before production) */}

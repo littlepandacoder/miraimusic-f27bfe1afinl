@@ -191,27 +191,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Quick network check
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         const msg = 'No network connection. Please check your internet connection and try again.';
         if (import.meta.env.DEV) setLastAuthError({ message: msg });
         return { error: new Error(msg) };
       }
-      
-      // Always clear any stale session before attempting sign in
-      // This prevents the "need to clear history" issue
-      try {
-        await supabase.auth.signOut();
-        clearSupabaseStorage();
-        await new Promise(r => setTimeout(r, 100));
-      } catch (e) {
-        // ignore cleanup errors
-      }
-      
-      // Attempt sign in
+
       let data: any = null;
       let error: any = null;
-      
+
       try {
         const res = await supabase.auth.signInWithPassword({ email, password });
         data = res.data;
@@ -227,19 +215,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.debug('[auth] signInWithPassword result', { data, error });
       }
 
-      // DEV: If we get a 400 from the token endpoint, attempt a one-off debug fetch
-      // to the same endpoint and log the raw response body. This helps capture the
-      // GoTrue JSON message that sometimes isn't visible in the normalized error.
       if (import.meta.env.DEV && error && (error as any)?.status === 400 && DEV_SUPABASE_URL && DEV_SUPABASE_PUBLISHABLE_KEY) {
         try {
-          // Do a single debug fetch to surface the raw response body in the console.
-          // NOTE: This sends the plaintext password to the same endpoint (dev-only).
           const debugResp = await fetch(`${DEV_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              apikey: DEV_SUPABASE_PUBLISHABLE_KEY,
-            },
+            headers: { 'Content-Type': 'application/json', apikey: DEV_SUPABASE_PUBLISHABLE_KEY },
             body: JSON.stringify({ email, password }),
           });
           const text = await debugResp.text();
@@ -252,47 +232,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (error) {
-        // store raw error for debug UI in dev
         if (import.meta.env.DEV) setLastAuthError(error);
-        
-        // Normalize common auth errors for friendlier UI messages
-        const anyErr = error as any;
-        const msg = anyErr.message || 'Invalid email or password';
+        const msg = (error as any).message || 'Invalid email or password';
         return { error: new Error(msg) };
       }
-      
-      // Ensure session state is available immediately: fetch session and set local state
-      try {
-        const { data: sessionRes } = await supabase.auth.getSession();
-        const newSession = sessionRes?.session ?? null;
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
 
-        // fetch roles as done during normal auth flows
-        if (newSession?.user) {
-          try {
-            const { data: rolesData, error: rolesError } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", newSession.user.id);
-            if (!rolesError) {
-              const userRoles = (rolesData?.map(r => r.role as any)) || [];
-              setRoles(userRoles);
-              if (import.meta.env.DEV) {
-                console.debug(`[auth] User roles loaded after sign-in:`, userRoles);
-              }
-            }
-          } catch (e) {
-            setRoles([]);
-          }
-        }
-      } catch (e) {
-        // non-critical
-      }
-
-      // Wait a moment for auth state to update
-      await new Promise(resolve => setTimeout(resolve, 300));
-
+      // onAuthStateChange handles all state updates (session, user, roles) on SIGNED_IN
       return { error: null };
     } catch (err) {
       console.error("Sign in error:", err);

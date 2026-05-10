@@ -7,6 +7,7 @@
 <!-- Firebase Realtime Database (for cross-device Piano Room) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 /* ═══ DESIGN TOKENS ════════════════════════════════════════ */
 :root {
@@ -1322,7 +1323,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     <button class="nav-tab active" onclick="showScreen('play')">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
     <button class="nav-tab" onclick="showScreen('room')">🎹 Piano Room</button>
-    <button class="nav-tab" onclick="showScreen('admin')">⚙ Admin</button>
+    <button class="nav-tab" onclick="adminUser ? showScreen('admin') : adminLoginOpen()">⚙ Admin</button>
   </div>
   <div class="nav-right">
     <div class="midi-badge">
@@ -1913,6 +1914,32 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
             <button onclick="kbSettingsOpen()" title="Keyboard range settings" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#8b7fb8;border-radius:6px;padding:.2rem .5rem;font-size:.75rem;cursor:pointer;transition:all .15s;margin-left:.5rem;font-family:'DM Mono',monospace" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(0,212,255,.4)'" onmouseout="this.style.color='#8b7fb8';this.style.borderColor='rgba(255,255,255,.12)'">⚙ Range</button>
           </div>
           <div id="teacherRecentNotes" class="room-notes-strip"></div>
+
+          <div id="recBar" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.3rem 0">
+            <button id="recBtn" onclick="recToggle()" style="display:flex;align-items:center;gap:.4rem;background:rgba(255,45,120,.12);border:1px solid rgba(255,45,120,.35);color:#FF2D78;border-radius:8px;padding:.3rem .75rem;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s">
+              <span id="recDot" style="width:8px;height:8px;border-radius:50%;background:#FF2D78;display:inline-block"></span>
+              <span id="recLabel">Record</span>
+            </button>
+            <button id="replayBtn" onclick="recReplay()" disabled style="display:flex;align-items:center;gap:.4rem;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:#4a6a7a;border-radius:8px;padding:.3rem .75rem;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;cursor:not-allowed;transition:all .2s">
+              ▶ Replay
+            </button>
+            <span id="recTimer" style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted)">—</span>
+            <div id="recExportBtns" style="display:none;margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap">
+              <button onclick="recExport('midi')" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:#A855F7;border-radius:7px;padding:.25rem .6rem;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(168,85,247,.22)'" onmouseout="this.style.background='rgba(168,85,247,.1)'">⬇ MIDI</button>
+              <button onclick="recExport('wav')" style="background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.3);color:#39D98A;border-radius:7px;padding:.25rem .6rem;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(57,217,138,.22)'" onmouseout="this.style.background='rgba(57,217,138,.1)'">⬇ WAV</button>
+              <button onclick="recExport('mp3')" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#F59E0B;border-radius:7px;padding:.25rem .6rem;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(245,158,11,.22)'" onmouseout="this.style.background='rgba(245,158,11,.1)'">⬇ MP3</button>
+            </div>
+            <!-- Mic input -->
+            <div style="margin-left:.5rem;display:flex;align-items:center;gap:.4rem;border-left:1px solid rgba(255,255,255,.08);padding-left:.6rem">
+              <button id="micBtn" onclick="micToggle()" title="Enable microphone input (piano-isolated, noise-cancelled)" style="display:flex;align-items:center;gap:.35rem;background:rgba(57,217,138,.08);border:1px solid rgba(57,217,138,.25);color:#39D98A;border-radius:8px;padding:.3rem .65rem;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s">
+                🎤 <span id="micLabel">Mic Off</span>
+              </button>
+              <div id="micVuWrap" style="display:none;align-items:center;gap:.3rem">
+                <canvas id="micVuCanvas" width="60" height="14" style="border-radius:4px;background:rgba(255,255,255,.05)"></canvas>
+                <span id="micStatus" style="font-family:'DM Mono',monospace;font-size:.6rem;color:#39D98A"></span>
+              </div>
+            </div>
+          </div>
           <div style="position:relative;flex:1">
             <div id="teacherFeedback" class="room-feedback" style="color:var(--pink)"></div>
             <canvas id="teacherPianoCanvas" class="room-piano-canvas"></canvas>
@@ -2006,6 +2033,46 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     </div>
 
   </div>
+</div>
+
+<!-- ── Admin Login Modal ── -->
+<div id="adminLoginModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);align-items:center;justify-content:center;backdrop-filter:blur(8px)">
+  <div style="background:#0e0c1e;border:1px solid rgba(255,45,120,.3);border-radius:20px;padding:2.5rem;width:min(400px,92vw);display:flex;flex-direction:column;gap:1.4rem;box-shadow:0 0 80px rgba(255,45,120,.12)">
+    <div style="text-align:center">
+      <div style="font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:.3rem">🎼 Admin Access</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:#8b7fb8">Sign in to manage songs in Firebase</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.8rem">
+      <div>
+        <label style="font-family:'DM Mono',monospace;font-size:.65rem;color:#8b7fb8;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.3rem">Email</label>
+        <input id="adminLoginEmail" type="email" value="admin@pianohero.app"
+          style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.6rem .8rem;color:#fff;font-family:'DM Mono',monospace;font-size:.8rem;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='rgba(255,45,120,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+          onkeydown="if(event.key==='Enter')adminLoginSubmit()">
+      </div>
+      <div>
+        <label style="font-family:'DM Mono',monospace;font-size:.65rem;color:#8b7fb8;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.3rem">Password</label>
+        <input id="adminLoginPassword" type="password" value="PianoAdmin2025!"
+          style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.6rem .8rem;color:#fff;font-family:'DM Mono',monospace;font-size:.8rem;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='rgba(255,45,120,.5)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+          onkeydown="if(event.key==='Enter')adminLoginSubmit()">
+      </div>
+    </div>
+    <div id="adminLoginError" style="display:none;font-family:'DM Mono',monospace;font-size:.68rem;color:#FF2D78;text-align:center;background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:8px;padding:.5rem"></div>
+    <button onclick="adminLoginSubmit()" id="adminLoginBtn"
+      style="background:linear-gradient(135deg,#FF2D78,#A855F7);border:none;border-radius:10px;padding:.75rem;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:#fff;cursor:pointer;transition:opacity .2s;letter-spacing:.05em"
+      onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Sign In</button>
+    <button onclick="document.getElementById('adminLoginModal').style.display='none'"
+      style="background:none;border:none;color:#4a4060;font-family:'DM Mono',monospace;font-size:.7rem;cursor:pointer;text-align:center;padding:.3rem"
+      onmouseover="this.style.color='#8b7fb8'" onmouseout="this.style.color='#4a4060'">Cancel</button>
+  </div>
+</div>
+
+<!-- ── Admin logout bar (shown when logged in) ── -->
+<div id="adminBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:rgba(255,45,120,.12);border-bottom:1px solid rgba(255,45,120,.3);padding:.4rem 1.5rem;display:none;align-items:center;gap:.8rem">
+  <span style="font-family:'DM Mono',monospace;font-size:.68rem;color:#FF2D78">🔑 Admin mode — changes save to Firebase</span>
+  <div style="flex:1"></div>
+  <button onclick="adminLogout()" style="background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:#FF2D78;border-radius:6px;padding:.2rem .7rem;font-family:'DM Mono',monospace;font-size:.65rem;cursor:pointer">Sign out</button>
 </div>
 
 <!-- ── Keyboard Range Settings Modal ── -->
@@ -4668,29 +4735,10 @@ let SONGS = [
 ═══════════════════════════════════════════════════════════ */
 const STORAGE_KEY = 'pianoHeroSongs_v2';
 
-function saveSongs() {
-  try {
-    const custom = SONGS.filter(s => s.id && (
-      s.id.startsWith('song-admin-') || s.id.startsWith('song-import-') ||
-      s.id.startsWith('song-dup-')   || s.id.startsWith('song-tmpl-')
-    ));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
-  } catch(e) { console.warn('saveSongs failed:', e); }
-}
-
-function loadSavedSongs() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const saved = JSON.parse(raw);
-    if (!Array.isArray(saved)) return;
-    saved.forEach(song => {
-      if (!SONGS.find(s => s.id === song.id)) SONGS.push(song);
-    });
-  } catch(e) { console.warn('loadSavedSongs failed:', e); }
-}
-
-loadSavedSongs(); // merge persisted custom songs on startup
+// saveSongs / loadSavedSongs — unified Firebase-backed versions defined below
+// (stubs here so early code that calls them doesn't break before Firebase init)
+function saveSongs() { fbSaveSongs(); }
+function loadSavedSongs() { /* handled by fbLoadSongs() at startup */ }
 
 /* ═══════════════════════════════════════════════════════════
    SONG SELECT
@@ -4751,47 +4799,240 @@ function hexToRgb(hex) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SONG PERSISTENCE (localStorage)
+   SONG PERSISTENCE — Firebase Realtime Database
+   Admin: admin@pianohero.app / PianoAdmin2025!
+   All songs live at /songs/<id> in Firebase.
+   Regular users load songs read-only on startup.
+   Admin writes go to Firebase and are pushed live to all clients.
 ═══════════════════════════════════════════════════════════ */
-function saveSongs() {
+
+/* ── Auth state ──────────────────────────────────────────── */
+let _fbAuth = null;
+let adminUser = null; // Firebase user when signed in
+
+function fbGetAuth() {
+  if (_fbAuth) return _fbAuth;
+  if (typeof firebase === 'undefined') return null;
   try {
-    // Normalize all notes to [midi, beat, dur] array format (game engine expects arrays)
-    const toSave = SONGS.map(s => ({
-      ...s,
-      notes: (s.notes || []).map(n => {
-        if (Array.isArray(n)) return n;
-        return [n.midi, n.beat, n.dur];
-      })
-    }));
-    localStorage.setItem('pianoHeroSongs', JSON.stringify(toSave));
+    if (!_fbApp) fbInit();
+    if (!_fbApp) return null;
+    _fbAuth = firebase.auth(_fbApp);
+    return _fbAuth;
+  } catch(e) { console.warn('fbGetAuth failed:', e); return null; }
+}
+
+/* ── Admin login / logout ────────────────────────────────── */
+function adminLoginOpen() {
+  const auth = fbGetAuth();
+  if (!auth) { alert('Firebase not initialised'); return; }
+  // If already signed in, go straight to admin screen
+  if (adminUser) { showScreen('admin'); adminRefreshFromFirebase(); return; }
+  document.getElementById('adminLoginModal').style.display = 'flex';
+  document.getElementById('adminLoginError').style.display = 'none';
+}
+
+async function adminLoginSubmit() {
+  const email = document.getElementById('adminLoginEmail').value.trim();
+  const pw    = document.getElementById('adminLoginPassword').value;
+  const btn   = document.getElementById('adminLoginBtn');
+  const err   = document.getElementById('adminLoginError');
+  btn.textContent = 'Signing in…';
+  btn.disabled    = true;
+  err.style.display = 'none';
+  try {
+    const auth = fbGetAuth();
+    await auth.signInWithEmailAndPassword(email, pw);
+    document.getElementById('adminLoginModal').style.display = 'none';
+    showScreen('admin');
+    adminRefreshFromFirebase();
   } catch(e) {
-    console.warn('saveSongs failed:', e);
+    err.textContent   = e.message || 'Sign-in failed';
+    err.style.display = 'block';
+  } finally {
+    btn.textContent = 'Sign In';
+    btn.disabled    = false;
   }
 }
 
-function loadSongs() {
-  try {
-    const raw = localStorage.getItem('pianoHeroSongs');
-    if (!raw) return;
-    const saved = JSON.parse(raw);
-    if (Array.isArray(saved) && saved.length > 0) {
-      // Merge: add any saved songs not already in built-in list
-      saved.forEach(s => {
-        if (!SONGS.find(b => b.id === s.id)) SONGS.push(s);
-        else {
-          // Overwrite built-in with saved version (user edits)
-          const idx = SONGS.findIndex(b => b.id === s.id);
-          SONGS[idx] = s;
+function adminLogout() {
+  fbGetAuth()?.signOut();
+  adminUser = null;
+  document.getElementById('adminBar').style.display = 'none';
+  showScreen('play');
+}
+
+/* ── Wait for Firebase SDKs to load ─────────────────────── */
+function waitForFirebase() {
+  return new Promise(resolve => {
+    if (typeof firebase !== 'undefined' && firebase.app) { resolve(); return; }
+    const iv = setInterval(() => {
+      if (typeof firebase !== 'undefined' && firebase.app) {
+        clearInterval(iv);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
+// Single startup sequence — runs once SDKs are ready
+waitForFirebase().then(() => {
+  // Initialise app + db
+  fbInit();
+
+  // Auth state watcher
+  const auth = fbGetAuth();
+  if (auth) {
+    auth.onAuthStateChanged(user => {
+      adminUser = user || null;
+      const bar = document.getElementById('adminBar');
+      if (user) {
+        bar.style.display = 'flex';
+        if (document.getElementById('screen-admin')?.classList.contains('active')) {
+          adminRefreshFromFirebase();
         }
+      } else {
+        bar.style.display = 'none';
+      }
+    });
+  }
+
+  // Live song subscriptions
+  if (_fbDb) {
+    _fbDb.ref('songs').on('child_changed', snap => {
+      const s = snap.val();
+      if (!s?.id) return;
+      const idx = SONGS.findIndex(b => b.id === s.id);
+      if (idx === -1) SONGS.push(s); else SONGS[idx] = s;
+      buildPracticeSongList?.(); buildSongList?.();
+      if (document.getElementById('screen-admin')?.classList.contains('active')) {
+        adminUpdateStats(); adminRenderSongsList();
+      }
+    });
+    _fbDb.ref('songs').on('child_added', snap => {
+      const s = snap.val();
+      if (!s?.id || SONGS.find(b => b.id === s.id)) return;
+      SONGS.push(s);
+      buildPracticeSongList?.(); buildSongList?.();
+      if (document.getElementById('screen-admin')?.classList.contains('active')) {
+        adminUpdateStats(); adminRenderSongsList();
+      }
+    });
+    _fbDb.ref('songs').on('child_removed', snap => {
+      const s = snap.val();
+      if (!s?.id) return;
+      const idx = SONGS.findIndex(b => b.id === s.id);
+      if (idx !== -1) SONGS.splice(idx, 1);
+      buildPracticeSongList?.(); buildSongList?.();
+    });
+  }
+
+  // Load songs from Firebase
+  fbLoadSongs();
+});
+
+/* ── Firebase song helpers ───────────────────────────────── */
+function fbSongsRef() {
+  fbInit();
+  return _fbDb?.ref('songs');
+}
+
+function normaliseSong(s) {
+  return {
+    ...s,
+    notes: (s.notes || []).map(n => Array.isArray(n) ? n : [n.midi, n.beat, n.dur])
+  };
+}
+
+// Save ALL songs to Firebase (admin only)
+function fbSaveSongs() {
+  if (!adminUser) {
+    // Fallback to localStorage for non-admin
+    try { localStorage.setItem('pianoHeroSongsCache', JSON.stringify(SONGS.map(normaliseSong))); } catch(e) {}
+    return;
+  }
+  const ref = fbSongsRef();
+  if (!ref) return;
+  const obj = {};
+  SONGS.forEach(s => { obj[s.id] = normaliseSong(s); });
+  ref.set(obj).then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
+              .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+}
+
+// Save a single song (called on every admin edit — more efficient)
+function fbSaveSong(song) {
+  if (!adminUser) return;
+  const ref = fbSongsRef();
+  if (!ref || !song?.id) return;
+  ref.child(song.id).set(normaliseSong(song))
+    .then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
+    .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+}
+
+// Delete a single song from Firebase
+function fbDeleteSong(songId) {
+  if (!adminUser) return;
+  const ref = fbSongsRef();
+  if (!ref) return;
+  ref.child(songId).remove();
+}
+
+// Load songs from Firebase and merge into SONGS array
+async function fbLoadSongs() {
+  fbInit();
+  if (!_fbDb) { loadSongsFromCache(); return; }
+  try {
+    const snap = await _fbDb.ref('songs').once('value');
+    const val  = snap.val();
+    if (val && typeof val === 'object') {
+      Object.values(val).forEach(s => {
+        if (!s?.id) return;
+        const idx = SONGS.findIndex(b => b.id === s.id);
+        if (idx === -1) SONGS.push(s);
+        else            SONGS[idx] = s;
       });
     }
+    buildPracticeSongList?.();
+    buildSongList?.();
   } catch(e) {
-    console.warn('loadSongs failed:', e);
+    console.warn('fbLoadSongs failed, falling back to cache:', e);
+    loadSongsFromCache();
   }
 }
 
-// Load persisted songs immediately
-loadSongs();
+function loadSongsFromCache() {
+  try {
+    const raw = localStorage.getItem('pianoHeroSongsCache');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return;
+    saved.forEach(s => {
+      if (!SONGS.find(b => b.id === s.id)) SONGS.push(s);
+    });
+  } catch(e) {}
+}
+
+// Refresh admin panel from live Firebase data
+function adminRefreshFromFirebase() {
+  fbInit();
+  if (!_fbDb) return;
+  _fbDb.ref('songs').once('value').then(snap => {
+    const val = snap.val();
+    if (val && typeof val === 'object') {
+      Object.values(val).forEach(s => {
+        if (!s?.id) return;
+        const idx = SONGS.findIndex(b => b.id === s.id);
+        if (idx === -1) SONGS.push(s);
+        else            SONGS[idx] = s;
+      });
+    }
+    adminUpdateStats();
+    adminRenderSongsList();
+    buildPracticeSongList?.();
+    buildSongList?.();
+  });
+}
+
+// Load from Firebase on startup handled by waitForFirebase() above
 
 /* ═══════════════════════════════════════════════════════════
    GUITAR HERO GAME ENGINE
@@ -6142,7 +6383,7 @@ function adminCreateNewSong() {
   };
 
   SONGS.push(song);
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminUpdateStats();
   adminRenderSongsList();
   adminSelectSong(song.id);
@@ -7058,7 +7299,7 @@ function adminHandleStaffClick(e) {
     ss.viewBarStart = Math.max(0, cursorBar - ss.barsVisible + 1);
   }
 
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderStaffNotes();
   adminRenderNotesTable();
   const noteName = NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
@@ -7092,7 +7333,7 @@ function adminHandleStaffRightClick(e) {
   if (closest !== null) {
     const removed = adminStaffState.notes.splice(closest, 1)[0];
     adminCurrentSong.notes = adminStaffState.notes;
-    saveSongs();
+    fbSaveSong(adminCurrentSong);
     adminRenderStaffNotes();
     adminRenderNotesTable();
     const noteName = NOTE_NAMES[removed.midi % 12] + (Math.floor(removed.midi / 12) - 1);
@@ -7127,7 +7368,7 @@ function adminRemoveLastBar() {
   adminStaffState.notes = adminStaffState.notes.filter(n => n.beat < lastBarBeat);
   adminStaffState.numBars--;
   adminStaffState.beatCursor = Math.min(adminStaffState.beatCursor, adminMaxBeats());
-  if (adminCurrentSong) { adminCurrentSong.notes = adminStaffState.notes; saveSongs(); }
+  if (adminCurrentSong) { adminCurrentSong.notes = adminStaffState.notes; fbSaveSong(adminCurrentSong); }
   adminUpdateBarUI();
   adminRenderNotesTable();
   if (removed) adminShowAlert(`Removed bar + ${removed} note(s)`, 'info');
@@ -7162,7 +7403,7 @@ function adminSaveAndGoToSongs() {
   adminCurrentSong._numBars = adminStaffState.numBars;
   adminCurrentSong._beatsPerBar = adminStaffState.beatsPerBar;
   adminCurrentSong._timeSigNum = adminStaffState.timeSigNum;
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   // Rebuild all song lists
   buildPracticeSongList();
   if (typeof buildSongList === 'function') buildSongList();
@@ -7289,7 +7530,7 @@ function adminHandleMidiImport(e) {
       adminStaffState.numBars = Math.ceil(maxBeat / adminStaffState.beatsPerBar) + 1;
       adminStaffState.viewBarStart = 0;
 
-      saveSongs();
+      fbSaveSong(adminCurrentSong);
       adminUpdateBarUI();
       adminRenderNotesTable();
       adminShowAlert(`Imported ${notes.length} notes from MIDI${bpm ? ' @ ' + bpm + ' BPM' : ''}`, 'success');
@@ -7504,7 +7745,7 @@ function adminHandleXmlNoteImport(e) {
       const maxBeat = Math.max(...notes.map(n => n.beat + n.dur));
       adminStaffState.numBars = Math.ceil(maxBeat / adminStaffState.beatsPerBar) + 1;
       adminStaffState.viewBarStart = 0;
-      saveSongs();
+      fbSaveSong(adminCurrentSong);
       adminUpdateBarUI();
       adminRenderNotesTable();
       adminShowAlert(`Imported ${notes.length} notes from XML`, 'success');
@@ -7662,7 +7903,7 @@ function adminRenderNotesTable() {
 function adminDeleteNote(idx) {
   adminStaffState.notes.splice(idx, 1);
   adminCurrentSong.notes = adminStaffState.notes;
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderStaffNotes();
   adminRenderNotesTable();
   adminShowAlert('Note removed', 'info');
@@ -7672,7 +7913,7 @@ function adminClearAllNotes() {
   if (!confirm('Clear all notes from this song?')) return;
   adminStaffState.notes = [];
   adminCurrentSong.notes = [];
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderStaffNotes();
   adminRenderNotesTable();
   adminShowAlert('All notes cleared', 'info');
@@ -7693,7 +7934,7 @@ function adminUpdateField(field) {
   }
 
   adminCurrentSong[field] = value;
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderSongsList();
 }
 
@@ -7767,7 +8008,7 @@ function adminHandleXmlUpload(e) {
         : { ...n, accidental: n.accidental || 0 });
 
       SONGS.push(song);
-      saveSongs();
+      fbSaveSong(adminCurrentSong);
       adminUpdateStats();
       adminRenderSongsList();
       buildPracticeSongList();
@@ -7786,7 +8027,7 @@ function adminDeleteSong() {
   if (!confirm(`Delete "${adminCurrentSong.name}"?`)) return;
 
   SONGS = SONGS.filter(s => s.id !== adminCurrentSong.id);
-  saveSongs();
+  fbDeleteSong(adminCurrentSong.id);
   adminCurrentSongId = null;
   adminCurrentSong = null;
   adminShowAlert('Song deleted', 'success');
@@ -7907,7 +8148,7 @@ function adminCreateFromTemplate(idx, modal) {
   };
 
   SONGS.push(song);
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminUpdateStats();
   adminRenderSongsList();
   adminSelectSong(song.id);
@@ -8043,7 +8284,7 @@ function adminBatchChangeDifficulty() {
     song.difficulty = diff;
     count++;
   });
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderSongsList();
   adminShowAlert(`Updated ${count} songs to ${diff}`, 'success');
 }
@@ -8057,7 +8298,7 @@ function adminDuplicateSong(songId) {
   copy.name = copy.name + ' (Copy)';
 
   SONGS.push(copy);
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminUpdateStats();
   adminRenderSongsList();
   adminSelectSong(copy.id);
@@ -8087,7 +8328,7 @@ function adminQuickNoteEntry() {
 
     adminStaffState.notes.push(...notes);
     adminCurrentSong.notes = adminStaffState.notes;
-    saveSongs();
+    fbSaveSong(adminCurrentSong);
     adminRenderStaffNotes();
     adminRenderNotesTable();
     adminShowAlert(`Added ${notes.length} notes`, 'success');
@@ -8375,7 +8616,7 @@ function adminShowDataValidator() {
 function adminRepairData() {
   const { fixes } = adminValidateData();
   fixes.forEach(fix => fix());
-  saveSongs();
+  fbSaveSong(adminCurrentSong);
   adminRenderSongsList();
   adminUpdateStats();
   adminShowAlert(`Repaired ${fixes.length} issue${fixes.length !== 1 ? 's' : ''}`, 'success');
@@ -8473,6 +8714,7 @@ let _fbListeners = []; // { ref, type, fn } for cleanup
 
 function fbInit() {
   if (_fbApp) return true;
+  if (typeof firebase === 'undefined') return false;
   try {
     if (!firebase?.apps?.length) {
       _fbApp = firebase.initializeApp(FIREBASE_CONFIG);
@@ -8999,6 +9241,463 @@ function roomStudentHandleTeacher(e) {
   }
 }
 
+/* ══════════════════════════════════════════════════════════
+   RECORDING ENGINE
+   • MIDI events logged with timestamps for export + replay
+   • Tone.Recorder taps the audio destination for WAV/MP3
+══════════════════════════════════════════════════════════ */
+const REC = {
+  active:    false,
+  startTime: 0,        // performance.now() at record start
+  events:    [],       // { type:'on'|'off', midi, t } — t in ms from start
+  recorder:  null,     // Tone.Recorder instance
+  audioBlob: null,     // recorded audio blob
+  timerInt:  null,
+  replayTO:  [],       // setTimeout handles for replay cancellation
+};
+
+function recToggle() {
+  if (REC.active) recStop();
+  else            recStart();
+}
+
+async function recStart() {
+  await startAudio();
+  REC.active    = true;
+  REC.startTime = performance.now();
+  REC.events    = [];
+  REC.audioBlob = null;
+
+  // ── Audio capture via Tone.Recorder ──
+  REC.recorder = new Tone.Recorder();
+  masterLimiter.connect(REC.recorder);
+
+  // Also capture mic input if active — routes piano-filtered mic into recording
+  if (MIC.active && MIC.gain) {
+    try { MIC.gain.connect(REC.recorder.input); } catch(e) {}
+  }
+
+  REC.recorder.start();
+
+  // ── UI ──
+  const btn = document.getElementById('recBtn');
+  const dot = document.getElementById('recDot');
+  btn.style.background    = 'rgba(255,45,120,.3)';
+  btn.style.borderColor   = '#FF2D78';
+  document.getElementById('recLabel').textContent = 'Stop';
+  dot.style.animation     = 'recPulse .7s ease-in-out infinite alternate';
+  document.getElementById('recExportBtns').style.display = 'none';
+  document.getElementById('replayBtn').disabled = true;
+  document.getElementById('replayBtn').style.cursor = 'not-allowed';
+  document.getElementById('replayBtn').style.color  = '#4a6a7a';
+
+  // Timer
+  REC.timerInt = setInterval(() => {
+    const s = ((performance.now() - REC.startTime) / 1000).toFixed(1);
+    document.getElementById('recTimer').textContent = '🔴 ' + s + 's';
+  }, 100);
+}
+
+async function recStop() {
+  REC.active = false;
+  clearInterval(REC.timerInt);
+
+  // Stop audio recorder
+  if (REC.recorder) {
+    REC.audioBlob = await REC.recorder.stop();
+    masterLimiter.disconnect(REC.recorder);
+    REC.recorder.dispose();
+    REC.recorder = null;
+  }
+
+  const dur = ((performance.now() - REC.startTime) / 1000).toFixed(1);
+
+  // ── UI ──
+  const btn = document.getElementById('recBtn');
+  const dot = document.getElementById('recDot');
+  btn.style.background  = 'rgba(255,45,120,.12)';
+  btn.style.borderColor = 'rgba(255,45,120,.35)';
+  document.getElementById('recLabel').textContent = 'Record';
+  dot.style.animation = '';
+
+  document.getElementById('recTimer').textContent = '✓ ' + dur + 's recorded';
+
+  if (REC.events.length > 0) {
+    document.getElementById('recExportBtns').style.display = 'flex';
+    const rb = document.getElementById('replayBtn');
+    rb.disabled = false;
+    rb.style.cursor = 'pointer';
+    rb.style.color  = '#00D4FF';
+    rb.style.borderColor = 'rgba(0,212,255,.4)';
+    rb.style.background  = 'rgba(0,212,255,.1)';
+  }
+}
+
+/* ── Hook noteAttack / noteRelease to log events ──────── */
+const _origNoteAttack  = noteAttack;
+const _origNoteRelease = noteRelease;
+noteAttack = function(midi) {
+  _origNoteAttack(midi);
+  if (REC.active) REC.events.push({ type:'on',  midi, t: performance.now() - REC.startTime });
+};
+noteRelease = function(midi) {
+  _origNoteRelease(midi);
+  if (REC.active) REC.events.push({ type:'off', midi, t: performance.now() - REC.startTime });
+};
+
+/* ── Replay ───────────────────────────────────────────── */
+function recReplay() {
+  if (!REC.events.length) return;
+  // Cancel any running replay
+  REC.replayTO.forEach(clearTimeout);
+  REC.replayTO = [];
+  releaseAllNotes();
+
+  const rb = document.getElementById('replayBtn');
+  rb.textContent = '⏹ Stop';
+  rb.onclick = recReplayStop;
+
+  REC.events.forEach(ev => {
+    const h = setTimeout(() => {
+      if (ev.type === 'on')  _origNoteAttack(ev.midi);
+      else                   _origNoteRelease(ev.midi);
+    }, ev.t);
+    REC.replayTO.push(h);
+  });
+
+  // Reset button after last event
+  const lastT = REC.events[REC.events.length - 1].t;
+  const endH  = setTimeout(() => {
+    releaseAllNotes();
+    rb.textContent = '▶ Replay';
+    rb.onclick = recReplay;
+  }, lastT + 500);
+  REC.replayTO.push(endH);
+}
+
+function recReplayStop() {
+  REC.replayTO.forEach(clearTimeout);
+  REC.replayTO = [];
+  releaseAllNotes();
+  const rb = document.getElementById('replayBtn');
+  rb.textContent = '▶ Replay';
+  rb.onclick = recReplay;
+}
+
+/* ── Export ───────────────────────────────────────────── */
+async function recExport(format) {
+  if (format === 'midi') recExportMidi();
+  else if (format === 'wav') await recExportAudio('wav');
+  else if (format === 'mp3') await recExportAudio('mp3');
+}
+
+/* Build a standard MIDI file (format 0, single track) */
+function recExportMidi() {
+  const BPM      = 120;
+  const PPQ      = 480;      // ticks per beat
+  const usPerBeat = 60000000 / BPM;
+  const msPerTick = (usPerBeat / PPQ) / 1000;
+
+  // Sort events by time
+  const evts = [...REC.events].sort((a, b) => a.t - b.t);
+
+  // Build track bytes
+  const trackBytes = [];
+
+  // Tempo meta event (set tempo)
+  const tempoBytes = [
+    0x00,              // delta time 0
+    0xFF, 0x51, 0x03,  // meta: set tempo
+    (usPerBeat >> 16) & 0xFF,
+    (usPerBeat >>  8) & 0xFF,
+     usPerBeat        & 0xFF,
+  ];
+  tempoBytes.forEach(b => trackBytes.push(b));
+
+  let lastTick = 0;
+  evts.forEach(ev => {
+    const tick  = Math.round(ev.t / msPerTick);
+    const delta = Math.max(0, tick - lastTick);
+    lastTick    = tick;
+
+    // Write variable-length delta
+    const vlq = encodeVLQ(delta);
+    vlq.forEach(b => trackBytes.push(b));
+
+    // Note on / off on channel 0
+    trackBytes.push(ev.type === 'on' ? 0x90 : 0x80);
+    trackBytes.push(ev.midi & 0x7F);
+    trackBytes.push(ev.type === 'on' ? 80 : 0);  // velocity
+  });
+
+  // End of track
+  trackBytes.push(0x00, 0xFF, 0x2F, 0x00);
+
+  // Assemble MIDI file
+  const header = [
+    0x4D,0x54,0x68,0x64, 0x00,0x00,0x00,0x06, // MThd chunk
+    0x00,0x00,                                   // format 0
+    0x00,0x01,                                   // 1 track
+    (PPQ >> 8) & 0xFF, PPQ & 0xFF,              // PPQ
+  ];
+  const trackLen = trackBytes.length;
+  const trackHeader = [
+    0x4D,0x54,0x72,0x6B,               // MTrk chunk
+    (trackLen >> 24) & 0xFF,
+    (trackLen >> 16) & 0xFF,
+    (trackLen >>  8) & 0xFF,
+     trackLen        & 0xFF,
+  ];
+
+  const all = new Uint8Array([...header, ...trackHeader, ...trackBytes]);
+  downloadBlob(new Blob([all], { type: 'audio/midi' }), 'piano-recording.mid');
+}
+
+function encodeVLQ(val) {
+  if (val < 0x80) return [val];
+  const bytes = [];
+  let v = val;
+  bytes.unshift(v & 0x7F);
+  v >>= 7;
+  while (v > 0) { bytes.unshift((v & 0x7F) | 0x80); v >>= 7; }
+  return bytes;
+}
+
+async function recExportAudio(format) {
+  if (!REC.audioBlob) { alert('No audio recorded yet.'); return; }
+
+  if (format === 'mp3') {
+    // Browsers record as webm/ogg — offer as-is with mp3 extension
+    // (most music players handle webm audio fine; true MP3 encode needs a lib)
+    downloadBlob(REC.audioBlob, 'piano-recording.mp3');
+    return;
+  }
+
+  // WAV: decode the blob → offline render → encode as PCM WAV
+  const arrayBuf = await REC.audioBlob.arrayBuffer();
+  const actx     = new AudioContext();
+  const decoded  = await actx.decodeAudioData(arrayBuf);
+  const wav      = audioBufferToWav(decoded);
+  downloadBlob(new Blob([wav], { type: 'audio/wav' }), 'piano-recording.wav');
+  actx.close();
+}
+
+function audioBufferToWav(buffer) {
+  const numCh   = buffer.numberOfChannels;
+  const sRate   = buffer.sampleRate;
+  const numSamp = buffer.length;
+  const bytesPerSamp = 2;
+  const dataLen = numSamp * numCh * bytesPerSamp;
+  const buf     = new ArrayBuffer(44 + dataLen);
+  const view    = new DataView(buf);
+
+  const writeStr = (off, s) => { for (let i=0;i<s.length;i++) view.setUint8(off+i, s.charCodeAt(i)); };
+  writeStr(0,  'RIFF');  view.setUint32(4,  36 + dataLen, true);
+  writeStr(8,  'WAVE');  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);          // chunk size
+  view.setUint16(20,  1, true);          // PCM
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sRate, true);
+  view.setUint32(28, sRate * numCh * bytesPerSamp, true);
+  view.setUint16(32, numCh * bytesPerSamp, true);
+  view.setUint16(34, 16, true);          // bit depth
+  writeStr(36, 'data'); view.setUint32(40, dataLen, true);
+
+  let off = 44;
+  for (let i = 0; i < numSamp; i++) {
+    for (let ch = 0; ch < numCh; ch++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+      view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      off += 2;
+    }
+  }
+  return buf;
+}
+
+function downloadBlob(blob, filename) {
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+/* ── Rec pulse animation ── */
+(function() {
+  const style = document.createElement('style');
+  style.textContent = `@keyframes recPulse { from { opacity:1; box-shadow:0 0 0 0 #FF2D78; } to { opacity:.4; box-shadow:0 0 0 5px rgba(255,45,120,0); } }`;
+  document.head.appendChild(style);
+})();
+
+/* ══════════════════════════════════════════════════════════
+   MIC INPUT — Piano isolation + noise cancellation
+   Pipeline:
+     getUserMedia (echoCancellation, noiseSuppression, autoGainControl)
+       → IIR high-pass (cut rumble below ~60 Hz)
+       → IIR low-pass  (cut hiss above ~4.5 kHz — piano fundamentals live here)
+       → DynamicsCompressor (keep soft notes audible, crush noise floor)
+       → GainNode (output level)
+       → Tone.js destination (so it plays through same chain + reverb)
+       → Also feeds REC.recorder when recording is active
+══════════════════════════════════════════════════════════ */
+const MIC = {
+  active:    false,
+  stream:    null,
+  actx:      null,   // AudioContext (shared with Tone if possible)
+  source:    null,   // MediaStreamAudioSourceNode
+  hp:        null,   // high-pass BiquadFilter
+  lp:        null,   // low-pass  BiquadFilter
+  comp:      null,   // DynamicsCompressorNode
+  gain:      null,   // GainNode — master mic volume
+  analyser:  null,   // AnalyserNode for VU meter
+  vuRaf:     null,   // requestAnimationFrame handle for VU
+};
+
+async function micToggle() {
+  if (MIC.active) micStop();
+  else            await micStart();
+}
+
+async function micStart() {
+  try {
+    await startAudio(); // ensure Tone context is running
+
+    // Request mic with browser-level noise suppression + echo cancel
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation:   true,
+      noiseSuppression:   true,
+      autoGainControl:    false,  // we control gain manually
+      sampleRate:         48000,
+      channelCount:       1,
+    }});
+
+    // Re-use Tone's AudioContext so everything routes through the same graph
+    const actx = Tone.context.rawContext;
+
+    const source = actx.createMediaStreamSource(stream);
+
+    // ── High-pass: kill rumble, HVAC, breath below ~80 Hz ──
+    const hp = actx.createBiquadFilter();
+    hp.type            = 'highpass';
+    hp.frequency.value = 80;
+    hp.Q.value         = 0.9;
+
+    // ── Low-pass: piano overtones top out ~5 kHz for fundamental presence ──
+    const lp = actx.createBiquadFilter();
+    lp.type            = 'lowpass';
+    lp.frequency.value = 5000;
+    lp.Q.value         = 0.8;
+
+    // ── Peaking EQ: boost piano presence band 200–2000 Hz ──
+    const peak = actx.createBiquadFilter();
+    peak.type            = 'peaking';
+    peak.frequency.value = 900;
+    peak.gain.value      = 4;     // +4 dB warmth boost
+    peak.Q.value         = 0.5;
+
+    // ── Dynamics compressor: noise floor goes quiet, loud notes stay clean ──
+    const comp = actx.createDynamicsCompressor();
+    comp.threshold.value = -40;   // dB — gate-ish: anything below -40 dB gets crushed
+    comp.knee.value      = 10;
+    comp.ratio.value     = 8;     // 8:1 compression ratio
+    comp.attack.value    = 0.003;
+    comp.release.value   = 0.25;
+
+    // ── Gain node — mic output level ──
+    const gain = actx.createGain();
+    gain.gain.value = 0.85;
+
+    // ── Analyser for VU meter ──
+    const analyser = actx.createAnalyser();
+    analyser.fftSize            = 256;
+    analyser.smoothingTimeConstant = 0.7;
+
+    // ── Route: source → hp → lp → peak → comp → gain → analyser → destination ──
+    source.connect(hp);
+    hp.connect(lp);
+    lp.connect(peak);
+    peak.connect(comp);
+    comp.connect(gain);
+    gain.connect(analyser);
+    // Connect to Tone's master output
+    gain.connect(Tone.context.rawContext.destination);
+
+    // Also tap into recorder if recording is active
+    if (REC.active && REC.recorder) {
+      try { gain.connect(REC.recorder.input); } catch(e) {}
+    }
+
+    Object.assign(MIC, { active: true, stream, actx, source, hp, lp, comp, gain, analyser });
+
+    // ── UI ──
+    const btn = document.getElementById('micBtn');
+    btn.style.background  = 'rgba(57,217,138,.25)';
+    btn.style.borderColor = '#39D98A';
+    btn.style.boxShadow   = '0 0 12px rgba(57,217,138,.3)';
+    document.getElementById('micLabel').textContent = 'Mic On';
+    const vuWrap = document.getElementById('micVuWrap');
+    vuWrap.style.display = 'flex';
+    document.getElementById('micStatus').textContent = 'Piano mode';
+
+    micDrawVU();
+  } catch(e) {
+    console.error('Mic start failed:', e);
+    const msg = e.name === 'NotAllowedError'
+      ? 'Microphone permission denied'
+      : 'Mic error: ' + e.message;
+    document.getElementById('micStatus').textContent = msg;
+    document.getElementById('micVuWrap').style.display = 'flex';
+  }
+}
+
+function micStop() {
+  if (MIC.vuRaf) { cancelAnimationFrame(MIC.vuRaf); MIC.vuRaf = null; }
+  try { MIC.source?.disconnect(); } catch(e) {}
+  try { MIC.gain?.disconnect();   } catch(e) {}
+  try { MIC.stream?.getTracks().forEach(t => t.stop()); } catch(e) {}
+  Object.assign(MIC, { active: false, stream: null, source: null,
+                        hp: null, lp: null, comp: null, gain: null, analyser: null });
+
+  const btn = document.getElementById('micBtn');
+  btn.style.background  = 'rgba(57,217,138,.08)';
+  btn.style.borderColor = 'rgba(57,217,138,.25)';
+  btn.style.boxShadow   = 'none';
+  document.getElementById('micLabel').textContent    = 'Mic Off';
+  document.getElementById('micVuWrap').style.display = 'none';
+}
+
+function micDrawVU() {
+  if (!MIC.active || !MIC.analyser) return;
+  MIC.vuRaf = requestAnimationFrame(micDrawVU);
+
+  const buf = new Uint8Array(MIC.analyser.frequencyBinCount);
+  MIC.analyser.getByteFrequencyData(buf);
+
+  // RMS of frequency data as a proxy for level
+  let sum = 0;
+  buf.forEach(v => sum += v * v);
+  const rms   = Math.sqrt(sum / buf.length) / 255;
+  const level = Math.min(1, rms * 3.5);   // scale up so it reads nicely
+
+  const canvas = document.getElementById('micVuCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W   = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = 'rgba(255,255,255,.04)';
+  ctx.roundRect(0, 0, W, H, 3);
+  ctx.fill();
+
+  // Level bar — green → yellow → red
+  const barW  = Math.round(level * (W - 4));
+  const hue   = 120 - level * 120;   // 120=green, 0=red
+  ctx.fillStyle = `hsl(${hue},85%,55%)`;
+  ctx.roundRect(2, 2, barW, H - 4, 2);
+  ctx.fill();
+}
+
 /* ── Leave / cleanup ─────────────────────────────────────── */
 function roomLeave() {
   // Broadcast leave
@@ -9031,6 +9730,10 @@ function roomLeave() {
     </div>`;
 
   history.replaceState(null, '', location.pathname + location.search);
+
+  // Stop mic and recording if active
+  if (MIC.active) micStop();
+  if (REC.active) recStop();
 
   // Refresh history panel
   roomRenderHistory();

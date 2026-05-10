@@ -24,9 +24,8 @@ const StudentHome = () => {
     nextLesson: null as { scheduled_date: string; scheduled_time: string } | null,
     foundationProgress: 0,
     foundationModulesCompleted: 0,
-    foundationModulesTotal: 8,
-    performanceScore: 85,
-    performanceTrend: "up" as "up" | "down" | "stable",
+    foundationModulesTotal: 0,
+    quizAvgScore: null as number | null,
     hoursLearned: 0,
   });
 
@@ -35,34 +34,63 @@ const StudentHome = () => {
 
     const fetchStats = async () => {
       const today = new Date().toISOString().split("T")[0];
-      
-      const [upcomingRes, completedRes, notesRes, nextRes] = await Promise.all([
+
+      const [upcomingRes, completedRes, notesRes, nextRes, modulesRes, lessonProgressRes, quizRes] = await Promise.all([
         supabase.from("lessons").select("*", { count: "exact" }).eq("student_id", user.id).eq("status", "scheduled").gte("scheduled_date", today),
         supabase.from("lessons").select("*", { count: "exact" }).eq("student_id", user.id).eq("status", "completed"),
         supabase.from("lesson_notes").select("*", { count: "exact" }).eq("is_visible_to_student", true),
         supabase.from("lessons").select("scheduled_date, scheduled_time").eq("student_id", user.id).eq("status", "scheduled").gte("scheduled_date", today).order("scheduled_date").order("scheduled_time").limit(1).maybeSingle(),
+        (supabase as any).from("foundation_modules").select("id").eq("is_published", true),
+        (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
+        (supabase as any).from("quiz_attempts").select("score, total").eq("user_id", user.id),
       ]);
 
-      // Calculate foundation progress from completed lessons
-      const foundationModulesCompleted = 2; // Welcome to Piano, Reading Notes
-      const foundationModulesTotal = 8;
-      const foundationProgress = (foundationModulesCompleted / foundationModulesTotal) * 100;
+      const totalModules = (modulesRes.data || []).length;
 
-      // Calculate total hours learned
+      // Count completed foundation modules: fetch all lesson IDs per module and check progress
+      let completedModules = 0;
+      if (totalModules > 0) {
+        const moduleIds = (modulesRes.data || []).map((m: any) => m.id);
+        const { data: allLessons } = await (supabase as any)
+          .from("foundation_lessons")
+          .select("id, module_id")
+          .in("module_id", moduleIds);
+
+        const completedLessonIds = new Set<string>(
+          (lessonProgressRes.data || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
+        );
+
+        const lessonsByModule: Record<string, string[]> = {};
+        (allLessons || []).forEach((l: any) => {
+          if (!lessonsByModule[l.module_id]) lessonsByModule[l.module_id] = [];
+          lessonsByModule[l.module_id].push(l.id);
+        });
+
+        completedModules = moduleIds.filter((mid: string) => {
+          const ids = lessonsByModule[mid] || [];
+          return ids.length > 0 && ids.every((id: string) => completedLessonIds.has(id));
+        }).length;
+      }
+
+      // Average quiz score
+      const attempts: any[] = quizRes.data || [];
+      const quizAvgScore = attempts.length > 0
+        ? Math.round(attempts.reduce((sum: number, a: any) => sum + (a.total > 0 ? (a.score / a.total) * 100 : 0), 0) / attempts.length)
+        : null;
+
       const completedCount = completedRes.count || 0;
-      const hoursLearned = completedCount * 1; // Assuming 1 hour per lesson on average
+      const foundationProgress = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
 
       setStats({
         upcomingLessons: upcomingRes.count || 0,
-        completedLessons: completedRes.count || 0,
+        completedLessons: completedCount,
         totalNotes: notesRes.count || 0,
         nextLesson: nextRes.data,
         foundationProgress,
-        foundationModulesCompleted,
-        foundationModulesTotal,
-        performanceScore: 85,
-        performanceTrend: "up",
-        hoursLearned,
+        foundationModulesCompleted: completedModules,
+        foundationModulesTotal: totalModules,
+        quizAvgScore,
+        hoursLearned: completedCount,
       });
     };
 
@@ -100,14 +128,15 @@ const StudentHome = () => {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Performance Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Quiz Avg Score</CardTitle>
             <TrendingUp className="w-5 h-5 text-yellow-400" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-yellow-400">{stats.performanceScore}%</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats.performanceTrend === "up" ? "📈 Improving" : stats.performanceTrend === "down" ? "📉 Declining" : "➡️ Stable"}
-            </p>
+            {stats.quizAvgScore !== null ? (
+              <p className="text-3xl font-bold text-yellow-400">{stats.quizAvgScore}%</p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-2">No quizzes taken yet</p>
+            )}
           </CardContent>
         </Card>
 
@@ -165,10 +194,10 @@ const StudentHome = () => {
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Reach 100% Performance</span>
-                  <span className="font-semibold">{stats.performanceScore}%</span>
+                  <span>Quiz Average</span>
+                  <span className="font-semibold">{stats.quizAvgScore !== null ? `${stats.quizAvgScore}%` : "—"}</span>
                 </div>
-                <Progress value={stats.performanceScore} className="h-2" />
+                <Progress value={stats.quizAvgScore ?? 0} className="h-2" />
               </div>
             </div>
           </CardContent>

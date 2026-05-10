@@ -80,8 +80,8 @@ const Navbar = () => {
               </Link>
 
               {/* CTA */}
-              <Link to="/book-class" className="btn-primary text-sm px-6 py-3">
-                Book a Class
+              <Link to="/signup" className="btn-primary text-sm px-6 py-3">
+                Start for Free
               </Link>
             </div>
           </div>
@@ -161,11 +161,11 @@ const Navbar = () => {
 
             {/* CTA */}
             <Link
-              to="/book-class"
+              to="/signup"
               className="btn-primary text-sm text-center"
               onClick={() => setIsOpen(false)}
             >
-              Book a Class
+              Start for Free
             </Link>
           </div>
         )}

@@ -42,43 +42,11 @@ interface Module {
   icon: React.ElementType;
 }
 
-const INITIAL_MODULES: Module[] = [
-  {
-    id: "1",
-    title: "Welcome to Piano",
-    level: "beginner",
-    status: "completed",
-    xpReward: 100,
-    icon: Piano,
-    lessons: [
-      { id: "1-1", title: "Introduction to Piano", duration: 15, status: "completed" },
-      { id: "1-2", title: "Proper Posture & Seating", duration: 20, status: "completed" },
-      { id: "1-3", title: "Hand Position & Technique", duration: 20, status: "completed" },
-      { id: "1-4", title: "Warm-up Exercises", duration: 15, status: "completed" },
-    ]
-  },
-  {
-    id: "2",
-    title: "Reading Notes",
-    level: "beginner",
-    status: "completed",
-    xpReward: 150,
-    icon: BookOpen,
-    lessons: [
-      { id: "2-1", title: "The Musical Staff", duration: 15, status: "completed" },
-      { id: "2-2", title: "Treble Clef Notes", duration: 20, status: "completed" },
-      { id: "2-3", title: "Bass Clef Notes", duration: 20, status: "completed" },
-      { id: "2-4", title: "Ledger Lines", duration: 15, status: "completed" },
-      { id: "2-5", title: "Accidentals", duration: 20, status: "completed" },
-      { id: "2-6", title: "Note Reading Practice", duration: 25, status: "completed" },
-    ]
-  },
-];
 
 const ManageFoundation = () => {
   const navigate = useNavigate();
   const { user, roles } = useAuth();
-  const [modules, setModules] = useState<Module[]>(INITIAL_MODULES);
+  const [modules, setModules] = useState<Module[]>([]);
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
@@ -95,41 +63,50 @@ const ManageFoundation = () => {
   });
   const { toast } = useToast();
 
-  // Try to load modules from Supabase; if tables don't exist, fall back to local state
   useEffect(() => {
     const loadFromDb = async () => {
-      try {
-        const { data, error } = await (supabase as any)
-          .from("modules")
-          .select("*, module_lessons(*)")
-          .order("created_at", { ascending: true });
+      const { data: mods, error } = await (supabase as any)
+        .from("foundation_modules")
+        .select("id, title, level, xp_reward, sort_order")
+        .order("sort_order");
 
-        if (error) {
-          console.debug("Modules table not available or fetch error:", error.message || error);
-          return; // keep using local modules
-        }
-
-        if (data) {
-          const mapped = (data as any[]).map((m) => ({
-            id: m.id,
-            title: m.title,
-            level: m.level || "beginner",
-            status: m.status || "available",
-            xpReward: m.xp_reward || 0,
-            icon: Music,
-            lessons: (m.module_lessons || []).map((l: any) => ({
-              id: l.id,
-              title: l.title,
-              duration: l.duration_minutes || 0,
-              status: l.status || "available",
-            })),
-          }));
-
-          setModules(mapped);
-        }
-      } catch (err) {
-        console.error("Error loading modules:", err);
+      if (error) {
+        console.error("Error loading foundation modules:", error.message);
+        return;
       }
+
+      if (!mods || mods.length === 0) {
+        setModules([]);
+        return;
+      }
+
+      const moduleIds = mods.map((m: any) => m.id);
+      const { data: lessonsData } = await (supabase as any)
+        .from("foundation_lessons")
+        .select("id, module_id, title, duration_minutes, sort_order")
+        .in("module_id", moduleIds)
+        .order("sort_order");
+
+      const lessonsByModule: Record<string, Lesson[]> = {};
+      (lessonsData || []).forEach((l: any) => {
+        if (!lessonsByModule[l.module_id]) lessonsByModule[l.module_id] = [];
+        lessonsByModule[l.module_id].push({
+          id: l.id,
+          title: l.title,
+          duration: l.duration_minutes || 20,
+          status: "available",
+        });
+      });
+
+      setModules(mods.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        level: m.level || "beginner",
+        status: "available",
+        xpReward: m.xp_reward || 0,
+        icon: Music,
+        lessons: lessonsByModule[m.id] || [],
+      })));
     };
 
     loadFromDb();
@@ -147,27 +124,27 @@ const ManageFoundation = () => {
       lessons: [],
     };
     
-    setModules([...modules, newModule]);
-    // Try to persist to DB
+    // Persist to foundation_modules table
     (async () => {
       try {
-        const { data, error } = await (supabase as any).from("modules").insert({
+        const { data, error } = await (supabase as any).from("foundation_modules").insert({
           title: newModule.title,
-          description: "",
           level: newModule.level,
-          status: newModule.status,
           xp_reward: newModule.xpReward,
-          created_by: user?.id || null,
-        });
+          sort_order: modules.length,
+        }).select().single();
         if (error) {
-          console.debug("Create module failed or table missing:", error.message || error);
+          toast({ title: "Error saving module", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "Module created", description: "Saved to database." });
+          toast({ title: "Module created" });
+          // Replace temp ID with real DB id
+          setModules(prev => prev.map(m => m.id === newModule.id ? { ...m, id: data.id } : m));
         }
       } catch (err) {
         console.error(err);
       }
     })();
+    setModules([...modules, newModule]);
     resetModuleForm();
     setIsModuleDialogOpen(false);
   };
@@ -181,15 +158,13 @@ const ManageFoundation = () => {
         : m
     ));
 
-    // Try to update DB
     (async () => {
       try {
         if (editingModule?.id) {
-          const { error } = await (supabase as any).from("modules").update({
+          const { error } = await (supabase as any).from("foundation_modules").update({
             title: formData.moduleTitle,
             level: formData.moduleLevel,
             xp_reward: parseInt(formData.moduleXP) || 100,
-            updated_at: new Date().toISOString(),
           }).eq("id", editingModule.id);
           if (error) console.debug("Update module failed:", error.message || error);
         }
@@ -207,8 +182,8 @@ const ManageFoundation = () => {
     setModules(modules.filter(m => m.id !== id));
     (async () => {
       try {
-        const { error } = await (supabase as any).from("modules").delete().eq("id", id);
-        if (error) console.debug("Delete module failed (maybe table missing):", error.message || error);
+        const { error } = await (supabase as any).from("foundation_modules").delete().eq("id", id);
+        if (error) console.debug("Delete module failed:", error.message || error);
       } catch (err) {
         console.error(err);
       }
@@ -249,15 +224,14 @@ const ManageFoundation = () => {
       // ignore storage errors
     }
 
-    // Try to persist lesson to DB
     (async () => {
       try {
-        const { data, error } = await (supabase as any).from("module_lessons").insert({
+        const currentCount = modules.find(m => m.id === selectedModuleForLesson)?.lessons.length || 0;
+        const { error } = await (supabase as any).from("foundation_lessons").insert({
           module_id: selectedModuleForLesson,
           title: newLesson.title,
           duration_minutes: newLesson.duration,
-          status: newLesson.status,
-          "order": 0,
+          sort_order: currentCount,
         });
         if (error) console.debug("Insert lesson failed:", error.message || error);
       } catch (err) {
@@ -291,10 +265,9 @@ const ManageFoundation = () => {
     (async () => {
       try {
         if (editingLesson?.id) {
-          const { error } = await (supabase as any).from("module_lessons").update({
+          const { error } = await (supabase as any).from("foundation_lessons").update({
             title: formData.lessonTitle,
             duration_minutes: parseInt(formData.lessonDuration) || 20,
-            updated_at: new Date().toISOString(),
           }).eq("id", editingLesson.id);
           if (error) console.debug("Update lesson failed:", error.message || error);
         }
@@ -334,7 +307,7 @@ const ManageFoundation = () => {
     ));
     (async () => {
       try {
-        const { error } = await (supabase as any).from("module_lessons").delete().eq("id", lessonId);
+        const { error } = await (supabase as any).from("foundation_lessons").delete().eq("id", lessonId);
         if (error) console.debug("Delete lesson failed:", error.message || error);
       } catch (err) {
         console.error(err);
@@ -453,15 +426,6 @@ const ManageFoundation = () => {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Info banner */}
-      <Card className="bg-blue-500/10 border-blue-500/30">
-        <CardContent className="py-4">
-          <p className="text-sm text-blue-400">
-            <strong>Note:</strong> Foundation modules are currently stored locally. Database tables will be created when you run the foundation migration.
-          </p>
-        </CardContent>
-      </Card>
 
       {/* Modules List */}
       <div className="space-y-4">

@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow anyone to create new signup documents (public signup flow)
+    match /signups/{doc=**} {
+      // Allow unauthenticated users to CREATE new signups
+      allow create: if request.auth == null;
+      
+      // Allow authenticated users to read/update their own data
+      allow read, update: if request.auth != null;
+      
+      // Allow anyone to read (for email uniqueness check)
+      allow list: if request.query.limit <= 1;
+    }
+
+    // Optional: Users collection for authentication
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+  }
+}
