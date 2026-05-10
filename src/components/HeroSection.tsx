@@ -13,12 +13,12 @@ const HeroSection = () => {
             <span className="text-foreground">PASS YOUR TRINITY PIANO EXAM</span>
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a 
-              href="#assessment" 
+            <a
+              href="/signup"
               className="btn-primary inline-block animate-slide-up animate-pulse-glow"
               style={{ animationDelay: "0.2s" }}
             >
-              DON'T THINK JUST CLICK
+              START FREE
             </a>
             <a 
               href="https://www.skool.com/pianomastery90days/about?ref=76fa2e8809594da080da4f38ee98471a"
