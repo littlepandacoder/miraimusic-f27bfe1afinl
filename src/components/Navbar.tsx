@@ -16,36 +16,34 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right:0 z-50 bg-background/90 backdrop-blur-md border-b border-border/30">
       <div className="container mx-auto px-8 py-4">
-        <div className="flex items-center justify-between">
 
-          {/* Mobile: logo */}
-          <Link to="/" className="md:hidden text-2xl font-black text-foreground">
+        {/* Desktop row — all items centered */}
+        <div className="hidden md:flex items-center justify-center gap-8">
+          <Link to="/" className="text-2xl font-black text-foreground">
             Musicable
           </Link>
 
-          {/* Desktop: all items centered as one group */}
-          <div className="hidden md:flex flex-1 items-center justify-center gap-8">
-            <Link to="/" className="text-2xl font-black text-foreground">
-              Musicable
-            </Link>
+          {isHomePage && navLinks.map((link) => (
+            <a key={link.href} href={link.href} className="nav-link">
+              {link.label}
+            </a>
+          ))}
 
-            {isHomePage && navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="nav-link">
-                {link.label}
-              </a>
-            ))}
+          <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
 
-            <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
+          <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+            <LogIn className="w-4 h-4" /> Portal Login
+          </Link>
 
-            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
-              <LogIn className="w-4 h-4" /> Portal Login
-            </Link>
+          <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
+        </div>
 
-            <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
+        {/* Mobile row */}
+        <div className="flex md:hidden items-center justify-between">
+          <Link to="/" className="text-2xl font-black text-foreground">
+            Musicable
+          </Link>
+          <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
