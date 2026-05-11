@@ -6,8 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { PageTracking } from "@/hooks/usePageTracking";
 import Index from "./pages/Index";
-import BookClass from "./pages/BookClass";
-import BookingSuccess from "./pages/BookingSuccess";
 import Login from "./pages/Login";
 import AuthDebug from "./pages/AuthDebug";
 import Pricing from "./pages/Pricing";
@@ -43,8 +41,6 @@ const App = () => (
             <Route path="/blog/piano-theory" element={<PianoTheory />} />
             <Route path="/blog/sight-reading" element={<SightReading />} />
             <Route path="/blog/note-naming" element={<NoteNaming />} />
-            <Route path="/book-class" element={<BookClass />} />
-            <Route path="/booking-success" element={<BookingSuccess />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/teacher-signup" element={<TeacherSignup />} />
