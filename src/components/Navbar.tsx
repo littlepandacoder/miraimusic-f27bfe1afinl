@@ -16,15 +16,15 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right:0 z-50 bg-background/90 backdrop-blur-md border-b border-border/30">
       <div className="container mx-auto px-8 py-4">
-        <div className="grid grid-cols-3 items-center">
+        <div className="relative flex items-center">
 
           {/* Logo — left */}
-          <Link to="/" className="text-2xl font-black text-foreground">
+          <Link to="/" className="text-2xl font-black text-foreground shrink-0">
             Musicable
           </Link>
 
-          {/* Desktop nav links — true center */}
-          <div className="hidden md:flex items-center justify-center gap-8">
+          {/* Desktop nav links — absolutely centered in viewport */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {isHomePage && navLinks.map((link) => (
               <a key={link.href} href={link.href} className="nav-link">
                 {link.label}
@@ -33,20 +33,18 @@ const Navbar = () => {
             <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
           </div>
 
-          {/* Desktop CTAs — right */}
-          <div className="hidden md:flex items-center justify-end gap-6">
-            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+          {/* Desktop CTAs — floated right */}
+          <div className="hidden md:flex items-center gap-8 ml-auto">
+            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">
               <LogIn className="w-4 h-4" /> Portal Login
             </Link>
-            <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
+            <Link to="/signup" className="btn-primary text-sm px-6 py-3 whitespace-nowrap">Start for Free</Link>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex justify-end col-start-3">
-            <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          <button className="md:hidden ml-auto text-foreground" onClick={() => setIsOpen(!isOpen)}>
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
         {/* Mobile Navigation */}
