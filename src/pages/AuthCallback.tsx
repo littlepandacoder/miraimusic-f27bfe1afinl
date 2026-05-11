@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Music } from "lucide-react";
-import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Music, Loader2 } from "lucide-react";
 
 interface WelcomeInfo {
   name: string;
@@ -27,7 +27,7 @@ const AuthCallback = () => {
       return () => clearTimeout(t);
     }
 
-    if (welcomed.current) return; // already handled — don't reset the timer
+    if (welcomed.current) return;
     welcomed.current = true;
 
     const rawName =
@@ -37,10 +37,33 @@ const AuthCallback = () => {
       "there";
     const firstName = rawName.split(" ")[0];
     const isNew = new Date(user.created_at).getTime() > Date.now() - 90_000;
-    const destination = roles.length > 0 ? "/dashboard" : "/signup";
+    const isStaff = roles.some(r => r === "admin" || r === "teacher");
 
-    destRef.current = destination;
-    setWelcome({ name: firstName, isNew, destination });
+    // Wrap async subscription check in an inner function (useEffect can't be async)
+    (async () => {
+      let hasSub = isStaff;
+
+      if (!isStaff) {
+        try {
+          const { data } = await (supabase as any)
+            .from("user_subscriptions")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "active")
+            .limit(1)
+            .maybeSingle();
+          hasSub = !!data;
+        } catch (_) {
+          hasSub = false;
+        }
+      }
+
+      const destination = hasSub ? "/dashboard" : "/signup";
+      if (!hasSub) sessionStorage.setItem("sub_needed", "1");
+
+      destRef.current = destination;
+      setWelcome({ name: firstName, isNew, destination });
+    })();
   }, [user, roles, loading, navigate]);
 
   // Effect 2 — navigate after 2.5 s once welcome is shown.
@@ -78,17 +101,21 @@ const AuthCallback = () => {
 
         <div className="space-y-3">
           <p className="text-primary font-semibold text-xl uppercase tracking-widest">
-            {welcome.isNew ? "Account Created" : "Signed In"}
+            {welcome.destination === "/signup"
+              ? "Subscription Needed"
+              : welcome.isNew ? "Account Created" : "Signed In"}
           </p>
           <h1 className="text-5xl sm:text-6xl font-black text-foreground leading-tight">
-            {welcome.isNew ? "Welcome," : "Welcome back,"}
-            <br />
-            <span className="text-primary">{welcome.name}!</span>
+            {welcome.destination === "/signup"
+              ? <>Hi, <span className="text-primary">{welcome.name}!</span></>
+              : <>{welcome.isNew ? "Welcome," : "Welcome back,"}<br /><span className="text-primary">{welcome.name}!</span></>}
           </h1>
           <p className="text-muted-foreground text-lg">
-            {welcome.isNew
-              ? "Your musical journey starts now."
-              : "Great to see you again. Let's keep going."}
+            {welcome.destination === "/signup"
+              ? "You need an active subscription to access the dashboard."
+              : welcome.isNew
+                ? "Your musical journey starts now."
+                : "Great to see you again. Let's keep going."}
           </p>
         </div>
 
@@ -98,7 +125,9 @@ const AuthCallback = () => {
             style={{ animation: "progress-shrink 2.5s linear forwards" }}
           />
         </div>
-        <p className="text-xs text-muted-foreground">Taking you to your dashboard…</p>
+        <p className="text-xs text-muted-foreground">
+          {welcome.destination === "/signup" ? "Taking you to subscription page…" : "Taking you to your dashboard…"}
+        </p>
       </div>
 
       <style>{`

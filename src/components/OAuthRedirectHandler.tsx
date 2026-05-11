@@ -1,34 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { wasOAuthRedirect } from "@/lib/oauthState";
 
 /**
  * Handles the OAuth hash redirect without orphaning Supabase's internal lock.
  *
- * When Google OAuth completes, Supabase lands the browser on the root URL with
- * #access_token=... in the hash. The Supabase SDK picks up the tokens and fires
- * onAuthStateChange SIGNED_IN. This component waits for that to finish (i.e.,
- * loading=false) then uses React Router's navigate — which does NOT trigger a
- * full page reload — to move the user to /auth/callback. That avoids the
- * "lock was not released within 5000ms" warning caused by navigating away mid-handler.
+ * When Google OAuth completes, Supabase lands the browser on the root URL (or
+ * /auth/callback) with #access_token=... in the hash. The Supabase SDK picks up
+ * the tokens, clears the hash, and fires onAuthStateChange SIGNED_IN — all before
+ * loading becomes false.
+ *
+ * wasOAuthRedirect is captured at module-load time (before Supabase clears the
+ * hash), so both this component and Index.tsx can reliably detect an OAuth flow.
+ *
+ * This component waits for loading=false then uses React Router navigate (no full
+ * page reload) so we don't orphan Supabase's internal lock.
  */
 const OAuthRedirectHandler = () => {
   const { loading } = useAuth();
   const navigate = useNavigate();
-  const handled = useRef(false);
 
   useEffect(() => {
-    if (handled.current) return;
-    if (!window.location.hash.includes("access_token")) return;
+    if (!wasOAuthRedirect) return;
     if (loading) return;
+    // Already on callback page — AuthCallback handles everything
+    if (window.location.pathname === "/auth/callback") return;
 
-    handled.current = true;
-    // Strip the hash so it doesn't linger in browser history
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search
-    );
     navigate("/auth/callback", { replace: true });
   }, [loading, navigate]);
 
