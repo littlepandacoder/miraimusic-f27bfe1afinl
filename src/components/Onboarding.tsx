@@ -341,14 +341,7 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-pink font-bold text-xl mt-1">✓</span>
-                    <div>
-                      <p className="font-bold text-foreground">
-                        Plus bass, guitar, drums, and singing.
-                      </p>
-                    </div>
-                  </div>
+
                   <div className="flex items-start gap-3">
                     <span className="text-pink font-bold text-xl mt-1">✓</span>
                     <div>
