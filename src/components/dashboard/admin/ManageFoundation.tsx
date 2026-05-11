@@ -6,24 +6,35 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Music, 
-  Piano,
-  BookOpen,
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Music,
   Trophy,
-  Zap,
-  Target,
   ChevronDown,
   ChevronUp,
-  BookOpenText
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Lesson {
   id: string;
@@ -42,6 +53,90 @@ interface Module {
   icon: React.ElementType;
 }
 
+
+interface SortableLessonProps {
+  lesson: Lesson;
+  index: number;
+  moduleId: string;
+  onTogglePublish: (moduleId: string, lesson: Lesson) => void;
+  onEdit: () => void;
+  onPreview: () => void;
+  onDelete: () => void;
+}
+
+const SortableLesson = ({ lesson, index, moduleId, onTogglePublish, onEdit, onPreview, onDelete }: SortableLessonProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lesson.id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-transparent transition-all",
+        isDragging && "opacity-50 border-primary shadow-lg bg-muted/60 z-50"
+      )}
+    >
+      <div className="flex items-center gap-3">
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground touch-none"
+          title="Drag to reorder"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-bold text-muted-foreground w-5 text-center">
+          {index + 1}
+        </span>
+        <div>
+          <p className="font-medium">{lesson.title}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-xs text-muted-foreground">{lesson.duration} min</p>
+            <Badge className={cn("text-xs px-1.5 py-0",
+              lesson.status === "published"
+                ? "bg-green-500/20 text-green-400 border-green-500/40"
+                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/40"
+            )}>
+              {lesson.status === "published" ? "Published" : "Draft"}
+            </Badge>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" variant={lesson.status === "published" ? "outline" : "default"} onClick={() => onTogglePublish(moduleId, lesson)}>
+          {lesson.status === "published" ? "Unpublish" : "Publish"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onEdit}>
+          <Edit className="w-4 h-4" />
+        </Button>
+        <Button size="sm" variant="outline" onClick={onPreview}>
+          Preview
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="ghost" className="text-destructive">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Lesson?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will delete "{lesson.title}". This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  );
+};
 
 const ManageFoundation = () => {
   const navigate = useNavigate();
@@ -379,6 +474,28 @@ const ManageFoundation = () => {
     }
   };
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleLessonDragEnd = async (event: DragEndEvent, moduleId: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setModules(prev => prev.map(m => {
+      if (m.id !== moduleId) return m;
+      const oldIndex = m.lessons.findIndex(l => l.id === active.id);
+      const newIndex = m.lessons.findIndex(l => l.id === over.id);
+      const reordered = arrayMove(m.lessons, oldIndex, newIndex);
+      // Persist new sort_order to DB
+      reordered.forEach((lesson, idx) => {
+        Promise.all([
+          (supabase as any).from("foundation_lessons").update({ sort_order: idx }).eq("id", lesson.id),
+          (supabase as any).from("module_lessons").update({ sort_order: idx }).eq("id", lesson.id),
+        ]).catch(console.error);
+      });
+      return { ...m, lessons: reordered };
+    }));
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case "beginner":
@@ -554,77 +671,31 @@ const ManageFoundation = () => {
                     No lessons yet. Add your first lesson!
                   </p>
                 ) : (
-                  <div className="space-y-2">
-                    {module.lessons.map((lesson, index) => (
-                      <div
-                        key={lesson.id}
-                        className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-muted-foreground w-6">
-                            {index + 1}.
-                          </span>
-                          <div>
-                            <p className="font-medium">{lesson.title}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <p className="text-xs text-muted-foreground">{lesson.duration} min</p>
-                              <Badge className={cn("text-xs px-1.5 py-0",
-                                lesson.status === "published"
-                                  ? "bg-green-500/20 text-green-400 border-green-500/40"
-                                  : "bg-yellow-500/20 text-yellow-400 border-yellow-500/40"
-                              )}>
-                                {lesson.status === "published" ? "Published" : "Draft"}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant={lesson.status === "published" ? "outline" : "default"}
-                            onClick={() => handleTogglePublish(module.id, lesson)}
-                          >
-                            {lesson.status === "published" ? "Unpublish" : "Publish"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openEditLesson(module, lesson)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/dashboard/foundation/lesson-viewer/${module.id}/${lesson.id}?preview=1`)}
-                          >
-                            Preview
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost" className="text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Lesson?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will delete "{lesson.title}". This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteLesson(module.id, lesson.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(e) => handleLessonDragEnd(e, module.id)}
+                  >
+                    <SortableContext
+                      items={module.lessons.map(l => l.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {module.lessons.map((lesson, index) => (
+                          <SortableLesson
+                            key={lesson.id}
+                            lesson={lesson}
+                            index={index}
+                            moduleId={module.id}
+                            onTogglePublish={handleTogglePublish}
+                            onEdit={() => openEditLesson(module, lesson)}
+                            onPreview={() => navigate(`/dashboard/foundation/lesson-viewer/${module.id}/${lesson.id}?preview=1`)}
+                            onDelete={() => handleDeleteLesson(module.id, lesson.id)}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </CardContent>
             )}
