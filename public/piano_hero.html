@@ -1363,7 +1363,7 @@ window.musicableUserId   = null;
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showScreen('play')">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
-    <button class="nav-tab" onclick="(adminUser || fbIsGlobalRole()) ? (showScreen('admin'), adminRefreshFromFirebase()) : adminLoginOpen()">⚙ Admin</button>
+    <button class="nav-tab" onclick="(adminUser || window.musicableUserId) ? (showScreen('admin'), adminRefreshFromFirebase()) : adminLoginOpen()">⚙ Admin</button>
   </div>
   <div class="nav-right">
     <div class="midi-badge">
@@ -4865,11 +4865,11 @@ function fbGetAuth() {
 
 /* ── Admin login / logout ────────────────────────────────── */
 function adminLoginOpen() {
-  // Supabase teacher/admin roles bypass Firebase login entirely
-  if (fbIsGlobalRole()) { showScreen('admin'); adminRefreshFromFirebase(); return; }
+  // Any logged-in Supabase user can access the admin panel.
+  // Songs route to global (teacher/admin) or personal (student) via fbIsGlobalRole().
+  if (window.musicableUserId || adminUser) { showScreen('admin'); adminRefreshFromFirebase(); return; }
   const auth = fbGetAuth();
   if (!auth) { alert('Firebase not initialised'); return; }
-  if (adminUser) { showScreen('admin'); adminRefreshFromFirebase(); return; }
   document.getElementById('adminLoginModal').style.display = 'flex';
   document.getElementById('adminLoginError').style.display = 'none';
 }
