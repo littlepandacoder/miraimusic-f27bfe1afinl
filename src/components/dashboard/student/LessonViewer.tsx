@@ -96,8 +96,9 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
 
     const fetchLesson = async () => {
       setLoadingLesson(true);
+      let found = false;
       try {
-        // Try localStorage preview first (for newly created lessons)
+        // Try localStorage preview first (covers race condition on newly created lessons)
         try {
           const previewRaw = localStorage.getItem(`lesson_preview:${lessonId}`);
           if (previewRaw) {
@@ -113,39 +114,51 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
               learningObjectives: [],
               status: preview.status || "available",
             });
+            found = true;
           }
         } catch (e) { /* ignore */ }
 
-        // Fetch from module_lessons + lesson_videos
+        // Fetch from foundation_lessons first (authoritative title source)
+        const { data: foundationRow } = await (supabase as any)
+          .from("foundation_lessons")
+          .select("*")
+          .eq("id", lessonId)
+          .maybeSingle();
+
+        // Fetch from module_lessons for content (videos etc.)
         const { data: lessonRow } = await (supabase as any)
           .from("module_lessons")
           .select("*")
           .eq("id", lessonId)
           .maybeSingle();
 
-        if (lessonRow) {
-          const { data: videos } = await (supabase as any)
-            .from("lesson_videos")
-            .select("*")
-            .eq("lesson_id", lessonId)
-            .order("created_at", { ascending: true });
+        if (foundationRow || lessonRow) {
+          const source = foundationRow || lessonRow;
 
-          // Also fetch module title from foundation_modules
+          const { data: videos } = lessonRow
+            ? await (supabase as any)
+                .from("lesson_videos")
+                .select("*")
+                .eq("lesson_id", lessonId)
+                .order("created_at", { ascending: true })
+            : { data: [] };
+
           let moduleTitle = moduleId || "";
-          if (lessonRow.module_id) {
+          const modId = source.module_id;
+          if (modId) {
             const { data: mod } = await (supabase as any)
               .from("foundation_modules")
               .select("title")
-              .eq("id", lessonRow.module_id)
+              .eq("id", modId)
               .maybeSingle();
             if (mod?.title) moduleTitle = mod.title;
           }
 
           setDbLesson({
-            id: lessonRow.id,
-            title: lessonRow.title,
-            description: lessonRow.description || "",
-            duration: lessonRow.duration_minutes || 20,
+            id: source.id,
+            title: source.title,
+            description: source.description || "",
+            duration: source.duration_minutes || 20,
             moduleTitle,
             videos: (videos || []).map((v: any) => ({
               id: v.id,
@@ -156,47 +169,15 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
             })),
             notes: "",
             learningObjectives: [],
-            status: lessonRow.status || "available",
+            status: source.status || "available",
           });
-          return;
+          found = true;
         }
 
-        // Fallback: try foundation_lessons
-        const { data: foundationRow } = await (supabase as any)
-          .from("foundation_lessons")
-          .select("*")
-          .eq("id", lessonId)
-          .maybeSingle();
-
-        if (foundationRow) {
-          let moduleTitle = moduleId || "";
-          if (foundationRow.module_id) {
-            const { data: mod } = await (supabase as any)
-              .from("foundation_modules")
-              .select("title")
-              .eq("id", foundationRow.module_id)
-              .maybeSingle();
-            if (mod?.title) moduleTitle = mod.title;
-          }
-          setDbLesson({
-            id: foundationRow.id,
-            title: foundationRow.title,
-            description: foundationRow.description || "",
-            duration: foundationRow.duration_minutes || 20,
-            moduleTitle,
-            videos: [],
-            notes: "",
-            learningObjectives: [],
-            status: foundationRow.status || "available",
-          });
-          return;
-        }
-
-        // Nothing found
-        if (!dbLesson) setErrorMessage("Lesson not found");
+        if (!found) setErrorMessage("Lesson not found");
       } catch (err) {
         console.error("Error loading lesson:", err);
-        setErrorMessage("Failed to load lesson");
+        if (!found) setErrorMessage("Failed to load lesson");
       } finally {
         setLoadingLesson(false);
       }

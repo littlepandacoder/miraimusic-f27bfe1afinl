@@ -262,15 +262,20 @@ const ManageFoundation = () => {
         : m
     ));
 
-    // Try to update lesson in DB
+    // Update in both tables so title stays in sync
     (async () => {
       try {
         if (editingLesson?.id) {
-          const { error } = await (supabase as any).from("foundation_lessons").update({
+          const payload = {
             title: formData.lessonTitle,
             duration_minutes: parseInt(formData.lessonDuration) || 20,
-          }).eq("id", editingLesson.id);
-          if (error) console.debug("Update lesson failed:", error.message || error);
+          };
+          const [r1, r2] = await Promise.all([
+            (supabase as any).from("foundation_lessons").update(payload).eq("id", editingLesson.id),
+            (supabase as any).from("module_lessons").update(payload).eq("id", editingLesson.id),
+          ]);
+          if (r1.error) console.debug("Update foundation_lessons failed:", r1.error.message);
+          if (r2.error) console.debug("Update module_lessons failed:", r2.error.message);
         }
       } catch (err) {
         console.error(err);
