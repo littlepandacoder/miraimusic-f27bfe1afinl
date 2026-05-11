@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastAuthError, setLastAuthError] = useState<any | null>(null);
+  // Tracks whether INITIAL_SESSION has fired. On page load, Supabase fires SIGNED_IN first
+  // (before auth.uid() is ready), then INITIAL_SESSION. We defer role fetching to INITIAL_SESSION
+  // so the first SIGNED_IN never triggers a premature subscription check with roles=[].
+  const initialSessionFiredRef = useRef(false);
 
   // Helper: remove all Supabase-related keys from localStorage without clearing unrelated data
   const clearSupabaseStorage = () => {
@@ -114,6 +118,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'SIGNED_OUT') {
           clearSupabaseStorage();
+          setSession(null);
+          setUser(null);
+          setRoles([]);
+          setLoading(false);
+          console.log("[auth] SIGNED_OUT — cleared state ✓");
+          return;
+        }
+
+        // On initial page load Supabase fires SIGNED_IN before auth.uid() is usable,
+        // so get_my_roles() and direct user_roles queries both time out.
+        // INITIAL_SESSION fires ~immediately after and IS reliable.
+        // Skip role fetching on the first SIGNED_IN and let INITIAL_SESSION handle it.
+        if (event === 'SIGNED_IN' && !initialSessionFiredRef.current) {
+          console.log("[auth] SIGNED_IN (pre-INITIAL_SESSION) — updating user/session, deferring roles to INITIAL_SESSION");
+          setSession(session);
+          setUser(session?.user ?? null);
+          return; // keep loading=true until INITIAL_SESSION completes
+        }
+
+        if (event === 'INITIAL_SESSION') {
+          initialSessionFiredRef.current = true;
+          console.log("[auth] INITIAL_SESSION — marking initialSessionFired, fetching roles now");
         }
 
         setSession(session);
