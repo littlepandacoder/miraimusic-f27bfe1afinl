@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
@@ -33,29 +33,39 @@ const SubscriptionGate = () => (
 
 const Dashboard = () => {
   const { user, loading, hasRole, roles } = useAuth();
-  const navigate = useNavigate();
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/login");
+      window.location.replace("/login");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading]);
 
   useEffect(() => {
     if (loading || !user) return;
 
-    // Admins and teachers always get access
-    if (hasRole("admin") || hasRole("teacher")) {
+    // Use roles directly — hasRole() is recreated every render so keeping it
+    // in deps would re-run this effect on every render.
+    const isStaff = roles.some(r => r === "admin" || r === "teacher");
+
+    if (isStaff) {
       setSubscribed(true);
       setCheckingSubscription(false);
       return;
     }
 
-    // For everyone else (student role OR no role), verify an active subscription
-    // record exists in user_subscriptions. This prevents auto-assigned roles from
-    // bypassing the paywall.
+    let cancelled = false;
+
+    // 10-second timeout so a hanging network request can't freeze the dashboard
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[dashboard] Subscription check timed out — treating as unsubscribed");
+        setSubscribed(false);
+        setCheckingSubscription(false);
+      }
+    }, 10_000);
+
     const checkPayPalSubscription = async () => {
       try {
         const { data, error } = await (supabase as any)
@@ -66,23 +76,33 @@ const Dashboard = () => {
           .limit(1)
           .maybeSingle();
 
+        if (cancelled) return;
         if (error) {
-          // Table may not exist yet or RLS blocked — treat as unsubscribed
           console.warn("[dashboard] Could not verify subscription:", error.message);
           setSubscribed(false);
         } else {
           setSubscribed(!!data);
         }
       } catch (err) {
-        console.warn("[dashboard] Subscription check failed:", err);
-        setSubscribed(false);
+        if (!cancelled) {
+          console.warn("[dashboard] Subscription check failed:", err);
+          setSubscribed(false);
+        }
       } finally {
-        setCheckingSubscription(false);
+        if (!cancelled) {
+          clearTimeout(timeout);
+          setCheckingSubscription(false);
+        }
       }
     };
 
     checkPayPalSubscription();
-  }, [loading, user, roles, hasRole]);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [loading, user, roles]);
 
   if (loading || checkingSubscription) {
     return (
