@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Check, Music, Trophy, ArrowLeft, ArrowRight, Play, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { Lock, Check, Music, Trophy, ArrowLeft, ArrowRight, Play, CheckCircle, Clock, Loader2, HelpCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Lesson {
@@ -37,6 +37,8 @@ const FoundationLessonPlan = () => {
   const [loading, setLoading] = useState(true);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [nextModuleId, setNextModuleId] = useState<string | null>(null);
+  const [quizCounts, setQuizCounts] = useState<Record<string, number>>({});
+  const [quizPassed, setQuizPassed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!moduleId || !user) return;
@@ -68,6 +70,24 @@ const FoundationLessonPlan = () => {
       setLessons(mapped);
       const first = mapped.find(l => l.status === "in-progress" || l.status === "available");
       setCurrentLesson(first || null);
+
+      // Load quiz counts and passed attempts for all lessons
+      const lessonIds = rawLessons.map((l: any) => l.id);
+      if (lessonIds.length > 0) {
+        const [quizRes, attemptsRes] = await Promise.all([
+          (supabase as any).from("module_quizzes").select("lesson_id").in("lesson_id", lessonIds),
+          (supabase as any).from("quiz_attempts").select("lesson_id, passed").eq("user_id", user.id).eq("passed", true).in("lesson_id", lessonIds),
+        ]);
+        const counts: Record<string, number> = {};
+        (quizRes.data || []).forEach((q: any) => {
+          if (q.lesson_id) counts[q.lesson_id] = (counts[q.lesson_id] || 0) + 1;
+        });
+        const passed: Record<string, boolean> = {};
+        (attemptsRes.data || []).forEach((a: any) => { if (a.lesson_id) passed[a.lesson_id] = true; });
+        setQuizCounts(counts);
+        setQuizPassed(passed);
+      }
+
       setLoading(false);
     };
 
@@ -220,7 +240,7 @@ const FoundationLessonPlan = () => {
                       <div className="flex-1">
                         <h4 className="font-semibold">{index + 1}. {lesson.title}</h4>
                         {lesson.description && <p className="text-sm text-muted-foreground mt-1">{lesson.description}</p>}
-                        <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="w-3 h-3" />{lesson.duration_minutes} min
                           </span>
@@ -232,17 +252,40 @@ const FoundationLessonPlan = () => {
                           )}>
                             {lesson.status === "in-progress" ? "In Progress" : lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}
                           </Badge>
+                          {quizCounts[lesson.id] > 0 && (
+                            quizPassed[lesson.id] ? (
+                              <Badge className="text-xs bg-green-500/20 text-green-400 border-green-500/40 gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Quiz Passed
+                              </Badge>
+                            ) : (
+                              <Badge className="text-xs bg-primary/10 text-primary border-primary/30 gap-1">
+                                <HelpCircle className="w-3 h-3" /> Quiz · {quizCounts[lesson.id]}Q
+                              </Badge>
+                            )
+                          )}
                         </div>
                       </div>
                     </div>
                     {lesson.status !== "locked" && (
-                      <Button
-                        size="sm"
-                        variant={lesson.status === "completed" ? "outline" : "default"}
-                        onClick={e => { e.stopPropagation(); startLesson(lesson); }}
-                      >
-                        {lesson.status === "completed" ? "Review" : lesson.status === "in-progress" ? "Continue" : "Start"}
-                      </Button>
+                      <div className="flex gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                        {quizCounts[lesson.id] > 0 && lesson.status === "completed" && !quizPassed[lesson.id] && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-primary border-primary/40"
+                            onClick={() => startLesson(lesson)}
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" /> Take Quiz
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={lesson.status === "completed" ? "outline" : "default"}
+                          onClick={() => startLesson(lesson)}
+                        >
+                          {lesson.status === "completed" ? "Review" : lesson.status === "in-progress" ? "Continue" : "Start"}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>

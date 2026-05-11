@@ -4,7 +4,7 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, FileText, Clock, Map, TrendingUp, Target, Award, Trophy } from "lucide-react";
+import { Calendar, BookOpen, Clock, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import MyLessons from "./student/MyLessons";
 import Resources from "./student/Resources";
@@ -14,6 +14,15 @@ import FoundationLessonPlan from "./student/FoundationLessonPlan";
 import LessonViewer from "./student/LessonViewer";
 
 import CourseLibrary from "./student/CourseLibrary";
+
+interface GameScoreSummary {
+  bestScore: number;
+  lastAccuracy: number | null;
+  avgAccuracy: number | null;
+  bestAccuracy: number | null;
+  bestStreak: number;
+  sessions: number;
+}
 
 const StudentHome = () => {
   const { user } = useAuth();
@@ -29,6 +38,7 @@ const StudentHome = () => {
     hoursLearned: 0,
     totalXp: 0,
   });
+  const [gameScores, setGameScores] = useState<Record<string, GameScoreSummary>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -104,6 +114,33 @@ const StudentHome = () => {
     };
 
     fetchStats();
+
+    const fetchGameScores = async () => {
+      const { data } = await (supabase as any)
+        .from("game_scores")
+        .select("game, score, correct, total, best_streak, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      const rows: any[] = data || [];
+      const summary: Record<string, GameScoreSummary> = {};
+      for (const game of ["note_naming", "sight_reading", "piano_hero"]) {
+        const gameSessions = rows.filter((r) => r.game === game);
+        if (gameSessions.length === 0) continue;
+        const bestScore = Math.max(...gameSessions.map((r) => r.score));
+        const last = gameSessions[0];
+        const lastAccuracy = last.total > 0 ? Math.round((last.correct / last.total) * 100) : null;
+        const bestStreak = Math.max(...gameSessions.map((r) => r.best_streak || 0));
+        const accuracies = gameSessions
+          .filter((r) => r.total > 0)
+          .map((r) => (r.correct / r.total) * 100);
+        const avgAccuracy = accuracies.length > 0 ? Math.round(accuracies.reduce((a, b) => a + b, 0) / accuracies.length) : null;
+        const bestAccuracy = accuracies.length > 0 ? Math.round(Math.max(...accuracies)) : null;
+        summary[game] = { bestScore, lastAccuracy, avgAccuracy, bestAccuracy, bestStreak, sessions: gameSessions.length };
+      }
+      setGameScores(summary);
+    };
+    fetchGameScores();
   }, [user]);
 
   const formatNextLesson = () => {
@@ -213,6 +250,77 @@ const StudentHome = () => {
         </Card>
       </div>
 
+      {/* Game Performance */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gamepad2 className="w-5 h-5 text-primary" />
+            Game Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { key: "note_naming",  label: "Note Naming",  icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html" },
+            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,    accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html" },
+            { key: "piano_hero",   label: "Piano Hero",   icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html" },
+          ].map(({ key, label, icon, accentClass, bgClass, href }) => {
+            const gs = gameScores[key];
+            return (
+              <div key={key} className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-lg ${bgClass}`}>{icon}</div>
+                    <p className="font-semibold text-sm">{label}</p>
+                  </div>
+                  <a href={href} className="text-xs text-primary hover:underline font-medium">Play →</a>
+                </div>
+
+                {gs ? (
+                  <>
+                    {/* Best score highlight */}
+                    <div className="flex items-end gap-1">
+                      <span className={`text-3xl font-bold ${accentClass}`}>{gs.bestScore.toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground mb-1">best score</span>
+                    </div>
+
+                    {/* Accuracy bar */}
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Avg Accuracy</span>
+                        <span className="font-semibold">{gs.avgAccuracy !== null ? `${gs.avgAccuracy}%` : "—"}</span>
+                      </div>
+                      <Progress value={gs.avgAccuracy ?? 0} className="h-1.5" />
+                    </div>
+
+                    {/* Row stats */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Best %</p>
+                        <p className="text-sm font-bold">{gs.bestAccuracy !== null ? `${gs.bestAccuracy}%` : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Best Streak</p>
+                        <p className="text-sm font-bold">{gs.bestStreak} 🔥</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Sessions</p>
+                        <p className="text-sm font-bold">{gs.sessions}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-muted-foreground">No sessions yet</p>
+                    <a href={href} className={`text-sm font-semibold ${accentClass} hover:underline`}>Start playing →</a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
@@ -248,6 +356,7 @@ const StudentHome = () => {
           </Link>
         </CardContent>
       </Card>
+
     </div>
   );
 };

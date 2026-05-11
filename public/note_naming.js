@@ -262,6 +262,7 @@ function sessionComplete() {
     `Accuracy: ${acc}% · Best streak: ${state.bestStreak}`);
   if (state.log.length >= 3) document.getElementById('analyseBtn').disabled = false;
   updateWeakSpots();
+  if (state.totalQ > 0) saveGameScore('note_naming', state.correct, state.correct, state.totalQ, state.bestStreak);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -779,6 +780,35 @@ async function runAIAnalysis() {
     : '';
 
   body.innerHTML = `<p>${feedback}</p>${chipHTML}`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCORE SAVING
+═══════════════════════════════════════════════════════ */
+function saveGameScore(game, score, correct, total, bestStreak) {
+  try {
+    var key = Object.keys(localStorage).find(function(k) {
+      return /^sb-.*-auth-token$/.test(k);
+    });
+    if (!key) return;
+    var session = JSON.parse(localStorage.getItem(key) || '{}');
+    var token = session.access_token;
+    if (!token) return;
+    var parts = token.split('.');
+    var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    var userId = payload.sub;
+    if (!userId) return;
+    fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/game_scores', {
+      method: 'POST',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ user_id: userId, game: game, score: score, correct: correct, total: total, best_streak: bestStreak })
+    }).catch(function() {});
+  } catch(e) {}
 }
 
 /* ═══════════════════════════════════════════════════════

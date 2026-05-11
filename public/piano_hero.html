@@ -6061,6 +6061,30 @@ function endGame(completed) {
 
   document.getElementById('endScreen').classList.add('active');
 
+  // Save score to Supabase
+  (function() {
+    try {
+      var key = Object.keys(localStorage).find(function(k) { return /^sb-.*-auth-token$/.test(k); });
+      if (!key) return;
+      var session = JSON.parse(localStorage.getItem(key) || '{}');
+      var token = session.access_token;
+      if (!token) return;
+      var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      var userId = payload.sub;
+      if (!userId) return;
+      fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/game_scores', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ user_id: userId, game: 'piano_hero', score: game.score, correct: game.hitNotes, total: game.totalNotes, best_streak: game.maxCombo })
+      }).catch(function() {});
+    } catch(e) {}
+  })();
+
   // Fireworks for S/A
   if (grade === 'S' || grade === 'A') {
     for (let i = 0; i < 8; i++) {

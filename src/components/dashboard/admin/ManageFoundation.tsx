@@ -15,6 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   GripVertical,
+  HelpCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +43,14 @@ interface Lesson {
   title: string;
   duration: number;
   status: "draft" | "published" | "available";
+}
+
+interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_index: number;
+  sort_order: number;
 }
 
 interface Module {
@@ -74,13 +84,15 @@ interface SortableLessonProps {
   lesson: Lesson;
   index: number;
   moduleId: string;
+  quizCount: number;
   onTogglePublish: (moduleId: string, lesson: Lesson) => void;
   onEdit: () => void;
   onPreview: () => void;
   onDelete: () => void;
+  onManageQuiz: () => void;
 }
 
-const SortableLesson = ({ lesson, index, moduleId, onTogglePublish, onEdit, onPreview, onDelete }: SortableLessonProps) => {
+const SortableLesson = ({ lesson, index, moduleId, quizCount, onTogglePublish, onEdit, onPreview, onDelete, onManageQuiz }: SortableLessonProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lesson.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -130,6 +142,10 @@ const SortableLesson = ({ lesson, index, moduleId, onTogglePublish, onEdit, onPr
         <Button size="sm" variant="outline" onClick={onPreview}>
           Preview
         </Button>
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={onManageQuiz}>
+          <HelpCircle className="w-4 h-4 text-primary" />
+          Quiz{quizCount > 0 ? ` (${quizCount})` : ""}
+        </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button size="sm" variant="ghost" className="text-destructive">
@@ -172,6 +188,22 @@ const ManageFoundation = () => {
     lessonTitle: "",
     lessonDuration: "20",
   });
+
+  // Quiz management state
+  const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+  const [quizLessonId, setQuizLessonId] = useState<string | null>(null);
+  const [quizLessonTitle, setQuizLessonTitle] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizCounts, setQuizCounts] = useState<Record<string, number>>({});
+  const [quizQDialogOpen, setQuizQDialogOpen] = useState(false);
+  const [editingQuizQ, setEditingQuizQ] = useState<QuizQuestion | null>(null);
+  const [quizQForm, setQuizQForm] = useState({
+    question: "",
+    options: ["", "", "", ""],
+    correct_index: 0,
+  });
+  const [savingQuizQ, setSavingQuizQ] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -209,7 +241,7 @@ const ManageFoundation = () => {
         });
       });
 
-      setModules(mods.map((m: any) => ({
+      const allModules = mods.map((m: any) => ({
         id: m.id,
         title: m.title,
         level: m.level || "beginner",
@@ -217,7 +249,22 @@ const ManageFoundation = () => {
         xpReward: m.xp_reward || 0,
         icon: Music,
         lessons: lessonsByModule[m.id] || [],
-      })));
+      }));
+      setModules(allModules);
+
+      // Load quiz counts for all lessons
+      const allLessonIds = (lessonsData || []).map((l: any) => l.id);
+      if (allLessonIds.length > 0) {
+        const { data: quizData } = await (supabase as any)
+          .from("module_quizzes")
+          .select("lesson_id")
+          .in("lesson_id", allLessonIds);
+        const counts: Record<string, number> = {};
+        (quizData || []).forEach((q: any) => {
+          if (q.lesson_id) counts[q.lesson_id] = (counts[q.lesson_id] || 0) + 1;
+        });
+        setQuizCounts(counts);
+      }
     };
 
     loadFromDb();
@@ -437,6 +484,84 @@ const ManageFoundation = () => {
         console.error(err);
       }
     })();
+  };
+
+  const openQuizManager = async (lessonId: string, lessonTitle: string) => {
+    setQuizLessonId(lessonId);
+    setQuizLessonTitle(lessonTitle);
+    setQuizDialogOpen(true);
+    const { data } = await (supabase as any)
+      .from("module_quizzes")
+      .select("id, question, options, correct_index, sort_order")
+      .eq("lesson_id", lessonId)
+      .order("sort_order");
+    setQuizQuestions(data || []);
+  };
+
+  const openAddQuestion = () => {
+    setEditingQuizQ(null);
+    setQuizQForm({ question: "", options: ["", "", "", ""], correct_index: 0 });
+    setQuizQDialogOpen(true);
+  };
+
+  const openEditQuestion = (q: QuizQuestion) => {
+    setEditingQuizQ(q);
+    const opts = [...q.options];
+    while (opts.length < 4) opts.push("");
+    setQuizQForm({ question: q.question, options: opts, correct_index: q.correct_index });
+    setQuizQDialogOpen(true);
+  };
+
+  const handleSaveQuestion = async () => {
+    if (!quizLessonId || !quizQForm.question.trim()) return;
+    const filledOptions = quizQForm.options.filter(o => o.trim());
+    if (filledOptions.length < 2) {
+      toast({ title: "Add at least 2 options", variant: "destructive" });
+      return;
+    }
+    setSavingQuizQ(true);
+    try {
+      if (editingQuizQ) {
+        const { error } = await (supabase as any)
+          .from("module_quizzes")
+          .update({ question: quizQForm.question, options: filledOptions, correct_index: quizQForm.correct_index })
+          .eq("id", editingQuizQ.id);
+        if (error) throw error;
+        setQuizQuestions(prev => prev.map(q =>
+          q.id === editingQuizQ.id
+            ? { ...q, question: quizQForm.question, options: filledOptions, correct_index: quizQForm.correct_index }
+            : q
+        ));
+        toast({ title: "Question updated" });
+      } else {
+        const { data, error } = await (supabase as any)
+          .from("module_quizzes")
+          .insert({ lesson_id: quizLessonId, question: quizQForm.question, options: filledOptions, correct_index: quizQForm.correct_index, sort_order: quizQuestions.length })
+          .select().single();
+        if (error) throw error;
+        setQuizQuestions(prev => [...prev, data]);
+        setQuizCounts(prev => ({ ...prev, [quizLessonId]: (prev[quizLessonId] || 0) + 1 }));
+        toast({ title: "Question added" });
+      }
+      setQuizQDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Failed to save question", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingQuizQ(false);
+    }
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    try {
+      await (supabase as any).from("module_quizzes").delete().eq("id", id);
+      setQuizQuestions(prev => prev.filter(q => q.id !== id));
+      if (quizLessonId) {
+        setQuizCounts(prev => ({ ...prev, [quizLessonId]: Math.max(0, (prev[quizLessonId] || 1) - 1) }));
+      }
+      toast({ title: "Question deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed to delete question", description: err.message, variant: "destructive" });
+    }
   };
 
   const resetModuleForm = () => {
@@ -733,10 +858,12 @@ const ManageFoundation = () => {
                             lesson={lesson}
                             index={index}
                             moduleId={module.id}
+                            quizCount={quizCounts[lesson.id] || 0}
                             onTogglePublish={handleTogglePublish}
                             onEdit={() => openEditLesson(module, lesson)}
                             onPreview={() => navigate(`/dashboard/foundation/lesson-viewer/${module.id}/${lesson.id}?preview=1`)}
                             onDelete={() => handleDeleteLesson(module.id, lesson.id)}
+                            onManageQuiz={() => openQuizManager(lesson.id, lesson.title)}
                           />
                         ))}
                       </div>
@@ -786,6 +913,125 @@ const ManageFoundation = () => {
             </Button>
             <Button onClick={editingLesson ? handleUpdateLesson : handleAddLesson}>
               {editingLesson ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quiz Manager Dialog */}
+      <Dialog open={quizDialogOpen} onOpenChange={setQuizDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-primary" />
+              Quiz — {quizLessonTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+            {quizQuestions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No questions yet. Add your first question!</p>
+            ) : (
+              quizQuestions.map((q, idx) => (
+                <div key={q.id} className="p-4 rounded-lg border border-border bg-muted/20 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium text-sm">
+                      <span className="text-primary mr-2">{idx + 1}.</span>{q.question}
+                    </p>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="sm" variant="ghost" onClick={() => openEditQuestion(q)}>
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="text-destructive">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Question?</AlertDialogTitle>
+                            <AlertDialogDescription>This will permanently delete this question.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteQuestion(q.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 pl-4">
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className={cn(
+                        "flex items-center gap-2 text-xs p-1.5 rounded border",
+                        oi === q.correct_index
+                          ? "border-green-500/50 bg-green-500/10 text-green-400"
+                          : "border-border text-muted-foreground"
+                      )}>
+                        {oi === q.correct_index && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                        <span>{opt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter className="border-t pt-4">
+            <Button variant="outline" onClick={() => setQuizDialogOpen(false)}>Close</Button>
+            <Button className="gap-2" onClick={openAddQuestion}>
+              <Plus className="w-4 h-4" /> Add Question
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Question Dialog */}
+      <Dialog open={quizQDialogOpen} onOpenChange={setQuizQDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingQuizQ ? "Edit Question" : "Add Question"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold">Question</label>
+              <Input
+                value={quizQForm.question}
+                onChange={(e) => setQuizQForm(p => ({ ...p, question: e.target.value }))}
+                placeholder="Enter question text"
+                className="mt-1"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Answer Options</label>
+              <p className="text-xs text-muted-foreground">Select the radio button next to the correct answer.</p>
+              {quizQForm.options.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="correct_option"
+                    checked={quizQForm.correct_index === i}
+                    onChange={() => setQuizQForm(p => ({ ...p, correct_index: i }))}
+                    className="accent-primary w-4 h-4 shrink-0"
+                  />
+                  <Input
+                    value={opt}
+                    onChange={(e) => {
+                      const opts = [...quizQForm.options];
+                      opts[i] = e.target.value;
+                      setQuizQForm(p => ({ ...p, options: opts }));
+                    }}
+                    placeholder={`Option ${i + 1}${i < 2 ? " (required)" : " (optional)"}`}
+                    className={cn("flex-1", quizQForm.correct_index === i && "border-green-500/50")}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuizQDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveQuestion} disabled={savingQuizQ || !quizQForm.question.trim()}>
+              {savingQuizQ ? "Saving…" : editingQuizQ ? "Update" : "Add Question"}
             </Button>
           </DialogFooter>
         </DialogContent>
