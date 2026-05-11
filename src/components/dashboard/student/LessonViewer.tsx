@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Play, Download, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Download, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle, Trophy } from "lucide-react";
 import VideoPlayer from "../shared/VideoPlayer";
 import { cn } from "@/lib/utils";
+import confetti from "canvas-confetti";
 
 interface Video {
   id: string;
@@ -99,6 +100,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
 
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
   const [nextModuleId, setNextModuleId] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Quiz state
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -362,8 +364,25 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     alert("Link copied to clipboard!");
   };
 
+  const launchFireworks = () => {
+    const duration = 3000;
+    const end = Date.now() + duration;
+    const colors = ["#a855f7", "#ec4899", "#facc15", "#22d3ee", "#4ade80"];
+    const frame = () => {
+      confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 }, colors });
+      confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  };
+
   const handleCompleteLesson = () => {
     setIsCompleted(true);
+    // Show trophy celebration only on the last lesson of a module
+    if (!nextLessonId && nextModuleId !== null) {
+      setShowCelebration(true);
+      launchFireworks();
+    }
     (async () => {
       try {
         if (!user) return;
@@ -386,6 +405,42 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
 
   return (
     <div className="space-y-6 p-6 max-w-6xl mx-auto">
+      {/* Module completion celebration overlay */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="relative bg-card border-2 border-yellow-400/60 rounded-2xl p-10 max-w-md w-full mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-yellow-400/10 animate-pulse pointer-events-none" />
+            <div className="flex justify-center mb-4">
+              <div className="w-28 h-28 rounded-full bg-yellow-400/20 flex items-center justify-center ring-4 ring-yellow-400/40 animate-bounce">
+                <Trophy className="w-16 h-16 text-yellow-400" />
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold mb-2">Module Complete!</h2>
+            <p className="text-muted-foreground mb-1 text-lg">Outstanding work! 🎉</p>
+            <p className="text-sm text-muted-foreground mb-8">
+              You've completed every lesson in this module. Keep up the amazing progress!
+            </p>
+            <div className="flex flex-col gap-3">
+              {nextModuleId && (
+                <Button
+                  className="w-full gap-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-base"
+                  onClick={() => {
+                    setShowCelebration(false);
+                    navigate(`/dashboard/foundation/lesson-plan/${nextModuleId}`);
+                  }}
+                >
+                  Go to Next Module
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
+              <Button variant="outline" className="w-full" onClick={() => setShowCelebration(false)}>
+                Stay Here
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
