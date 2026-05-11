@@ -281,14 +281,20 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     setQuizSubmitted(true);
     setQuizPassed(passed);
     if (user && !isPreview) {
-      await (supabase as any).from("quiz_attempts").insert({
+      const payload: Record<string, unknown> = {
         user_id: user.id,
         lesson_id: lesson!.id,
-        module_id: moduleId,
         score: correct,
         total: quizQuestions.length,
         passed,
-      });
+      };
+      if (moduleId) payload.module_id = moduleId;
+
+      const { error } = await (supabase as any)
+        .from("quiz_attempts")
+        .upsert(payload, { onConflict: "user_id,lesson_id" });
+
+      if (error) console.error("Failed to save quiz attempt:", error.message, error);
     }
   };
 
