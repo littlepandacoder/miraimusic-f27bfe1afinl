@@ -88,6 +88,7 @@ const LessonEditor = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lessonPersistedInDb, setLessonPersistedInDb] = useState(false);
   const { toast } = useToast();
 
   // Load lesson from DB if editing an existing lesson
@@ -121,6 +122,8 @@ const LessonEditor = () => {
           console.debug("Could not load lesson from DB:", lessonErr?.message || lessonErr);
           return;
         }
+
+        setLessonPersistedInDb(true);
 
         // Load videos
         const { data: videos, error: videosErr } = await (supabase as any)
@@ -163,45 +166,34 @@ const LessonEditor = () => {
   const handleSaveLesson = async (): Promise<string | null> => {
     setIsSaving(true);
     try {
-      // If this is a new lesson (no id or lessonId === 'new'), insert
-      if (!lesson.id || lessonId === "new") {
-        const insertPayload = {
-          module_id: lesson.moduleId,
-          title: lesson.title,
-          description: lesson.description,
-          duration_minutes: lesson.duration,
-          status: lesson.status,
-        };
-
-        const { data, error } = await (supabase as any).from("module_lessons").insert(insertPayload).select("*").single();
-        if (error || !data) {
-          console.error("Failed to create lesson:", error);
-          toast({ title: "Error", description: "Failed to create lesson.", variant: "destructive" });
-          return null;
-        }
-
-        setLesson((prev) => ({ ...prev, id: data.id }));
-        toast({ title: "Lesson created", description: "Lesson saved to database." });
-        return data.id;
-      }
-
-      // Otherwise update existing
-      const { error } = await (supabase as any).from("module_lessons").update({
+      // Upsert handles: new lesson, lesson with local UUID not yet in DB, and existing DB lesson
+      const upsertPayload: Record<string, unknown> = {
+        module_id: lesson.moduleId,
         title: lesson.title,
         description: lesson.description,
         duration_minutes: lesson.duration,
         status: lesson.status,
-        updated_at: new Date().toISOString(),
-      }).eq("id", lesson.id);
+      };
+      if (lesson.id && lesson.id !== "new") {
+        upsertPayload.id = lesson.id;
+      }
 
-      if (error) {
-        console.error("Failed to update lesson:", error);
-        toast({ title: "Error", description: "Failed to update lesson.", variant: "destructive" });
+      const { data, error } = await (supabase as any)
+        .from("module_lessons")
+        .upsert(upsertPayload, { onConflict: "id" })
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        console.error("Failed to save lesson:", error);
+        toast({ title: "Error", description: "Failed to save lesson.", variant: "destructive" });
         return null;
       }
 
+      setLesson((prev) => ({ ...prev, id: data.id }));
+      setLessonPersistedInDb(true);
       toast({ title: "Lesson saved", description: "Changes saved." });
-      return lesson.id;
+      return data.id;
     } catch (err) {
       console.error("Save lesson error:", err);
       toast({ title: "Error", description: "Unexpected error saving lesson.", variant: "destructive" });
@@ -232,10 +224,10 @@ const LessonEditor = () => {
     setVideoTitle("");
     setIsVideoDialogOpen(false);
 
-    // Persist to DB if lesson exists; if not, create lesson first
+    // Persist to DB — ensure lesson row exists first
     (async () => {
       try {
-        let lessonId = lesson.id;
+        let lessonId = lessonPersistedInDb ? lesson.id : null;
         if (!lessonId) {
           lessonId = await handleSaveLesson() || undefined;
         }
@@ -311,7 +303,7 @@ const LessonEditor = () => {
 
         // Ensure lesson exists in DB, then persist video metadata
         try {
-          let lessonId = lesson.id;
+          let lessonId = lessonPersistedInDb ? lesson.id : null;
           if (!lessonId) {
             lessonId = await handleSaveLesson() || undefined;
           }
