@@ -1313,6 +1313,17 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 </style>
 <style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><script src="https://www.googletagmanager.com/gtag/js?l=dataLayer&amp;id=G-VKTN926TCJ" async=""></script></head>
 <body>
+<script>
+// Auth guard — redirect to /login if no active Supabase session
+(function() {
+  try {
+    var hasSession = Object.keys(localStorage).some(function(k) {
+      return /^sb-.*-auth-token$/.test(k) && localStorage.getItem(k);
+    });
+    if (!hasSession) window.location.replace('/login');
+  } catch(e) {}
+})();
+</script>
 
 <canvas id="particleCanvas" width="1316" height="547"></canvas>
 
@@ -4215,7 +4226,7 @@ function onMidiMessage(msg) {
     } else if (currentScreen() === 'game') {
       gameKeyPress(note);
     } else if (currentScreen() === 'room') {
-      playPianoNote(note, 0.5);
+      noteAttack(note);
       roomHandleMidiNoteOn(note);
     }
   } else if (isOff) {
@@ -4224,6 +4235,7 @@ function onMidiMessage(msg) {
     } else if (currentScreen() === 'game') {
       gameKeyRelease(note);
     } else if (currentScreen() === 'room') {
+      noteRelease(note);
       roomHandleMidiNoteOff(note);
     }
   }
@@ -9993,7 +10005,7 @@ document.addEventListener('keydown', (e) => {
   const midi = MAP[e.key.toLowerCase()];
   if (!midi) return;
   if (ROOM.myNotes.has(midi)) return;
-  startAudio().then(() => playPianoNote(midi, 0.5));
+  startAudio().then(() => noteAttack(midi));
   roomHandleMidiNoteOn(midi);
 });
 document.addEventListener('keyup', (e) => {
@@ -10001,6 +10013,7 @@ document.addEventListener('keyup', (e) => {
   const MAP = { a:60, w:61, s:62, e:63, d:64, f:65, t:66, g:67, y:68, h:69, u:70, j:71, k:72 };
   const midi = MAP[e.key.toLowerCase()];
   if (!midi) return;
+  noteRelease(midi);
   roomHandleMidiNoteOff(midi);
 });
 

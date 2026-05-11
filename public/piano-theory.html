@@ -475,6 +475,9 @@ footer{
 </style>
 </head>
 <body>
+<script>
+(function(){try{var h=Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k);});if(!h)window.location.replace('/login');}catch(e){}})();
+</script>
 
 <div id="note-popup"></div>
 

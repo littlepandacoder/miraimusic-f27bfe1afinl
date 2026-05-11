@@ -64,6 +64,14 @@ serve(async (req) => {
       full_name: full_name || "",
     }, { onConflict: "user_id" });
 
+    // Grant active subscription so admin-created users can access the dashboard immediately
+    await supabaseAdmin.from("user_subscriptions").insert({
+      user_id: userId,
+      subscription_id: "admin-created",
+      plan_id: "admin-created",
+      status: "active",
+    });
+
     return new Response(JSON.stringify({ success: true, userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

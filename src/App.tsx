@@ -17,6 +17,7 @@ import NoteNaming from "./pages/NoteNaming";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import Signup from "./pages/Signup";
+import TeacherSignup from "./pages/TeacherSignup";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/booking-success" element={<BookingSuccess />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/teacher-signup" element={<TeacherSignup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />

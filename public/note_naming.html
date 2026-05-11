@@ -194,6 +194,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 </style>
 </head>
 <body>
+<script>
+(function(){try{var h=Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k);});if(!h)window.location.replace('/login');}catch(e){}})();
+</script>
 
 <div id="toast"></div>
 

@@ -25,7 +25,7 @@ const CLIENT_ID_LIVE =
   import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE ||
   "AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr";
 
-// Plan IDs
+// Student plan IDs
 const PLAN_ID_SANDBOX =
   import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX ||
   "P-4L07924847135773VNIAMVRA";
@@ -33,10 +33,18 @@ const PLAN_ID_LIVE =
   import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE ||
   "P-204241322W266371XNIAXACQ";
 
-export const PAYPAL_CLIENT_ID = IS_SANDBOX ? CLIENT_ID_SANDBOX : CLIENT_ID_LIVE;
-export const PAYPAL_PLAN_ID = IS_SANDBOX ? PLAN_ID_SANDBOX : PLAN_ID_LIVE;
+// Teacher plan IDs ($20/month, 10 student seats — create at developer.paypal.com)
+const TEACHER_PLAN_ID_SANDBOX = import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX || "";
+const TEACHER_PLAN_ID_LIVE    = import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_LIVE    || "";
 
+export const PAYPAL_CLIENT_ID      = IS_SANDBOX ? CLIENT_ID_SANDBOX : CLIENT_ID_LIVE;
+export const PAYPAL_PLAN_ID        = IS_SANDBOX ? PLAN_ID_SANDBOX   : PLAN_ID_LIVE;
+export const PAYPAL_TEACHER_PLAN_ID = IS_SANDBOX ? TEACHER_PLAN_ID_SANDBOX : TEACHER_PLAN_ID_LIVE;
+
+// Subscription SDK (vault + subscription intent)
 export const PAYPAL_SDK_URL = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription`;
+// Orders SDK (for one-time per-seat purchases)
+export const PAYPAL_ORDERS_SDK_URL = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&currency=USD&intent=capture`;
 
 // Warn in dev if sandbox creds are missing
 if (import.meta.env.DEV) {

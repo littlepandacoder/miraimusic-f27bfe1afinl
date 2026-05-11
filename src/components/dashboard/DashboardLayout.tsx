@@ -11,7 +11,8 @@ import {
   BookOpen,
   Settings,
   ClipboardList,
-  Gamepad2
+  Gamepad2,
+  KeyboardMusic
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -33,6 +34,13 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   };
 
 
+  const gameItems = [
+    { href: "/piano_hero.html",    icon: KeyboardMusic, label: "Piano Hero",   external: true },
+    { href: "/note_naming.html",   icon: Gamepad2,      label: "Note Naming",  external: true },
+    { href: "/sight-reading.html", icon: Gamepad2,      label: "Sight Reading", external: true },
+    { href: "/piano-theory.html",  icon: Gamepad2,      label: "Piano Theory", external: true },
+  ];
+
   const getNavItems = () => {
     const baseItems = [
       { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -44,10 +52,10 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         { href: "/dashboard/users", icon: Users, label: "Manage Users" },
         { href: "/dashboard/courses", icon: BookOpen, label: "Course Content" },
         { href: "/dashboard/lessons", icon: Calendar, label: "All Lessons" },
-        { href: "/dashboard/slots", icon: ClipboardList, label: "Time Slots" },        
+        { href: "/dashboard/slots", icon: ClipboardList, label: "Time Slots" },
         { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Modules" },
-
         { href: "/dashboard/districts", icon: Settings, label: "Districts" },
+        ...gameItems,
       ];
     }
 
@@ -59,6 +67,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         { href: "/dashboard/schedule", icon: Calendar, label: "Schedule" },
         { href: "/dashboard/slots", icon: ClipboardList, label: "My Slots" },
         { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Modules" },
+        ...gameItems,
       ];
     }
 
@@ -69,6 +78,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Fundamentals" },
       { href: "/dashboard/book", icon: ClipboardList, label: "Book Lesson" },
       { href: "/dashboard/resources", icon: BookOpen, label: "Resources" },
+      ...gameItems,
     ];
   };
 
@@ -90,13 +100,23 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </Link>
+                {(item as any).external ? (
+                  <a
+                    href={item.href}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={item.href}
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -134,10 +154,17 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
               {/* Mobile nav: horizontal compact links */}
               <nav className="flex gap-2 overflow-x-auto">
                 {navItems.map((item) => (
-                  <Link key={item.href} to={item.href} className="px-3 py-2 rounded-md text-sm bg-secondary text-muted-foreground">
-                    <item.icon className="inline w-4 h-4 mr-2" />
-                    <span className="align-middle">{item.label}</span>
-                  </Link>
+                  (item as any).external ? (
+                    <a key={item.href} href={item.href} className="px-3 py-2 rounded-md text-sm bg-secondary text-muted-foreground">
+                      <item.icon className="inline w-4 h-4 mr-2" />
+                      <span className="align-middle">{item.label}</span>
+                    </a>
+                  ) : (
+                    <Link key={item.href} to={item.href} className="px-3 py-2 rounded-md text-sm bg-secondary text-muted-foreground">
+                      <item.icon className="inline w-4 h-4 mr-2" />
+                      <span className="align-middle">{item.label}</span>
+                    </Link>
+                  )
                 ))}
               </nav>
             </div>

@@ -56,7 +56,7 @@ const AssessmentSection = () => {
     const startStr = startDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
     const endStr = endDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
     
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startStr}/${endStr}&details=${eventDetails}&location=${eventLocation}`;
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startStr}/${endStr}&details=${eventDetails}&location=${eventLocation}&add=musicableapp%40proton.me`;
 
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
