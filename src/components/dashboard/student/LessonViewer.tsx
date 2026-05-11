@@ -194,25 +194,25 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     (async () => {
       try {
         if (!user || isPreview || !lesson) return;
-        // Upsert a baseline progress row
-        const payload = {
-          lesson_id: lesson.id,
-          student_id: user.id,
-          completed: false,
-          watched_seconds: 0,
-          last_watched_at: new Date().toISOString()
-        };
-        await (supabase as any).from('lesson_progress').upsert([payload], { onConflict: ['lesson_id', 'student_id'] });
+        // Write to both progress tables so FoundationLessonPlan and LessonViewer stay in sync
+        await Promise.all([
+          (supabase as any).from('student_lesson_progress').upsert(
+            [{ student_id: user.id, lesson_id: lesson.id, completed: false, last_watched_at: new Date().toISOString() }],
+            { onConflict: 'student_id,lesson_id' }
+          ),
+          (supabase as any).from('lesson_progress').upsert(
+            [{ lesson_id: lesson.id, student_id: user.id, completed: false, watched_seconds: 0, last_watched_at: new Date().toISOString() }],
+            { onConflict: 'lesson_id,student_id' }
+          ),
+        ]);
+        // Check if already completed
+        const { data: progressData } = await (supabase as any)
+          .from('student_lesson_progress').select('completed')
+          .eq('lesson_id', lesson.id).eq('student_id', user.id).maybeSingle();
+        if (progressData?.completed) setIsCompleted(true);
 
-        // Fetch existing progress to set completed state
-        const { data: progressData } = await (supabase as any).from('lesson_progress').select('completed').eq('lesson_id', lesson.id).eq('student_id', user.id).limit(1).single();
-        if (progressData && progressData.completed) setIsCompleted(true);
-
-        // Track telemetry event: lesson_view
         try { trackEvent('lesson_view', { lessonId: lesson.id, moduleId, userId: user.id }); } catch (e) {}
       } catch (e) {
-        // non-blocking
-        // eslint-disable-next-line no-console
         console.debug('ensure lesson_progress failed', e);
       }
     })();
@@ -264,14 +264,21 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
 
   const handleCompleteLesson = () => {
     setIsCompleted(true);
-    alert("Lesson marked as completed! Great job! 🎉");
     (async () => {
       try {
         if (!user) return;
-        await (supabase as any).from('lesson_progress').upsert([{ lesson_id: lesson.id, student_id: user.id, completed: true, watched_seconds: (lesson.videos?.[selectedVideoIndex]?.duration || 0), last_watched_at: new Date().toISOString() }], { onConflict: ['lesson_id', 'student_id'] });
+        await Promise.all([
+          (supabase as any).from('student_lesson_progress').upsert(
+            [{ student_id: user.id, lesson_id: lesson.id, completed: true, completed_at: new Date().toISOString(), last_watched_at: new Date().toISOString() }],
+            { onConflict: 'student_id,lesson_id' }
+          ),
+          (supabase as any).from('lesson_progress').upsert(
+            [{ lesson_id: lesson.id, student_id: user.id, completed: true, watched_seconds: (lesson.videos?.[selectedVideoIndex]?.duration || 0), last_watched_at: new Date().toISOString() }],
+            { onConflict: 'lesson_id,student_id' }
+          ),
+        ]);
         try { trackEvent('lesson_completed', { lessonId: lesson.id, moduleId, userId: user.id }); } catch (e) {}
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.debug('Failed to update lesson_progress on complete', e);
       }
     })();

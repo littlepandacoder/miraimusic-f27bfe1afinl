@@ -111,40 +111,38 @@ const ManageFoundation = () => {
 
     loadFromDb();
   }, []);
-  const handleAddModule = () => {
+  const handleAddModule = async () => {
     if (!formData.moduleTitle.trim()) return;
-    
-    const newModule: Module = {
-      id: `module-${Date.now()}`,
-      title: formData.moduleTitle,
-      level: formData.moduleLevel,
-      status: "available",
-      xpReward: parseInt(formData.moduleXP) || 100,
-      icon: Music,
-      lessons: [],
-    };
-    
-    // Persist to foundation_modules table
-    (async () => {
-      try {
-        const { data, error } = await (supabase as any).from("foundation_modules").insert({
-          title: newModule.title,
-          level: newModule.level,
-          xp_reward: newModule.xpReward,
-          sort_order: modules.length,
-        }).select().single();
-        if (error) {
-          toast({ title: "Error saving module", description: error.message, variant: "destructive" });
-        } else {
-          toast({ title: "Module created" });
-          // Replace temp ID with real DB id
-          setModules(prev => prev.map(m => m.id === newModule.id ? { ...m, id: data.id } : m));
-        }
-      } catch (err) {
-        console.error(err);
+
+    try {
+      const { data, error } = await (supabase as any).from("foundation_modules").insert({
+        title: formData.moduleTitle,
+        level: formData.moduleLevel,
+        xp_reward: parseInt(formData.moduleXP) || 100,
+        sort_order: modules.length,
+      }).select().single();
+
+      if (error) {
+        toast({ title: "Error saving module", description: error.message, variant: "destructive" });
+        return;
       }
-    })();
-    setModules([...modules, newModule]);
+
+      const newModule: Module = {
+        id: data.id,
+        title: data.title,
+        level: data.level,
+        status: "available",
+        xpReward: data.xp_reward,
+        icon: Music,
+        lessons: [],
+      };
+      setModules(prev => [...prev, newModule]);
+      toast({ title: "Module created" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error creating module", variant: "destructive" });
+    }
+
     resetModuleForm();
     setIsModuleDialogOpen(false);
   };
@@ -227,14 +225,21 @@ const ManageFoundation = () => {
     (async () => {
       try {
         const currentCount = modules.find(m => m.id === selectedModuleForLesson)?.lessons.length || 0;
-        const { error } = await (supabase as any).from("foundation_lessons").insert({
+        const lessonPayload = {
           id: newLesson.id,
           module_id: selectedModuleForLesson,
           title: newLesson.title,
           duration_minutes: newLesson.duration,
           sort_order: currentCount,
-        });
-        if (error) console.debug("Insert lesson failed:", error.message || error);
+        };
+        // Create in both tables with the same ID so LessonEditor and LessonViewer can find it
+        await Promise.all([
+          (supabase as any).from("foundation_lessons").insert(lessonPayload),
+          (supabase as any).from("module_lessons").insert({
+            ...lessonPayload,
+            status: "draft",
+          }),
+        ]);
       } catch (err) {
         console.error(err);
       }
@@ -313,8 +318,10 @@ const ManageFoundation = () => {
     ));
     (async () => {
       try {
-        const { error } = await (supabase as any).from("foundation_lessons").delete().eq("id", lessonId);
-        if (error) console.debug("Delete lesson failed:", error.message || error);
+        await Promise.all([
+          (supabase as any).from("foundation_lessons").delete().eq("id", lessonId),
+          (supabase as any).from("module_lessons").delete().eq("id", lessonId),
+        ]);
       } catch (err) {
         console.error(err);
       }
