@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
+import { DashboardErrorBoundary } from "@/components/DashboardErrorBoundary";
 import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -136,9 +137,9 @@ const Dashboard = () => {
   }
 
   console.log("[dashboard] → rendering dashboard for role:", hasRole("admin") ? "admin" : hasRole("teacher") ? "teacher" : "student");
-  if (hasRole("admin")) return <AdminDashboard />;
-  if (hasRole("teacher")) return <TeacherDashboard />;
-  return <StudentDashboard />;
+  if (hasRole("admin")) return <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>;
+  if (hasRole("teacher")) return <DashboardErrorBoundary><TeacherDashboard /></DashboardErrorBoundary>;
+  return <DashboardErrorBoundary><StudentDashboard /></DashboardErrorBoundary>;
 };
 
 export default Dashboard;

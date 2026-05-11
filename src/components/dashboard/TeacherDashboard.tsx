@@ -129,6 +129,7 @@ const TeacherDashboard = () => {
   return (
     <DashboardLayout title="Teacher Dashboard" role="teacher">
       <Routes>
+        <Route index element={<TeacherHome />} />
         <Route path="/" element={<TeacherHome />} />
         <Route path="/my-students" element={<MyStudents />} />
         <Route path="/lesson-plans" element={<LessonPlans />} />

@@ -121,6 +121,7 @@ const AdminDashboard = () => {
   return (
     <DashboardLayout title="Admin Dashboard" role="admin">
       <Routes>
+        <Route index element={<AdminHome />} />
         <Route path="/" element={<AdminHome />} />
         <Route path="/users" element={<ManageUsers />} />
         <Route path="/lessons" element={<ManageLessons />} />

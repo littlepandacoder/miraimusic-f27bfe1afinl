@@ -188,9 +188,9 @@ const StudentHome = () => {
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Complete Foundation Modules</span>
-                  <span className="font-semibold">{Math.round((stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100)}%</span>
+                  <span className="font-semibold">{stats.foundationModulesTotal > 0 ? Math.round((stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100) : 0}%</span>
                 </div>
-                <Progress value={(stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100} className="h-2" />
+                <Progress value={stats.foundationModulesTotal > 0 ? (stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100 : 0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
@@ -247,6 +247,7 @@ const StudentDashboard = () => {
   return (
     <DashboardLayout title="Music Lesson Dashboard" role="student">
       <Routes>
+        <Route index element={<StudentHome />} />
         <Route path="/" element={<StudentHome />} />
         <Route path="/my-lessons" element={<MyLessons />} />
         <Route path="/resources" element={<Resources />} />
