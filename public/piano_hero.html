@@ -8993,10 +8993,9 @@ function roomBuildShareUrl(code) {
 
 /* ── Screen entry ─────────────────────────────────────────── */
 function roomApplyRoleVisibility() {
-  var teacherCol = document.querySelector('#roomRolePick > div:first-child');
+  // The teacher column is the first child of .room-role-pick (contains teacher card + prev rooms)
+  var teacherCol = document.querySelector('.room-role-pick > div:first-child');
   if (!teacherCol) return;
-  // Default to hiding teacher column — only show it when role is confirmed as teacher or admin.
-  // This handles null (still loading) and 'student' the same safe way.
   var isTeacherOrAdmin = window.musicableUserRole === 'teacher' || window.musicableUserRole === 'admin';
   teacherCol.style.display = isTeacherOrAdmin ? '' : 'none';
 }
