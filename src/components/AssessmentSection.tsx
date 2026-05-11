@@ -47,9 +47,9 @@ const AssessmentSection = () => {
     endDateTime.setHours(hours + 1);
 
     // Create Google Calendar event URL
-    const eventTitle = encodeURIComponent(`Piano Assessment - ${name}`);
+    const eventTitle = encodeURIComponent(`Musicable Partnership Call - ${name}`);
     const eventDetails = encodeURIComponent(
-      `Free Piano Assessment\n\nStudent: ${name}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nExperience: ${experience || 'Not specified'}\n\nNotes: ${message || 'None'}`
+      `Free Discovery Call — Musicable Partnership\n\nContact: ${name}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nOrganisation Type: ${experience || 'Not specified'}\n\nAbout their school/studio: ${message || 'None'}`
     );
     const eventLocation = encodeURIComponent("Online - Link will be sent via email");
     
@@ -78,17 +78,17 @@ const AssessmentSection = () => {
               <CheckCircle className="w-12 h-12 text-lime" />
             </div>
             <h2 className="section-title text-foreground mb-4">
-              YOU'RE ALL SET!
+              WE'LL BE IN TOUCH!
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Your free assessment has been scheduled. We've opened Google Calendar for you to save the event.
-              Check your email for confirmation and meeting details.
+              Your discovery call has been scheduled. We've opened Google Calendar so you can save the event.
+              Expect a confirmation email with the meeting link shortly.
             </p>
-            <Button 
+            <Button
               onClick={() => setIsBooked(false)}
               className="btn-primary"
             >
-              Book Another Assessment
+              Schedule Another Call
             </Button>
           </div>
         </div>
@@ -101,10 +101,10 @@ const AssessmentSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="section-title text-foreground mb-4">
-            SEE IF YOU'RE A PERFECT FIT.
+            BRING MUSICABLE TO YOUR SCHOOL OR STUDIO.
           </h2>
           <p className="text-xl text-muted-foreground">
-            Book your FREE assessment today and start your piano journey!
+            Book a free discovery call and find out how we can partner together to transform piano education.
           </p>
         </div>
 
@@ -192,42 +192,42 @@ const AssessmentSection = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="experience" className="text-foreground">Piano Experience Level</Label>
+                  <Label htmlFor="experience" className="text-foreground">Organisation Type</Label>
                   <Select value={experience} onValueChange={setExperience}>
                     <SelectTrigger className="mt-1 bg-secondary border-border">
-                      <SelectValue placeholder="Select your level" />
+                      <SelectValue placeholder="Select your organisation type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="beginner">Beginner - Never played</SelectItem>
-                      <SelectItem value="elementary">Elementary - Less than 1 year</SelectItem>
-                      <SelectItem value="intermediate">Intermediate - 1-3 years</SelectItem>
-                      <SelectItem value="advanced">Advanced - 3+ years</SelectItem>
+                      <SelectItem value="private-teacher">Private Music Teacher</SelectItem>
+                      <SelectItem value="music-school">Music School or Studio</SelectItem>
+                      <SelectItem value="k12-school">K-12 School</SelectItem>
+                      <SelectItem value="university">University or College</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
-                  <Label htmlFor="message" className="text-foreground">Additional Notes</Label>
+                  <Label htmlFor="message" className="text-foreground">Tell Us About Your School or Studio</Label>
                   <Textarea
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Tell us about your goals..."
+                    placeholder="How many students do you teach? What are your goals with Musicable?"
                     className="mt-1 bg-secondary border-border min-h-[100px]"
                   />
                 </div>
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   className="btn-primary w-full mt-6"
                   disabled={isSubmitting || !date || !selectedTime}
                 >
-                  {isSubmitting ? "Scheduling..." : "Book Free Assessment"}
+                  {isSubmitting ? "Scheduling..." : "Book a Free Discovery Call"}
                 </Button>
-                
+
                 <p className="text-xs text-muted-foreground text-center">
                   By booking, you agree to our terms and privacy policy.
-                  A Google Calendar event will be created for you.
+                  A Google Calendar invite will be sent to both parties.
                 </p>
               </div>
             </div>
