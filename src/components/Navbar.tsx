@@ -15,34 +15,36 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right:0 z-50 bg-background/90 backdrop-blur-md border-b border-border/30">
-      <div className="container mx-auto px-8 py-4">
-        <div className="relative flex items-center">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
 
-          {/* Logo — left */}
-          <Link to="/" className="text-2xl font-black text-foreground shrink-0">
+          {/* Logo */}
+          <Link to="/" className="text-2xl font-black text-foreground">
             Musicable
           </Link>
 
-          {/* Desktop nav links — absolutely centered in viewport */}
-          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-            {isHomePage && navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="nav-link">
-                {link.label}
-              </a>
-            ))}
-            <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
-          </div>
+          {/* Desktop Navigation */}
+          <div className="flex-1 flex justify-center">
+            <div className="hidden md:flex items-center gap-8">
 
-          {/* Desktop CTAs — floated right */}
-          <div className="hidden md:flex items-center gap-8 ml-auto">
-            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">
-              <LogIn className="w-4 h-4" /> Portal Login
-            </Link>
-            <Link to="/signup" className="btn-primary text-sm px-6 py-3 whitespace-nowrap">Start for Free</Link>
+              {isHomePage && navLinks.map((link, index) => (
+                <a key={link.href} href={link.href} className={`nav-link ${index === 0 ? "ml-5" : ""}`}>
+                  {link.label}
+                </a>
+              ))}
+
+              <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
+
+              <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+                <LogIn className="w-4 h-4" /> Portal Login
+              </Link>
+
+              <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden ml-auto text-foreground" onClick={() => setIsOpen(!isOpen)}>
+          <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
