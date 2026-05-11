@@ -37,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // (before auth.uid() is ready), then INITIAL_SESSION. We defer role fetching to INITIAL_SESSION
   // so the first SIGNED_IN never triggers a premature subscription check with roles=[].
   const initialSessionFiredRef = useRef(false);
+  // Mirrors current roles state so callbacks can read the latest value without stale closures.
+  const currentRolesRef = useRef<UserRole[]>([]);
 
   // Helper: remove all Supabase-related keys from localStorage without clearing unrelated data
   const clearSupabaseStorage = () => {
@@ -62,13 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Keep currentRolesRef in sync so the auth callback can read the latest value.
+  useEffect(() => { currentRolesRef.current = roles; }, [roles]);
+
   useEffect(() => {
     // Fetch roles: try SECURITY DEFINER RPC first (bypasses RLS), then fall back
     // to direct table query. The RPC requires get_my_roles() to exist in Supabase.
     const fetchRoles = async (userId: string): Promise<UserRole[]> => {
       console.log("[auth] fetchRoles START — userId:", userId);
 
-      // Hard 5-second timeout so fetchRoles can never hang and block setLoading(false)
+      // Generous timeout — only called on INITIAL_SESSION or USER_UPDATED (not TOKEN_REFRESHED)
       const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
         Promise.race([p, new Promise<T>(r => setTimeout(() => r(fallback), ms))]);
 
@@ -76,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const result = await withTimeout(
           supabase.rpc("get_my_roles" as any),
-          3000,
+          8000,
           { data: null, error: new Error("rpc timeout") }
         );
         const { data, error } = result as any;
@@ -94,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const result = await withTimeout(
           supabase.from("user_roles").select("role").eq("user_id", userId),
-          3000,
+          8000,
           { data: null, error: new Error("direct query timeout") }
         );
         const { data, error } = result as any;
@@ -123,6 +128,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setLoading(false);
           console.log("[auth] SIGNED_OUT — cleared state ✓");
+          return;
+        }
+
+        // TOKEN_REFRESHED: the access token is being silently refreshed — roles haven't changed.
+        // Re-fetching roles here causes intermittent timeouts that wipe roles to [] and log the
+        // user out to SubscriptionGate. Just update session/user and keep existing roles.
+        if (event === 'TOKEN_REFRESHED') {
+          console.log("[auth] TOKEN_REFRESHED — updating session only, roles unchanged:", currentRolesRef.current);
+          setSession(session);
+          setUser(session?.user ?? null);
           return;
         }
 
@@ -167,11 +182,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })();
 
           const userRoles = await fetchRoles(session.user.id);
-          console.log("[auth] setRoles →", userRoles, "| setLoading(false) next");
-          setRoles(userRoles);
+          // Guard: if fetchRoles returned [] but we already have roles, the query likely timed
+          // out. Keep the existing roles rather than wiping them and forcing SubscriptionGate.
+          if (userRoles.length === 0 && currentRolesRef.current.length > 0) {
+            console.warn("[auth] fetchRoles returned [] but existing roles are", currentRolesRef.current, "— keeping existing roles to prevent spurious logout");
+          } else {
+            console.log("[auth] setRoles →", userRoles, "| setLoading(false) next");
+            setRoles(userRoles);
+            currentRolesRef.current = userRoles;
+          }
         } else {
           console.log("[auth] no session user — setRoles([]) | setLoading(false) next");
           setRoles([]);
+          currentRolesRef.current = [];
         }
 
         setLoading(false);
