@@ -59,15 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Fetch roles via SECURITY DEFINER RPC — bypasses RLS on user_roles entirely.
-    // Falls back to direct table query if the RPC doesn't exist yet.
-    const fetchRoles = async (_userId: string): Promise<UserRole[]> => {
+    // Fetch roles: try SECURITY DEFINER RPC first (bypasses RLS), then fall back
+    // to direct table query. The RPC requires get_my_roles() to exist in Supabase.
+    const fetchRoles = async (userId: string): Promise<UserRole[]> => {
+      // 1. Try RPC (bypasses RLS entirely)
+      try {
+        const { data, error } = await supabase.rpc("get_my_roles" as any);
+        if (!error && Array.isArray(data) && data.length >= 0) {
+          return (data as string[]) as UserRole[];
+        }
+      } catch (_) {}
+
+      // 2. Fallback: direct table query with retry
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           if (attempt > 0) await new Promise(r => setTimeout(r, 600));
-          const { data, error } = await supabase.rpc("get_my_roles" as any);
+          const { data, error } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId);
           if (error) throw error;
-          return ((data as string[]) ?? []) as UserRole[];
+          return (data?.map((r: any) => r.role as UserRole)) ?? [];
         } catch (err: any) {
           if (attempt === 1) {
             console.warn("[auth] Could not fetch user roles after retry:", err?.message ?? err);
