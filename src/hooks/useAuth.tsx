@@ -221,13 +221,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let data: any = null;
       let error: any = null;
 
+      console.log("[auth] signInWithPassword — email:", email, "passwordLength:", password.length);
       try {
         const res = await supabase.auth.signInWithPassword({ email, password });
         data = res.data;
         error = res.error;
+        console.log("[auth] signInWithPassword result — user:", data?.user?.email ?? "null", "error:", error?.message ?? "none", "status:", (error as any)?.status ?? "n/a");
       } catch (fetchErr: any) {
         const msg = String(fetchErr?.message || fetchErr || 'Network error while contacting auth server');
-        if (import.meta.env.DEV) console.debug('[auth] network/fetch error during signIn:', msg);
+        console.error('[auth] network/fetch error during signIn:', msg);
         if (import.meta.env.DEV) setLastAuthError({ message: msg });
         return { error: new Error(msg) };
       }
