@@ -21,14 +21,16 @@
     "migrate:status": "supabase status",
     "db:link": "supabase link --project-ref ugpgsctazvnhkasqpclg",
     "db:push": "bash scripts/run_foundation_migration.sh",
-     "dev": "vite",
-  "tunnel": "ngrok http 8080",
-  "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\""
+    "dev": "vite",
+    "tunnel": "ngrok http 8080",
+    "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\""
   },
   "migrationScripts": {
     "pgToMongo": "scripts/migrate_postgres_to_mongo.cjs"
   },
   "dependencies": {
+    "@11labs/client": "^0.2.0",
+    "@11labs/react": "^0.2.0",
     "@elevenlabs/react": "^0.12.3",
     "@hookform/resolvers": "^3.10.0",
     "@microsoft/clarity": "^1.0.2",

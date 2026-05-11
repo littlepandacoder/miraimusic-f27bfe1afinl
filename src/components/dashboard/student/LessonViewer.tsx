@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, Download, Share2, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, Play, Download, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle } from "lucide-react";
 import VideoPlayer from "../shared/VideoPlayer";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,13 @@ interface LessonContent {
   notes: string;
   learningObjectives: string[];
   status: "completed" | "in-progress" | "available";
+}
+
+interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_index: number;
 }
 
 interface LessonViewerProps {
@@ -89,6 +96,13 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dbLesson, setDbLesson] = useState<LessonContent | null>(null);
   const [loadingLesson, setLoadingLesson] = useState(false);
+
+  // Quiz state
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
 
   // Fetch lesson from DB if not passed as prop and not a sample lesson
   useEffect(() => {
@@ -217,6 +231,45 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
       }
     })();
   }, [user, isPreview, lesson, moduleId]);
+
+  // Load quiz questions and check prior passing attempt
+  useEffect(() => {
+    if (!lesson?.id) return;
+    (async () => {
+      const { data: qs } = await (supabase as any)
+        .from("module_quizzes").select("id, question, options, correct_index, sort_order")
+        .eq("lesson_id", lesson.id).order("sort_order");
+      setQuizQuestions(qs || []);
+
+      if (user && !isPreview && qs?.length) {
+        const { data: attempt } = await (supabase as any)
+          .from("quiz_attempts").select("passed")
+          .eq("lesson_id", lesson.id).eq("user_id", user.id).eq("passed", true).maybeSingle();
+        if (attempt) setQuizPassed(true);
+      }
+    })();
+  }, [lesson?.id, user, isPreview]);
+
+  const handleSubmitQuiz = async () => {
+    const correct = quizQuestions.filter(q => quizAnswers[q.id] === q.correct_index).length;
+    const pct = Math.round((correct / quizQuestions.length) * 100);
+    const passed = pct >= 70;
+    setQuizScore(pct);
+    setQuizSubmitted(true);
+    setQuizPassed(passed);
+    if (user && !isPreview) {
+      await (supabase as any).from("quiz_attempts").insert({
+        user_id: user.id,
+        lesson_id: lesson!.id,
+        module_id: moduleId,
+        score: correct,
+        total: quizQuestions.length,
+        passed,
+      });
+    }
+  };
+
+  const canComplete = quizQuestions.length === 0 || quizPassed;
 
   if (!lesson && errorMessage) {
     return (
@@ -439,6 +492,75 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
               </Tabs>
             </CardContent>
           </Card>
+          {/* Quiz Section */}
+          {quizQuestions.length > 0 && !isPreview && (
+            <Card className={cn("border-2", quizPassed ? "border-green-500/50" : "border-primary/40")}>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-primary" />
+                  Lesson Quiz
+                  {quizPassed && <Badge className="bg-green-500/20 text-green-400 ml-auto">Passed</Badge>}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {quizPassed ? (
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <CheckCircle2 className="w-6 h-6 text-green-400 shrink-0" />
+                    <p className="text-sm text-green-400 font-medium">You passed the quiz! You can now mark this lesson as complete.</p>
+                  </div>
+                ) : quizSubmitted ? (
+                  <div className="space-y-4">
+                    <div className={cn("p-4 rounded-lg border text-center", quizScore >= 70 ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30")}>
+                      {quizScore >= 70
+                        ? <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                        : <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />}
+                      <p className="text-xl font-bold">{quizScore}%</p>
+                      <p className="text-sm text-muted-foreground">{quizScore >= 70 ? "Great job! Quiz passed." : "Need 70% to pass. Try again!"}</p>
+                    </div>
+                    {quizScore < 70 && (
+                      <Button className="w-full" variant="outline" onClick={() => { setQuizSubmitted(false); setQuizAnswers({}); }}>
+                        Retry Quiz
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {quizQuestions.map((q, idx) => (
+                      <div key={q.id} className="space-y-3">
+                        <p className="font-semibold text-sm">Q{idx + 1}. {q.question}</p>
+                        <div className="space-y-2">
+                          {(q.options as string[]).map((opt, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: i }))}
+                              className={cn(
+                                "w-full text-left px-4 py-2.5 rounded-lg border text-sm transition-all",
+                                quizAnswers[q.id] === i
+                                  ? "bg-primary/20 border-primary text-primary font-medium"
+                                  : "bg-muted/30 border-muted hover:bg-muted/50"
+                              )}
+                            >
+                              {String.fromCharCode(65 + i)}. {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      className="w-full"
+                      onClick={handleSubmitQuiz}
+                      disabled={Object.keys(quizAnswers).length < quizQuestions.length}
+                    >
+                      Submit Quiz
+                    </Button>
+                    {Object.keys(quizAnswers).length < quizQuestions.length && (
+                      <p className="text-xs text-muted-foreground text-center">Answer all questions to submit.</p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right Sidebar */}
@@ -453,13 +575,20 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                 <div className="flex justify-between items-center mb-2">
                   <p className="text-sm font-semibold">Lesson Progress</p>
                   <span className="text-sm font-bold text-primary">
-                    {selectedVideoIndex + 1}/{lesson.videos.length}
+                    {selectedVideoIndex + 1}/{lesson.videos.length || 1}
                   </span>
                 </div>
                 <Progress
-                  value={((selectedVideoIndex + 1) / lesson.videos.length) * 100}
+                  value={lesson.videos.length ? ((selectedVideoIndex + 1) / lesson.videos.length) * 100 : 100}
                 />
               </div>
+
+              {quizQuestions.length > 0 && !isPreview && !quizPassed && (
+                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-400 flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 shrink-0" />
+                  Complete the quiz below to unlock completion.
+                </div>
+              )}
 
               {isCompleted ? (
                 <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
@@ -472,7 +601,8 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                 <Button
                   onClick={handleCompleteLesson}
                   className="w-full"
-                  disabled={selectedVideoIndex < lesson.videos.length - 1}
+                  disabled={!canComplete}
+                  title={!canComplete ? "Pass the quiz first" : undefined}
                 >
                   Mark as Complete
                 </Button>

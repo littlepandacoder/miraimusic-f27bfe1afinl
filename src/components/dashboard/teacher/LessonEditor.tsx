@@ -35,6 +35,8 @@ import {
   Link2,
   Play,
   Save,
+  ClipboardList,
+  CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -63,6 +65,14 @@ interface LessonContent {
   status: "draft" | "published";
 }
 
+interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_index: number;
+  sort_order: number;
+}
+
 const LessonEditor = () => {
   const { moduleId, lessonId } = useParams();
   const navigate = useNavigate();
@@ -89,6 +99,10 @@ const LessonEditor = () => {
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lessonPersistedInDb, setLessonPersistedInDb] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [isSavingQuestion, setIsSavingQuestion] = useState(false);
+  const [quizForm, setQuizForm] = useState({ question: "", options: ["", "", "", ""], correctIndex: 0 });
   const { toast } = useToast();
 
   // Load lesson from DB if editing an existing lesson
@@ -124,6 +138,14 @@ const LessonEditor = () => {
         }
 
         setLessonPersistedInDb(true);
+
+        // Load quiz questions
+        const { data: questions } = await (supabase as any)
+          .from("module_quizzes")
+          .select("*")
+          .eq("lesson_id", lessonId)
+          .order("sort_order");
+        setQuizQuestions(questions || []);
 
         // Load videos
         const { data: videos, error: videosErr } = await (supabase as any)
@@ -406,6 +428,39 @@ Recommended Content Structure:
     }
   };
 
+  const handleAddQuestion = async () => {
+    if (!quizForm.question.trim() || quizForm.options.some(o => !o.trim())) return;
+    setIsSavingQuestion(true);
+    try {
+      let dbLessonId = lessonPersistedInDb ? lesson.id : await handleSaveLesson();
+      if (!dbLessonId) return;
+      const { data, error } = await (supabase as any).from("module_quizzes").insert({
+        lesson_id: dbLessonId,
+        module_id: lesson.moduleId || moduleId,
+        question: quizForm.question,
+        options: quizForm.options,
+        correct_index: quizForm.correctIndex,
+        sort_order: quizQuestions.length,
+      }).select("*").single();
+      if (error || !data) {
+        toast({ title: "Failed to save question", variant: "destructive" });
+      } else {
+        setQuizQuestions(prev => [...prev, data]);
+        setQuizForm({ question: "", options: ["", "", "", ""], correctIndex: 0 });
+        setIsAddingQuestion(false);
+        toast({ title: "Question added" });
+      }
+    } finally {
+      setIsSavingQuestion(false);
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId: string) => {
+    await (supabase as any).from("module_quizzes").delete().eq("id", questionId);
+    setQuizQuestions(prev => prev.filter(q => q.id !== questionId));
+    toast({ title: "Question removed" });
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -665,6 +720,102 @@ Recommended Content Structure:
                       </Button>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Quiz Section */}
+          <Card className="border-border">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                Quiz Questions
+                {quizQuestions.length > 0 && (
+                  <Badge variant="outline" className="ml-1">{quizQuestions.length}</Badge>
+                )}
+              </CardTitle>
+              <Button size="sm" className="gap-2" onClick={() => setIsAddingQuestion(true)} disabled={isAddingQuestion}>
+                <Plus className="w-4 h-4" /> Add Question
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground">Students must score ≥70% to mark the lesson as complete.</p>
+
+              {quizQuestions.map((q, idx) => (
+                <div key={q.id} className="p-4 rounded-lg border bg-muted/20 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="font-semibold text-sm">Q{idx + 1}. {q.question}</p>
+                    <Button size="sm" variant="ghost" className="text-destructive shrink-0" onClick={() => handleDeleteQuestion(q.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(q.options as string[]).map((opt, i) => (
+                      <div key={i} className={cn("text-xs px-2 py-1.5 rounded border flex items-center gap-1",
+                        i === q.correct_index ? "bg-green-500/20 border-green-500/50 text-green-400" : "bg-muted/30 border-muted"
+                      )}>
+                        {i === q.correct_index && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                        <span>{String.fromCharCode(65 + i)}. {opt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {isAddingQuestion && (
+                <div className="p-4 rounded-lg border border-primary/40 bg-primary/5 space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold">Question</label>
+                    <Textarea
+                      value={quizForm.question}
+                      onChange={e => setQuizForm({ ...quizForm, question: e.target.value })}
+                      placeholder="Type your question here..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Options <span className="text-muted-foreground font-normal">(select the correct answer)</span></label>
+                    {quizForm.options.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-muted-foreground w-5">{String.fromCharCode(65 + i)}.</span>
+                        <Input
+                          value={opt}
+                          onChange={e => {
+                            const opts = [...quizForm.options];
+                            opts[i] = e.target.value;
+                            setQuizForm({ ...quizForm, options: opts });
+                          }}
+                          placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                          className="flex-1"
+                        />
+                        <input
+                          type="radio"
+                          name="correct_answer"
+                          checked={quizForm.correctIndex === i}
+                          onChange={() => setQuizForm({ ...quizForm, correctIndex: i })}
+                          className="w-4 h-4 accent-green-500"
+                          title="Mark as correct"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button size="sm" variant="outline" onClick={() => setIsAddingQuestion(false)}>Cancel</Button>
+                    <Button
+                      size="sm"
+                      onClick={handleAddQuestion}
+                      disabled={isSavingQuestion || !quizForm.question.trim() || quizForm.options.some(o => !o.trim())}
+                    >
+                      {isSavingQuestion ? "Saving..." : "Save Question"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {quizQuestions.length === 0 && !isAddingQuestion && (
+                <div className="text-center py-6 text-muted-foreground text-sm">
+                  No quiz questions yet — add some to require students to pass before completing.
                 </div>
               )}
             </CardContent>
