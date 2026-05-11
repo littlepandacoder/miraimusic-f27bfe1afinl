@@ -262,7 +262,15 @@ const LessonEditor = () => {
   const handleUploadVideo = async () => {
     if (!videoFile || !videoTitle.trim()) return;
 
-    setUploadProgress(1);
+    setUploadProgress(2);
+    // Simulate progress since Supabase SDK doesn't emit upload events
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 88) { clearInterval(progressInterval); return 88; }
+        return Math.min(prev + (Math.random() * 8 + 2), 88);
+      });
+    }, 400);
+
     try {
       // Upload to Supabase storage (bucket: lesson-videos)
       const fileExt = videoFile.name.split(".").pop();
@@ -271,6 +279,9 @@ const LessonEditor = () => {
       const { data: uploadData, error: uploadErr } = await supabase.storage
         .from("lesson-videos")
         .upload(filePath, videoFile, { upsert: false });
+
+      clearInterval(progressInterval);
+      setUploadProgress(uploadErr ? 0 : 100);
 
       if (uploadErr) {
         console.error("Upload error:", uploadErr);
@@ -325,12 +336,13 @@ const LessonEditor = () => {
         }
       }
     } catch (err) {
+      clearInterval(progressInterval);
+      setUploadProgress(0);
       console.error("Unexpected upload error:", err);
       toast({ title: "Error", description: "Failed to upload video." });
     } finally {
       setVideoFile(null);
       setVideoTitle("");
-      setUploadProgress(0);
       setIsUploadMode(false);
       setIsVideoDialogOpen(false);
     }
