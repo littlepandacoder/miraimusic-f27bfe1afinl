@@ -4,7 +4,7 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, FileText, Clock, Map, TrendingUp, Target, Award } from "lucide-react";
+import { Calendar, BookOpen, FileText, Clock, Map, TrendingUp, Target, Award, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import MyLessons from "./student/MyLessons";
 import Resources from "./student/Resources";
@@ -152,7 +152,7 @@ const StudentHome = () => {
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total XP Earned</CardTitle>
-            <Award className="w-5 h-5 text-yellow-400" />
+            <Trophy className="w-5 h-5 text-yellow-400" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-yellow-400">{stats.totalXp.toLocaleString()} <span className="text-lg font-semibold">XP</span></p>
