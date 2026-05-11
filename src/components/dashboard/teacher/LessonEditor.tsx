@@ -278,7 +278,7 @@ const LessonEditor = () => {
 
       const { data: uploadData, error: uploadErr } = await supabase.storage
         .from("lesson-videos")
-        .upload(filePath, videoFile, { upsert: false });
+        .upload(filePath, videoFile, { upsert: true });
 
       clearInterval(progressInterval);
       setUploadProgress(uploadErr ? 0 : 100);
@@ -341,8 +341,11 @@ const LessonEditor = () => {
       console.error("Unexpected upload error:", err);
       toast({ title: "Error", description: "Failed to upload video." });
     } finally {
+      // Brief pause so user sees 100% before dialog closes
+      await new Promise(r => setTimeout(r, 800));
       setVideoFile(null);
       setVideoTitle("");
+      setUploadProgress(0);
       setIsUploadMode(false);
       setIsVideoDialogOpen(false);
     }
