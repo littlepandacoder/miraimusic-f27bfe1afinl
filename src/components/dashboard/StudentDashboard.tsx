@@ -40,7 +40,7 @@ const StudentHome = () => {
         supabase.from("lessons").select("*", { count: "exact" }).eq("student_id", user.id).eq("status", "completed"),
         supabase.from("lesson_notes").select("*", { count: "exact" }).eq("is_visible_to_student", true),
         supabase.from("lessons").select("scheduled_date, scheduled_time").eq("student_id", user.id).eq("status", "scheduled").gte("scheduled_date", today).order("scheduled_date").order("scheduled_time").limit(1).maybeSingle(),
-        (supabase as any).from("foundation_modules").select("id").eq("is_published", true),
+        (supabase as any).from("foundation_modules").select("id").order("sort_order"),
         (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
         (supabase as any).from("quiz_attempts").select("score, total").eq("user_id", user.id),
       ]);

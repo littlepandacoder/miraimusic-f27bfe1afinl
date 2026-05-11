@@ -208,23 +208,26 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   // Get lesson from passed props, DB, or sample data
   const lesson = passedLesson || dbLesson || (lessonId ? SAMPLE_LESSONS[lessonId] : null);
 
-  // Ensure lesson_progress exists for this user & lesson (best-effort)
+  // Ensure a progress row exists, then read completion status
   useEffect(() => {
     (async () => {
       try {
         if (!user || isPreview || !lesson) return;
-        // Write to both progress tables so FoundationLessonPlan and LessonViewer stay in sync
+
+        // INSERT only — ignoreDuplicates ensures we never overwrite completed:true on revisit
         await Promise.all([
           (supabase as any).from('student_lesson_progress').upsert(
             [{ student_id: user.id, lesson_id: lesson.id, completed: false, last_watched_at: new Date().toISOString() }],
-            { onConflict: 'student_id,lesson_id' }
+            { onConflict: 'student_id,lesson_id', ignoreDuplicates: true }
           ),
+          // lesson_progress has no last_watched_at column — omit it
           (supabase as any).from('lesson_progress').upsert(
-            [{ lesson_id: lesson.id, student_id: user.id, completed: false, watched_seconds: 0, last_watched_at: new Date().toISOString() }],
-            { onConflict: 'lesson_id,student_id' }
+            [{ lesson_id: lesson.id, student_id: user.id, completed: false, watched_seconds: 0 }],
+            { onConflict: 'lesson_id,student_id', ignoreDuplicates: true }
           ),
         ]);
-        // Check if already completed
+
+        // Read the actual completion state (not the value we just tried to insert)
         const { data: progressData } = await (supabase as any)
           .from('student_lesson_progress').select('completed')
           .eq('lesson_id', lesson.id).eq('student_id', user.id).maybeSingle();
@@ -372,6 +375,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   };
 
   const handleCompleteLesson = () => {
+    if (!canComplete) return;
     setIsCompleted(true);
     // Show trophy celebration only on the last lesson of a module
     if (!nextLessonId && nextModuleId !== null) {
@@ -381,19 +385,23 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     (async () => {
       try {
         if (!user) return;
-        await Promise.all([
+        const now = new Date().toISOString();
+        const [r1, r2] = await Promise.all([
           (supabase as any).from('student_lesson_progress').upsert(
-            [{ student_id: user.id, lesson_id: lesson.id, completed: true, completed_at: new Date().toISOString(), last_watched_at: new Date().toISOString() }],
+            [{ student_id: user.id, lesson_id: lesson.id, completed: true, completed_at: now, last_watched_at: now }],
             { onConflict: 'student_id,lesson_id' }
           ),
+          // lesson_progress has no last_watched_at — omit it
           (supabase as any).from('lesson_progress').upsert(
-            [{ lesson_id: lesson.id, student_id: user.id, completed: true, watched_seconds: (lesson.videos?.[selectedVideoIndex]?.duration || 0), last_watched_at: new Date().toISOString() }],
+            [{ lesson_id: lesson.id, student_id: user.id, completed: true, watched_seconds: (lesson.videos?.[selectedVideoIndex]?.duration || 0) }],
             { onConflict: 'lesson_id,student_id' }
           ),
         ]);
+        if (r1.error) console.error('student_lesson_progress upsert failed:', r1.error.message);
+        if (r2.error) console.error('lesson_progress upsert failed:', r2.error.message);
         try { trackEvent('lesson_completed', { lessonId: lesson.id, moduleId, userId: user.id }); } catch (e) {}
       } catch (e) {
-        console.debug('Failed to update lesson_progress on complete', e);
+        console.error('Failed to update lesson_progress on complete', e);
       }
     })();
   };
