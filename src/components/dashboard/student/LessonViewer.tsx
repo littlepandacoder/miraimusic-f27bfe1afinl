@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, Download, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Download, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle } from "lucide-react";
 import VideoPlayer from "../shared/VideoPlayer";
 import { cn } from "@/lib/utils";
 
@@ -96,6 +96,8 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dbLesson, setDbLesson] = useState<LessonContent | null>(null);
   const [loadingLesson, setLoadingLesson] = useState(false);
+
+  const [nextLessonId, setNextLessonId] = useState<string | null>(null);
 
   // Quiz state
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -249,6 +251,27 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
       }
     })();
   }, [lesson?.id, user, isPreview]);
+
+  // Find next lesson in the same module
+  useEffect(() => {
+    if (!lesson?.id || !moduleId) return;
+    (async () => {
+      const { data: siblings } = await (supabase as any)
+        .from("foundation_lessons")
+        .select("id, sort_order")
+        .eq("module_id", moduleId)
+        .order("sort_order", { ascending: true });
+      if (!siblings?.length) return;
+      const idx = siblings.findIndex((s: any) => s.id === lesson.id);
+      if (idx !== -1 && idx < siblings.length - 1) {
+        setNextLessonId(siblings[idx + 1].id);
+      }
+    })();
+  }, [lesson?.id, moduleId]);
+
+  const handleNextLesson = () => {
+    if (nextLessonId) navigate(`/dashboard/foundation/lesson-viewer/${moduleId}/${nextLessonId}`);
+  };
 
   const handleSubmitQuiz = async () => {
     const correct = quizQuestions.filter(q => quizAnswers[q.id] === q.correct_index).length;
@@ -605,6 +628,16 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                   title={!canComplete ? "Pass the quiz first" : undefined}
                 >
                   Mark as Complete
+                </Button>
+              )}
+              {nextLessonId && (
+                <Button
+                  onClick={handleNextLesson}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  Next Lesson
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               )}
             </CardContent>
