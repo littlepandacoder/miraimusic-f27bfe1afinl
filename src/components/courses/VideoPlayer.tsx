@@ -53,6 +53,7 @@ const VideoPlayer = ({ video }: VideoPlayerProps) => {
           height="100%"
           controls
           controlsList="nodownload"
+          onContextMenu={(e) => e.preventDefault()}
           className="w-full h-full"
         >
           <source src={embedUrl} type="video/mp4" />

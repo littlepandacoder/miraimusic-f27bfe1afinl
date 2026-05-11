@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize, Download, Share2 } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +7,6 @@ interface VideoPlayerProps {
   src: string;
   title?: string;
   poster?: string;
-  onDownload?: () => void;
   onShare?: () => void;
 }
 
@@ -15,7 +14,6 @@ export const VideoPlayer = ({
   src,
   title = "Video Player",
   poster,
-  onDownload,
   onShare,
 }: VideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -118,6 +116,8 @@ export const VideoPlayer = ({
         src={src}
         poster={poster}
         className="w-full h-full"
+        controlsList="nodownload"
+        onContextMenu={(e) => e.preventDefault()}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -198,18 +198,6 @@ export const VideoPlayer = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Download */}
-            {onDownload && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={onDownload}
-                className="text-white hover:bg-white/20"
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-            )}
-
             {/* Share */}
             {onShare && (
               <Button
