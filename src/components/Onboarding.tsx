@@ -325,10 +325,10 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
               <div className="bg-card/50 border border-pink/30 rounded-2xl p-8 space-y-6">
                 <div>
                   <h3 className="text-3xl font-black text-pink mb-2">
-                    Your First Week is FREE
+                    Your First 7 Days are FREE
                   </h3>
                   <p className="text-foreground font-semibold">
-                    Get 7 days FREE with an Annual Plan, or start a monthly membership now.
+                    Start your 7-day free trial, then $17/month. Cancel anytime.
                   </p>
                 </div>
 
@@ -341,7 +341,6 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start gap-3">
                     <span className="text-pink font-bold text-xl mt-1">✓</span>
                     <div>
@@ -366,18 +365,10 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-pink font-bold text-xl mt-1">✓</span>
-                    <div>
-                      <p className="font-bold text-foreground">
-                        Plus 90 days worry-free.
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="text-sm text-muted-foreground border-t border-border/30 pt-4">
-                  If you don't love your trial but forget to cancel, don't worry! You'll still have a full 90-day money-back guarantee.
+                  Try free for 7 days. If you cancel before your trial ends, you won't be charged.
                 </div>
               </div>
 
