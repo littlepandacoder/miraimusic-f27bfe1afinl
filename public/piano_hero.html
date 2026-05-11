@@ -1363,7 +1363,6 @@ window.musicableUserId   = null;
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showScreen('play')">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
-    <button class="nav-tab" onclick="showScreen('room')">🎹 Piano Room</button>
     <button class="nav-tab" onclick="adminUser ? showScreen('admin') : adminLoginOpen()">⚙ Admin</button>
   </div>
   <div class="nav-right">
@@ -10173,6 +10172,14 @@ window.addEventListener('resize', () => {
   setTimeout(() => document.getElementById('studentName')?.focus(), 100);
 })();
 
+</script>
+
+<!-- Auto-open Piano Room if navigated via dashboard link -->
+<script>
+if (location.hash === '#room') {
+  // Wait for showScreen hook to be patched before calling
+  window.addEventListener('load', function() { showScreen('room'); });
+}
 </script>
 
 <!-- Firebase Analytics handled by compat SDK above -->
