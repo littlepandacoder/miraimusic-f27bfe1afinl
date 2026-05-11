@@ -1326,6 +1326,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 
 // Fetch the logged-in user's role from Supabase and store on window
 window.musicableUserRole = null;
+window.musicableUserId   = null;
 (function() {
   try {
     var key = Object.keys(localStorage).find(function(k) {
@@ -1339,6 +1340,7 @@ window.musicableUserRole = null;
     var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
     var userId = payload.sub;
     if (!userId) return;
+    window.musicableUserId = userId; // set synchronously so fbLoadSongs can use it
     fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/user_roles?user_id=eq.' + userId + '&select=role&limit=1', {
       headers: {
         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
@@ -1347,6 +1349,7 @@ window.musicableUserRole = null;
     }).then(function(r) { return r.json(); }).then(function(data) {
       window.musicableUserRole = (data && data[0] && data[0].role) || 'student';
       roomApplyRoleVisibility();
+      fbSubscribePersonalSongs(window.musicableUserId);
     }).catch(function() { window.musicableUserRole = 'student'; });
   } catch(e) {}
 })();
@@ -4795,6 +4798,7 @@ function buildSongList() {
     grid.innerHTML += `
       <div class="song-card" style="border-color:rgba(${hexToRgb(song.color)},.2)" id="card-${song.id}">
         <div class="song-diff ${diffClass}">${diffLabel}</div>
+        ${song._personal ? '<div style="display:inline-block;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;border-radius:6px;padding:.15rem .55rem;font-size:.6rem;font-family:\'DM Mono\',monospace;margin-bottom:.3rem">My Song</div>' : ''}
         <div class="song-name">${song.name}</div>
         <div class="song-meta">${song.composer}</div>
         <div class="song-bpm">♩= ${song.bpm} BPM</div>
@@ -4975,6 +4979,47 @@ function fbSongsRef() {
   return _fbDb?.ref('songs');
 }
 
+function fbUserSongsRef(uid) {
+  fbInit();
+  const id = uid || window.musicableUserId;
+  if (!id || !_fbDb) return null;
+  return _fbDb.ref('user_songs/' + id);
+}
+
+function fbIsGlobalRole() {
+  return adminUser || window.musicableUserRole === 'teacher' || window.musicableUserRole === 'admin';
+}
+
+// Subscribe to live updates for a user's personal songs
+function fbSubscribePersonalSongs(uid) {
+  if (!uid) return;
+  fbInit();
+  if (!_fbDb) return;
+  const ref = _fbDb.ref('user_songs/' + uid);
+  ref.on('child_added', snap => {
+    const s = snap.val();
+    if (!s?.id) return;
+    s._personal = true;
+    if (!SONGS.find(b => b.id === s.id)) SONGS.push(s);
+    buildPracticeSongList?.(); buildSongList?.();
+  });
+  ref.on('child_changed', snap => {
+    const s = snap.val();
+    if (!s?.id) return;
+    s._personal = true;
+    const idx = SONGS.findIndex(b => b.id === s.id);
+    if (idx === -1) SONGS.push(s); else SONGS[idx] = s;
+    buildPracticeSongList?.(); buildSongList?.();
+  });
+  ref.on('child_removed', snap => {
+    const s = snap.val();
+    if (!s?.id) return;
+    const idx = SONGS.findIndex(b => b.id === s.id && b._personal);
+    if (idx !== -1) SONGS.splice(idx, 1);
+    buildPracticeSongList?.(); buildSongList?.();
+  });
+}
+
 function normaliseSong(s) {
   return {
     ...s,
@@ -4982,37 +5027,61 @@ function normaliseSong(s) {
   };
 }
 
-// Save ALL songs to Firebase (admin only)
+// Save ALL songs to Firebase
 function fbSaveSongs() {
-  if (!adminUser) {
-    // Fallback to localStorage for non-admin
-    try { localStorage.setItem('pianoHeroSongsCache', JSON.stringify(SONGS.map(normaliseSong))); } catch(e) {}
-    return;
+  if (fbIsGlobalRole()) {
+    const ref = fbSongsRef();
+    if (!ref) return;
+    const obj = {};
+    SONGS.filter(s => !s._personal).forEach(s => { obj[s.id] = normaliseSong(s); });
+    ref.set(obj).then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
+                .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+  } else {
+    const ref = fbUserSongsRef();
+    if (!ref) {
+      try { localStorage.setItem('pianoHeroSongsCache', JSON.stringify(SONGS.map(normaliseSong))); } catch(e) {}
+      return;
+    }
+    const obj = {};
+    SONGS.forEach(s => { obj[s.id] = normaliseSong(s); });
+    ref.set(obj).then(() => adminShowAlert('Saved ✓', 'success'))
+                .catch(e => adminShowAlert('Save failed: ' + e.message, 'error'));
   }
-  const ref = fbSongsRef();
-  if (!ref) return;
-  const obj = {};
-  SONGS.forEach(s => { obj[s.id] = normaliseSong(s); });
-  ref.set(obj).then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
-              .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
 }
 
-// Save a single song (called on every admin edit — more efficient)
+// Save a single song — routes to global or personal path based on role
 function fbSaveSong(song) {
-  if (!adminUser) return;
-  const ref = fbSongsRef();
-  if (!ref || !song?.id) return;
-  ref.child(song.id).set(normaliseSong(song))
-    .then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
-    .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+  if (!song?.id) return;
+  if (fbIsGlobalRole()) {
+    const ref = fbSongsRef();
+    if (!ref) return;
+    const data = normaliseSong(song);
+    delete data._personal;
+    ref.child(song.id).set(data)
+      .then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
+      .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+  } else {
+    const ref = fbUserSongsRef();
+    if (!ref) return;
+    const data = normaliseSong(song);
+    data._personal = true;
+    ref.child(song.id).set(data)
+      .then(() => adminShowAlert('Saved ✓', 'success'))
+      .catch(e => adminShowAlert('Save failed: ' + e.message, 'error'));
+  }
 }
 
-// Delete a single song from Firebase
+// Delete a single song from the correct path
 function fbDeleteSong(songId) {
-  if (!adminUser) return;
-  const ref = fbSongsRef();
-  if (!ref) return;
-  ref.child(songId).remove();
+  if (fbIsGlobalRole()) {
+    const ref = fbSongsRef();
+    if (!ref) return;
+    ref.child(songId).remove();
+  } else {
+    const ref = fbUserSongsRef();
+    if (!ref) return;
+    ref.child(songId).remove();
+  }
 }
 
 // Load songs from Firebase and merge into SONGS array
@@ -5020,6 +5089,7 @@ async function fbLoadSongs() {
   fbInit();
   if (!_fbDb) { loadSongsFromCache(); return; }
   try {
+    // Load global songs
     const snap = await _fbDb.ref('songs').once('value');
     const val  = snap.val();
     if (val && typeof val === 'object') {
@@ -5029,6 +5099,21 @@ async function fbLoadSongs() {
         if (idx === -1) SONGS.push(s);
         else            SONGS[idx] = s;
       });
+    }
+    // Load personal songs for this user
+    const uid = window.musicableUserId;
+    if (uid) {
+      const personalSnap = await _fbDb.ref('user_songs/' + uid).once('value');
+      const personalVal  = personalSnap.val();
+      if (personalVal && typeof personalVal === 'object') {
+        Object.values(personalVal).forEach(s => {
+          if (!s?.id) return;
+          s._personal = true;
+          const idx = SONGS.findIndex(b => b.id === s.id);
+          if (idx === -1) SONGS.push(s);
+          else            SONGS[idx] = s;
+        });
+      }
     }
     buildPracticeSongList?.();
     buildSongList?.();
