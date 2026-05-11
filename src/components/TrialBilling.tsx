@@ -258,7 +258,7 @@ const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplet
 
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-2">7-Day Free Trial</h2>
-            <p className="text-sm text-muted-foreground mb-4">Then $20.99/month, cancel anytime.</p>
+            <p className="text-sm text-muted-foreground mb-4">Then $17/month, cancel anytime.</p>
             <div id="paypal-button-container-trial" className="min-h-[150px]">
               {!paypalReady && <Loader2 className="animate-spin mx-auto" />}
             </div>

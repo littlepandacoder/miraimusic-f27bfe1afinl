@@ -59,7 +59,7 @@ const Pricing = () => {
               <CardHeader className="pb-4 text-center pt-8">
                 <CardTitle className="text-2xl font-black mb-2">Musicable Pro</CardTitle>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-black">$20.99</span>
+                  <span className="text-5xl font-black">$17</span>
                   <span className="text-muted-foreground text-lg">/month</span>
                 </div>
                 <p className="text-muted-foreground text-sm mt-2">
@@ -99,7 +99,7 @@ const Pricing = () => {
             {[
               {
                 q: "What happens after the free trial?",
-                a: "After 7 days your PayPal subscription activates at $20.99/month. You'll receive an email reminder before you're charged.",
+                a: "After 7 days your PayPal subscription activates at $17/month. You'll receive an email reminder before you're charged.",
               },
               {
                 q: "How do I cancel?",
