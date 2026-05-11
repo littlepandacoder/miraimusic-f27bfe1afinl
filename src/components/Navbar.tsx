@@ -18,29 +18,30 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
 
-          {/* Logo */}
-          <Link to="/" className="text-2xl font-black text-foreground">
+          {/* Mobile: logo */}
+          <Link to="/" className="md:hidden text-2xl font-black text-foreground">
             Musicable
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="flex-1 flex justify-center">
-            <div className="hidden md:flex items-center gap-8">
+          {/* Desktop: all items centered as one group */}
+          <div className="hidden md:flex flex-1 items-center justify-center gap-8">
+            <Link to="/" className="text-2xl font-black text-foreground">
+              Musicable
+            </Link>
 
-              {isHomePage && navLinks.map((link, index) => (
-                <a key={link.href} href={link.href} className={`nav-link ${index === 0 ? "ml-5" : ""}`}>
-                  {link.label}
-                </a>
-              ))}
+            {isHomePage && navLinks.map((link) => (
+              <a key={link.href} href={link.href} className="nav-link">
+                {link.label}
+              </a>
+            ))}
 
-              <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
+            <Link to="/pricing" className="nav-link font-semibold">Pricing</Link>
 
-              <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
-                <LogIn className="w-4 h-4" /> Portal Login
-              </Link>
+            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+              <LogIn className="w-4 h-4" /> Portal Login
+            </Link>
 
-              <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
-            </div>
+            <Link to="/signup" className="btn-primary text-sm px-6 py-3">Start for Free</Link>
           </div>
 
           {/* Mobile Menu Button */}
