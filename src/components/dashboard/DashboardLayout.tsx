@@ -77,7 +77,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       { href: "/dashboard/courses", icon: BookOpen, label: "Course Library" },
       { href: "/dashboard/my-lessons", icon: Calendar, label: "My Lessons" },
       { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Fundamentals" },
-      { href: "/dashboard/resources", icon: BookOpen, label: "Resources" },
+      { href: "/dashboard/resources", icon: BookOpen, label: "AI Music Teacher" },
       ...gameItems,
     ];
   };

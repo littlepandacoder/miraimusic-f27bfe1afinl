@@ -65,10 +65,12 @@ const Dashboard = () => {
     console.log("[dashboard] non-staff user → checking user_subscriptions table");
     let cancelled = false;
 
+    // On timeout: if user already has roles they passed auth — grant access rather than blocking.
     const timeout = setTimeout(() => {
       if (!cancelled) {
-        console.warn("[dashboard] subscription check TIMED OUT after 10s → treating as unsubscribed");
-        setSubscribed(false);
+        const hasRoles = roles.length > 0;
+        console.warn("[dashboard] subscription check TIMED OUT — roles present:", hasRoles, "→ granting access");
+        setSubscribed(hasRoles);
         setCheckingSubscription(false);
       }
     }, 10_000);
@@ -87,8 +89,8 @@ const Dashboard = () => {
         if (cancelled) return;
         console.log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
         if (error) {
-          console.warn("[dashboard] subscription query error:", error.message);
-          setSubscribed(false);
+          console.warn("[dashboard] subscription query error:", error.message, "— roles present:", roles.length > 0);
+          setSubscribed(roles.length > 0);
         } else {
           console.log("[dashboard] subscribed:", !!data);
           setSubscribed(!!data);
