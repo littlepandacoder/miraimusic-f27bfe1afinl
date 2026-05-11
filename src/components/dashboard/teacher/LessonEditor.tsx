@@ -190,6 +190,17 @@ const LessonEditor = () => {
         return null;
       }
 
+      // Keep foundation_lessons in sync (title, status, duration — source of truth for the module list)
+      await (supabase as any).from("foundation_lessons").upsert({
+        id: data.id,
+        module_id: data.module_id || moduleId,
+        title: data.title,
+        description: data.description,
+        duration_minutes: data.duration_minutes,
+        status: data.status,
+        sort_order: 0,
+      }, { onConflict: "id" });
+
       setLesson((prev) => ({ ...prev, id: data.id }));
       setLessonPersistedInDb(true);
       toast({ title: "Lesson saved", description: "Changes saved." });

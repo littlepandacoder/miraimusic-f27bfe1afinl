@@ -29,7 +29,7 @@ interface Lesson {
   id: string;
   title: string;
   duration: number;
-  status: "completed" | "in-progress" | "available" | "locked";
+  status: "draft" | "published" | "available";
 }
 
 interface Module {
@@ -83,7 +83,7 @@ const ManageFoundation = () => {
       const moduleIds = mods.map((m: any) => m.id);
       const { data: lessonsData } = await (supabase as any)
         .from("foundation_lessons")
-        .select("id, module_id, title, duration_minutes, sort_order")
+        .select("id, module_id, title, duration_minutes, sort_order, status")
         .in("module_id", moduleIds)
         .order("sort_order");
 
@@ -94,7 +94,7 @@ const ManageFoundation = () => {
           id: l.id,
           title: l.title,
           duration: l.duration_minutes || 20,
-          status: "available",
+          status: l.status || "draft",
         });
       });
 
@@ -357,8 +357,26 @@ const ManageFoundation = () => {
   };
 
   const openEditLesson = (module: Module, lesson: Lesson) => {
-    // Navigate to lesson editor page for full editing
     navigate(`/dashboard/foundation/lesson-editor/${module.id}/${lesson.id}`);
+  };
+
+  const handleTogglePublish = async (moduleId: string, lesson: Lesson) => {
+    const newStatus = lesson.status === "published" ? "draft" : "published";
+    setModules(prev => prev.map(m =>
+      m.id === moduleId
+        ? { ...m, lessons: m.lessons.map(l => l.id === lesson.id ? { ...l, status: newStatus } : l) }
+        : m
+    ));
+    try {
+      await Promise.all([
+        (supabase as any).from("foundation_lessons").update({ status: newStatus }).eq("id", lesson.id),
+        (supabase as any).from("module_lessons").update({ status: newStatus }).eq("id", lesson.id),
+      ]);
+      toast({ title: newStatus === "published" ? "Lesson published" : "Lesson unpublished" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Failed to update status", variant: "destructive" });
+    }
   };
 
   const getLevelColor = (level: string) => {
@@ -542,10 +560,26 @@ const ManageFoundation = () => {
                           </span>
                           <div>
                             <p className="font-medium">{lesson.title}</p>
-                            <p className="text-xs text-muted-foreground">{lesson.duration} min</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-muted-foreground">{lesson.duration} min</p>
+                              <Badge className={cn("text-xs px-1.5 py-0",
+                                lesson.status === "published"
+                                  ? "bg-green-500/20 text-green-400 border-green-500/40"
+                                  : "bg-yellow-500/20 text-yellow-400 border-yellow-500/40"
+                              )}>
+                                {lesson.status === "published" ? "Published" : "Draft"}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                         <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={lesson.status === "published" ? "outline" : "default"}
+                            onClick={() => handleTogglePublish(module.id, lesson)}
+                          >
+                            {lesson.status === "published" ? "Unpublish" : "Publish"}
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
