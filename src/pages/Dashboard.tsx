@@ -37,30 +37,36 @@ const Dashboard = () => {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   useEffect(() => {
+    console.log("[dashboard] auth state — loading:", loading, "user:", user?.email ?? "null");
     if (!loading && !user) {
+      console.log("[dashboard] no user → redirecting to /login");
       window.location.replace("/login");
     }
   }, [user, loading]);
 
   useEffect(() => {
-    if (loading || !user) return;
+    console.log("[dashboard] subscription effect — loading:", loading, "user:", user?.email ?? "null", "roles:", roles);
+    if (loading || !user) {
+      console.log("[dashboard] waiting — loading or no user, skipping subscription check");
+      return;
+    }
 
-    // Use roles directly — hasRole() is recreated every render so keeping it
-    // in deps would re-run this effect on every render.
     const isStaff = roles.some(r => r === "admin" || r === "teacher");
+    console.log("[dashboard] isStaff:", isStaff, "roles:", roles);
 
     if (isStaff) {
+      console.log("[dashboard] staff user → granting access immediately");
       setSubscribed(true);
       setCheckingSubscription(false);
       return;
     }
 
+    console.log("[dashboard] non-staff user → checking user_subscriptions table");
     let cancelled = false;
 
-    // 10-second timeout so a hanging network request can't freeze the dashboard
     const timeout = setTimeout(() => {
       if (!cancelled) {
-        console.warn("[dashboard] Subscription check timed out — treating as unsubscribed");
+        console.warn("[dashboard] subscription check TIMED OUT after 10s → treating as unsubscribed");
         setSubscribed(false);
         setCheckingSubscription(false);
       }
@@ -68,6 +74,7 @@ const Dashboard = () => {
 
     const checkPayPalSubscription = async () => {
       try {
+        console.log("[dashboard] querying user_subscriptions for user:", user.id);
         const { data, error } = await (supabase as any)
           .from("user_subscriptions")
           .select("id, status")
@@ -77,21 +84,24 @@ const Dashboard = () => {
           .maybeSingle();
 
         if (cancelled) return;
+        console.log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
         if (error) {
-          console.warn("[dashboard] Could not verify subscription:", error.message);
+          console.warn("[dashboard] subscription query error:", error.message);
           setSubscribed(false);
         } else {
+          console.log("[dashboard] subscribed:", !!data);
           setSubscribed(!!data);
         }
       } catch (err) {
         if (!cancelled) {
-          console.warn("[dashboard] Subscription check failed:", err);
+          console.warn("[dashboard] subscription check threw:", err);
           setSubscribed(false);
         }
       } finally {
         if (!cancelled) {
           clearTimeout(timeout);
           setCheckingSubscription(false);
+          console.log("[dashboard] setCheckingSubscription(false) ✓");
         }
       }
     };
@@ -104,7 +114,10 @@ const Dashboard = () => {
     };
   }, [loading, user, roles]);
 
+  console.log("[dashboard] RENDER — loading:", loading, "checkingSubscription:", checkingSubscription, "subscribed:", subscribed, "roles:", roles, "user:", user?.email ?? "null");
+
   if (loading || checkingSubscription) {
+    console.log("[dashboard] → showing spinner (loading:", loading, "checkingSubscription:", checkingSubscription, ")");
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -112,12 +125,17 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    console.log("[dashboard] → returning null (no user)");
+    return null;
+  }
 
   if (!subscribed) {
+    console.log("[dashboard] → showing SubscriptionGate (not subscribed)");
     return <SubscriptionGate />;
   }
 
+  console.log("[dashboard] → rendering dashboard for role:", hasRole("admin") ? "admin" : hasRole("teacher") ? "teacher" : "student");
   if (hasRole("admin")) return <AdminDashboard />;
   if (hasRole("teacher")) return <TeacherDashboard />;
   return <StudentDashboard />;

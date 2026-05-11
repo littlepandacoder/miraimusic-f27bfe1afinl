@@ -62,41 +62,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch roles: try SECURITY DEFINER RPC first (bypasses RLS), then fall back
     // to direct table query. The RPC requires get_my_roles() to exist in Supabase.
     const fetchRoles = async (userId: string): Promise<UserRole[]> => {
-      // 1. Try RPC (bypasses RLS entirely)
-      try {
-        const { data, error } = await supabase.rpc("get_my_roles" as any);
-        if (!error && Array.isArray(data) && data.length >= 0) {
-          return (data as string[]) as UserRole[];
-        }
-      } catch (_) {}
+      console.log("[auth] fetchRoles START — userId:", userId);
 
-      // 2. Fallback: direct table query with retry
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          if (attempt > 0) await new Promise(r => setTimeout(r, 600));
-          const { data, error } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId);
-          if (error) throw error;
-          return (data?.map((r: any) => r.role as UserRole)) ?? [];
-        } catch (err: any) {
-          if (attempt === 1) {
-            console.warn("[auth] Could not fetch user roles after retry:", err?.message ?? err);
-          }
+      // Hard 5-second timeout so fetchRoles can never hang and block setLoading(false)
+      const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
+        Promise.race([p, new Promise<T>(r => setTimeout(() => r(fallback), ms))]);
+
+      // 1. Try SECURITY DEFINER RPC (bypasses RLS)
+      try {
+        const result = await withTimeout(
+          supabase.rpc("get_my_roles" as any),
+          3000,
+          { data: null, error: new Error("rpc timeout") }
+        );
+        const { data, error } = result as any;
+        console.log("[auth] fetchRoles RPC result — data:", data, "error:", error?.message ?? error);
+        if (!error && Array.isArray(data)) {
+          console.log("[auth] fetchRoles → roles from RPC:", data);
+          return data as UserRole[];
         }
+      } catch (e) {
+        console.warn("[auth] fetchRoles RPC threw:", e);
       }
+
+      // 2. Fallback: direct table query
+      console.log("[auth] fetchRoles falling back to direct table query");
+      try {
+        const result = await withTimeout(
+          supabase.from("user_roles").select("role").eq("user_id", userId),
+          3000,
+          { data: null, error: new Error("direct query timeout") }
+        );
+        const { data, error } = result as any;
+        console.log("[auth] fetchRoles direct query result — data:", data, "error:", error?.message ?? error);
+        if (!error && data) {
+          const roles = data.map((r: any) => r.role as UserRole);
+          console.log("[auth] fetchRoles → roles from direct query:", roles);
+          return roles;
+        }
+      } catch (e) {
+        console.warn("[auth] fetchRoles direct query threw:", e);
+      }
+
+      console.warn("[auth] fetchRoles → returning [] (all methods failed)");
       return [];
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (import.meta.env.DEV) {
-          console.debug(`[auth] event=${event} user=${session?.user?.email ?? 'null'}`);
-        }
+        console.log(`[auth] onAuthStateChange — event: ${event}, user: ${session?.user?.email ?? "null"}`);
 
-        // Supabase fires SIGNED_OUT when a refresh token is invalid or signOut() is called.
-        // Clear stale storage so the bad token doesn't cause repeated 400s.
         if (event === 'SIGNED_OUT') {
           clearSupabaseStorage();
         }
@@ -105,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Best-effort: seed lesson_progress rows on first login
+          // Best-effort: seed lesson_progress rows on first login (non-blocking)
           (async () => {
             try {
               const uid = session.user.id;
@@ -126,12 +141,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })();
 
           const userRoles = await fetchRoles(session.user.id);
+          console.log("[auth] setRoles →", userRoles, "| setLoading(false) next");
           setRoles(userRoles);
         } else {
+          console.log("[auth] no session user — setRoles([]) | setLoading(false) next");
           setRoles([]);
         }
 
         setLoading(false);
+        console.log("[auth] setLoading(false) called ✓");
       }
     );
 
