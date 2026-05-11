@@ -54,6 +54,22 @@ interface Module {
 }
 
 
+const SortableModuleCard = ({
+  id,
+  children,
+}: {
+  id: string;
+  children: (props: { dragHandleProps: React.HTMLAttributes<HTMLDivElement>; isDragging: boolean }) => React.ReactNode;
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners }, isDragging })}
+    </div>
+  );
+};
+
 interface SortableLessonProps {
   lesson: Lesson;
   index: number;
@@ -476,6 +492,23 @@ const ManageFoundation = () => {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
+  const handleModuleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setModules(prev => {
+      const oldIndex = prev.findIndex(m => m.id === active.id);
+      const newIndex = prev.findIndex(m => m.id === over.id);
+      const reordered = arrayMove(prev, oldIndex, newIndex);
+      reordered.forEach((mod, idx) => {
+        (supabase as any).from("foundation_modules").update({ sort_order: idx }).eq("id", mod.id).then(({ error }: any) => {
+          if (error) console.error("Failed to update module sort_order:", error.message);
+        });
+      });
+      return reordered;
+    });
+  };
+
   const handleLessonDragEnd = async (event: DragEndEvent, moduleId: string) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -576,15 +609,28 @@ const ManageFoundation = () => {
       </div>
 
       {/* Modules List */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleModuleDragEnd}>
+        <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
       <div className="space-y-4">
         {modules.map((module, moduleIndex) => (
-          <Card key={module.id} className="bg-card border-border">
+          <SortableModuleCard key={module.id} id={module.id}>
+            {({ dragHandleProps, isDragging }) => (
+            <Card className={cn("bg-card border-border transition-all", isDragging && "opacity-50 shadow-2xl")}>
             <CardHeader
               className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => setExpandedModuleId(expandedModuleId === module.id ? null : module.id)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
+                  {/* Module drag handle */}
+                  <div
+                    {...dragHandleProps}
+                    onClick={(e) => e.stopPropagation()}
+                    className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground touch-none shrink-0"
+                    title="Drag to reorder module"
+                  >
+                    <GripVertical className="w-5 h-5" />
+                  </div>
                   <button className="p-0 hover:bg-muted rounded">
                     {expandedModuleId === module.id ? (
                       <ChevronUp className="w-6 h-6" />
@@ -699,9 +745,13 @@ const ManageFoundation = () => {
                 )}
               </CardContent>
             )}
-          </Card>
+            </Card>
+            )}
+          </SortableModuleCard>
         ))}
       </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Lesson Dialog */}
       <Dialog open={isLessonDialogOpen} onOpenChange={setIsLessonDialogOpen}>
