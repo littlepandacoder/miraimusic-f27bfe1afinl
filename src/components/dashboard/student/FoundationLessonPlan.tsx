@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Check, Music, Trophy, ArrowLeft, Play, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { Lock, Check, Music, Trophy, ArrowLeft, ArrowRight, Play, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Lesson {
@@ -36,6 +36,7 @@ const FoundationLessonPlan = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [nextModuleId, setNextModuleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!moduleId || !user) return;
@@ -72,6 +73,21 @@ const FoundationLessonPlan = () => {
 
     fetchData();
   }, [moduleId, user]);
+
+  // Find the next module once the current one is loaded
+  useEffect(() => {
+    if (module === null) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("foundation_modules")
+        .select("id, sort_order")
+        .gt("sort_order", module.sort_order)
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (data?.id) setNextModuleId(data.id);
+    })();
+  }, [module]);
 
   if (loading) {
     return (
@@ -235,6 +251,28 @@ const FoundationLessonPlan = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Module complete — next module CTA */}
+      {completedCount === lessons.length && lessons.length > 0 && nextModuleId && (
+        <Card className="border-2 border-green-500/60 bg-green-500/5">
+          <CardContent className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Trophy className="w-8 h-8 text-yellow-400 shrink-0" />
+              <div>
+                <p className="font-bold text-lg">Module Complete!</p>
+                <p className="text-sm text-muted-foreground">You've finished all lessons in this module.</p>
+              </div>
+            </div>
+            <Button
+              className="gap-2 shrink-0"
+              onClick={() => navigate(`/dashboard/foundation/lesson-plan/${nextModuleId}`)}
+            >
+              Go to Next Module
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Current lesson preview */}
       {currentLesson && (
