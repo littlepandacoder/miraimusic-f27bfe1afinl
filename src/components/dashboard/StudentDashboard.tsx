@@ -27,6 +27,7 @@ const StudentHome = () => {
     foundationModulesTotal: 0,
     quizAvgScore: null as number | null,
     hoursLearned: 0,
+    totalXp: 0,
   });
 
   useEffect(() => {
@@ -40,15 +41,16 @@ const StudentHome = () => {
         supabase.from("lessons").select("*", { count: "exact" }).eq("student_id", user.id).eq("status", "completed"),
         supabase.from("lesson_notes").select("*", { count: "exact" }).eq("is_visible_to_student", true),
         supabase.from("lessons").select("scheduled_date, scheduled_time").eq("student_id", user.id).eq("status", "scheduled").gte("scheduled_date", today).order("scheduled_date").order("scheduled_time").limit(1).maybeSingle(),
-        (supabase as any).from("foundation_modules").select("id").order("sort_order"),
+        (supabase as any).from("foundation_modules").select("id, xp_reward").order("sort_order"),
         (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
         (supabase as any).from("quiz_attempts").select("score, total").eq("user_id", user.id),
       ]);
 
       const totalModules = (modulesRes.data || []).length;
 
-      // Count completed foundation modules: fetch all lesson IDs per module and check progress
+      // Count completed foundation modules and sum earned XP
       let completedModules = 0;
+      let totalXp = 0;
       if (totalModules > 0) {
         const moduleIds = (modulesRes.data || []).map((m: any) => m.id);
         const { data: allLessons } = await (supabase as any)
@@ -66,10 +68,16 @@ const StudentHome = () => {
           lessonsByModule[l.module_id].push(l.id);
         });
 
-        completedModules = moduleIds.filter((mid: string) => {
+        const completedModuleIds = moduleIds.filter((mid: string) => {
           const ids = lessonsByModule[mid] || [];
           return ids.length > 0 && ids.every((id: string) => completedLessonIds.has(id));
-        }).length;
+        });
+        completedModules = completedModuleIds.length;
+
+        // Sum XP for every completed module
+        totalXp = (modulesRes.data || [])
+          .filter((m: any) => completedModuleIds.includes(m.id))
+          .reduce((sum: number, m: any) => sum + (m.xp_reward || 0), 0);
       }
 
       // Average quiz score
@@ -91,6 +99,7 @@ const StudentHome = () => {
         foundationModulesTotal: totalModules,
         quizAvgScore,
         hoursLearned: completedCount,
+        totalXp,
       });
     };
 
@@ -142,11 +151,11 @@ const StudentHome = () => {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Hours Learned</CardTitle>
-            <Clock className="w-5 h-5 text-purple-400" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total XP Earned</CardTitle>
+            <Award className="w-5 h-5 text-yellow-400" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{stats.hoursLearned}h</p>
+            <p className="text-3xl font-bold text-yellow-400">{stats.totalXp.toLocaleString()} <span className="text-lg font-semibold">XP</span></p>
           </CardContent>
         </Card>
       </div>
