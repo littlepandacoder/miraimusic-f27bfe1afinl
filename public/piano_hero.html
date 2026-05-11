@@ -1323,6 +1323,33 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     if (!hasSession) window.location.replace('/login');
   } catch(e) {}
 })();
+
+// Fetch the logged-in user's role from Supabase and store on window
+window.musicableUserRole = null;
+(function() {
+  try {
+    var key = Object.keys(localStorage).find(function(k) {
+      return /^sb-.*-auth-token$/.test(k);
+    });
+    if (!key) return;
+    var session = JSON.parse(localStorage.getItem(key) || '{}');
+    var token = session.access_token;
+    if (!token) return;
+    var parts = token.split('.');
+    var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    var userId = payload.sub;
+    if (!userId) return;
+    fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/user_roles?user_id=eq.' + userId + '&select=role&limit=1', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+        'Authorization': 'Bearer ' + token
+      }
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      window.musicableUserRole = (data && data[0] && data[0].role) || 'student';
+      roomApplyRoleVisibility();
+    }).catch(function() { window.musicableUserRole = 'student'; });
+  } catch(e) {}
+})();
 </script>
 
 <canvas id="particleCanvas" width="1316" height="547"></canvas>
@@ -8880,9 +8907,16 @@ function roomBuildShareUrl(code) {
 }
 
 /* ── Screen entry ─────────────────────────────────────────── */
+function roomApplyRoleVisibility() {
+  var teacherCol = document.querySelector('#roomRolePick > div:first-child');
+  if (!teacherCol) return;
+  teacherCol.style.display = (window.musicableUserRole === 'student') ? 'none' : '';
+}
+
 function roomOnShow() {
   // Render previous classroom history
   roomRenderHistory();
+  roomApplyRoleVisibility();
 
   // Auto-join from URL hash (student flow)
   const hash = location.hash;
