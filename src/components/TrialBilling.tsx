@@ -86,7 +86,7 @@ const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplet
 
     window.paypal
       .Buttons({
-        style: { shape: "pill", color: "gold", layout: "vertical", label: "subscribe" },
+        style: { shape: "rect", color: "gold", layout: "vertical", label: "subscribe" },
         onClick: (_data: any, actions: any) => {
           const pw = passwordRef.current;
           const cpw = confirmPasswordRef.current;

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Music, Loader2 } from "lucide-react";
@@ -12,7 +11,6 @@ interface WelcomeInfo {
 
 const AuthCallback = () => {
   const { user, roles, loading } = useAuth();
-  const navigate = useNavigate();
 
   const welcomed = useRef(false);
   const destRef = useRef("/dashboard");
@@ -23,7 +21,7 @@ const AuthCallback = () => {
     if (loading) return;
 
     if (!user) {
-      const t = setTimeout(() => navigate("/login", { replace: true }), 3000);
+      const t = setTimeout(() => window.location.replace("/login"), 3000);
       return () => clearTimeout(t);
     }
 
@@ -64,18 +62,18 @@ const AuthCallback = () => {
       destRef.current = destination;
       setWelcome({ name: firstName, isNew, destination });
     })();
-  }, [user, roles, loading, navigate]);
+  }, [user, roles, loading]);
 
   // Effect 2 — navigate after 2.5 s once welcome is shown.
-  // Only depends on `welcome` (set once) so role re-renders can't cancel this timer.
+  // Uses window.location.replace (full reload) because React Router's navigate
+  // can silently fail mid-OAuth flow when the router state is still settling.
   useEffect(() => {
     if (!welcome) return;
-    const t = setTimeout(
-      () => navigate(destRef.current, { replace: true }),
-      2500
-    );
+    const t = setTimeout(() => {
+      window.location.replace(destRef.current);
+    }, 2500);
     return () => clearTimeout(t);
-  }, [welcome, navigate]);
+  }, [welcome]);
 
   // Loading spinner while session is being established
   if (!welcome) {
