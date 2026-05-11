@@ -98,6 +98,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   const [loadingLesson, setLoadingLesson] = useState(false);
 
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
+  const [nextModuleId, setNextModuleId] = useState<string | null>(null);
 
   // Quiz state
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -252,7 +253,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     })();
   }, [lesson?.id, user, isPreview]);
 
-  // Find next lesson in the same module
+  // Find next lesson in the same module; if last lesson, find next module
   useEffect(() => {
     if (!lesson?.id || !moduleId) return;
     (async () => {
@@ -265,6 +266,23 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
       const idx = siblings.findIndex((s: any) => s.id === lesson.id);
       if (idx !== -1 && idx < siblings.length - 1) {
         setNextLessonId(siblings[idx + 1].id);
+      } else {
+        // Last lesson — look up the next module
+        const { data: currentMod } = await (supabase as any)
+          .from("foundation_modules")
+          .select("sort_order")
+          .eq("id", moduleId)
+          .maybeSingle();
+        if (currentMod) {
+          const { data: nextMod } = await (supabase as any)
+            .from("foundation_modules")
+            .select("id")
+            .gt("sort_order", currentMod.sort_order)
+            .order("sort_order", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          if (nextMod?.id) setNextModuleId(nextMod.id);
+        }
       }
     })();
   }, [lesson?.id, moduleId]);
@@ -643,6 +661,15 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                   className="w-full gap-2"
                 >
                   Next Lesson
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
+              {!nextLessonId && nextModuleId && (
+                <Button
+                  onClick={() => navigate(`/dashboard/foundation/lesson-plan/${nextModuleId}`)}
+                  className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Go to Next Module
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               )}
