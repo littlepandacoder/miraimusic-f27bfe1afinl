@@ -25,6 +25,7 @@ interface Module {
   description: string | null;
   level: string;
   xp_reward: number;
+  sort_order: number;
 }
 
 const FoundationLessonPlan = () => {
@@ -41,7 +42,7 @@ const FoundationLessonPlan = () => {
 
     const fetchData = async () => {
       const [modRes, lessonsRes, progressRes] = await Promise.all([
-        (supabase as any).from("foundation_modules").select("id, title, description, level, xp_reward").eq("id", moduleId).single(),
+        (supabase as any).from("foundation_modules").select("id, title, description, level, xp_reward, sort_order").eq("id", moduleId).single(),
         (supabase as any).from("foundation_lessons").select("id, title, description, duration_minutes, sort_order").eq("module_id", moduleId).order("sort_order"),
         (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
       ]);
@@ -124,10 +125,11 @@ const FoundationLessonPlan = () => {
           <Card className="bg-card border-border">
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Music className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                  <span className="text-2xl font-bold text-primary-foreground">{module.sort_order + 1}</span>
                 </div>
                 <div>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Module {module.sort_order + 1}</p>
                   <CardTitle className="text-2xl mb-1">{module.title}</CardTitle>
                   {module.description && <p className="text-muted-foreground text-sm">{module.description}</p>}
                   <Badge className={cn("mt-2 text-xs", getLevelColor(module.level))}>{module.level}</Badge>

@@ -460,7 +460,7 @@ const ManageFoundation = () => {
 
       {/* Modules List */}
       <div className="space-y-4">
-        {modules.map((module) => (
+        {modules.map((module, moduleIndex) => (
           <Card key={module.id} className="bg-card border-border">
             <CardHeader
               className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -475,7 +475,13 @@ const ManageFoundation = () => {
                       <ChevronDown className="w-6 h-6" />
                     )}
                   </button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
+                      {moduleIndex + 1}
+                    </div>
+                  </div>
                   <div>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Module {moduleIndex + 1}</p>
                     <CardTitle className="text-2xl">{module.title}</CardTitle>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge className={cn("text-xs", getLevelColor(module.level))}>
