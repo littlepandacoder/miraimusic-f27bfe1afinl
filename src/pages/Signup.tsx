@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { EmailCollection } from "@/components/EmailCollection";
 import Onboarding from "@/components/Onboarding";
 import TrialBilling from "@/components/TrialBilling";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 interface OnboardingData {
   email: string;
   goals: string[];
@@ -17,6 +17,14 @@ type Stage = "email" | "onboarding" | "billing" | "loading";
 const Signup = () => {
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>("email");
+  const [subNeeded, setSubNeeded] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("sub_needed") === "1") {
+      setSubNeeded(true);
+      sessionStorage.removeItem("sub_needed");
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [docId, setDocId] = useState("");
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
@@ -51,7 +59,19 @@ const Signup = () => {
   }
 
   if (stage === "email") {
-    return <EmailCollection onComplete={handleEmailSubmit} />;
+    return (
+      <>
+        {subNeeded && (
+          <div className="fixed top-0 inset-x-0 z-50 bg-destructive text-destructive-foreground px-4 py-3 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            Subscription needed — please subscribe below to access the dashboard.
+          </div>
+        )}
+        <div className={subNeeded ? "pt-12" : ""}>
+          <EmailCollection onComplete={handleEmailSubmit} />
+        </div>
+      </>
+    );
   }
 
   if (stage === "onboarding") {

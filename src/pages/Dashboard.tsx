@@ -46,22 +46,16 @@ const Dashboard = () => {
   useEffect(() => {
     if (loading || !user) return;
 
-    // Admins and teachers always get access via role
+    // Admins and teachers always get access
     if (hasRole("admin") || hasRole("teacher")) {
       setSubscribed(true);
       setCheckingSubscription(false);
       return;
     }
 
-    // Students: role check first (fast), then fall back to user_subscriptions table
-    if (hasRole("student")) {
-      setSubscribed(true);
-      setCheckingSubscription(false);
-      return;
-    }
-
-    // No role yet — check user_subscriptions table directly (handles race between
-    // PayPal onApprove saving subscription and the auth session refreshing roles)
+    // For everyone else (student role OR no role), verify an active subscription
+    // record exists in user_subscriptions. This prevents auto-assigned roles from
+    // bypassing the paywall.
     const checkPayPalSubscription = async () => {
       try {
         const { data, error } = await (supabase as any)
@@ -73,6 +67,7 @@ const Dashboard = () => {
           .maybeSingle();
 
         if (error) {
+          // Table may not exist yet or RLS blocked — treat as unsubscribed
           console.warn("[dashboard] Could not verify subscription:", error.message);
           setSubscribed(false);
         } else {
