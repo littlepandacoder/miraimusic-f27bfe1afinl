@@ -230,7 +230,7 @@ const CourseLibrary = () => {
 
               {quizResult ? (
                 <div className="text-center space-y-3 py-4">
-                  <Trophy className={`w-12 h-12 mx-auto ${quizResult.score / quizResult.total >= 0.7 ? "text-yellow-400" : "text-muted-foreground"}`} />
+                  <Trophy className="w-12 h-12 mx-auto text-yellow-400" />
                   <p className="text-2xl font-bold">{quizResult.score}/{quizResult.total}</p>
                   <p className={`text-sm font-medium ${quizResult.score / quizResult.total >= 0.7 ? "text-green-400" : "text-red-400"}`}>
                     {quizResult.score / quizResult.total >= 0.7 ? "Passed! Great job!" : "Not quite — review the video and try again."}
