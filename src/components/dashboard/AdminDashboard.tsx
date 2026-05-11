@@ -8,7 +8,7 @@ import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
 import ManageSlots from "./admin/ManageSlots";
 import ManageFoundation from "./admin/ManageFoundation";
-import ManageGamifiedMaps from "./admin/ManageGamifiedMaps";
+
 import ManageCourses from "./admin/ManageCourses";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
@@ -127,7 +127,7 @@ const AdminDashboard = () => {
         <Route path="/lessons" element={<ManageLessons />} />
         <Route path="/slots" element={<ManageSlots />} />
         <Route path="/foundation" element={<ManageFoundation />} />
-        <Route path="/gamified-maps" element={<ManageGamifiedMaps />} />
+
         <Route path="/courses" element={<ManageCourses />} />
         <Route path="/foundation/lesson-editor/:moduleId/:lessonId" element={<LessonEditor />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
