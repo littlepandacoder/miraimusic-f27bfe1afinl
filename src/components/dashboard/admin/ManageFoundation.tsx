@@ -195,7 +195,7 @@ const ManageFoundation = () => {
     if (!formData.lessonTitle.trim() || !selectedModuleForLesson) return;
 
     const newLesson: Lesson = {
-      id: `lesson-${Date.now()}`,
+      id: crypto.randomUUID(),
       title: formData.lessonTitle,
       duration: parseInt(formData.lessonDuration) || 20,
       status: "available",
@@ -228,6 +228,7 @@ const ManageFoundation = () => {
       try {
         const currentCount = modules.find(m => m.id === selectedModuleForLesson)?.lessons.length || 0;
         const { error } = await (supabase as any).from("foundation_lessons").insert({
+          id: newLesson.id,
           module_id: selectedModuleForLesson,
           title: newLesson.title,
           duration_minutes: newLesson.duration,

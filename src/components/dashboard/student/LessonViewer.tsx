@@ -87,17 +87,126 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [dbLesson, setDbLesson] = useState<LessonContent | null>(null);
+  const [loadingLesson, setLoadingLesson] = useState(false);
 
-  
-
-  // Get lesson from passed props or sample data
-  const lesson = passedLesson || (lessonId ? SAMPLE_LESSONS[lessonId] : null);
-
+  // Fetch lesson from DB if not passed as prop and not a sample lesson
   useEffect(() => {
-    if (!lesson && lessonId && !SAMPLE_LESSONS[lessonId]) {
-      setErrorMessage('Lesson not found');
-    }
-  }, [lessonId, lesson]);
+    if (passedLesson || !lessonId || SAMPLE_LESSONS[lessonId]) return;
+
+    const fetchLesson = async () => {
+      setLoadingLesson(true);
+      try {
+        // Try localStorage preview first (for newly created lessons)
+        try {
+          const previewRaw = localStorage.getItem(`lesson_preview:${lessonId}`);
+          if (previewRaw) {
+            const preview = JSON.parse(previewRaw);
+            setDbLesson({
+              id: preview.id,
+              title: preview.title || "Untitled Lesson",
+              description: preview.description || "",
+              duration: preview.duration || 20,
+              moduleTitle: preview.moduleId || "",
+              videos: preview.videos || [],
+              notes: preview.notes || "",
+              learningObjectives: [],
+              status: preview.status || "available",
+            });
+          }
+        } catch (e) { /* ignore */ }
+
+        // Fetch from module_lessons + lesson_videos
+        const { data: lessonRow } = await (supabase as any)
+          .from("module_lessons")
+          .select("*")
+          .eq("id", lessonId)
+          .maybeSingle();
+
+        if (lessonRow) {
+          const { data: videos } = await (supabase as any)
+            .from("lesson_videos")
+            .select("*")
+            .eq("lesson_id", lessonId)
+            .order("created_at", { ascending: true });
+
+          // Also fetch module title from foundation_modules
+          let moduleTitle = moduleId || "";
+          if (lessonRow.module_id) {
+            const { data: mod } = await (supabase as any)
+              .from("foundation_modules")
+              .select("title")
+              .eq("id", lessonRow.module_id)
+              .maybeSingle();
+            if (mod?.title) moduleTitle = mod.title;
+          }
+
+          setDbLesson({
+            id: lessonRow.id,
+            title: lessonRow.title,
+            description: lessonRow.description || "",
+            duration: lessonRow.duration_minutes || 20,
+            moduleTitle,
+            videos: (videos || []).map((v: any) => ({
+              id: v.id,
+              title: v.title,
+              url: v.url,
+              type: (v.source === "supabase" || v.source === "loveable") ? "upload" : "external",
+              duration: v.duration_seconds || undefined,
+            })),
+            notes: "",
+            learningObjectives: [],
+            status: lessonRow.status || "available",
+          });
+          return;
+        }
+
+        // Fallback: try foundation_lessons
+        const { data: foundationRow } = await (supabase as any)
+          .from("foundation_lessons")
+          .select("*")
+          .eq("id", lessonId)
+          .maybeSingle();
+
+        if (foundationRow) {
+          let moduleTitle = moduleId || "";
+          if (foundationRow.module_id) {
+            const { data: mod } = await (supabase as any)
+              .from("foundation_modules")
+              .select("title")
+              .eq("id", foundationRow.module_id)
+              .maybeSingle();
+            if (mod?.title) moduleTitle = mod.title;
+          }
+          setDbLesson({
+            id: foundationRow.id,
+            title: foundationRow.title,
+            description: foundationRow.description || "",
+            duration: foundationRow.duration_minutes || 20,
+            moduleTitle,
+            videos: [],
+            notes: "",
+            learningObjectives: [],
+            status: foundationRow.status || "available",
+          });
+          return;
+        }
+
+        // Nothing found
+        if (!dbLesson) setErrorMessage("Lesson not found");
+      } catch (err) {
+        console.error("Error loading lesson:", err);
+        setErrorMessage("Failed to load lesson");
+      } finally {
+        setLoadingLesson(false);
+      }
+    };
+
+    fetchLesson();
+  }, [lessonId, passedLesson, moduleId]);
+
+  // Get lesson from passed props, DB, or sample data
+  const lesson = passedLesson || dbLesson || (lessonId ? SAMPLE_LESSONS[lessonId] : null);
 
   // Ensure lesson_progress exists for this user & lesson (best-effort)
   useEffect(() => {
@@ -144,7 +253,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     );
   }
 
-  if (!lesson) {
+  if (!lesson || loadingLesson) {
     return (
       <div className="space-y-6 p-6 max-w-6xl mx-auto">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
