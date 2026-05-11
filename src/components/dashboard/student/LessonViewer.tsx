@@ -411,14 +411,14 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
       {/* Module completion celebration overlay */}
       {showCelebration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="relative bg-card border-2 border-yellow-400/60 rounded-2xl p-10 max-w-md w-full mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="absolute inset-0 rounded-2xl bg-yellow-400/10 animate-pulse pointer-events-none" />
+          <div className="relative bg-card border-2 border-green-500/60 rounded-2xl p-10 max-w-md w-full mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-green-500/5 animate-pulse pointer-events-none" />
             <div className="flex justify-center mb-4">
-              <div className="w-28 h-28 rounded-full bg-yellow-400/20 flex items-center justify-center ring-4 ring-yellow-400/40 animate-bounce">
-                <Trophy className="w-16 h-16 text-yellow-400" />
+              <div className="w-28 h-28 rounded-full bg-yellow-400/20 flex items-center justify-center ring-4 ring-yellow-500/60 animate-bounce">
+                <Trophy className="w-16 h-16 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold mb-2">Module Complete!</h2>
+            <h2 className="text-3xl font-bold mb-2 text-green-400">Module Complete!</h2>
             <p className="text-muted-foreground mb-1 text-lg">Outstanding work! 🎉</p>
             <p className="text-sm text-muted-foreground mb-8">
               You've completed every lesson in this module. Keep up the amazing progress!
@@ -426,7 +426,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
             <div className="flex flex-col gap-3">
               {nextModuleId && (
                 <Button
-                  className="w-full gap-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-base"
+                  className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-base"
                   onClick={() => {
                     setShowCelebration(false);
                     navigate(`/dashboard/foundation/lesson-plan/${nextModuleId}`);
