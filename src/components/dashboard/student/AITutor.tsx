@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AITutorProps {
   lessonContext?: {
@@ -46,18 +45,8 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const { data, error } = await supabase.functions.invoke(
-        "elevenlabs-conversation-token"
-      );
-
-      if (error) throw error;
-
-      if (!data?.token) {
-        throw new Error("No token received");
-      }
-
       await conversation.startSession({
-        conversationToken: data.token,
+        agentId: "agent_7401krc6fjd4e1hvvce2m7mn0ss0",
         connectionType: "webrtc",
       });
     } catch (error) {
