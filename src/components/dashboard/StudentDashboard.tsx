@@ -200,7 +200,7 @@ const StudentHome = () => {
         <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-primary" />
+              <Trophy className="w-5 h-5 text-primary" />
               Foundation Progress
             </CardTitle>
           </CardHeader>
