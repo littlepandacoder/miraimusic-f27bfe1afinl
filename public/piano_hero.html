@@ -360,6 +360,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 .end-btn:hover{opacity:.85;transform:scale(1.03)}
 .end-btn.outline{background:transparent;border:2px solid var(--border);color:var(--muted)}
 .end-btn-row{display:flex;gap:.8rem;justify-content:center}
+#endAiSection{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:1rem 1.2rem;margin:.8rem 0;max-width:480px;width:100%;text-align:left}
+#endAiBody{font-family:'DM Mono',monospace;font-size:.78rem;color:#c4b5fd;line-height:1.6;min-height:2rem}
+.end-ai-spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(167,139,250,.3);border-top-color:#a78bfa;border-radius:50%;animation:spin .7s linear infinite;margin-right:.5rem;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ═══ PARTICLES ════════════════════════════════════════════ */
 #particleCanvas{
@@ -1509,6 +1513,9 @@ window.musicableUserId   = null;
     <div><div class="end-stat-val" id="endAcc">0%</div><div class="end-stat-lbl">Accuracy</div></div>
   </div>
   <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--muted)" id="endBreakdown"></div>
+  <div id="endAiSection">
+    <div id="endAiBody"><span class="end-ai-spinner"></span> Analysing your performance…</div>
+  </div>
   <div class="end-btn-row">
     <button class="end-btn outline" onclick="backToSongs()">Song Select</button>
     <button class="end-btn" id="retryBtn" onclick="retryGame()">▶ Retry</button>
@@ -6061,6 +6068,13 @@ function endGame(completed) {
 
   document.getElementById('endScreen').classList.add('active');
 
+  // Auto AI analysis
+  var endAiBody = document.getElementById('endAiBody');
+  if (endAiBody) endAiBody.innerHTML = '<span class="end-ai-spinner"></span> Analysing your performance…';
+  var misses = game.totalNotes - game.hitNotes;
+  var songName = (game.song && game.song.name) ? game.song.name : 'this song';
+  runPianoHeroAIAnalysis(grade, acc, game.score, game.maxCombo, songName, game.perfectHits, game.goodHits, misses);
+
   // Save score to Supabase
   (function() {
     try {
@@ -6100,8 +6114,41 @@ function endGame(completed) {
   }
 }
 
+async function runPianoHeroAIAnalysis(grade, acc, score, maxCombo, songName, perfectHits, goodHits, misses) {
+  var body = document.getElementById('endAiBody');
+  if (!body) return;
+
+  var prompt = 'You are a warm, encouraging piano teacher giving brief feedback on a Piano Hero session.\n\nSession data:\n- Song: ' + songName + '\n- Grade: ' + grade + '\n- Score: ' + score.toLocaleString() + '\n- Accuracy: ' + acc + '%\n- Max Combo: x' + maxCombo + '\n- Perfect: ' + perfectHits + ', Good: ' + goodHits + ', Misses: ' + misses + '\n\nWrite 2-3 short, encouraging sentences. Cover overall performance (reference the grade), one strength, one area to improve. Be specific, warm and practical. No bullet points.';
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 240, messages: [{ role: 'user', content: prompt }] })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    if (!text) throw new Error('empty');
+    body.innerHTML = '<span style="color:rgba(167,139,250,.6);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase">✦ AI Analysis</span><br>' + text.replace(/\n+/g, ' ');
+  } catch (e) {
+    // Local fallback
+    var fb = '';
+    if (grade === 'S')      fb = 'Outstanding performance on "' + songName + '"! A perfect S grade — your timing and accuracy are exceptional.';
+    else if (grade === 'A') fb = 'Great job on "' + songName + '"! An A grade shows strong control. Keep refining your timing to reach S rank.';
+    else if (grade === 'B') fb = 'Good effort on "' + songName + '"! A B grade shows solid progress. Focus on reducing misses to climb higher.';
+    else if (grade === 'C') fb = 'Nice work on "' + songName + '"! A C is a good start — practice the tricky sections to boost your accuracy.';
+    else                    fb = 'Keep practising "' + songName + '"! Every run builds muscle memory — try slowing down and focusing on accuracy first.';
+    if (maxCombo >= 20) fb += ' Your x' + maxCombo + ' max combo shows great concentration!';
+    if (misses > perfectHits) fb += ' Aim to convert more misses into Perfect hits next time.';
+    body.innerHTML = '<span style="color:rgba(167,139,250,.6);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase">✦ AI Analysis</span><br>' + fb;
+  }
+}
+
 function retryGame() {
   document.getElementById('endScreen').classList.remove('active');
+  var b = document.getElementById('endAiBody');
+  if (b) b.innerHTML = '<span class="end-ai-spinner"></span> Analysing your performance…';
   stopMic(); // clean up mic if it was running
   if (game.song) selectSong(game.song.id);
 }

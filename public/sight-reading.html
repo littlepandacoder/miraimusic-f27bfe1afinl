@@ -784,6 +784,13 @@ function sessionComplete() {
   if (state.log.length >= 3) document.getElementById('analyseBtn').disabled = false;
   showToast(`🏆 Session done! ${acc}% accuracy`);
   if (state.totalQ > 0) saveGameScore('sight_reading', state.correct, state.correct, state.totalQ, state.bestStreak);
+  if (state.totalQ >= 3) {
+    setTimeout(function() {
+      var panel = document.getElementById('aiPanel');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      runAIAnalysis();
+    }, 1000);
+  }
 }
 
 function saveGameScore(game, score, correct, total, bestStreak) {

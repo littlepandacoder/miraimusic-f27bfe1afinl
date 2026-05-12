@@ -263,6 +263,13 @@ function sessionComplete() {
   if (state.log.length >= 3) document.getElementById('analyseBtn').disabled = false;
   updateWeakSpots();
   if (state.totalQ > 0) saveGameScore('note_naming', state.correct, state.correct, state.totalQ, state.bestStreak);
+  if (state.totalQ >= 3) {
+    setTimeout(function() {
+      var panel = document.getElementById('aiPanel');
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      runAIAnalysis();
+    }, 1000);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
