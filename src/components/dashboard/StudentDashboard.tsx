@@ -4,16 +4,14 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, Clock, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye } from "lucide-react";
+import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import MyLessons from "./student/MyLessons";
 import Resources from "./student/Resources";
 import BookLesson from "./student/BookLesson";
 import ModuleMap from "./student/ModuleMap";
 import FoundationLessonPlan from "./student/FoundationLessonPlan";
 import LessonViewer from "./student/LessonViewer";
 
-import CourseLibrary from "./student/CourseLibrary";
 
 interface GameScoreSummary {
   bestScore: number;
@@ -333,14 +331,7 @@ const StudentHome = () => {
               <p className="text-sm text-muted-foreground">Schedule your next class</p>
             </div>
           </Link>
-          <Link to="/dashboard/my-lessons" className="feature-card flex items-center gap-4 p-4">
-            <Clock className="w-8 h-8 text-cyan-400" />
-            <div>
-              <p className="font-semibold">My Lessons</p>
-              <p className="text-sm text-muted-foreground">View and manage lessons</p>
-            </div>
-          </Link>
-          <Link to="/dashboard/foundation" className="feature-card flex items-center gap-4 p-4">
+<Link to="/dashboard/foundation" className="feature-card flex items-center gap-4 p-4">
             <Map className="w-8 h-8 text-yellow-400" />
             <div>
               <p className="font-semibold">Foundation Journey</p>
@@ -367,14 +358,12 @@ const StudentDashboard = () => {
       <Routes>
         <Route index element={<StudentHome />} />
         <Route path="/" element={<StudentHome />} />
-        <Route path="/my-lessons" element={<MyLessons />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/book" element={<BookLesson />} />
         <Route path="/foundation" element={<ModuleMap />} />
         <Route path="/foundation/lesson-plan/:moduleId" element={<FoundationLessonPlan />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
 
-        <Route path="/courses" element={<CourseLibrary />} />
       </Routes>
     </DashboardLayout>
   );

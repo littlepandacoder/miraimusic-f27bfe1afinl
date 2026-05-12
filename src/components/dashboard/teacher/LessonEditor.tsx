@@ -638,7 +638,7 @@ Recommended Content Structure:
                           type="file"
                           accept="video/*"
                           onChange={handleVideoFileChange}
-                          className="text-base"
+                          className="text-base file:bg-pink-500 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1.5 file:mr-3 file:text-sm file:font-medium file:cursor-pointer hover:file:bg-pink-600"
                         />
                       </div>
                       <div className="space-y-2">
