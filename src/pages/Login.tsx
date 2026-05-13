@@ -38,12 +38,14 @@ const Login = () => {
       // Brand-new self-signups (Google OAuth etc.) get a user_roles row from the trigger
       // but no subscription until they complete onboarding — send them to /signup.
       if (roles.includes("student")) {
-        const { data: sub } = await (supabase as any)
+        const { data: sub, error: subErr } = await (supabase as any)
           .from("user_subscriptions")
           .select("id")
           .eq("user_id", user.id)
           .eq("status", "active")
           .maybeSingle();
+        if (subErr) console.error("[login] subscription check error:", subErr);
+        console.log("[login] subscription row:", sub, "→ routing to", sub ? "/dashboard" : "/signup");
         navigate(sub ? "/dashboard" : "/signup");
         return;
       }
