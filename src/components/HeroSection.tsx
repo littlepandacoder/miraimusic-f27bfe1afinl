@@ -9,7 +9,7 @@ const HeroSection = () => {
             LEARN<br />SMARTER
           </h1>
           <p className="text-xl md:text-2xl font-semibold mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            <span className="text-pink">100% GUARANTEED</span>{" "}
+            <span className="text-primary">100% GUARANTEED</span>{" "}
             <span className="text-foreground">PASS YOUR TRINITY PIANO EXAM</span>
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
