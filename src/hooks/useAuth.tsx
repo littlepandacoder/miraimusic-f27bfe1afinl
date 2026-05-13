@@ -157,6 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log("[auth] INITIAL_SESSION — marking initialSessionFired, fetching roles now");
         }
 
+        // Hold loading=true while roles are being fetched so routing guards
+        // (e.g. Login's useEffect) don't fire with stale empty roles between
+        // the setUser call and the async setRoles call below.
+        if (session?.user) setLoading(true);
+
         setSession(session);
         setUser(session?.user ?? null);
 

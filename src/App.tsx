@@ -18,6 +18,8 @@ import Signup from "./pages/Signup";
 import TeacherSignup from "./pages/TeacherSignup";
 import ResetPassword from "./pages/ResetPassword";
 import AuthCallback from "./pages/AuthCallback";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
 import MusicCursor from "./components/MusicCursor";
 import NotFound from "./pages/NotFound";
@@ -48,6 +50,8 @@ const App = () => (
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             {/* Temporary debug route for auth troubleshooting (remove before production) */}
             <Route path="/auth-debug" element={<AuthDebug />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

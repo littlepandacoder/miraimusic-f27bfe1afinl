@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from "lucide-react";
 const Footer = () => {
   return <footer id="contact" className="py-16 bg-navy-dark border-t border-border/30">
@@ -58,10 +59,14 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-border/30 pt-8 text-center">
+        <div className="border-t border-border/30 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Musicableapp. All rights reserved.
           </p>
+          <div className="flex gap-4 text-sm">
+            <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms &amp; Conditions</Link>
+            <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
+          </div>
         </div>
       </div>
     </footer>;
