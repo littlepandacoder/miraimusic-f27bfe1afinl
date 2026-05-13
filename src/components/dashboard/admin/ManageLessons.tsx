@@ -112,53 +112,57 @@ const ManageLessons = () => {
           ) : lessons.length === 0 ? (
             <p className="text-muted-foreground">No lessons scheduled yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lessons.map((lesson) => (
-                  <TableRow key={lesson.id} className="border-border">
-                    <TableCell>
-                      {new Date(lesson.scheduled_date).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </TableCell>
-                    <TableCell>{lesson.scheduled_time.slice(0, 5)}</TableCell>
-                    <TableCell className="font-medium">{lesson.student_name}</TableCell>
-                    <TableCell>{lesson.teacher_name}</TableCell>
-                    <TableCell>{lesson.duration_minutes} min</TableCell>
-                    <TableCell>
-                      <Select
-                        value={lesson.status}
-                        onValueChange={(v) => handleStatusChange(lesson.id, v)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <Badge className={getStatusColor(lesson.status)}>
-                            {lesson.status}
-                          </Badge>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="rescheduled">Rescheduled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto -mx-6">
+              <div className="min-w-[560px] px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Dur.</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lessons.map((lesson) => (
+                      <TableRow key={lesson.id} className="border-border">
+                        <TableCell className="whitespace-nowrap">
+                          {new Date(lesson.scheduled_date).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </TableCell>
+                        <TableCell>{lesson.scheduled_time.slice(0, 5)}</TableCell>
+                        <TableCell className="font-medium">{lesson.student_name}</TableCell>
+                        <TableCell>{lesson.teacher_name}</TableCell>
+                        <TableCell>{lesson.duration_minutes}m</TableCell>
+                        <TableCell>
+                          <Select
+                            value={lesson.status}
+                            onValueChange={(v) => handleStatusChange(lesson.id, v)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <Badge className={getStatusColor(lesson.status)}>
+                                {lesson.status}
+                              </Badge>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="scheduled">Scheduled</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                              <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

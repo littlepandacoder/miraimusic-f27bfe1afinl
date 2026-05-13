@@ -165,7 +165,7 @@ const ManageSlots = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap gap-3 justify-between items-center">
         <h2 className="text-xl font-semibold">Time Slots Management</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -253,43 +253,47 @@ const ManageSlots = () => {
           ) : slots.length === 0 ? (
             <p className="text-muted-foreground">No time slots configured yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Day</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {slots.map((slot) => (
-                  <TableRow key={slot.id} className="border-border">
-                    <TableCell className="font-medium">{slot.teacher_name}</TableCell>
-                    <TableCell>{DAYS[slot.day_of_week]}</TableCell>
-                    <TableCell>
-                      {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={slot.is_active}
-                        onCheckedChange={(checked) => handleToggleActive(slot.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteSlot(slot.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto -mx-6">
+              <div className="min-w-[420px] px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border">
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Day</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Active</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {slots.map((slot) => (
+                      <TableRow key={slot.id} className="border-border">
+                        <TableCell className="font-medium">{slot.teacher_name}</TableCell>
+                        <TableCell>{DAYS[slot.day_of_week]}</TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={slot.is_active}
+                            onCheckedChange={(checked) => handleToggleActive(slot.id, checked)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteSlot(slot.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

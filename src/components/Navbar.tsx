@@ -43,7 +43,7 @@ const Navbar = () => {
           <Link to="/" className="text-2xl font-black text-foreground">
             Musicable
           </Link>
-          <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
+          <button className="p-2 text-foreground hover:text-primary transition-colors rounded-lg" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>

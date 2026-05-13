@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,9 @@ import {
   Settings,
   ClipboardList,
   Gamepad2,
-  KeyboardMusic
+  KeyboardMusic,
+  Menu,
+  X,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -24,15 +26,12 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    // Full reload guarantees React state is flushed before Login page checks auth.
-    // Without this, navigate("/login") can arrive while user is still set in memory,
-    // causing Login to redirect straight back to the dashboard.
     window.location.href = "/login";
   };
-
 
   const gameItems = [
     { href: "/piano_hero.html#room", icon: KeyboardMusic, label: "Piano Room",    external: true },
@@ -50,12 +49,12 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     if (role === "admin") {
       return [
         ...baseItems,
-        { href: "/dashboard/users", icon: Users, label: "Manage Users" },
-        { href: "/dashboard/courses", icon: BookOpen, label: "Course Content" },
-        { href: "/dashboard/lessons", icon: Calendar, label: "All Lessons" },
-        { href: "/dashboard/slots", icon: ClipboardList, label: "Time Slots" },
-        { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Modules" },
-        { href: "/dashboard/districts", icon: Settings, label: "Districts" },
+        { href: "/dashboard/users",      icon: Users,         label: "Manage Users" },
+        { href: "/dashboard/courses",    icon: BookOpen,      label: "Course Content" },
+        { href: "/dashboard/lessons",    icon: Calendar,      label: "All Lessons" },
+        { href: "/dashboard/slots",      icon: ClipboardList, label: "Time Slots" },
+        { href: "/dashboard/foundation", icon: Gamepad2,      label: "Foundation Modules" },
+        { href: "/dashboard/districts",  icon: Settings,      label: "Districts" },
         ...gameItems,
       ];
     }
@@ -63,11 +62,11 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     if (role === "teacher") {
       return [
         ...baseItems,
-        { href: "/dashboard/my-students", icon: Users, label: "My Students" },
-        { href: "/dashboard/lesson-plans", icon: BookOpen, label: "Lesson Plans" },
-        { href: "/dashboard/schedule", icon: Calendar, label: "Schedule" },
-        { href: "/dashboard/slots", icon: ClipboardList, label: "My Slots" },
-        { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Modules" },
+        { href: "/dashboard/my-students",  icon: Users,         label: "My Students" },
+        { href: "/dashboard/lesson-plans", icon: BookOpen,      label: "Lesson Plans" },
+        { href: "/dashboard/schedule",     icon: Calendar,      label: "Schedule" },
+        { href: "/dashboard/slots",        icon: ClipboardList, label: "My Slots" },
+        { href: "/dashboard/foundation",   icon: Gamepad2,      label: "Foundation Modules" },
         ...gameItems,
       ];
     }
@@ -75,54 +74,59 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     return [
       ...baseItems,
       { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Fundamentals" },
-      { href: "/dashboard/resources", icon: BookOpen, label: "AI Music Teacher" },
+      { href: "/dashboard/resources",  icon: BookOpen, label: "AI Music Teacher" },
       ...gameItems,
     ];
   };
 
   const navItems = getNavItems();
 
+  const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) =>
+    (item as any).external ? (
+      <a
+        href={item.href}
+        onClick={onClick}
+        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+      >
+        <item.icon className="w-5 h-5 shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </a>
+    ) : (
+      <Link
+        to={item.href}
+        onClick={onClick}
+        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+      >
+        <item.icon className="w-5 h-5 shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar (hidden on small screens) */}
-      <aside className="hidden md:flex w-64 bg-card border-r border-border flex flex-col">
+
+      {/* ── Desktop sidebar ─────────────────────────────────── */}
+      <aside className="hidden md:flex w-64 shrink-0 bg-card border-r border-border flex-col">
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-8 h-8 text-primary" />
             <span className="text-xl font-bold">Musicable</span>
           </Link>
         </div>
-        
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.href}>
-                {(item as any).external ? (
-                  <a
-                    href={item.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    to={item.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.label}
-                  </Link>
-                )}
+                <NavLink item={item} />
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border shrink-0">
           <div className="flex items-center gap-3 px-4 py-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
               <span className="text-sm font-bold text-primary">
                 {user?.email?.charAt(0).toUpperCase()}
               </span>
@@ -132,8 +136,8 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
               <p className="text-xs text-muted-foreground capitalize">{role}</p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
             onClick={handleSignOut}
           >
@@ -143,31 +147,86 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <header className="bg-card border-b border-border px-4 py-4 md:px-8 md:py-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg md:text-2xl font-bold">{title}</h1>
-            <div className="flex items-center gap-2 md:hidden">
-              {/* Mobile nav: horizontal compact links */}
-              <nav className="flex gap-2 overflow-x-auto">
-                {navItems.map((item) => (
-                  (item as any).external ? (
-                    <a key={item.href} href={item.href} className="px-3 py-2 rounded-md text-sm bg-secondary text-muted-foreground">
-                      <item.icon className="inline w-4 h-4 mr-2" />
-                      <span className="align-middle">{item.label}</span>
-                    </a>
-                  ) : (
-                    <Link key={item.href} to={item.href} className="px-3 py-2 rounded-md text-sm bg-secondary text-muted-foreground">
-                      <item.icon className="inline w-4 h-4 mr-2" />
-                      <span className="align-middle">{item.label}</span>
-                    </Link>
-                  )
-                ))}
-              </nav>
+      {/* ── Mobile drawer overlay ────────────────────────────── */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile drawer panel ──────────────────────────────── */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-card border-r border-border flex flex-col
+          transform transition-transform duration-300 ease-in-out md:hidden
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <Link to="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+            <Music className="w-7 h-7 text-primary" />
+            <span className="text-lg font-bold">Musicable</span>
+          </Link>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Drawer nav */}
+        <nav className="flex-1 p-3 overflow-y-auto">
+          <ul className="space-y-1">
+            {navItems.map((item) => (
+              <li key={item.href}>
+                <NavLink item={item} onClick={() => setMobileOpen(false)} />
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Drawer footer */}
+        <div className="p-4 border-t border-border shrink-0">
+          <div className="flex items-center gap-3 px-2 py-2 mb-2">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-primary">
+                {user?.email?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{role}</p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Main content ─────────────────────────────────────── */}
+      <main className="flex-1 min-w-0 overflow-auto">
+        <header className="bg-card border-b border-border px-4 py-3 md:px-8 md:py-5 sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            {/* Hamburger — mobile only */}
+            <button
+              className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-base md:text-2xl font-bold truncate">{title}</h1>
+          </div>
         </header>
+
         <div className="p-4 md:p-8">
           {children}
         </div>

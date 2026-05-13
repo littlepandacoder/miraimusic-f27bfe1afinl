@@ -248,7 +248,7 @@ const MyStudents = () => {
       )}
 
       {/* Student list */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap gap-3 justify-between items-center">
         <h2 className="text-xl font-semibold">My Students</h2>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
@@ -302,34 +302,38 @@ const MyStudents = () => {
               No students yet. Click "Add Student" to onboard your first student.
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Total Lessons</TableHead>
-                  <TableHead>Completed</TableHead>
-                  <TableHead>Next Lesson</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((s) => (
-                  <TableRow key={s.id} className="border-border">
-                    <TableCell className="font-medium">{s.full_name}</TableCell>
-                    <TableCell>{s.email}</TableCell>
-                    <TableCell>{s.total_lessons}</TableCell>
-                    <TableCell>
-                      <Badge className="bg-lime/20 text-lime border-lime/50">{s.completed_lessons}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {s.next_lesson
-                        ? new Date(s.next_lesson).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-                        : "No upcoming"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto -mx-6">
+              <div className="min-w-[560px] px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border">
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Done</TableHead>
+                      <TableHead>Next Lesson</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map((s) => (
+                      <TableRow key={s.id} className="border-border">
+                        <TableCell className="font-medium">{s.full_name}</TableCell>
+                        <TableCell className="max-w-[140px] truncate">{s.email}</TableCell>
+                        <TableCell>{s.total_lessons}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-lime/20 text-lime border-lime/50">{s.completed_lessons}</Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {s.next_lesson
+                            ? new Date(s.next_lesson).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                            : "No upcoming"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

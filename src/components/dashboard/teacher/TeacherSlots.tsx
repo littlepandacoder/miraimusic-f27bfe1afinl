@@ -504,41 +504,45 @@ const TeacherSlots = () => {
                   No time slots configured. Add your available times above.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border">
-                      <TableHead>Day</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Active</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {slots.map((slot) => (
-                      <TableRow key={slot.id} className="border-border">
-                        <TableCell className="font-medium">{DAYS[slot.day_of_week]}</TableCell>
-                        <TableCell>
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                        </TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={slot.is_active}
-                            onCheckedChange={(checked) => handleToggleActive(slot.id, checked)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteSlot(slot.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto -mx-6">
+                  <div className="min-w-[360px] px-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border">
+                          <TableHead>Day</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Active</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {slots.map((slot) => (
+                          <TableRow key={slot.id} className="border-border">
+                            <TableCell className="font-medium">{DAYS[slot.day_of_week]}</TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
+                            </TableCell>
+                            <TableCell>
+                              <Switch
+                                checked={slot.is_active}
+                                onCheckedChange={(checked) => handleToggleActive(slot.id, checked)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteSlot(slot.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
