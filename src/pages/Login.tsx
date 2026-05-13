@@ -123,7 +123,7 @@ const Login = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {showForgot ? "Reset Password" : "Welcome to Musicableapp"}
+            {showForgot ? "Reset Password" : "Welcome to Musicable"}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {showForgot ? "We'll send a reset link to your email" : "Sign in to access your dashboard"}

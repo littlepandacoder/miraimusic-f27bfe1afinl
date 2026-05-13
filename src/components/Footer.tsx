@@ -6,7 +6,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <h3 className="text-2xl font-black text-foreground mb-4">Musicableapp</h3>
+            <h3 className="text-2xl font-black text-foreground mb-4">Musicable</h3>
             <p className="text-muted-foreground text-sm">
               Transform your piano journey with our innovative AI-powered learning platform.
               100% guaranteed exam success.
@@ -61,7 +61,7 @@ const Footer = () => {
 
         <div className="border-t border-border/30 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Musicableappapp. All rights reserved.
+            © {new Date().getFullYear()} Musicableapp. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm">
             <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms &amp; Conditions</Link>

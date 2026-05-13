@@ -20,7 +20,7 @@ const Navbar = () => {
         {/* Desktop row — all items centered */}
         <div className="hidden md:flex items-center justify-center gap-8">
           <Link to="/" className="text-2xl font-black text-foreground">
-            Musicableapp
+            Musicable
           </Link>
 
           {isHomePage && navLinks.map((link) => (
@@ -41,7 +41,7 @@ const Navbar = () => {
         {/* Mobile row */}
         <div className="flex md:hidden items-center justify-between">
           <Link to="/" className="text-2xl font-black text-foreground">
-            Musicableapp
+            Musicable
           </Link>
           <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
