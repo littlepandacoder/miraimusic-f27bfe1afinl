@@ -90,7 +90,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold">Musicable</span>
+            <span className="text-xl font-bold">Musicableapp</span>
           </Link>
         </div>
         
