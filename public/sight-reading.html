@@ -323,6 +323,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
             </select>
             <span style="color:var(--muted2);font-size:.8rem">to</span>
             <select class="range-select" id="rangeTo">
+              <option value="C3">C3</option><option value="D3">D3</option><option value="E3">E3</option>
+              <option value="F3">F3</option><option value="G3">G3</option><option value="A3">A3</option>
+              <option value="B3">B3</option><option value="C4">C4</option><option value="D4">D4</option>
               <option value="E4">E4</option><option value="F4">F4</option><option value="G4">G4</option>
               <option value="A4">A4</option><option value="B4" selected>B4</option>
               <option value="C5">C5</option><option value="D5">D5</option><option value="E5">E5</option>
@@ -553,6 +556,7 @@ let state = {
   log:           [],
   notePool:      [],
   answered:      false,
+  testMode:      null,   // 'treble_test' | 'bass_test' | null
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -783,7 +787,11 @@ function sessionComplete() {
 
   if (state.log.length >= 3) document.getElementById('analyseBtn').disabled = false;
   showToast(`🏆 Session done! ${acc}% accuracy`);
-  if (state.totalQ > 0) saveGameScore('sight_reading', state.correct, state.correct, state.totalQ, state.bestStreak);
+
+  // Save score — test sessions use a distinct game name so they can be queried separately
+  var gameName = state.testMode || 'sight_reading';
+  if (state.totalQ > 0) saveGameScore(gameName, state.correct, state.correct, state.totalQ, state.bestStreak);
+
   if (state.totalQ >= 3) {
     setTimeout(function() {
       var panel = document.getElementById('aiPanel');
@@ -791,6 +799,61 @@ function sessionComplete() {
       runAIAnalysis();
     }, 1000);
   }
+
+  // Test mode result overlay
+  if (state.testMode) {
+    var testPassed = (acc === 100 && state.totalQ >= 20);
+    setTimeout(function() { showTestResultOverlay(testPassed, acc, state.totalQ, state.correct); }, 700);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TEST RESULT OVERLAY
+═══════════════════════════════════════════════════════════ */
+function showTestResultOverlay(passed, acc, totalQ, correct) {
+  var existing = document.getElementById('testResultOverlay');
+  if (existing) existing.remove();
+
+  var clefLabel = state.testMode === 'treble_test' ? 'Treble Clef' : 'Bass Clef';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'testResultOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);padding:1rem';
+
+  if (passed) {
+    overlay.innerHTML =
+      '<div style="background:#0f172a;border:2px solid #39D98A;border-radius:20px;padding:2.5rem;max-width:440px;width:100%;text-align:center">'
+      + '<div style="font-size:3rem;margin-bottom:.4rem">🎉</div>'
+      + '<div style="color:#39D98A;font-size:.72rem;font-family:\'DM Mono\',monospace;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem">Test Passed ✓</div>'
+      + '<h2 style="font-size:1.9rem;font-weight:900;color:#fff;margin-bottom:.3rem">' + clefLabel + '</h2>'
+      + '<p style="color:#8892A4;font-size:.88rem;margin-bottom:1.4rem">100% accuracy — you\'ve mastered ' + clefLabel + ' note reading!</p>'
+      + '<div style="background:rgba(57,217,138,.08);border:1px solid rgba(57,217,138,.2);border-radius:12px;padding:.9rem;margin-bottom:1.4rem">'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:2.4rem;color:#39D98A;font-weight:500">' + acc + '%</div>'
+      + '<div style="font-size:.75rem;color:#8892A4">' + correct + '/' + totalQ + ' correct · all within 3 seconds</div>'
+      + '</div>'
+      + '<a href="/dashboard/foundation" style="display:block;width:100%;padding:.85rem;background:#39D98A;color:#0f172a;font-weight:800;font-size:.9rem;border-radius:12px;text-decoration:none;letter-spacing:.03em;text-transform:uppercase">Return to Foundation Journey →</a>'
+      + '<button onclick="document.getElementById(\'testResultOverlay\').remove()" style="margin-top:.7rem;width:100%;padding:.65rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:#8892A4;font-size:.8rem;border-radius:10px;cursor:pointer">Stay &amp; Review</button>'
+      + '</div>';
+  } else {
+    var notYetReason = totalQ < 20
+      ? 'Complete all 20 questions — you answered ' + totalQ + '.'
+      : 'You scored <strong style="color:#F59E0B">' + acc + '%</strong> — 100% accuracy required.';
+    overlay.innerHTML =
+      '<div style="background:#0f172a;border:2px solid rgba(239,68,68,.4);border-radius:20px;padding:2.5rem;max-width:440px;width:100%;text-align:center">'
+      + '<div style="font-size:3rem;margin-bottom:.4rem">📖</div>'
+      + '<div style="color:#F59E0B;font-size:.72rem;font-family:\'DM Mono\',monospace;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem">Not Yet</div>'
+      + '<h2 style="font-size:1.9rem;font-weight:900;color:#fff;margin-bottom:.3rem">' + clefLabel + ' Test</h2>'
+      + '<p style="color:#8892A4;font-size:.88rem;margin-bottom:1.4rem">' + notYetReason + ' Keep practising!</p>'
+      + '<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:.9rem;margin-bottom:1.4rem">'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:2.4rem;color:#F59E0B;font-weight:500">' + acc + '%</div>'
+      + '<div style="font-size:.75rem;color:#8892A4">Need 100% on all 20 questions within 3 seconds each</div>'
+      + '</div>'
+      + '<button onclick="document.getElementById(\'testResultOverlay\').remove();startSession();" style="display:block;width:100%;padding:.85rem;background:#FF2D78;color:#fff;font-weight:800;font-size:.9rem;border-radius:12px;border:none;cursor:pointer;letter-spacing:.03em;text-transform:uppercase">Try Again</button>'
+      + '<a href="/dashboard/foundation" style="display:block;margin-top:.7rem;width:100%;padding:.65rem;background:transparent;border:1px solid rgba(255,255,255,.1);color:#8892A4;font-size:.8rem;border-radius:10px;text-align:center;text-decoration:none">Return to Foundation</a>'
+      + '</div>';
+  }
+
+  document.body.appendChild(overlay);
 }
 
 function saveGameScore(game, score, correct, total, bestStreak) {
@@ -1331,6 +1394,76 @@ document.addEventListener('keydown', e => {
 drawStaff(null, null);
 drawMiniKb(null);
 updateStats();
+
+/* ── URL params: pre-configure for test / lesson routing ── */
+(function() {
+  var p     = new URLSearchParams(window.location.search);
+  var mode  = p.get('mode');    // 'treble_test' | 'bass_test'
+  var clef  = p.get('clef');    // 'treble' | 'bass' | 'both'
+  var from  = p.get('from');    // e.g. 'C4'
+  var to    = p.get('to');      // e.g. 'C5'
+  var cnt   = parseInt(p.get('count') || '0', 10);
+
+  // Apply clef
+  if (clef) {
+    var clefBtn = document.querySelector('[data-clef="' + clef + '"]');
+    if (clefBtn) setClef(clef, clefBtn);
+  }
+
+  // Apply question count
+  if (cnt > 0) {
+    var cntBtn = document.querySelector('[data-count="' + cnt + '"]');
+    if (cntBtn) setCount(cnt, cntBtn);
+    else state.count = cnt;
+  }
+
+  // Apply note range (add missing options if needed)
+  if (from) {
+    var selFrom = document.getElementById('rangeFrom');
+    if (![].some.call(selFrom.options, function(o) { return o.value === from; })) {
+      selFrom.add(new Option(from, from), 0);
+    }
+    selFrom.value = from;
+  }
+  if (to) {
+    var selTo = document.getElementById('rangeTo');
+    if (![].some.call(selTo.options, function(o) { return o.value === to; })) {
+      selTo.add(new Option(to, to), 0);
+    }
+    selTo.value = to;
+  }
+
+  // Test mode — lock settings and show banner
+  if (mode === 'treble_test' || mode === 'bass_test') {
+    state.testMode = mode;
+
+    // Lock all setting controls
+    document.querySelectorAll('.seg-btn, .range-select').forEach(function(el) {
+      el.disabled = true;
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.45';
+    });
+
+    var clefLabel = mode === 'treble_test' ? 'Treble Clef' : 'Bass Clef';
+    var noteRange = mode === 'treble_test' ? 'C4 – C5 (Treble)' : 'C2 – C4 (Bass)';
+
+    var banner = document.createElement('div');
+    banner.style.cssText = 'background:linear-gradient(135deg,rgba(255,45,120,.12),rgba(0,212,255,.06));border:1px solid rgba(255,45,120,.25);border-radius:14px;padding:1rem 1.5rem;margin-bottom:1.2rem';
+    banner.innerHTML =
+      '<div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.35rem">'
+      + '<span style="font-size:1.1rem">🎯</span>'
+      + '<strong style="color:var(--pink);font-size:.88rem">' + clefLabel + ' Sight Reading Test · ' + noteRange + ' · 20 Questions</strong>'
+      + '</div>'
+      + '<p style="font-size:.79rem;color:var(--muted);line-height:1.5">Answer all <strong style="color:var(--off-white)">20 notes</strong> with <strong style="color:var(--green)">100% accuracy</strong> and within 3 seconds each to unlock the next module. Settings are locked for this test.</p>';
+
+    document.querySelector('.main-grid').before(banner);
+  }
+
+  // Auto-start
+  if (p.get('autostart') === '1') {
+    setTimeout(startSession, 700);
+  }
+})();
 </script>
 </body>
 </html>

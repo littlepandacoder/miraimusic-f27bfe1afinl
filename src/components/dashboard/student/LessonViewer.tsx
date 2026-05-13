@@ -374,6 +374,16 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
     frame();
   };
 
+  const moduleTitle = lesson?.moduleTitle?.toLowerCase() ?? "";
+  const isTrebleModule = moduleTitle.includes("treble");
+  const isBassModule   = moduleTitle.includes("bass clef") || (moduleTitle.includes("bass") && !isTrebleModule);
+
+  const sightReadingTestUrl = isTrebleModule
+    ? "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+    : isBassModule
+      ? "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+      : null;
+
   const handleCompleteLesson = () => {
     if (!canComplete) return;
     setIsCompleted(true);
@@ -420,19 +430,37 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
             </div>
             <h2 className="text-3xl font-bold mb-2 text-green-400">Module Complete!</h2>
             <p className="text-muted-foreground mb-1 text-lg">Outstanding work! 🎉</p>
-            <p className="text-sm text-muted-foreground mb-8">
+            <p className="text-sm text-muted-foreground mb-4">
               You've completed every lesson in this module. Keep up the amazing progress!
             </p>
+
+            {sightReadingTestUrl && (
+              <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-left">
+                <p className="text-xs font-semibold text-yellow-400 mb-1">🎯 Sight Reading Test Required</p>
+                <p className="text-xs text-muted-foreground">
+                  Pass the sight reading test with 100% accuracy (20 questions) and complete at least 10 practice sessions to unlock the next module.
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
+              {sightReadingTestUrl && (
+                <a
+                  href={sightReadingTestUrl}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm rounded-lg transition-colors"
+                >
+                  🎯 Take the Sight Reading Test
+                </a>
+              )}
               {nextModuleId && (
                 <Button
-                  className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white font-bold text-base"
+                  className={`w-full gap-2 font-bold text-base ${sightReadingTestUrl ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-green-600 hover:bg-green-700 text-white"}`}
                   onClick={() => {
                     setShowCelebration(false);
                     navigate(`/dashboard/foundation/lesson-plan/${nextModuleId}`);
                   }}
                 >
-                  Go to Next Module
+                  {sightReadingTestUrl ? "View Next Module (Locked)" : "Go to Next Module"}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               )}

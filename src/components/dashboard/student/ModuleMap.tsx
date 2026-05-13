@@ -23,12 +23,21 @@ interface FoundationModule {
   status: "locked" | "available" | "in-progress" | "completed";
 }
 
+interface SightReadingGate {
+  trebleTestPassed: boolean;
+  bassTestPassed:   boolean;
+  totalSessions:    number;
+}
+
+const SESSIONS_REQUIRED = 10;
+
 const ModuleMap = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [modules, setModules] = useState<FoundationModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalXP, setTotalXP] = useState(0);
+  const [srGate, setSrGate] = useState<SightReadingGate>({ trebleTestPassed: false, bassTestPassed: false, totalSessions: 0 });
 
   useEffect(() => {
     if (!user) return;
@@ -49,30 +58,38 @@ const ModuleMap = () => {
 
       // Fetch all lessons for these modules (just need module_id to count)
       const moduleIds = rawModules.map((m: any) => m.id);
-      const { data: lessons } = await (supabase as any)
-        .from("foundation_lessons")
-        .select("id, module_id")
-        .in("module_id", moduleIds);
-
-      // Fetch student lesson progress
-      const { data: progress } = await (supabase as any)
-        .from("student_lesson_progress")
-        .select("lesson_id, completed")
-        .eq("student_id", user.id);
+      const [lessonsRes, progressRes, scoresRes] = await Promise.all([
+        (supabase as any).from("foundation_lessons").select("id, module_id").in("module_id", moduleIds),
+        (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
+        (supabase as any).from("game_scores").select("game, correct, total").eq("user_id", user.id)
+          .in("game", ["sight_reading", "sight_reading_treble_test", "sight_reading_bass_test"]),
+      ]);
 
       const completedSet = new Set<string>(
-        (progress || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
+        (progressRes.data || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
       );
+
+      // Compute sight-reading gate status
+      const scores: Array<{ game: string; correct: number; total: number }> = scoresRes.data || [];
+      const gate: SightReadingGate = {
+        trebleTestPassed: scores.some(s => s.game === "sight_reading_treble_test" && s.total >= 20 && s.correct === s.total),
+        bassTestPassed:   scores.some(s => s.game === "sight_reading_bass_test"   && s.total >= 20 && s.correct === s.total),
+        totalSessions:    scores.length,
+      };
+      setSrGate(gate);
 
       // Count lessons per module
       const lessonsByModule: Record<string, string[]> = {};
-      (lessons || []).forEach((l: any) => {
+      (lessonsRes.data || []).forEach((l: any) => {
         if (!lessonsByModule[l.module_id]) lessonsByModule[l.module_id] = [];
         lessonsByModule[l.module_id].push(l.id);
       });
 
-      // Compute status sequentially (each module unlocks when previous is completed)
-      let prevCompleted = true; // first module is always available
+      // Compute status sequentially — each module unlocks when previous is completed.
+      // Extra gate: if previous module is Treble Clef → treble SR test required.
+      //             if previous module is Bass Clef   → bass SR test required.
+      let prevCompleted = true;
+      let prevTitle = "";
       const mapped: FoundationModule[] = rawModules.map((m: any) => {
         const total = (lessonsByModule[m.id] || []).length;
         const completed = (lessonsByModule[m.id] || []).filter((id: string) => completedSet.has(id)).length;
@@ -88,7 +105,21 @@ const ModuleMap = () => {
           status = "locked";
         }
 
+        // Extra sight-reading gate: lock this module if previous was a treble/bass clef module
+        // and the student hasn't yet passed the corresponding test with enough sessions.
+        if (status !== "locked") {
+          const prevTitleLc = prevTitle.toLowerCase();
+          const needsTrebleTest = prevTitleLc.includes("treble");
+          const needsBassTest   = prevTitleLc.includes("bass");
+          if (needsTrebleTest && (!gate.trebleTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
+            status = "locked";
+          } else if (needsBassTest && (!gate.bassTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
+            status = "locked";
+          }
+        }
+
         prevCompleted = status === "completed";
+        prevTitle = m.title ?? "";
 
         return { ...m, totalLessons: total, completedLessons: completed, status };
       });
@@ -164,7 +195,22 @@ const ModuleMap = () => {
         </Card>
       ) : (
         <div className="flex flex-col items-center space-y-0">
-          {modules.map((module, index) => (
+          {modules.map((module, index) => {
+            // Determine if this module is locked specifically due to a sight-reading gate
+            const prevModuleTitle = (index > 0 ? modules[index - 1]?.title ?? "" : "").toLowerCase();
+            const lockedByTrebleTest = module.status === "locked" && prevModuleTitle.includes("treble")
+              && (!srGate.trebleTestPassed || srGate.totalSessions < SESSIONS_REQUIRED);
+            const lockedByBassTest   = module.status === "locked" && prevModuleTitle.includes("bass")
+              && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
+            const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
+
+            const srTestUrl = lockedByTrebleTest
+              ? "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+              : lockedByBassTest
+                ? "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                : null;
+
+            return (
             <div key={module.id} className="w-full max-w-2xl">
               {index > 0 && (
                 <div className="flex justify-center">
@@ -175,7 +221,7 @@ const ModuleMap = () => {
               <div
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
-                  getStatusStyles(module.status),
+                  lockedBySRTest ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" : getStatusStyles(module.status),
                   index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full"
                 )}
                 onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
@@ -185,12 +231,13 @@ const ModuleMap = () => {
                   module.status === "completed" ? "bg-green-500/30 border-green-500" :
                   module.status === "in-progress" ? "bg-primary/30 border-primary" :
                   module.status === "available" ? "bg-cyan-500/30 border-cyan-500" :
+                  lockedBySRTest ? "bg-yellow-500/20 border-yellow-500/50" :
                   "bg-muted border-border"
                 )}>
                   {module.status === "completed" ? (
                     <Check className="w-7 h-7 text-green-400" />
                   ) : module.status === "locked" ? (
-                    <Lock className="w-6 h-6" />
+                    <Lock className={cn("w-6 h-6", lockedBySRTest ? "text-yellow-400" : "")} />
                   ) : (
                     <Music className="w-7 h-7" />
                   )}
@@ -205,6 +252,20 @@ const ModuleMap = () => {
                   </div>
                   {module.description && (
                     <p className="text-sm text-muted-foreground line-clamp-1">{module.description}</p>
+                  )}
+
+                  {lockedBySRTest && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-yellow-400 font-medium">🎯 Sight Reading Test Required</p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className={cn(srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400" : "")}>
+                          {srGate.totalSessions >= SESSIONS_REQUIRED ? "✓" : `${srGate.totalSessions}/${SESSIONS_REQUIRED}`} sessions
+                        </span>
+                        <span className={cn((lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "text-green-400" : "")}>
+                          {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "✓ Test passed" : "Test: 100% accuracy needed"}
+                        </span>
+                      </div>
+                    </div>
                   )}
 
                   {(module.status === "in-progress" || module.status === "completed") && module.totalLessons > 0 && (
@@ -231,7 +292,15 @@ const ModuleMap = () => {
                   )}
                 </div>
 
-                {module.status !== "locked" && (
+                {lockedBySRTest && srTestUrl ? (
+                  <a
+                    href={srTestUrl}
+                    onClick={e => e.stopPropagation()}
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors whitespace-nowrap"
+                  >
+                    Take Test →
+                  </a>
+                ) : module.status !== "locked" ? (
                   <Button
                     size="sm"
                     variant={module.status === "completed" ? "outline" : "default"}
@@ -240,10 +309,11 @@ const ModuleMap = () => {
                   >
                     {module.status === "completed" ? "Review" : module.status === "in-progress" ? "Continue" : "Start"}
                   </Button>
-                )}
+                ) : null}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
