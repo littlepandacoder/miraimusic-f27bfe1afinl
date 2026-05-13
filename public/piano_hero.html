@@ -4251,9 +4251,11 @@ function onMidiMessage(msg) {
   const isOff = cmd === 0x80 || (cmd === 0x90 && velocity === 0);
 
   if (document.getElementById('inputModal').classList.contains('active')) return;
-  // In the Piano Room, MIDI always works regardless of modal input setting
-  const isRoomScreen = currentScreen() === 'room';
-  if (!isRoomScreen && modal.selectedInput !== 'midi' && modal.selectedInput !== null) return;
+  // MIDI always works in: Piano Room, free-play screen, and when user selected MIDI
+  const screen = currentScreen();
+  const isRoomScreen = screen === 'room';
+  const isPlayScreen = screen === 'play';
+  if (!isRoomScreen && !isPlayScreen && modal.selectedInput !== 'midi' && modal.selectedInput !== null) return;
 
   if (isOn) {
     startAudio();
@@ -6219,11 +6221,11 @@ async function startMic() {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
     const source   = audioCtx.createMediaStreamSource(stream);
 
-    // ── High-pass: remove everything below piano (rumble, voice body, thuds)
+    // ── High-pass: remove sub-bass rumble below lowest piano fundamentals
     const hp = audioCtx.createBiquadFilter();
     hp.type            = 'highpass';
-    hp.frequency.value = 80;    // Hz — A0 piano fundamental is 27.5 Hz but
-    hp.Q.value         = 0.9;   // most energy is in harmonics above 80 Hz
+    hp.frequency.value = 40;    // Hz — lowered from 80 so C2 (65 Hz) fundamental passes
+    hp.Q.value         = 0.9;
 
     // ── Low-pass: remove everything above piano (hiss, air con, harmonics > C8)
     const lp = audioCtx.createBiquadFilter();
@@ -6236,7 +6238,8 @@ async function startMic() {
     analyser.fftSize              = 4096;   // high resolution
     analyser.smoothingTimeConstant = 0.6;   // moderate smoothing
     analyser.minDecibels          = -90;
-    analyser.maxDecibels          = -10;
+    analyser.maxDecibels          = 0;      // was -10 — that clamped piano-level signals and
+                                            // flattened the FFT, killing the spectral clarity check
 
     // Chain: source → hp → lp → analyser
     source.connect(hp);
@@ -6301,7 +6304,7 @@ function micPitchLoop() {
   for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
   rms = Math.sqrt(rms / buf.length);
 
-  const RMS_THRESHOLD = 0.035;  // raise this if still noisy; lower if missing notes
+  const RMS_THRESHOLD = 0.015;  // lowered from 0.035 — catches quieter/distant piano notes
   if (rms < RMS_THRESHOLD) {
     // Signal fell below gate — reset onset detector and note state
     if (micState.lastRms >= RMS_THRESHOLD) {
@@ -6314,7 +6317,7 @@ function micPitchLoop() {
   }
 
   // ── 2. Onset detection — only process on rising edges (new note attacks)
-  const rising = rms > micState.lastRms * 1.15;  // 15% louder than last frame
+  const rising = rms > micState.lastRms * 1.08;  // 8% louder than last frame (was 15%)
   micState.lastRms = rms;
   if (rising) micState.onsetArmed = true;
 
@@ -6337,9 +6340,8 @@ function micPitchLoop() {
     if (i === peakBin) peakLinear = lin;
   }
   const clarityRatio = peakLinear / (totalLinear || 1);
-  // Piano notes are tonal — peak should contain ≥ 18% of total energy
-  // Noise/chords/voice spread energy across many bins
-  if (clarityRatio < 0.18) return;
+  // Piano has rich harmonics that spread energy across many bins — lowered from 0.18 to 0.08
+  if (clarityRatio < 0.08) return;
 
   // ── 4. YIN-style autocorrelation pitch detection (strict threshold)
   const freq = autoCorrelateYIN(buf, sr);
@@ -6359,8 +6361,8 @@ function micPitchLoop() {
   }
 
   const now = performance.now();
-  const DEBOUNCE_SAME = 500;   // ms before re-triggering same note
-  const DEBOUNCE_NEW  = 80;    // ms minimum between any notes
+  const DEBOUNCE_SAME = 250;   // ms before re-triggering same note (was 500)
+  const DEBOUNCE_NEW  = 60;    // ms minimum between any notes (was 80)
 
   // Only fire on: onset armed + 2 stable frames + debounce passed
   if (!micState.onsetArmed)                                          { micState.lastMidi = midi; return; }
@@ -6390,7 +6392,7 @@ function micPitchLoop() {
 function autoCorrelateYIN(buf, sampleRate) {
   const SIZE    = buf.length;
   const HALF    = Math.floor(SIZE / 2);
-  const YIN_THRESHOLD = 0.15;   // strict: 0.10–0.15 recommended for instruments
+  const YIN_THRESHOLD = 0.20;   // raised from 0.15 — more forgiving for piano attack transients
 
   // ── YIN difference function d(tau)
   const diff = new Float32Array(HALF);
