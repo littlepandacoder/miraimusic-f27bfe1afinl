@@ -28,17 +28,32 @@ const AuthCallback = () => {
     if (welcomed.current) return;
     welcomed.current = true;
 
-    const rawName =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.email?.split("@")[0] ||
-      "there";
-    const firstName = rawName.split(" ")[0];
     const isNew = new Date(user.created_at).getTime() > Date.now() - 90_000;
     const isStaff = roles.some(r => r === "admin" || r === "teacher");
 
-    // Wrap async subscription check in an inner function (useEffect can't be async)
+    // Wrap async checks in an inner function (useEffect can't be async)
     (async () => {
+      // Resolve display name: OAuth metadata → profiles table → email prefix
+      let rawName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        "";
+
+      if (!rawName) {
+        try {
+          const { data: profile } = await (supabase as any)
+            .from("profiles")
+            .select("full_name")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          rawName = profile?.full_name || user.email?.split("@")[0] || "there";
+        } catch (_) {
+          rawName = user.email?.split("@")[0] || "there";
+        }
+      }
+
+      const firstName = rawName.split(" ")[0];
+
       let hasSub = isStaff;
 
       if (!isStaff) {

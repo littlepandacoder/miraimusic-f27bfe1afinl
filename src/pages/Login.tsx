@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client"; // used for Google OAuth + forgot password
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,43 +19,16 @@ const Login = () => {
   const [forgotSent, setForgotSent] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
 
-  const { signIn, user, roles, loading: authLoading } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!user || authLoading) return;
-
-    const route = async () => {
-      // Admins and teachers always go to dashboard directly
-      if (roles.includes("admin") || roles.includes("teacher")) {
-        navigate("/dashboard");
-        return;
-      }
-
-      // Students: only go to dashboard if they have an active subscription.
-      // Admin/teacher-created students get a subscription inserted by the edge function.
-      // Brand-new self-signups (Google OAuth etc.) get a user_roles row from the trigger
-      // but no subscription until they complete onboarding — send them to /signup.
-      if (roles.includes("student")) {
-        const { data: sub, error: subErr } = await (supabase as any)
-          .from("user_subscriptions")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .maybeSingle();
-        if (subErr) console.error("[login] subscription check error:", subErr);
-        console.log("[login] subscription row:", sub, "→ routing to", sub ? "/dashboard" : "/signup");
-        navigate(sub ? "/dashboard" : "/signup");
-        return;
-      }
-
-      // No recognised role — send to signup
-      navigate("/signup");
-    };
-
-    route();
-  }, [user, authLoading, roles, navigate]);
+    // Route through /auth/callback so both email and Google logins
+    // get the same welcome screen, subscription check, and final routing.
+    navigate("/auth/callback");
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
