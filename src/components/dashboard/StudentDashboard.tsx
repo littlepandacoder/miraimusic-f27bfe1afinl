@@ -258,10 +258,13 @@ const StudentHome = () => {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { key: "note_naming",  label: "Note Naming",  icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html" },
-            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,    accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html" },
-            { key: "piano_hero",   label: "Piano Hero",   icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html" },
-          ].map(({ key, label, icon, accentClass, bgClass, href }) => {
+            { key: "note_naming",  label: "Note Naming",  icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",    tests: null },
+            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,    accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html",  tests: [
+              { label: "Treble Test", href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1" },
+              { label: "Bass Test",   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1" },
+            ]},
+            { key: "piano_hero",   label: "Piano Hero",   icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",     tests: null },
+          ].map(({ key, label, icon, accentClass, bgClass, href, tests }) => {
             const gs = gameScores[key];
             return (
               <div key={key} className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
@@ -273,6 +276,19 @@ const StudentHome = () => {
                   </div>
                   <a href={href} className="text-xs text-primary hover:underline font-medium">Play →</a>
                 </div>
+                {tests && (
+                  <div className="flex gap-2">
+                    {tests.map((t) => (
+                      <a
+                        key={t.label}
+                        href={t.href}
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                      >
+                        🎯 {t.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
 
                 {gs ? (
                   <>

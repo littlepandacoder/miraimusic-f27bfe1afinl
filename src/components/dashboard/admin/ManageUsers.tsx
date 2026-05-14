@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2 } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Trash2 } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -24,6 +24,16 @@ const ManageUsers = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: "", full_name: "", password: "", role: "student" });
   const [isCreating, setIsCreating] = useState(false);
+
+  // Edit dialog state
+  const [editTarget, setEditTarget] = useState<UserWithRole | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", password: "" });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Delete dialog state
+  const [deleteTarget, setDeleteTarget] = useState<UserWithRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -117,6 +127,52 @@ const ManageUsers = () => {
     }
   };
 
+  const openEdit = (user: UserWithRole) => {
+    setEditTarget(user);
+    setEditForm({ full_name: user.full_name === "—" ? "" : user.full_name, email: user.email, password: "" });
+  };
+
+  const handleEditUser = async () => {
+    if (!editTarget) return;
+    setIsSaving(true);
+    try {
+      const body: Record<string, string> = { userId: editTarget.id };
+      if (editForm.full_name) body.full_name = editForm.full_name;
+      if (editForm.email) body.email = editForm.email;
+      if (editForm.password) body.password = editForm.password;
+
+      const { data, error } = await supabase.functions.invoke("update-user", { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "User updated" });
+      setEditTarget(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error updating user", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-user", { body: { userId: deleteTarget.id } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "User deleted" });
+      setDeleteTarget(null);
+      setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+    } catch (error: any) {
+      toast({ title: "Error deleting user", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 justify-between items-center">
@@ -204,6 +260,7 @@ const ManageUsers = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Joined</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -223,8 +280,30 @@ const ManageUsers = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground whitespace-nowrap">
                           {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={() => openEdit(user)}
+                              title="Edit user"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeleteTarget(user)}
+                              title="Delete user"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -235,6 +314,77 @@ const ManageUsers = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Full Name</Label>
+              <Input
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                placeholder="Full name"
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="Email"
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>New Password <span className="text-muted-foreground text-xs">(leave blank to keep current)</span></Label>
+              <Input
+                type="password"
+                value={editForm.password}
+                onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                placeholder="New password"
+                className="bg-secondary border-border"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleEditUser} disabled={isSaving} className="flex-1 btn-primary">
+                {isSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save Changes"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditTarget(null)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to permanently delete <span className="text-foreground font-medium">{deleteTarget?.email}</span>? This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="destructive"
+                onClick={handleDeleteUser}
+                disabled={isDeleting}
+                className="flex-1"
+              >
+                {isDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Delete User"}
+              </Button>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

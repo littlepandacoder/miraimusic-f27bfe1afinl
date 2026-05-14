@@ -210,6 +210,11 @@ const ModuleMap = () => {
                 ? "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
                 : null;
 
+            const isSRAdventureModule = module.title.toLowerCase().includes("sight reading adventure");
+            const moduleTitleLc = module.title.toLowerCase();
+            const isTrebleModule = moduleTitleLc.includes("treble");
+            const isBassModule   = moduleTitleLc.includes("bass clef") || (moduleTitleLc.includes("bass") && !isTrebleModule);
+
             return (
             <div key={module.id} className="w-full max-w-2xl">
               {index > 0 && (
@@ -288,6 +293,45 @@ const ModuleMap = () => {
                         <Star className="w-3 h-3 text-yellow-400" />
                         {module.xp_reward} XP
                       </span>
+                    </div>
+                  )}
+
+                  {isSRAdventureModule && module.status !== "locked" && (
+                    <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                      <a
+                        href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                      >
+                        🎯 Treble Test
+                      </a>
+                      <a
+                        href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                      >
+                        🎯 Bass Test
+                      </a>
+                    </div>
+                  )}
+
+                  {isTrebleModule && module.status !== "locked" && (
+                    <div className="mt-3" onClick={e => e.stopPropagation()}>
+                      <a
+                        href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                      >
+                        🎯 Take Treble Test
+                      </a>
+                    </div>
+                  )}
+
+                  {isBassModule && module.status !== "locked" && (
+                    <div className="mt-3" onClick={e => e.stopPropagation()}>
+                      <a
+                        href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                      >
+                        🎯 Take Bass Test
+                      </a>
                     </div>
                   )}
                 </div>
