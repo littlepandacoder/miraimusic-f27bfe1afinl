@@ -24,12 +24,15 @@ interface FoundationModule {
 }
 
 interface SightReadingGate {
-  trebleTestPassed: boolean;
-  bassTestPassed:   boolean;
-  totalSessions:    number;
+  trebleTestPassed:  boolean;
+  bassTestPassed:    boolean;
+  totalSessions:     number;
+  rhythmQuizPassed:  boolean;
+  rhythmBestAcc:     number; // best accuracy % across all rhythm_quiz attempts
 }
 
 const SESSIONS_REQUIRED = 10;
+const RHYTHM_PASS_ACCURACY = 70; // 70% correct to unlock next module
 
 const ModuleMap = () => {
   const navigate = useNavigate();
@@ -37,7 +40,7 @@ const ModuleMap = () => {
   const [modules, setModules] = useState<FoundationModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalXP, setTotalXP] = useState(0);
-  const [srGate, setSrGate] = useState<SightReadingGate>({ trebleTestPassed: false, bassTestPassed: false, totalSessions: 0 });
+  const [srGate, setSrGate] = useState<SightReadingGate>({ trebleTestPassed: false, bassTestPassed: false, totalSessions: 0, rhythmQuizPassed: false, rhythmBestAcc: 0 });
 
   useEffect(() => {
     if (!user) return;
@@ -62,19 +65,25 @@ const ModuleMap = () => {
         (supabase as any).from("foundation_lessons").select("id, module_id").in("module_id", moduleIds),
         (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
         (supabase as any).from("game_scores").select("game, correct, total").eq("user_id", user.id)
-          .in("game", ["sight_reading", "sight_reading_treble_test", "sight_reading_bass_test"]),
+          .in("game", ["sight_reading", "sight_reading_treble_test", "sight_reading_bass_test", "rhythm_quiz"]),
       ]);
 
       const completedSet = new Set<string>(
         (progressRes.data || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
       );
 
-      // Compute sight-reading gate status
+      // Compute sight-reading + rhythm gate status
       const scores: Array<{ game: string; correct: number; total: number }> = scoresRes.data || [];
+      const rhythmScores = scores.filter(s => s.game === "rhythm_quiz" && s.total > 0);
+      const rhythmBestAcc = rhythmScores.length > 0
+        ? Math.max(...rhythmScores.map(s => Math.round((s.correct / s.total) * 100)))
+        : 0;
       const gate: SightReadingGate = {
-        trebleTestPassed: scores.some(s => s.game === "sight_reading_treble_test" && s.total >= 20 && s.correct === s.total),
-        bassTestPassed:   scores.some(s => s.game === "sight_reading_bass_test"   && s.total >= 20 && s.correct === s.total),
-        totalSessions:    scores.length,
+        trebleTestPassed:  scores.some(s => s.game === "sight_reading_treble_test" && s.total >= 20 && s.correct === s.total),
+        bassTestPassed:    scores.some(s => s.game === "sight_reading_bass_test"   && s.total >= 20 && s.correct === s.total),
+        totalSessions:     scores.filter(s => s.game.startsWith("sight_reading")).length,
+        rhythmQuizPassed:  rhythmBestAcc >= RHYTHM_PASS_ACCURACY,
+        rhythmBestAcc,
       };
       setSrGate(gate);
 
@@ -87,8 +96,9 @@ const ModuleMap = () => {
 
       // Compute status sequentially — each module unlocks when previous is completed.
       // SR gate: Treble Clef Songs requires treble test; Bass Clef Songs requires bass test.
-      // Coordination has no test gate — unlocks normally after Bass Clef Songs is completed.
+      // Rhythm gate: module right after a "Rhythm" module requires rhythm quiz passed.
       let prevCompleted = true;
+      let prevTitleLc = "";
       const mapped: FoundationModule[] = rawModules.map((m: any) => {
         const total = (lessonsByModule[m.id] || []).length;
         const completed = (lessonsByModule[m.id] || []).filter((id: string) => completedSet.has(id)).length;
@@ -104,21 +114,24 @@ const ModuleMap = () => {
           status = "locked";
         }
 
-        // SR gate based on the module's OWN title:
-        // "Treble Clef Songs" → needs treble test passed
-        // "Bass Clef Songs"   → needs bass test passed
+        // SR gate: Treble / Bass Clef Songs gated by sight-reading test
+        // Rhythm quiz gate: module right after a "rhythm" module gated by rhythm quiz
         if (status !== "locked") {
           const titleLc = (m.title ?? "").toLowerCase();
           const isTrebleGated = titleLc.includes("treble");
           const isBassGated   = titleLc.includes("bass clef") || (titleLc.includes("bass") && !isTrebleGated);
+          const isRhythmGated = prevTitleLc.includes("rhythm");
           if (isTrebleGated && (!gate.trebleTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
             status = "locked";
           } else if (isBassGated && (!gate.bassTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
+            status = "locked";
+          } else if (isRhythmGated && !gate.rhythmQuizPassed) {
             status = "locked";
           }
         }
 
         prevCompleted = status === "completed";
+        prevTitleLc   = (m.title ?? "").toLowerCase();
 
         return { ...m, totalLessons: total, completedLessons: completed, status };
       });
@@ -195,10 +208,11 @@ const ModuleMap = () => {
       ) : (
         <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
-            // SR gate matches the module's OWN title (same logic as fetchData).
-            // Also require the previous module to be completed so sequential locks don't falsely show SR gate UI.
+            // Gate detection — also require the previous module to be completed so sequential
+            // locks don't falsely show gate UI when the module isn't reachable yet.
             const prevModule = index > 0 ? modules[index - 1] : null;
             const prevModuleCompleted = prevModule?.status === "completed";
+            const prevModuleTitleLc   = (prevModule?.title ?? "").toLowerCase();
             const moduleTitleLcForGate = module.title.toLowerCase();
             const isTrebleGated = moduleTitleLcForGate.includes("treble");
             const isBassGated   = moduleTitleLcForGate.includes("bass clef") || (moduleTitleLcForGate.includes("bass") && !isTrebleGated);
@@ -207,6 +221,8 @@ const ModuleMap = () => {
             const lockedByBassTest   = module.status === "locked" && prevModuleCompleted && isBassGated
               && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
             const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
+            const lockedByRhythmQuiz = module.status === "locked" && prevModuleCompleted
+              && prevModuleTitleLc.includes("rhythm") && !srGate.rhythmQuizPassed;
 
             const srTestUrl = lockedByTrebleTest
               ? "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
@@ -227,7 +243,9 @@ const ModuleMap = () => {
               <div
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
-                  lockedBySRTest ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" : getStatusStyles(module.status),
+                  lockedBySRTest     ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" :
+                  lockedByRhythmQuiz ? "bg-purple-500/5 border-purple-500/40 opacity-80" :
+                  getStatusStyles(module.status),
                   index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full"
                 )}
                 onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
@@ -238,6 +256,7 @@ const ModuleMap = () => {
                   module.status === "in-progress" ? "bg-primary/30 border-primary" :
                   module.status === "available" ? "bg-cyan-500/30 border-cyan-500" :
                   lockedBySRTest ? "bg-yellow-500/20 border-yellow-500/50" :
+                  lockedByRhythmQuiz ? "bg-purple-500/20 border-purple-500/50" :
                   "bg-muted border-border"
                 )}>
                   {module.status === "completed" ? (
@@ -270,6 +289,22 @@ const ModuleMap = () => {
                         <span className={cn((lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "text-green-400" : "")}>
                           {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "✓ Test passed" : "Test: 100% accuracy needed"}
                         </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {lockedByRhythmQuiz && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-purple-400 font-medium">🎵 Rhythm Quiz Required</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className={cn(srGate.rhythmQuizPassed ? "text-green-400" : "")}>
+                          {srGate.rhythmQuizPassed
+                            ? `✓ Passed (${srGate.rhythmBestAcc}%)`
+                            : `Best score: ${srGate.rhythmBestAcc}% — need ${RHYTHM_PASS_ACCURACY}%`}
+                        </span>
+                      </div>
+                      <div className="mt-1">
+                        <Progress value={Math.min(srGate.rhythmBestAcc, 100)} className="h-1.5" />
                       </div>
                     </div>
                   )}
@@ -363,6 +398,14 @@ const ModuleMap = () => {
                     className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors whitespace-nowrap"
                   >
                     Take Test →
+                  </a>
+                ) : lockedByRhythmQuiz ? (
+                  <a
+                    href="/rhythm-quiz.html"
+                    onClick={e => e.stopPropagation()}
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 transition-colors whitespace-nowrap"
+                  >
+                    Take Quiz →
                   </a>
                 ) : module.status !== "locked" && !isSRAdventureModule ? (
                   <Button

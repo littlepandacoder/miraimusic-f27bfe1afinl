@@ -195,7 +195,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 <body>
 
 <nav id="nav">
-  <a class="nav-logo" href="/">Musicable</a>
+  <a class="nav-logo" href="/dashboard">Musicable</a>
   <a class="nav-back" href="/dashboard">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
     Dashboard
@@ -787,12 +787,45 @@ function glow(el)  { el.classList.add('glow-ok'); setTimeout(()=>el.classList.re
 // ── GAME OVER ─────────────────────────────────────────────────
 function showGameOver() {
   clearInterval(S.timer);
+  saveScore();
   const acc=S.round>0?Math.round(S.correct/S.round*100):0;
   document.getElementById('go-score').textContent=S.score.toLocaleString();
   document.getElementById('go-correct').textContent=S.correct;
   document.getElementById('go-streak').textContent=S.bestStreak;
   document.getElementById('go-acc').textContent=acc+'%';
   showScreen('gameover');
+}
+
+// ── SUPABASE SCORE SAVE ───────────────────────────────────────
+const _SUPA_URL = 'https://tychkyunjfbkksyxknhn.supabase.co';
+const _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw';
+
+async function saveScore() {
+  try {
+    const raw = localStorage.getItem('sb-tychkyunjfbkksyxknhn-auth-token');
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    const token = parsed?.access_token;
+    const userId = parsed?.user?.id;
+    if (!token || !userId) return;
+    await fetch(`${_SUPA_URL}/rest/v1/game_scores`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': _SUPA_KEY,
+        'Authorization': `Bearer ${token}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        game: 'rhythm_quiz',
+        score: S.score,
+        correct: S.correct,
+        total: S.round,
+        best_streak: S.bestStreak,
+      }),
+    });
+  } catch(e) { console.warn('score save failed', e); }
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
