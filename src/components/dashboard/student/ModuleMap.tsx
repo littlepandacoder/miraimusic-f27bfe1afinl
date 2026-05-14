@@ -86,10 +86,9 @@ const ModuleMap = () => {
       });
 
       // Compute status sequentially — each module unlocks when previous is completed.
-      // Extra gate: if previous module is Treble Clef → treble SR test required.
-      //             if previous module is Bass Clef   → bass SR test required.
+      // SR gate: Treble Clef Songs requires treble test; Bass Clef Songs requires bass test.
+      // Coordination has no test gate — unlocks normally after Bass Clef Songs is completed.
       let prevCompleted = true;
-      let prevTitle = "";
       const mapped: FoundationModule[] = rawModules.map((m: any) => {
         const total = (lessonsByModule[m.id] || []).length;
         const completed = (lessonsByModule[m.id] || []).filter((id: string) => completedSet.has(id)).length;
@@ -105,21 +104,21 @@ const ModuleMap = () => {
           status = "locked";
         }
 
-        // Extra sight-reading gate: lock this module if previous was a treble/bass clef module
-        // and the student hasn't yet passed the corresponding test with enough sessions.
+        // SR gate based on the module's OWN title:
+        // "Treble Clef Songs" → needs treble test passed
+        // "Bass Clef Songs"   → needs bass test passed
         if (status !== "locked") {
-          const prevTitleLc = prevTitle.toLowerCase();
-          const needsTrebleTest = prevTitleLc.includes("treble");
-          const needsBassTest   = prevTitleLc.includes("bass");
-          if (needsTrebleTest && (!gate.trebleTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
+          const titleLc = (m.title ?? "").toLowerCase();
+          const isTrebleGated = titleLc.includes("treble");
+          const isBassGated   = titleLc.includes("bass clef") || (titleLc.includes("bass") && !isTrebleGated);
+          if (isTrebleGated && (!gate.trebleTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
             status = "locked";
-          } else if (needsBassTest && (!gate.bassTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
+          } else if (isBassGated && (!gate.bassTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
             status = "locked";
           }
         }
 
         prevCompleted = status === "completed";
-        prevTitle = m.title ?? "";
 
         return { ...m, totalLessons: total, completedLessons: completed, status };
       });
@@ -196,16 +195,16 @@ const ModuleMap = () => {
       ) : (
         <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
-            // Determine if this module is locked specifically due to a sight-reading gate.
-            // prevModule must be *completed* — if it's just sequentially locked we don't show SR gate UI.
+            // SR gate matches the module's OWN title (same logic as fetchData).
+            // Also require the previous module to be completed so sequential locks don't falsely show SR gate UI.
             const prevModule = index > 0 ? modules[index - 1] : null;
-            const prevModuleTitle = (prevModule?.title ?? "").toLowerCase();
             const prevModuleCompleted = prevModule?.status === "completed";
-            const lockedByTrebleTest = module.status === "locked" && prevModuleCompleted
-              && prevModuleTitle.includes("treble")
+            const moduleTitleLcForGate = module.title.toLowerCase();
+            const isTrebleGated = moduleTitleLcForGate.includes("treble");
+            const isBassGated   = moduleTitleLcForGate.includes("bass clef") || (moduleTitleLcForGate.includes("bass") && !isTrebleGated);
+            const lockedByTrebleTest = module.status === "locked" && prevModuleCompleted && isTrebleGated
               && (!srGate.trebleTestPassed || srGate.totalSessions < SESSIONS_REQUIRED);
-            const lockedByBassTest   = module.status === "locked" && prevModuleCompleted
-              && prevModuleTitle.includes("bass")
+            const lockedByBassTest   = module.status === "locked" && prevModuleCompleted && isBassGated
               && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
             const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
 
@@ -216,9 +215,6 @@ const ModuleMap = () => {
                 : null;
 
             const isSRAdventureModule = module.title.toLowerCase().includes("sight reading adventure");
-            const moduleTitleLc = module.title.toLowerCase();
-            const isTrebleModule = moduleTitleLc.includes("treble");
-            const isBassModule   = moduleTitleLc.includes("bass clef") || (moduleTitleLc.includes("bass") && !isTrebleModule);
 
             return (
             <div key={module.id} className="w-full max-w-2xl">
@@ -305,51 +301,30 @@ const ModuleMap = () => {
                     <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
                       <a
                         href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
-                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                       >
                         🎯 Treble Test
                       </a>
                       <a
                         href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
-                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                       >
                         🎯 Bass Test
                       </a>
                     </div>
                   )}
 
-                  {isTrebleModule && module.status !== "locked" && (
-                    <div className="mt-3" onClick={e => e.stopPropagation()}>
-                      <a
-                        href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
-                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
-                      >
-                        🎯 Take Treble Test
-                      </a>
-                    </div>
-                  )}
-
-                  {isBassModule && module.status !== "locked" && (
-                    <div className="mt-3" onClick={e => e.stopPropagation()}>
-                      <a
-                        href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
-                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
-                      >
-                        🎯 Take Bass Test
-                      </a>
-                    </div>
-                  )}
                 </div>
 
                 {lockedBySRTest && srTestUrl ? (
                   <a
                     href={srTestUrl}
                     onClick={e => e.stopPropagation()}
-                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors whitespace-nowrap"
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors whitespace-nowrap"
                   >
                     Take Test →
                   </a>
-                ) : module.status !== "locked" ? (
+                ) : module.status !== "locked" && !isSRAdventureModule ? (
                   <Button
                     size="sm"
                     variant={module.status === "completed" ? "outline" : "default"}
