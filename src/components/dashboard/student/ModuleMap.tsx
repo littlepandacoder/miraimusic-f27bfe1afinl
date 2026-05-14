@@ -376,7 +376,7 @@ const ModuleMap = () => {
                       </div>
                       <a
                         href="/rhythm-quiz.html"
-                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 transition-colors"
+                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                       >
                         🎵 {srGate.rhythmQuizPassed ? "✓ Rhythm Quiz Passed" : "Take Rhythm Quiz"}
                       </a>
