@@ -42,7 +42,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .midi-dot.connected{background:var(--green);box-shadow:0 0 6px rgba(57,217,138,.6)}
 
 /* ── PAGE ── */
-.page{max-width:1100px;margin:0 auto;padding:80px 2rem 4rem}
+.page{max-width:1400px;margin:0 auto;padding:80px 2.5rem 4rem}
 
 /* ── HERO ── */
 .hero-strip{background:linear-gradient(135deg,rgba(255,45,120,.12) 0%,rgba(0,212,255,.06) 100%);border:1px solid var(--border-pink,rgba(255,45,120,.2));border-radius:16px;padding:2rem 2.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
@@ -55,8 +55,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .badge.green{background:rgba(57,217,138,.1);border-color:rgba(57,217,138,.3);color:var(--green)}
 
 /* ── LAYOUT ── */
-.main-grid{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start}
+@media(max-width:960px){.main-grid{grid-template-columns:1fr}}
 
 /* ── CARD ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
@@ -78,14 +78,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
 /* ── STAFF DISPLAY ── */
-.staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center}
+.staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;position:relative;min-height:260px;display:flex;align-items:center;justify-content:center}
 #staffCanvas{width:100%;height:auto;display:block;border-radius:6px}
 
 /* ── ANSWER KEYBOARD ── */
-.answer-section{margin-bottom:1.2rem}
-.answer-label{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.7rem}
-.note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem}
-.note-btn{padding:.6rem .3rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:.85rem;border-radius:8px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
+.answer-section{margin-bottom:1.4rem}
+.answer-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem}
+.note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
+.note-btn{padding:.9rem .4rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:1.05rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
 .note-btn:hover{border-color:var(--pink);color:var(--pink);background:var(--pink-dim)}
 .note-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green) !important;animation:pulse-green .4s ease}
 .note-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red) !important;animation:shake .3s ease}
@@ -150,9 +150,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .analyse-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* ── MIDI KEYBOARD VISUAL ── */
-.midi-kb-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.8rem;margin-bottom:.8rem;overflow:hidden}
+.midi-kb-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;overflow:hidden}
 #midiKbCanvas{width:100%;height:auto;display:block;border-radius:4px;cursor:pointer}
-.midi-hint{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);text-align:center;margin-top:.4rem}
+.midi-hint{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2);text-align:center;margin-top:.5rem}
 
 /* ── PROGRESS BAR ── */
 .progress-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:1rem;overflow:hidden}
@@ -224,7 +224,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 
       <!-- Staff display -->
       <div class="staff-area">
-        <canvas id="staffCanvas" width="700" height="200"></canvas>
+        <canvas id="staffCanvas" width="900" height="270"></canvas>
         <div class="idle-overlay" id="idleOverlay">
           <div class="idle-icon">🎼</div>
           <div class="idle-text">Configure settings and press<br/><strong style="color:var(--pink)">Start Session</strong></div>
@@ -246,7 +246,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
       <!-- MIDI mini keyboard -->
       <div class="midi-kb-wrap">
         <div class="card-title" style="margin-bottom:.6rem">🎹 Play on keyboard · click or use MIDI</div>
-        <canvas id="midiKbCanvas" width="700" height="80"></canvas>
+        <canvas id="midiKbCanvas" width="900" height="110"></canvas>
         <div class="midi-hint">Click a key or press your MIDI keyboard · White keys only shown for note names</div>
       </div>
 
@@ -1000,7 +1000,7 @@ function resetNoteButtons() {
 ═══════════════════════════════════════════════════════════ */
 const staffCanvas = document.getElementById('staffCanvas');
 const sCtx        = staffCanvas.getContext('2d');
-const SW = 700, SH = 200;
+const SW = 900, SH = 270;
 
 function drawStaff(noteObj, clef) {
   sCtx.clearRect(0, 0, SW, SH);
@@ -1010,10 +1010,10 @@ function drawStaff(noteObj, clef) {
   if (!noteObj) return;           // early exit — nothing to draw
 
   const isTreble   = clef === 'treble';
-  const lineGap    = 16;
-  const staffTop   = isTreble ? 55 : 85;
-  const staffLeft  = 80;
-  const staffW     = SW - 100;
+  const lineGap    = 22;
+  const staffTop   = isTreble ? 70 : 105;
+  const staffLeft  = 90;
+  const staffW     = SW - 130;
   const stepSize   = lineGap / 2;
 
   // Staff lines
@@ -1027,20 +1027,20 @@ function drawStaff(noteObj, clef) {
   }
 
   // Clef
-  sCtx.font      = '72px serif';
+  sCtx.font      = '92px serif';
   sCtx.textAlign = 'left';
   if (isTreble) {
     sCtx.fillStyle = '#00D4FF';
-    sCtx.fillText('𝄞', staffLeft - 56, staffTop + 4 * lineGap + 6);
+    sCtx.fillText('𝄞', staffLeft - 66, staffTop + 4 * lineGap + 8);
   } else {
     sCtx.fillStyle = '#FF2D78';
-    sCtx.fillText('𝄢', staffLeft - 50, staffTop + 2 * lineGap + 6);
+    sCtx.fillText('𝄢', staffLeft - 62, staffTop + 2 * lineGap + 8);
   }
 
   // Clef label
-  sCtx.font      = '10px "DM Mono",monospace';
+  sCtx.font      = '12px "DM Mono",monospace';
   sCtx.fillStyle = isTreble ? '#00D4FF' : '#FF2D78';
-  sCtx.fillText(isTreble ? 'TREBLE CLEF' : 'BASS CLEF', staffLeft + 5, staffTop - 12);
+  sCtx.fillText(isTreble ? 'TREBLE CLEF' : 'BASS CLEF', staffLeft + 5, staffTop - 14);
   sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
 
   // Note Y position on staff
@@ -1055,38 +1055,38 @@ function drawStaff(noteObj, clef) {
 
   // Ledger lines — treble: below staff and above staff
   sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-  sCtx.lineWidth   = 1.5;
+  sCtx.lineWidth   = 2;
   if (isTreble) {
     for (let ly = staffTop + 5 * lineGap; ly <= noteY + stepSize / 2; ly += lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 18, ly); sCtx.lineTo(noteX + 18, ly); sCtx.stroke();
+      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
     }
     for (let ly = staffTop - lineGap; ly >= noteY - stepSize / 2; ly -= lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 18, ly); sCtx.lineTo(noteX + 18, ly); sCtx.stroke();
+      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
     }
   } else {
     for (let ly = staffTop - lineGap; ly >= noteY - stepSize / 2; ly -= lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 18, ly); sCtx.lineTo(noteX + 18, ly); sCtx.stroke();
+      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
     }
     for (let ly = staffTop + 5 * lineGap; ly <= noteY + stepSize / 2; ly += lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 18, ly); sCtx.lineTo(noteX + 18, ly); sCtx.stroke();
+      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
     }
   }
 
   // Note head glow + fill
   sCtx.shadowColor = '#FF2D78';
-  sCtx.shadowBlur  = 20;
+  sCtx.shadowBlur  = 26;
   sCtx.fillStyle   = '#FF2D78';
   sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 13, 9, -0.18, 0, Math.PI * 2);
+  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
   sCtx.fill();
   sCtx.shadowBlur = 0;
 
   // Accidental
   if (noteObj.accidental === '#' || noteObj.accidental === 'b') {
     sCtx.fillStyle  = '#FF2D78';
-    sCtx.font       = 'bold 22px serif';
+    sCtx.font       = 'bold 28px serif';
     sCtx.textAlign  = 'right';
-    sCtx.fillText(noteObj.accidental === '#' ? '♯' : '♭', noteX - 16, noteY + 8);
+    sCtx.fillText(noteObj.accidental === '#' ? '♯' : '♭', noteX - 22, noteY + 10);
   }
 
   // Outer ring
@@ -1094,17 +1094,17 @@ function drawStaff(noteObj, clef) {
   sCtx.lineWidth   = 1.5;
   sCtx.globalAlpha = 0.3;
   sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 20, 14, -0.18, 0, Math.PI * 2);
+  sCtx.ellipse(noteX, noteY, 26, 18, -0.18, 0, Math.PI * 2);
   sCtx.stroke();
   sCtx.globalAlpha = 1;
 
   // ? badge
   sCtx.fillStyle    = '#fff';
-  sCtx.font         = 'bold 13px "DM Mono",monospace';
+  sCtx.font         = 'bold 16px "DM Mono",monospace';
   sCtx.textAlign    = 'center';
   sCtx.textBaseline = 'middle';
   sCtx.shadowColor  = '#FF2D78';
-  sCtx.shadowBlur   = 8;
+  sCtx.shadowBlur   = 10;
   sCtx.fillText('?', noteX, noteY);
   sCtx.shadowBlur   = 0;
   sCtx.textBaseline = 'alphabetic';
@@ -1122,7 +1122,7 @@ function drawStaff(noteObj, clef) {
 ═══════════════════════════════════════════════════════════ */
 const midiKbCanvas = document.getElementById('midiKbCanvas');
 const kbCtx        = midiKbCanvas.getContext('2d');
-const KBW = 700, KBH = 80;
+const KBW = 900, KBH = 110;
 const KB_NOTES  = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const KB_SHARPS = [true, true, false, true, true, true, false];
 const KW    = KBW / KB_NOTES.length;
@@ -1154,9 +1154,9 @@ function drawMiniKb(highlightInfo) {
     kbCtx.fill(); kbCtx.stroke();
 
     kbCtx.fillStyle = isHL ? '#fff' : '#5a4020';
-    kbCtx.font      = 'bold 11px "DM Mono",monospace';
+    kbCtx.font      = 'bold 14px "DM Mono",monospace';
     kbCtx.textAlign = 'center';
-    kbCtx.fillText(note, x + KW / 2, KBH - 8);
+    kbCtx.fillText(note, x + KW / 2, KBH - 10);
   });
 
   // Black keys

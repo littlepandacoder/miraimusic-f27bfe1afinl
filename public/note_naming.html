@@ -43,7 +43,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .midi-dot.connected{background:var(--green);box-shadow:0 0 6px rgba(57,217,138,.6)}
 
 /* ── PAGE ── */
-.page{max-width:1100px;margin:0 auto;padding:80px 2rem 4rem}
+.page{max-width:1400px;margin:0 auto;padding:80px 2.5rem 4rem}
 
 /* ── HERO ── */
 .hero-strip{background:linear-gradient(135deg,rgba(236,72,153,.12) 0%,rgba(0,212,255,.06) 100%);border:1px solid rgba(236,72,153,.2);border-radius:16px;padding:2rem 2.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
@@ -57,8 +57,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .badge.sky{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.25);color:var(--sky)}
 
 /* ── LAYOUT ── */
-.main-grid{display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start}
-@media(max-width:900px){.main-grid{grid-template-columns:1fr}}
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start}
+@media(max-width:960px){.main-grid{grid-template-columns:1fr}}
 
 /* ── CARD ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
@@ -66,25 +66,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .card-title::before{content:'';width:14px;height:1px;background:var(--pink)}
 
 /* ── PIANO DISPLAY ── */
-.piano-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;position:relative}
-.piano-area-title{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem}
+.piano-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;position:relative}
+.piano-area-title{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
 #pianoCanvas{width:100%;height:auto;display:block;border-radius:6px;cursor:pointer}
 
 /* ── NOTE DISPLAY ── */
-.note-display-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:center;min-height:140px;position:relative}
+.note-display-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;min-height:190px;position:relative}
 .idle-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;border-radius:12px;background:rgba(15,23,42,.7)}
 .idle-icon{font-size:2.5rem}
 .idle-text{font-size:.88rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:center}
 .note-challenge{text-align:center;width:100%}
-.note-big{font-family:'DM Mono',monospace;font-size:5rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.04em;text-shadow:0 0 40px rgba(255,45,120,.4)}
+.note-big{font-family:'DM Mono',monospace;font-size:6.5rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.04em;text-shadow:0 0 50px rgba(255,45,120,.4)}
 .note-octave-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.75rem;background:var(--pink-dim);border:1px solid rgba(255,45,120,.3);color:var(--pink);padding:.15rem .6rem;border-radius:100px;margin-top:.4rem}
 .note-hint{font-size:.78rem;color:var(--muted);margin-top:.5rem;font-family:'DM Mono',monospace}
 
 /* ── ANSWER BUTTONS ── */
-.answer-section{margin-bottom:1.2rem}
-.answer-label{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.7rem}
-.note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem}
-.note-btn{padding:.65rem .3rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:.92rem;border-radius:8px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
+.answer-section{margin-bottom:1.4rem}
+.answer-label{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.8rem}
+.note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
+.note-btn{padding:.9rem .4rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:1.05rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
 .note-btn:hover:not(:disabled){border-color:var(--pink);color:var(--pink);background:var(--pink-dim)}
 .note-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green)!important;animation:pulse-green .4s ease}
 .note-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)!important;animation:shake .3s ease}
@@ -251,7 +251,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
       <!-- Piano display -->
       <div class="piano-area">
         <div class="piano-area-title" id="pianoLabel">A key will highlight — name it below</div>
-        <canvas id="pianoCanvas" width="900" height="160"></canvas>
+        <canvas id="pianoCanvas" width="1100" height="210"></canvas>
       </div>
 
       <!-- Note challenge display (for "Find the Key" mode) -->
