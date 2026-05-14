@@ -422,7 +422,7 @@ Recommended Content Structure:
       }));
     } catch (error) {
       console.error("Error generating AI suggestions:", error);
-      alert("Failed to generate AI suggestions");
+      toast({ title: "Failed to generate AI suggestions", variant: "destructive" });
     } finally {
       setIsLoadingAI(false);
     }

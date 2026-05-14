@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ interface CourseEditorProps {
 
 const CourseEditor = ({ course, onSave, onCancel }: CourseEditorProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: course?.title || "",
@@ -67,7 +69,7 @@ const CourseEditor = ({ course, onSave, onCancel }: CourseEditorProps) => {
       onSave();
     } catch (err) {
       console.error("Error saving course:", err);
-      alert("Failed to save course");
+      toast({ title: "Failed to save course", variant: "destructive" });
     } finally {
       setLoading(false);
     }

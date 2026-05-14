@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface NoteFormProps {
   courseId: string;
@@ -24,6 +25,7 @@ const NoteForm = ({
   onSuccess,
   onCancel,
 }: NoteFormProps) => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
@@ -57,7 +59,7 @@ const NoteForm = ({
       onSuccess();
     } catch (err) {
       console.error("Error saving note:", err);
-      alert("Failed to save note");
+      toast({ title: "Failed to save note", variant: "destructive" });
     } finally {
       setLoading(false);
     }

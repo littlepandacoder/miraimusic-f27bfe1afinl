@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Play, Share2, CheckCircle, Clock, ClipboardList, CheckCircle2, XCircle, Trophy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import VideoPlayer from "../shared/VideoPlayer";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -91,6 +92,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
   const [searchParams] = useSearchParams();
   const isPreview = searchParams.get("preview") === "1";
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -359,7 +361,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
 
   const handleShareVideo = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
+    toast({ title: "Link copied to clipboard!" });
   };
 
   const launchFireworks = () => {

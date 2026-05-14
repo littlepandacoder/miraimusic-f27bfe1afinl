@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, Play, FileText, Plus, Trash2, Edit2, 
-  Loader2, AlertCircle, Music 
+import {
+  ArrowLeft, Play, FileText, Plus, Trash2, Edit2,
+  Loader2, AlertCircle, Music
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 import VideoPlayer from "./VideoPlayer";
 import NoteViewer from "./NoteViewer";
 import VideoForm from "./VideoForm";
@@ -53,11 +54,14 @@ const CourseDetail = ({
   onBack,
   onEdit,
 }: CourseDetailProps) => {
+  const { toast } = useToast();
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showVideoForm, setShowVideoForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   // Fetch videos
   const { data: videos = [], isLoading: videosLoading, refetch: refetchVideos } = useQuery({
@@ -98,8 +102,7 @@ const CourseDetail = ({
 
   // Delete video
   const handleDeleteVideo = async (videoId: string) => {
-    if (!window.confirm("Are you sure you want to delete this video?")) return;
-
+    setDeletingVideoId(videoId);
     try {
       const { error } = await supabase
         .from("course_videos")
@@ -113,14 +116,15 @@ const CourseDetail = ({
       }
     } catch (err) {
       console.error("Error deleting video:", err);
-      alert("Failed to delete video");
+      toast({ title: "Failed to delete video", variant: "destructive" });
+    } finally {
+      setDeletingVideoId(null);
     }
   };
 
   // Delete note
   const handleDeleteNote = async (noteId: string) => {
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
-
+    setDeletingNoteId(noteId);
     try {
       const { error } = await supabase
         .from("course_notes")
@@ -134,7 +138,9 @@ const CourseDetail = ({
       }
     } catch (err) {
       console.error("Error deleting note:", err);
-      alert("Failed to delete note");
+      toast({ title: "Failed to delete note", variant: "destructive" });
+    } finally {
+      setDeletingNoteId(null);
     }
   };
 
@@ -293,9 +299,12 @@ const CourseDetail = ({
                                   e.stopPropagation();
                                   handleDeleteVideo(video.id);
                                 }}
+                                disabled={deletingVideoId === video.id}
                                 className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                               >
-                                <Trash2 size={14} />
+                                {deletingVideoId === video.id
+                                  ? <Loader2 size={14} className="animate-spin" />
+                                  : <Trash2 size={14} />}
                               </Button>
                             )}
                           </div>
@@ -356,9 +365,12 @@ const CourseDetail = ({
                                   e.stopPropagation();
                                   handleDeleteNote(note.id);
                                 }}
+                                disabled={deletingNoteId === note.id}
                                 className="text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                               >
-                                <Trash2 size={14} />
+                                {deletingNoteId === note.id
+                                  ? <Loader2 size={14} className="animate-spin" />
+                                  : <Trash2 size={14} />}
                               </Button>
                             )}
                           </div>

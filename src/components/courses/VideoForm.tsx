@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 interface VideoFormProps {
   courseId: string;
@@ -26,6 +27,7 @@ const VideoForm = ({
   onSuccess,
   onCancel,
 }: VideoFormProps) => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
@@ -61,7 +63,7 @@ const VideoForm = ({
       onSuccess();
     } catch (err) {
       console.error("Error saving video:", err);
-      alert("Failed to save video");
+      toast({ title: "Failed to save video", variant: "destructive" });
     } finally {
       setLoading(false);
     }

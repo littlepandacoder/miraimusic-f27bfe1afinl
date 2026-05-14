@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { PageTracking } from "@/hooks/usePageTracking";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import AuthDebug from "./pages/AuthDebug";
 import Pricing from "./pages/Pricing";
 import PianoTheory from "./pages/PianoTheory";
 import SightReading from "./pages/SightReading";
@@ -52,8 +51,6 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            {/* Temporary debug route for auth troubleshooting (remove before production) */}
-            <Route path="/auth-debug" element={<AuthDebug />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
