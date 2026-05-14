@@ -1017,7 +1017,7 @@ function drawStaff(noteObj, clef) {
   const stepSize   = lineGap / 2;
 
   // Staff lines
-  sCtx.strokeStyle = '#2a3a4a';
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
   sCtx.lineWidth   = 1.5;
   for (let i = 0; i < 5; i++) {
     sCtx.beginPath();
@@ -1054,7 +1054,7 @@ function drawStaff(noteObj, clef) {
   const noteX      = SW / 2;
 
   // Ledger lines — treble: below staff and above staff
-  sCtx.strokeStyle = '#2a3a4a';
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
   sCtx.lineWidth   = 1.5;
   if (isTreble) {
     for (let ly = staffTop + 5 * lineGap; ly <= noteY + stepSize / 2; ly += lineGap) {
@@ -1110,7 +1110,7 @@ function drawStaff(noteObj, clef) {
   sCtx.textBaseline = 'alphabetic';
 
   // Closing barline
-  sCtx.strokeStyle = '#4a5568';
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
   sCtx.lineWidth = 2;
   sCtx.beginPath(); sCtx.moveTo(staffLeft + staffW, staffTop - 2); sCtx.lineTo(staffLeft + staffW, staffTop + 4 * lineGap + 2); sCtx.stroke();
   sCtx.lineWidth = 5;
