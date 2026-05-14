@@ -96,9 +96,7 @@ const ModuleMap = () => {
 
       // Compute status sequentially — each module unlocks when previous is completed.
       // SR gate: Treble Clef Songs requires treble test; Bass Clef Songs requires bass test.
-      // Rhythm gate: module right after a "Rhythm" module requires rhythm quiz passed.
       let prevCompleted = true;
-      let prevTitleLc = "";
       const mapped: FoundationModule[] = rawModules.map((m: any) => {
         const total = (lessonsByModule[m.id] || []).length;
         const completed = (lessonsByModule[m.id] || []).filter((id: string) => completedSet.has(id)).length;
@@ -114,24 +112,21 @@ const ModuleMap = () => {
           status = "locked";
         }
 
-        // SR gate: Treble / Bass Clef Songs gated by sight-reading test
-        // Rhythm quiz gate: module right after a "rhythm" module gated by rhythm quiz
+        // SR gate based on the module's OWN title:
+        // "Treble Clef Songs" → needs treble test passed
+        // "Bass Clef Songs"   → needs bass test passed
         if (status !== "locked") {
           const titleLc = (m.title ?? "").toLowerCase();
           const isTrebleGated = titleLc.includes("treble");
           const isBassGated   = titleLc.includes("bass clef") || (titleLc.includes("bass") && !isTrebleGated);
-          const isRhythmGated = prevTitleLc.includes("rhythm");
           if (isTrebleGated && (!gate.trebleTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
             status = "locked";
           } else if (isBassGated && (!gate.bassTestPassed || gate.totalSessions < SESSIONS_REQUIRED)) {
-            status = "locked";
-          } else if (isRhythmGated && !gate.rhythmQuizPassed) {
             status = "locked";
           }
         }
 
         prevCompleted = status === "completed";
-        prevTitleLc   = (m.title ?? "").toLowerCase();
 
         return { ...m, totalLessons: total, completedLessons: completed, status };
       });
@@ -208,11 +203,10 @@ const ModuleMap = () => {
       ) : (
         <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
-            // Gate detection — also require the previous module to be completed so sequential
-            // locks don't falsely show gate UI when the module isn't reachable yet.
+            // SR gate matches the module's OWN title (same logic as fetchData).
+            // Also require the previous module to be completed so sequential locks don't falsely show SR gate UI.
             const prevModule = index > 0 ? modules[index - 1] : null;
             const prevModuleCompleted = prevModule?.status === "completed";
-            const prevModuleTitleLc   = (prevModule?.title ?? "").toLowerCase();
             const moduleTitleLcForGate = module.title.toLowerCase();
             const isTrebleGated = moduleTitleLcForGate.includes("treble");
             const isBassGated   = moduleTitleLcForGate.includes("bass clef") || (moduleTitleLcForGate.includes("bass") && !isTrebleGated);
@@ -221,8 +215,7 @@ const ModuleMap = () => {
             const lockedByBassTest   = module.status === "locked" && prevModuleCompleted && isBassGated
               && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
             const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
-            const lockedByRhythmQuiz = module.status === "locked" && prevModuleCompleted
-              && prevModuleTitleLc.includes("rhythm") && !srGate.rhythmQuizPassed;
+            const isRhythmModule = moduleTitleLcForGate.includes("rhythm");
 
             const srTestUrl = lockedByTrebleTest
               ? "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
@@ -243,9 +236,7 @@ const ModuleMap = () => {
               <div
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
-                  lockedBySRTest     ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" :
-                  lockedByRhythmQuiz ? "bg-purple-500/5 border-purple-500/40 opacity-80" :
-                  getStatusStyles(module.status),
+                  lockedBySRTest ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" : getStatusStyles(module.status),
                   index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full"
                 )}
                 onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
@@ -256,13 +247,12 @@ const ModuleMap = () => {
                   module.status === "in-progress" ? "bg-primary/30 border-primary" :
                   module.status === "available" ? "bg-cyan-500/30 border-cyan-500" :
                   lockedBySRTest ? "bg-yellow-500/20 border-yellow-500/50" :
-                  lockedByRhythmQuiz ? "bg-purple-500/20 border-purple-500/50" :
                   "bg-muted border-border"
                 )}>
                   {module.status === "completed" ? (
                     <Check className="w-7 h-7 text-green-400" />
                   ) : module.status === "locked" ? (
-                    <Lock className={cn("w-6 h-6", lockedBySRTest ? "text-yellow-400" : "")} />
+                    <Lock className={cn("w-6 h-6", lockedBySRTest ? "text-yellow-400" : "text-muted-foreground")} />
                   ) : (
                     <Music className="w-7 h-7" />
                   )}
@@ -289,22 +279,6 @@ const ModuleMap = () => {
                         <span className={cn((lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "text-green-400" : "")}>
                           {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "✓ Test passed" : "Test: 100% accuracy needed"}
                         </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {lockedByRhythmQuiz && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-purple-400 font-medium">🎵 Rhythm Quiz Required</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className={cn(srGate.rhythmQuizPassed ? "text-green-400" : "")}>
-                          {srGate.rhythmQuizPassed
-                            ? `✓ Passed (${srGate.rhythmBestAcc}%)`
-                            : `Best score: ${srGate.rhythmBestAcc}% — need ${RHYTHM_PASS_ACCURACY}%`}
-                        </span>
-                      </div>
-                      <div className="mt-1">
-                        <Progress value={Math.min(srGate.rhythmBestAcc, 100)} className="h-1.5" />
                       </div>
                     </div>
                   )}
@@ -389,6 +363,26 @@ const ModuleMap = () => {
                     </div>
                   )}
 
+                  {isRhythmModule && module.status !== "locked" && (
+                    <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Rhythm Quiz best score</span>
+                          <span className={srGate.rhythmQuizPassed ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {srGate.rhythmBestAcc}%
+                          </span>
+                        </div>
+                        <Progress value={srGate.rhythmBestAcc} className="h-1.5" />
+                      </div>
+                      <a
+                        href="/rhythm-quiz.html"
+                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 transition-colors"
+                      >
+                        🎵 {srGate.rhythmQuizPassed ? "✓ Rhythm Quiz Passed" : "Take Rhythm Quiz"}
+                      </a>
+                    </div>
+                  )}
+
                 </div>
 
                 {lockedBySRTest && srTestUrl ? (
@@ -399,15 +393,7 @@ const ModuleMap = () => {
                   >
                     Take Test →
                   </a>
-                ) : lockedByRhythmQuiz ? (
-                  <a
-                    href="/rhythm-quiz.html"
-                    onClick={e => e.stopPropagation()}
-                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-500/20 border border-purple-500/50 text-purple-400 hover:bg-purple-500/30 transition-colors whitespace-nowrap"
-                  >
-                    Take Quiz →
-                  </a>
-                ) : module.status !== "locked" && !isSRAdventureModule ? (
+                ) : module.status !== "locked" && !isSRAdventureModule && !isRhythmModule ? (
                   <Button
                     size="sm"
                     variant={module.status === "completed" ? "outline" : "default"}

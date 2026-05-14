@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Gamepad2,
   KeyboardMusic,
+  Music,
   Menu,
   X,
 } from "lucide-react";
@@ -38,6 +39,8 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     { href: "/rhythm-quiz.html",     icon: Gamepad2,      label: "Rhythm Quiz",   external: true },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
+    { href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1", icon: Gamepad2, label: "Treble Test", external: true },
+    { href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1",     icon: Gamepad2, label: "Bass Test",   external: true },
     { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true },
   ];
 
@@ -109,8 +112,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside className="hidden md:flex h-screen w-64 shrink-0 bg-card border-r border-border flex-col">
         <div className="p-4 border-b border-border">
-          <Link to="/">
-            <img src="/logo.png" alt="Musicable" className="h-10 w-auto" />
+          <Link to="/" className="flex items-center gap-2">
+            <Music className="w-8 h-8 text-primary" />
+            <span className="text-xl font-bold">Musicable</span>
           </Link>
         </div>
 
@@ -163,8 +167,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <Link to="/" onClick={() => setMobileOpen(false)}>
-            <img src="/logo.png" alt="Musicable" className="h-9 w-auto" />
+          <Link to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
+            <Music className="w-7 h-7 text-primary" />
+            <span className="text-lg font-bold">Musicable</span>
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
