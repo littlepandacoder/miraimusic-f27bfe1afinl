@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Quiz — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0812;--bg2:#0f0d1a;--card:#151228;--border:rgba(255,255,255,0.07);
+  --pink:#FF2D78;--sky:#00D4FF;--green:#39D98A;--amber:#F59E0B;
+  --purple:#A855F7;--red:#EF4444;--off-white:#E8ECF0;--muted:#6B7280;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;background:var(--bg)}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:200;height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;
+  background:rgba(10,8,18,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;
+  color:var(--pink);letter-spacing:.08em;text-decoration:none;
+  text-shadow:0 0 20px rgba(255,45,120,.5)}
+.nav-back{font-size:.78rem;color:var(--muted);text-decoration:none;
+  display:flex;align-items:center;gap:.4rem;transition:color .2s}
+.nav-back:hover{color:var(--pink)}
+
+/* SCREENS */
+.screen{min-height:100vh;padding-top:52px;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* MODE SELECT */
+#mode-select{align-items:center;justify-content:center;padding:3rem 1rem;gap:1.5rem}
+.mode-title{font-family:'Orbitron',monospace;font-weight:900;font-size:2.2rem;
+  text-align:center;background:linear-gradient(135deg,var(--pink),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mode-sub{color:var(--muted);text-align:center;font-size:.95rem}
+.mode-cards{display:flex;gap:1.25rem;flex-wrap:wrap;justify-content:center;max-width:740px;width:100%}
+.mode-card{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:2rem;width:320px;cursor:pointer;transition:all .2s;text-align:center;position:relative;overflow:hidden}
+.mode-card:hover{border-color:var(--pink);transform:translateY(-4px);box-shadow:0 16px 48px rgba(255,45,120,.2)}
+.mode-icon{font-size:2.8rem;margin-bottom:.75rem;display:block}
+.mode-name{font-family:'Orbitron',monospace;font-weight:700;font-size:1rem;color:var(--pink);margin-bottom:.6rem}
+.mode-desc{color:var(--muted);font-size:.88rem;line-height:1.55}
+.diff{display:inline-block;margin-top:.9rem;padding:.2rem .7rem;border-radius:100px;
+  font-size:.68rem;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.05em}
+.diff-easy{background:rgba(57,217,138,.12);color:var(--green);border:1px solid rgba(57,217,138,.3)}
+.diff-med{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
+
+/* GAME */
+#game{align-items:center;padding:.75rem .75rem 2rem;gap:.85rem}
+.game-inner{width:100%;max-width:760px;display:flex;flex-direction:column;gap:.75rem}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.hud-score{font-family:'Orbitron',monospace;font-weight:700;font-size:1.3rem;color:var(--pink)}
+.hud-streak{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--amber)}
+.hud-timer{font-family:'DM Mono',monospace;font-size:.95rem;color:var(--sky);margin-left:auto}
+.hud-timer.urgent{color:var(--red);animation:pulse .9s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.xp-wrap{height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.xp-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--purple));transition:width .45s ease;width:0}
+.round-row{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;
+  font-size:.7rem;color:var(--muted)}
+
+/* STAFF */
+.staff-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.5rem 1.25rem;position:relative;overflow:visible}
+.staff-svg{width:100%;display:block;overflow:visible}
+
+/* MEASURE AREA (mode 1) */
+.measure-area{display:none;flex-direction:column;gap:.5rem}
+.measure-slots{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;
+  min-height:72px;padding:.75rem;background:rgba(255,255,255,.03);
+  border:1.5px dashed rgba(255,255,255,.12);border-radius:10px;transition:border-color .2s}
+.measure-slots.over{border-color:var(--pink);background:rgba(255,45,120,.06)}
+.measure-slot-item{background:var(--bg2);border:1.5px solid var(--sky);border-radius:9px;
+  padding:.5rem .6rem;cursor:pointer;transition:all .15s;text-align:center;position:relative}
+.measure-slot-item:hover{border-color:var(--red);background:rgba(239,68,68,.08)}
+.measure-slot-item svg{width:30px;height:40px;display:block}
+.slot-beats{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--sky);text-align:center;margin-top:2px}
+.slot-rm{position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;
+  background:var(--red);color:#fff;font-size:.55rem;display:flex;align-items:center;
+  justify-content:center;opacity:0;transition:opacity .15s}
+.measure-slot-item:hover .slot-rm{opacity:1}
+.beat-counter{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted);text-align:right}
+.beat-counter span{color:var(--off-white);font-weight:700}
+
+/* TIME SIG DROP (mode 2) */
+.timesig-area{display:none;flex-direction:column;gap:.5rem;align-items:flex-start}
+.timesig-slot{width:58px;height:72px;border:2px dashed rgba(168,85,247,.4);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;background:rgba(168,85,247,.04)}
+.timesig-slot.over{border-color:var(--purple);background:rgba(168,85,247,.12)}
+.timesig-slot.filled{border-style:solid;border-color:var(--purple)}
+.timesig-slot-inner{text-align:center;line-height:1.1;font-weight:700;font-size:1.2rem;
+  color:var(--off-white);font-family:'Inter',sans-serif}
+.timesig-slot-inner .sig-line{border-top:1.5px solid rgba(255,255,255,.4);margin:2px 6px}
+
+/* QUESTION */
+.q-text{color:var(--muted);font-size:.9rem;text-align:center}
+.q-text strong{color:var(--off-white)}
+
+/* PALETTE */
+.palette-label{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.1em;text-align:center}
+.palette{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
+.chip{background:var(--card);border:1.5px solid var(--border);border-radius:11px;
+  padding:.65rem .75rem;cursor:grab;user-select:none;text-align:center;
+  transition:all .15s;min-width:68px;display:flex;flex-direction:column;align-items:center;gap:.25rem;
+  -webkit-user-select:none}
+.chip:hover{border-color:var(--pink);box-shadow:0 0 14px rgba(255,45,120,.2)}
+.chip.dragging{opacity:.45;transform:scale(.95)}
+.chip svg{width:32px;height:42px;display:block}
+.chip-lbl{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);white-space:nowrap}
+.chip-beat{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--sky);font-weight:700}
+.chip-sig{text-align:center;line-height:1.1;font-weight:700;font-size:1.25rem;color:var(--off-white)}
+.chip-sig .sig-line{border-top:1.5px solid rgba(255,255,255,.35);margin:2px 5px}
+
+/* DRAG GHOST */
+#ghost{position:fixed;pointer-events:none;z-index:9999;
+  background:var(--card);border:1.5px solid var(--pink);border-radius:11px;
+  padding:.5rem .7rem;box-shadow:0 8px 24px rgba(255,45,120,.4);
+  display:none;flex-direction:column;align-items:center;gap:.2rem}
+#ghost svg{width:28px;height:36px}
+#ghost-lbl{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted)}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:.75rem;align-items:center;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--pink);color:#fff;border:none;border-radius:11px;
+  padding:.8rem 2rem;font-family:'Orbitron',monospace;font-weight:700;font-size:.85rem;
+  cursor:pointer;transition:all .2s;letter-spacing:.04em;box-shadow:0 4px 20px rgba(255,45,120,.35)}
+.btn-primary:hover{background:#ff4d8f;transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,45,120,.45)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);
+  border-radius:11px;padding:.8rem 1.25rem;font-size:.85rem;cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--pink);color:var(--pink)}
+
+/* FEEDBACK */
+#feedback{position:fixed;inset:0;z-index:500;display:none;align-items:center;
+  justify-content:center;flex-direction:column;gap:.6rem;pointer-events:none}
+.fb-badge{padding:.85rem 2.25rem;border-radius:18px;font-family:'Orbitron',monospace;
+  font-weight:900;font-size:1.8rem;letter-spacing:.04em;
+  animation:fbpop .55s ease forwards;opacity:0}
+.fb-badge.ok{background:rgba(57,217,138,.15);color:var(--green);
+  border:2px solid var(--green);box-shadow:0 0 36px rgba(57,217,138,.35)}
+.fb-badge.bad{background:rgba(239,68,68,.15);color:var(--red);
+  border:2px solid var(--red);box-shadow:0 0 36px rgba(239,68,68,.35)}
+.fb-sub{color:var(--muted);font-size:.9rem;animation:fbpop .55s .08s ease forwards;opacity:0}
+@keyframes fbpop{
+  0%{opacity:0;transform:scale(.5) translateY(16px)}
+  60%{opacity:1;transform:scale(1.06) translateY(-3px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+
+/* COMBO */
+#combo{position:fixed;top:64px;right:14px;z-index:400;
+  background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+  padding:.4rem .9rem;border-radius:100px;font-family:'Orbitron',monospace;
+  font-size:.75rem;font-weight:700;box-shadow:0 4px 18px rgba(255,45,120,.45);
+  display:none;animation:comboin .3s ease}
+@keyframes comboin{from{transform:scale(.4) translateX(20px);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* GAME OVER */
+#gameover{min-height:100vh;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:1.25rem;padding:2rem;text-align:center}
+#gameover.active{display:flex}
+.go-tag{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--muted);letter-spacing:.12em}
+.go-score{font-family:'Orbitron',monospace;font-weight:900;font-size:3.8rem;
+  background:linear-gradient(135deg,var(--pink),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stats-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:.85rem 1.25rem;min-width:90px}
+.stat-val{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--sky);font-weight:700}
+.stat-lbl{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+
+/* ANIMATIONS */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .38s ease}
+@keyframes glow-ok{0%,100%{box-shadow:none}50%{box-shadow:0 0 36px rgba(57,217,138,.55)}}
+.glow-ok{animation:glow-ok .75s ease}
+
+@media(max-width:580px){
+  .mode-card{width:100%;max-width:340px}
+  .mode-title{font-size:1.7rem}
+  .chip{min-width:58px;padding:.55rem .6rem}
+  .go-score{font-size:2.8rem}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="/">Musicable</a>
+  <a class="nav-back" href="/dashboard">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Dashboard
+  </a>
+</nav>
+
+<div id="ghost">
+  <div id="ghost-svg"></div>
+  <div id="ghost-lbl"></div>
+</div>
+<div id="combo">🔥 COMBO ×<span id="combo-val">2</span></div>
+<div id="feedback">
+  <div class="fb-badge" id="fb-badge"></div>
+  <div class="fb-sub" id="fb-sub"></div>
+</div>
+
+<!-- MODE SELECT -->
+<div class="screen active" id="mode-select">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:2rem 1rem;gap:1.25rem">
+    <div class="mode-title">Rhythm Quiz</div>
+    <p class="mode-sub">Test your music theory. Build beats. Train your ear.</p>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startGame('build')">
+        <span class="mode-icon">🎵</span>
+        <div class="mode-name">Build the Measure</div>
+        <p class="mode-desc">A time signature is shown. Drag notes into the measure until the beats add up exactly right.</p>
+        <span class="diff diff-easy">Beginner Friendly</span>
+      </div>
+      <div class="mode-card" onclick="startGame('guess')">
+        <span class="mode-icon">🎼</span>
+        <div class="mode-name">Guess the Time Sig</div>
+        <p class="mode-desc">A measure full of notes is shown. Count the beats and drag the correct time signature onto the staff.</p>
+        <span class="diff diff-med">Intermediate</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <div class="game-inner">
+    <!-- HUD -->
+    <div class="hud">
+      <div class="hud-score">⭐ <span id="score">0</span></div>
+      <div class="hud-streak">🔥 <span id="streak">0</span> streak</div>
+      <div class="hud-timer" id="timer-wrap">⏱ <span id="timer">30</span>s</div>
+    </div>
+    <div class="xp-wrap"><div class="xp-fill" id="xp-fill"></div></div>
+    <div class="round-row">
+      <span>Round <strong id="round-num" style="color:var(--off-white)">1</strong> / 10</span>
+      <span>Level <strong id="level-num" style="color:var(--off-white)">1</strong></span>
+    </div>
+
+    <!-- Staff -->
+    <div class="staff-card" id="staff-card">
+      <svg class="staff-svg" id="staff-svg" viewBox="0 0 680 110" preserveAspectRatio="xMidYMid meet">
+        <line x1="55" y1="28" x2="660" y2="28" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>
+        <line x1="55" y1="42" x2="660" y2="42" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>
+        <line x1="55" y1="56" x2="660" y2="56" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>
+        <line x1="55" y1="70" x2="660" y2="70" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>
+        <line x1="55" y1="84" x2="660" y2="84" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>
+        <line x1="55" y1="28" x2="55" y2="84" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+        <line x1="660" y1="28" x2="660" y2="84" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+        <text x="4" y="88" font-size="72" fill="rgba(255,255,255,.45)" font-family="serif">𝄞</text>
+        <g id="svg-timesig"></g>
+        <g id="svg-notes"></g>
+        <text id="svg-hint" x="380" y="62" text-anchor="middle" fill="rgba(255,255,255,.13)" font-size="12" font-family="Inter,sans-serif">drop notes here</text>
+      </svg>
+    </div>
+
+    <!-- Mode 1: measure slots -->
+    <div class="measure-area" id="measure-area">
+      <div class="measure-slots" id="measure-slots"
+           ondragover="event.preventDefault();this.classList.add('over')"
+           ondragleave="this.classList.remove('over')"
+           ondrop="onDropNote(event)">
+        <span id="slots-empty" style="color:rgba(255,255,255,.15);font-family:'DM Mono',monospace;font-size:.75rem">
+          Drag notes here…
+        </span>
+      </div>
+      <div class="beat-counter">Beats: <span id="beat-count">0</span> / <span id="beat-target">4</span></div>
+    </div>
+
+    <!-- Mode 2: time sig drop -->
+    <div class="timesig-area" id="timesig-area">
+      <p style="font-size:.82rem;color:var(--muted)">Drop the time signature here:</p>
+      <div class="timesig-slot" id="timesig-slot"
+           ondragover="event.preventDefault();this.classList.add('over')"
+           ondragleave="this.classList.remove('over')"
+           ondrop="onDropSig(event)">
+        <span style="color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;font-size:.8rem">?</span>
+      </div>
+    </div>
+
+    <div class="q-text" id="q-text"></div>
+    <p class="palette-label" id="palette-lbl">Drag a note into the measure</p>
+    <div class="palette" id="palette"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="goMenu()">↩ Menu</button>
+      <button class="btn-primary" id="check-btn" onclick="checkAnswer()">Check ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover">
+  <div class="go-tag">ROUND COMPLETE</div>
+  <div class="go-score" id="go-score">0</div>
+  <div style="color:var(--muted);font-size:.9rem">Total Score</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val" id="go-correct">0</div><div class="stat-lbl">Correct</div></div>
+    <div class="stat"><div class="stat-val" id="go-streak">0</div><div class="stat-lbl">Best Streak</div></div>
+    <div class="stat"><div class="stat-val" id="go-acc">0%</div><div class="stat-lbl">Accuracy</div></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="restartGame()">Play Again</button>
+    <button class="btn-ghost" onclick="goMenu()">Change Mode</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+const NOTES = [
+  { id:'whole',      label:'Whole',     beats:4,   open:true,  stem:false, flag:false, dot:false },
+  { id:'half',       label:'Half',      beats:2,   open:true,  stem:true,  flag:false, dot:false },
+  { id:'dot-half',   label:'Dot Half',  beats:3,   open:true,  stem:true,  flag:false, dot:true  },
+  { id:'quarter',    label:'Quarter',   beats:1,   open:false, stem:true,  flag:false, dot:false },
+  { id:'dot-qtr',    label:'Dot Qtr',   beats:1.5, open:false, stem:true,  flag:false, dot:true  },
+  { id:'eighth',     label:'Eighth',    beats:0.5, open:false, stem:true,  flag:true,  dot:false },
+  { id:'qtr-rest',   label:'Qtr Rest',  beats:1,   rest:true  },
+  { id:'half-rest',  label:'Half Rest', beats:2,   rest:true  },
+];
+
+const SIGS = [
+  { id:'4/4', top:4, bot:4, beats:4 },
+  { id:'3/4', top:3, bot:4, beats:3 },
+  { id:'2/4', top:2, bot:4, beats:2 },
+  { id:'6/8', top:6, bot:8, beats:3 },
+  { id:'2/2', top:2, bot:2, beats:4 },
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+let S = {};
+function resetState(mode) {
+  return { mode, score:0, streak:0, bestStreak:0, round:0, correct:0,
+    xp:0, level:1, secs:30, timer:null, sig:null, placed:[], placedSig:null, done:false };
+}
+
+// ── AUDIO ─────────────────────────────────────────────────────
+let AC = null;
+const ac = () => AC || (AC = new (window.AudioContext||window.webkitAudioContext)());
+function tone(f, d=.15, t='sine', v=.25) {
+  try {
+    const o=ac().createOscillator(), g=ac().createGain();
+    o.connect(g); g.connect(ac().destination);
+    o.type=t; o.frequency.value=f;
+    g.gain.setValueAtTime(v,ac().currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ac().currentTime+d);
+    o.start(); o.stop(ac().currentTime+d);
+  } catch(e){}
+}
+const sndOk  = () => { tone(523,.13); setTimeout(()=>tone(659,.13),75); setTimeout(()=>tone(784,.22),150); };
+const sndBad = () => { tone(220,.28,'sawtooth',.14); setTimeout(()=>tone(180,.28,'sawtooth',.09),130); };
+const sndDrop= () => tone(440,.07,'sine',.09);
+const sndTick= () => tone(880,.05,'square',.05);
+
+// ── SVG HELPERS ───────────────────────────────────────────────
+function noteSVG(n, size=32, h=42) {
+  const W=size, H=h, cx=W*.45, cy=H*.76, rx=W*.38, ry=H*.16;
+  const rot=`rotate(-14,${cx},${cy})`;
+  if (n.rest) {
+    if (n.id==='qtr-rest') return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <path d="M${W*.44} ${H*.18} Q${W*.72} ${H*.32} ${W*.34} ${H*.46} Q${W*.74} ${H*.58} ${W*.28} ${H*.72} Q${W*.56} ${H*.76} ${W*.44} ${H*.9}" stroke="#E8ECF0" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>`;
+    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="${W*.18}" y="${H*.5}" width="${W*.64}" height="${H*.18}" rx="2" fill="#E8ECF0"/>
+      <line x1="${W*.12}" y1="${H*.5}" x2="${W*.88}" y2="${H*.5}" stroke="#E8ECF0" stroke-width="1.6"/></svg>`;
+  }
+  const stemX=cx+rx*.85, stemY1=cy-ry, stemY2=H*.1;
+  const flagPath=n.flag?`<path d="M${stemX} ${stemY2} Q${stemX+W*.42} ${stemY2+H*.2} ${stemX+W*.1} ${stemY2+H*.38}" stroke="#E8ECF0" stroke-width="1.6" fill="none"/>`:''
+  const dotMark=n.dot?`<circle cx="${cx+rx+W*.18}" cy="${cy+ry}" r="${W*.1}" fill="#E8ECF0"/>`:''
+  const stemLine=n.stem?`<line x1="${stemX}" y1="${stemY1}" x2="${stemX}" y2="${stemY2}" stroke="#E8ECF0" stroke-width="1.7"/>`:''
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="${rot}" fill="${n.open?'none':'#E8ECF0'}" stroke="#E8ECF0" stroke-width="1.7"/>
+    ${stemLine}${flagPath}${dotMark}</svg>`;
+}
+
+function noteInStaff(nid, x) {
+  const n = NOTES.find(n=>n.id===nid); if (!n) return '';
+  const cy=58, cx=x, rx=10, ry=6.5, rot=`rotate(-13,${cx},${cy})`;
+  const stemX=cx+rx*.85, stemY1=cy-ry, stemY2=cy-32;
+  if (n.rest) {
+    if (n.id==='qtr-rest') return `<path d="M${cx} ${cy-20} Q${cx+8} ${cy-13} ${cx-2} ${cy-5} Q${cx+8} ${cy+1} ${cx-3} ${cy+9} Q${cx+6} ${cy+12} ${cx+1} ${cy+20}" stroke="#E8ECF0" stroke-width="1.9" fill="none" stroke-linecap="round"/>`;
+    return `<rect x="${cx-10}" y="${cy-4}" width="20" height="8" rx="1.5" fill="#E8ECF0"/>
+      <line x1="${cx-12}" y1="${cy-4}" x2="${cx+12}" y2="${cy-4}" stroke="#E8ECF0" stroke-width="1.5"/>`;
+  }
+  const flag=n.flag?`<path d="M${stemX} ${stemY2} Q${stemX+14} ${stemY2+9} ${stemX+4} ${stemY2+17}" stroke="#E8ECF0" stroke-width="1.5" fill="none"/>`:''
+  const dot=n.dot?`<circle cx="${cx+rx+7}" cy="${cy+ry}" r="2.8" fill="#E8ECF0"/>`:''
+  const stem=n.stem?`<line x1="${stemX}" y1="${stemY1}" x2="${stemX}" y2="${stemY2}" stroke="#E8ECF0" stroke-width="1.7"/>`:''
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="${rot}" fill="${n.open?'none':'#E8ECF0'}" stroke="#E8ECF0" stroke-width="1.7"/>
+    ${stem}${flag}${dot}`;
+}
+
+function sigSVG(s) {
+  return `<div class="chip-sig">
+    <div>${s.top}</div><div class="sig-line"></div><div>${s.bot}</div>
+  </div><div class="chip-lbl">${s.id}</div>`;
+}
+
+// ── SCREENS ───────────────────────────────────────────────────
+function showScreen(id) {
+  ['mode-select','game','gameover'].forEach(s => {
+    const el=document.getElementById(s);
+    if (!el) return;
+    if (s==='gameover') el.classList.remove('active');
+    else el.classList.remove('active');
+  });
+  const el=document.getElementById(id);
+  if (!el) return;
+  if (id==='gameover') el.classList.add('active');
+  else el.classList.add('active');
+}
+
+function goMenu() { clearInterval(S.timer); showScreen('mode-select'); }
+
+// ── GAME FLOW ─────────────────────────────────────────────────
+function startGame(mode) {
+  S = resetState(mode);
+  showScreen('game');
+  nextRound();
+}
+function restartGame() { startGame(S.mode); }
+
+function nextRound() {
+  S.round++;
+  S.placed = [];
+  S.placedSig = null;
+  S.done = false;
+  updateHUD();
+  clearInterval(S.timer);
+  S.secs = Math.max(14, 30 - Math.floor((S.level-1)/2)*3);
+  startTimer();
+  S.mode === 'build' ? setupBuild() : setupGuess();
+}
+
+// ── MODE 1: BUILD ─────────────────────────────────────────────
+function setupBuild() {
+  S.sig = pick(SIGS);
+  renderStaffSig(S.sig);
+  clearStaffNotes();
+  document.getElementById('svg-hint').style.display='block';
+
+  document.getElementById('measure-area').style.display='flex';
+  document.getElementById('timesig-area').style.display='none';
+  renderSlots();
+
+  const avail = NOTES.filter(n => n.beats <= S.sig.beats + 0.01);
+  renderPalette('note', avail);
+
+  document.getElementById('q-text').innerHTML =
+    `Fill the measure — time sig <strong>${S.sig.id}</strong> = <strong>${S.sig.beats} beats</strong>`;
+  document.getElementById('palette-lbl').textContent = 'Drag notes into the measure';
+  document.getElementById('check-btn').disabled = false;
+}
+
+function renderSlots() {
+  const el = document.getElementById('measure-slots');
+  const empty = document.getElementById('slots-empty');
+  const total = S.placed.reduce((a,n)=>a+n.beats, 0);
+
+  // remove old items
+  el.querySelectorAll('.measure-slot-item').forEach(e=>e.remove());
+  empty.style.display = S.placed.length ? 'none' : 'inline';
+
+  S.placed.forEach((n, i) => {
+    const div = document.createElement('div');
+    div.className = 'measure-slot-item';
+    div.title = `${n.label} (${n.beats}b) — click to remove`;
+    div.innerHTML = noteSVG(n) + `<div class="slot-beats">${n.beats}b</div><div class="slot-rm">×</div>`;
+    div.onclick = () => { S.placed.splice(i,1); sndDrop(); renderSlots(); refreshStaffNotes(); updateBeatCount(); };
+    el.appendChild(div);
+  });
+
+  updateBeatCount();
+}
+
+function updateBeatCount() {
+  const t = S.placed.reduce((a,n)=>a+n.beats,0);
+  document.getElementById('beat-count').textContent = fmtB(t);
+  document.getElementById('beat-target').textContent = S.sig.beats;
+}
+
+function addNote(nid) {
+  if (S.done) return;
+  const n = NOTES.find(n=>n.id===nid); if (!n) return;
+  const cur = S.placed.reduce((a,x)=>a+x.beats,0);
+  if (cur + n.beats > S.sig.beats + 0.001) {
+    shake(document.getElementById('staff-card'));
+    sndBad(); return;
+  }
+  S.placed.push(n);
+  sndDrop();
+  renderSlots();
+  refreshStaffNotes();
+  const newTotal = S.placed.reduce((a,x)=>a+x.beats,0);
+  if (Math.abs(newTotal - S.sig.beats) < 0.001) setTimeout(checkAnswer, 320);
+}
+
+function refreshStaffNotes() {
+  const g = document.getElementById('svg-notes'); if (!g) return;
+  let x = 125;
+  g.innerHTML = S.placed.map(n => { const s=noteInStaff(n.id,x); x+=65; return s; }).join('');
+  document.getElementById('svg-hint').style.display = S.placed.length ? 'none' : 'block';
+}
+
+// ── MODE 2: GUESS SIG ─────────────────────────────────────────
+function setupGuess() {
+  S.sig = pick(SIGS);
+  clearStaffSig();
+  clearStaffNotes();
+
+  const notes = genMeasure(S.sig.beats);
+  S.currentNotes = notes;
+
+  // Draw notes on staff
+  const g = document.getElementById('svg-notes');
+  let x = 115;
+  g.innerHTML = notes.map(n => { const s=noteInStaff(n.id,x); x+=65; return s; }).join('');
+  document.getElementById('svg-hint').style.display='none';
+
+  document.getElementById('measure-area').style.display='none';
+  document.getElementById('timesig-area').style.display='flex';
+
+  const slot = document.getElementById('timesig-slot');
+  slot.classList.remove('filled','over');
+  slot.innerHTML = `<span style="color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;font-size:.8rem">?</span>`;
+
+  renderPalette('sig', SIGS);
+
+  document.getElementById('q-text').innerHTML = `Count the beats shown. Drag the correct <strong>time signature</strong> below.`;
+  document.getElementById('palette-lbl').textContent = 'Drag the correct time signature';
+  document.getElementById('check-btn').disabled = false;
+}
+
+function genMeasure(beats) {
+  let rem = beats, out = [], iter = 0;
+  while (rem > 0.001 && iter++ < 20) {
+    const valid = NOTES.filter(n => !n.rest && n.beats <= rem + 0.001);
+    if (!valid.length) break;
+    const n = pick(valid);
+    out.push(n); rem -= n.beats;
+  }
+  return out;
+}
+
+// ── STAFF HELPERS ─────────────────────────────────────────────
+function renderStaffSig(sig) {
+  document.getElementById('svg-timesig').innerHTML =
+    `<text x="80" y="50" text-anchor="middle" fill="#E8ECF0" font-size="20" font-weight="700" font-family="Inter,sans-serif">${sig.top}</text>
+     <text x="80" y="74" text-anchor="middle" fill="#E8ECF0" font-size="20" font-weight="700" font-family="Inter,sans-serif">${sig.bot}</text>`;
+}
+function clearStaffSig() { document.getElementById('svg-timesig').innerHTML=''; }
+function clearStaffNotes() { document.getElementById('svg-notes').innerHTML=''; }
+
+// ── CHECK ANSWER ──────────────────────────────────────────────
+function checkAnswer() {
+  if (S.done) return;
+  S.done = true;
+  clearInterval(S.timer);
+
+  let ok = false;
+  if (S.mode === 'build') {
+    const t = S.placed.reduce((a,n)=>a+n.beats,0);
+    ok = Math.abs(t - S.sig.beats) < 0.001;
+  } else {
+    ok = S.placedSig?.id === S.sig.id;
+  }
+
+  if (ok) {
+    S.correct++;
+    S.streak++;
+    if (S.streak > S.bestStreak) S.bestStreak = S.streak;
+    const mult = Math.min(S.streak, 5);
+    const pts = 100 * mult;
+    S.score += pts;
+    S.xp = Math.min(100, S.xp + 15 + mult*3);
+    if (S.xp >= 100) { S.xp=0; S.level++; }
+    feedback(true, `+${pts} pts`, mult > 1 ? `${mult}× combo!` : 'Nice!');
+    glow(document.getElementById('staff-card'));
+    sndOk();
+    if (S.streak >= 2) showCombo(S.streak);
+  } else {
+    S.streak = 0;
+    const hint = S.mode === 'build' ? `Needed exactly ${S.sig.beats} beats` : `Answer: ${S.sig.id}`;
+    feedback(false, 'Not quite', hint);
+    shake(document.getElementById('staff-card'));
+    sndBad();
+  }
+
+  updateHUD();
+  if (S.round >= 10) setTimeout(showGameOver, 1800);
+  else setTimeout(nextRound, 1800);
+}
+
+// ── PALETTE ───────────────────────────────────────────────────
+function renderPalette(type, items) {
+  const p = document.getElementById('palette');
+  p.innerHTML = '';
+  items.forEach(item => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.draggable = true;
+
+    if (type === 'note') {
+      chip.innerHTML = noteSVG(item) + `<div class="chip-lbl">${item.label}</div><div class="chip-beat">${item.beats}b</div>`;
+      chip.dataset.nid = item.id;
+      chip.ondragstart = e => { e.dataTransfer.setData('nid', item.id); chip.classList.add('dragging'); };
+      chip.ondragend = () => chip.classList.remove('dragging');
+    } else {
+      chip.innerHTML = sigSVG(item);
+      chip.dataset.sid = item.id;
+      chip.ondragstart = e => { e.dataTransfer.setData('sid', item.id); chip.classList.add('dragging'); };
+      chip.ondragend = () => chip.classList.remove('dragging');
+    }
+
+    // Mouse drag
+    chip.onmousedown = e => {
+      drag.type = type; drag.id = type === 'note' ? item.id : item.id;
+      const ghost = document.getElementById('ghost');
+      ghost.style.display='flex';
+      document.getElementById('ghost-svg').innerHTML = type === 'note' ? noteSVG(item,26,34) : `<div class="chip-sig" style="font-size:1rem">${item.top}<div class="sig-line"></div>${item.bot}</div>`;
+      document.getElementById('ghost-lbl').textContent = type === 'note' ? `${item.label} · ${item.beats}b` : item.id;
+      ghost.style.left=(e.clientX+12)+'px'; ghost.style.top=(e.clientY-16)+'px';
+      chip.classList.add('dragging');
+    };
+
+    p.appendChild(chip);
+  });
+}
+
+// ── DROP HANDLERS ─────────────────────────────────────────────
+function onDropNote(e) {
+  e.preventDefault();
+  document.getElementById('measure-slots').classList.remove('over');
+  const nid = e.dataTransfer?.getData('nid') || drag.id;
+  if (nid && drag.type === 'note') addNote(nid);
+  endDrag();
+}
+
+function onDropSig(e) {
+  e.preventDefault();
+  const sid = e.dataTransfer?.getData('sid') || (drag.type==='sig' ? drag.id : null);
+  if (!sid) { endDrag(); return; }
+  applySig(sid);
+  endDrag();
+}
+
+function applySig(sid) {
+  const s = SIGS.find(s=>s.id===sid); if (!s) return;
+  S.placedSig = s;
+  const slot = document.getElementById('timesig-slot');
+  slot.classList.remove('over'); slot.classList.add('filled');
+  slot.innerHTML = `<div class="timesig-slot-inner"><div>${s.top}</div><div class="sig-line"></div><div>${s.bot}</div></div>`;
+  sndDrop();
+  setTimeout(checkAnswer, 320);
+}
+
+// ── DRAG STATE (mouse) ────────────────────────────────────────
+const drag = { type: null, id: null };
+document.addEventListener('mousemove', e => {
+  if (!drag.type) return;
+  const g = document.getElementById('ghost');
+  g.style.left=(e.clientX+12)+'px'; g.style.top=(e.clientY-16)+'px';
+});
+document.addEventListener('mouseup', e => {
+  if (!drag.type) return;
+  // Check drop over measure slots (note) or timesig slot (sig)
+  if (drag.type === 'note') {
+    const el = document.getElementById('measure-slots');
+    if (el && isOver(e, el)) { addNote(drag.id); }
+    else {
+      // also accept dropping anywhere on staff card
+      const sc = document.getElementById('staff-card');
+      if (sc && isOver(e, sc)) addNote(drag.id);
+    }
+  } else if (drag.type === 'sig') {
+    const el = document.getElementById('timesig-slot');
+    if (el && isOver(e, el)) applySig(drag.id);
+  }
+  endDrag();
+});
+function endDrag() {
+  drag.type=null; drag.id=null;
+  document.getElementById('ghost').style.display='none';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('dragging'));
+}
+function isOver(e, el) {
+  const r = el.getBoundingClientRect();
+  return e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+}
+document.addEventListener('selectstart', e => { if (drag.type) e.preventDefault(); });
+
+// ── TOUCH ─────────────────────────────────────────────────────
+let touchItem = null;
+document.addEventListener('touchstart', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  touchItem = chip;
+  drag.type = chip.dataset.nid ? 'note' : 'sig';
+  drag.id = chip.dataset.nid || chip.dataset.sid;
+  chip.classList.add('dragging');
+}, {passive:true});
+document.addEventListener('touchmove', e => {
+  if (!touchItem) return;
+  e.preventDefault();
+  const t=e.touches[0];
+  const g=document.getElementById('ghost');
+  g.style.display='flex'; g.style.left=(t.clientX+12)+'px'; g.style.top=(t.clientY-18)+'px';
+  const n=NOTES.find(n=>n.id===drag.id), s=SIGS.find(s=>s.id===drag.id);
+  document.getElementById('ghost-svg').innerHTML = n ? noteSVG(n,24,32) : s ? `<div class="chip-sig" style="font-size:.9rem">${s.top}<div class="sig-line"></div>${s.bot}</div>` : '';
+  document.getElementById('ghost-lbl').textContent = n ? `${n.label} · ${n.beats}b` : drag.id;
+}, {passive:false});
+document.addEventListener('touchend', e => {
+  if (!touchItem) return;
+  const t=e.changedTouches[0];
+  if (drag.type==='note') {
+    const sc=document.getElementById('staff-card');
+    if (sc && isOverXY(t.clientX,t.clientY,sc)) addNote(drag.id);
+    const ms=document.getElementById('measure-slots');
+    if (ms && isOverXY(t.clientX,t.clientY,ms)) addNote(drag.id);
+  } else if (drag.type==='sig') {
+    const ts=document.getElementById('timesig-slot');
+    if (ts && isOverXY(t.clientX,t.clientY,ts)) applySig(drag.id);
+  }
+  touchItem=null; endDrag();
+}, {passive:true});
+function isOverXY(x,y,el) {
+  const r=el.getBoundingClientRect();
+  return x>=r.left && x<=r.right && y>=r.top && y<=r.bottom;
+}
+
+// ── TIMER ─────────────────────────────────────────────────────
+function startTimer() {
+  const tw=document.getElementById('timer-wrap'), td=document.getElementById('timer');
+  td.textContent=S.secs; tw.classList.remove('urgent');
+  S.timer = setInterval(()=>{
+    S.secs--;
+    td.textContent=S.secs;
+    if (S.secs<=5) { tw.classList.add('urgent'); sndTick(); }
+    if (S.secs<=0) {
+      clearInterval(S.timer);
+      if (!S.done) {
+        S.done=true; S.streak=0;
+        feedback(false,"Time's up!",'');
+        sndBad(); updateHUD();
+        if (S.round>=10) setTimeout(showGameOver,1800);
+        else setTimeout(nextRound,1800);
+      }
+    }
+  },1000);
+}
+
+// ── HUD ───────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('score').textContent=S.score.toLocaleString();
+  document.getElementById('streak').textContent=S.streak;
+  document.getElementById('round-num').textContent=S.round;
+  document.getElementById('level-num').textContent=S.level;
+  document.getElementById('xp-fill').style.width=S.xp+'%';
+}
+
+// ── FEEDBACK ─────────────────────────────────────────────────
+function feedback(ok, main, sub) {
+  const el=document.getElementById('feedback'), b=document.getElementById('fb-badge'), s=document.getElementById('fb-sub');
+  b.className='fb-badge '+(ok?'ok':'bad');
+  b.textContent=(ok?'✓ ':'✗ ')+main;
+  s.textContent=sub;
+  el.style.display='flex';
+  setTimeout(()=>el.style.display='none',1500);
+}
+function showCombo(n) {
+  const c=document.getElementById('combo');
+  document.getElementById('combo-val').textContent=Math.min(n,5);
+  c.style.display='block';
+  setTimeout(()=>c.style.display='none',1200);
+}
+function shake(el) { el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400); }
+function glow(el)  { el.classList.add('glow-ok'); setTimeout(()=>el.classList.remove('glow-ok'),800); }
+
+// ── GAME OVER ─────────────────────────────────────────────────
+function showGameOver() {
+  clearInterval(S.timer);
+  const acc=S.round>0?Math.round(S.correct/S.round*100):0;
+  document.getElementById('go-score').textContent=S.score.toLocaleString();
+  document.getElementById('go-correct').textContent=S.correct;
+  document.getElementById('go-streak').textContent=S.bestStreak;
+  document.getElementById('go-acc').textContent=acc+'%';
+  showScreen('gameover');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmtB = b => b===Math.floor(b) ? b : b.toFixed(1);
+</script>
+</body>
+</html>

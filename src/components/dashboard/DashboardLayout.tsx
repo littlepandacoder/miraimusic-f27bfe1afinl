@@ -36,6 +36,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const gameItems = [
     { href: "/piano_hero.html#room", icon: KeyboardMusic, label: "Piano Room",    external: true },
     { href: "/piano_hero.html",      icon: Gamepad2,      label: "Piano Hero",    external: true },
+    { href: "/rhythm-quiz.html",     icon: Gamepad2,      label: "Rhythm Quiz",   external: true },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
     { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true },
