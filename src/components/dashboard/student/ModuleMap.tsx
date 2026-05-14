@@ -298,19 +298,38 @@ const ModuleMap = () => {
                   )}
 
                   {isSRAdventureModule && module.status !== "locked" && (
-                    <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
-                      <a
-                        href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
-                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
-                      >
-                        🎯 Treble Test
-                      </a>
-                      <a
-                        href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
-                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
-                      >
-                        🎯 Bass Test
-                      </a>
+                    <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Sessions to unlock Treble Clef Songs</span>
+                          <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                          </span>
+                        </div>
+                        <Progress
+                          value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100}
+                          className="h-1.5"
+                        />
+                        {srGate.totalSessions < SESSIONS_REQUIRED && (
+                          <p className="text-xs text-muted-foreground">
+                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <a
+                          href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                          className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                        >
+                          🎯 Treble Test
+                        </a>
+                        <a
+                          href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                          className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                        >
+                          🎯 Bass Test
+                        </a>
+                      </div>
                     </div>
                   )}
 
