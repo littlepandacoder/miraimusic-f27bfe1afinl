@@ -66,7 +66,8 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 
 /* STAFF */
 .staff-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:2rem 2rem;position:relative;overflow:visible}
+  padding:2rem 2rem;position:relative;overflow:visible;transition:border-color .15s,background .15s}
+.staff-card.over{border-color:var(--pink);background:rgba(255,45,120,.05)}
 .staff-svg{width:100%;display:block;overflow:visible}
 
 /* MEASURE AREA (mode 1) */
@@ -250,7 +251,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     </div>
 
     <!-- Staff -->
-    <div class="staff-card" id="staff-card">
+    <div class="staff-card" id="staff-card"
+         ondragover="staffDragOver(event)"
+         ondragleave="staffDragLeave(event)"
+         ondrop="staffDrop(event)">
       <svg class="staff-svg" id="staff-svg" viewBox="0 0 680 148" preserveAspectRatio="xMidYMid meet">
         <line x1="55" y1="36" x2="660" y2="36" stroke="rgba(255,255,255,.25)" stroke-width="1.6"/>
         <line x1="55" y1="54" x2="660" y2="54" stroke="rgba(255,255,255,.25)" stroke-width="1.6"/>
@@ -640,6 +644,7 @@ function renderPalette(type, items) {
 function onDropNote(e) {
   e.preventDefault();
   document.getElementById('measure-slots').classList.remove('over');
+  document.getElementById('staff-card').classList.remove('over');
   const nid = e.dataTransfer?.getData('nid') || drag.id;
   if (nid && drag.type === 'note') addNote(nid);
   endDrag();
@@ -647,9 +652,28 @@ function onDropNote(e) {
 
 function onDropSig(e) {
   e.preventDefault();
+  document.getElementById('staff-card').classList.remove('over');
   const sid = e.dataTransfer?.getData('sid') || (drag.type==='sig' ? drag.id : null);
   if (!sid) { endDrag(); return; }
   applySig(sid);
+  endDrag();
+}
+
+function staffDragOver(e) {
+  e.preventDefault();
+  document.getElementById('staff-card').classList.add('over');
+}
+function staffDragLeave(e) {
+  if (e.relatedTarget && document.getElementById('staff-card').contains(e.relatedTarget)) return;
+  document.getElementById('staff-card').classList.remove('over');
+}
+function staffDrop(e) {
+  e.preventDefault();
+  document.getElementById('staff-card').classList.remove('over');
+  const nid = e.dataTransfer?.getData('nid');
+  const sid = e.dataTransfer?.getData('sid');
+  if (nid && S.mode === 'build') addNote(nid);
+  else if (sid && S.mode === 'guess') applySig(sid);
   endDrag();
 }
 
@@ -672,18 +696,14 @@ document.addEventListener('mousemove', e => {
 });
 document.addEventListener('mouseup', e => {
   if (!drag.type) return;
-  // Check drop over measure slots (note) or timesig slot (sig)
   if (drag.type === 'note') {
-    const el = document.getElementById('measure-slots');
-    if (el && isOver(e, el)) { addNote(drag.id); }
-    else {
-      // also accept dropping anywhere on staff card
-      const sc = document.getElementById('staff-card');
-      if (sc && isOver(e, sc)) addNote(drag.id);
-    }
+    const sc = document.getElementById('staff-card');
+    const ms = document.getElementById('measure-slots');
+    if ((ms && isOver(e, ms)) || (sc && isOver(e, sc))) addNote(drag.id);
   } else if (drag.type === 'sig') {
-    const el = document.getElementById('timesig-slot');
-    if (el && isOver(e, el)) applySig(drag.id);
+    const sc = document.getElementById('staff-card');
+    const ts = document.getElementById('timesig-slot');
+    if ((ts && isOver(e, ts)) || (sc && isOver(e, sc))) applySig(drag.id);
   }
   endDrag();
 });
@@ -722,12 +742,12 @@ document.addEventListener('touchend', e => {
   const t=e.changedTouches[0];
   if (drag.type==='note') {
     const sc=document.getElementById('staff-card');
-    if (sc && isOverXY(t.clientX,t.clientY,sc)) addNote(drag.id);
     const ms=document.getElementById('measure-slots');
-    if (ms && isOverXY(t.clientX,t.clientY,ms)) addNote(drag.id);
+    if ((sc && isOverXY(t.clientX,t.clientY,sc)) || (ms && isOverXY(t.clientX,t.clientY,ms))) addNote(drag.id);
   } else if (drag.type==='sig') {
+    const sc=document.getElementById('staff-card');
     const ts=document.getElementById('timesig-slot');
-    if (ts && isOverXY(t.clientX,t.clientY,ts)) applySig(drag.id);
+    if ((ts && isOverXY(t.clientX,t.clientY,ts)) || (sc && isOverXY(t.clientX,t.clientY,sc))) applySig(drag.id);
   }
   touchItem=null; endDrag();
 }, {passive:true});
