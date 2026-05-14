@@ -112,6 +112,11 @@ const ModuleMap = () => {
           status = "locked";
         }
 
+        // Rhythm gate: rhythm module lessons all done but quiz not passed → stay in-progress
+        if (status === "completed" && (m.title ?? "").toLowerCase().includes("rhythm") && !gate.rhythmQuizPassed) {
+          status = "in-progress";
+        }
+
         // SR gate based on the module's OWN title:
         // "Treble Clef Songs" → needs treble test passed
         // "Bass Clef Songs"   → needs bass test passed
@@ -365,6 +370,9 @@ const ModuleMap = () => {
 
                   {isRhythmModule && module.status !== "locked" && (
                     <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                      {module.completedLessons === module.totalLessons && module.totalLessons > 0 && !srGate.rhythmQuizPassed && (
+                        <p className="text-xs text-amber-400 font-medium">🎯 Pass the Rhythm Quiz to complete this module</p>
+                      )}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Rhythm Quiz best score</span>
