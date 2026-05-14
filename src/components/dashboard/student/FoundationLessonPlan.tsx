@@ -28,6 +28,14 @@ interface Module {
   sort_order: number;
 }
 
+const SESSIONS_REQUIRED = 10;
+
+interface SRGate {
+  trebleTestPassed: boolean;
+  bassTestPassed: boolean;
+  totalSessions: number;
+}
+
 const FoundationLessonPlan = () => {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
@@ -39,18 +47,28 @@ const FoundationLessonPlan = () => {
   const [nextModuleId, setNextModuleId] = useState<string | null>(null);
   const [quizCounts, setQuizCounts] = useState<Record<string, number>>({});
   const [quizPassed, setQuizPassed] = useState<Record<string, boolean>>({});
+  const [srGate, setSrGate] = useState<SRGate>({ trebleTestPassed: false, bassTestPassed: false, totalSessions: 0 });
 
   useEffect(() => {
     if (!moduleId || !user) return;
 
     const fetchData = async () => {
-      const [modRes, lessonsRes, progressRes] = await Promise.all([
+      const [modRes, lessonsRes, progressRes, scoresRes] = await Promise.all([
         (supabase as any).from("foundation_modules").select("id, title, description, level, xp_reward, sort_order").eq("id", moduleId).single(),
         (supabase as any).from("foundation_lessons").select("id, title, description, duration_minutes, sort_order").eq("module_id", moduleId).order("sort_order"),
         (supabase as any).from("student_lesson_progress").select("lesson_id, completed").eq("student_id", user.id),
+        (supabase as any).from("game_scores").select("game, correct, total").eq("user_id", user.id)
+          .in("game", ["sight_reading", "sight_reading_treble_test", "sight_reading_bass_test"]),
       ]);
 
       setModule(modRes.data || null);
+
+      const scores: Array<{ game: string; correct: number; total: number }> = scoresRes.data || [];
+      setSrGate({
+        trebleTestPassed: scores.some(s => s.game === "sight_reading_treble_test" && s.total >= 20 && s.correct === s.total),
+        bassTestPassed:   scores.some(s => s.game === "sight_reading_bass_test"   && s.total >= 20 && s.correct === s.total),
+        totalSessions:    scores.length,
+      });
 
       const completedSet = new Set<string>(
         (progressRes.data || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
@@ -134,6 +152,7 @@ const FoundationLessonPlan = () => {
 
   const completedCount = lessons.filter(l => l.status === "completed").length;
   const completionPct = lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0;
+  const isSRAdventure = module?.title?.toLowerCase().includes("sight reading adventure") ?? false;
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -172,7 +191,7 @@ const FoundationLessonPlan = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center gap-8">
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground mb-2">Overall Progress</p>
@@ -187,6 +206,52 @@ const FoundationLessonPlan = () => {
                   <p className="text-2xl font-bold text-yellow-400">{module.xp_reward}</p>
                 </div>
               </div>
+
+              {isSRAdventure && (
+                <div className="border-t border-border pt-4 space-y-3">
+                  {/* Treble progress */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Sessions to unlock Treble Clef Songs</span>
+                      <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                        {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                      </span>
+                    </div>
+                    <Progress value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100} className="h-1.5" />
+                    {srGate.totalSessions < SESSIONS_REQUIRED && (
+                      <p className="text-xs text-muted-foreground">{SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed</p>
+                    )}
+                  </div>
+                  {/* Bass progress */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Sessions to unlock Bass Clef Songs</span>
+                      <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                        {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                      </span>
+                    </div>
+                    <Progress value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100} className="h-1.5" />
+                    {srGate.totalSessions < SESSIONS_REQUIRED && (
+                      <p className="text-xs text-muted-foreground">{SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed</p>
+                    )}
+                  </div>
+                  {/* Test buttons */}
+                  <div className="flex gap-2 pt-1">
+                    <a
+                      href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                      className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                    >
+                      🎯 Treble Test {srGate.trebleTestPassed ? "✓" : ""}
+                    </a>
+                    <a
+                      href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                      className="flex-1 text-center text-xs font-semibold py-2 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                    >
+                      🎯 Bass Test {srGate.bassTestPassed ? "✓" : ""}
+                    </a>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -200,6 +265,46 @@ const FoundationLessonPlan = () => {
               <p className="text-3xl font-bold text-primary">{lessons.length}</p>
             </CardContent>
           </Card>
+
+          {isSRAdventure && (
+            <Card className="bg-card border-border border-pink-500/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-pink-400">🎯 Sight Reading Tests</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Treble Test</span>
+                    {srGate.trebleTestPassed
+                      ? <span className="text-green-400 font-semibold">✓ Passed</span>
+                      : <span className="text-muted-foreground">{Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED} sessions</span>}
+                  </div>
+                  <Progress value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100} className="h-1.5" />
+                  <a
+                    href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                    className="block text-center text-xs font-semibold py-1.5 mt-1 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                  >
+                    🎯 Take Treble Test
+                  </a>
+                </div>
+                <div className="space-y-1 pt-1 border-t border-border">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Bass Test</span>
+                    {srGate.bassTestPassed
+                      ? <span className="text-green-400 font-semibold">✓ Passed</span>
+                      : <span className="text-muted-foreground">{Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED} sessions</span>}
+                  </div>
+                  <Progress value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100} className="h-1.5" />
+                  <a
+                    href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                    className="block text-center text-xs font-semibold py-1.5 mt-1 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                  >
+                    🎯 Take Bass Test
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
