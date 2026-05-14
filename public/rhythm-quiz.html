@@ -372,20 +372,81 @@ function resetState(mode) {
 // ── AUDIO ─────────────────────────────────────────────────────
 let AC = null;
 const ac = () => AC || (AC = new (window.AudioContext||window.webkitAudioContext)());
-function tone(f, d=.15, t='sine', v=.25) {
+function tone(f, d=.15, t='sine', v=.22) {
   try {
-    const o=ac().createOscillator(), g=ac().createGain();
-    o.connect(g); g.connect(ac().destination);
+    const ctx=ac(), o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
     o.type=t; o.frequency.value=f;
-    g.gain.setValueAtTime(v,ac().currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,ac().currentTime+d);
-    o.start(); o.stop(ac().currentTime+d);
+    g.gain.setValueAtTime(v, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, ctx.currentTime+d);
+    o.start(); o.stop(ctx.currentTime+d);
   } catch(e){}
 }
-const sndOk  = () => { tone(523,.13); setTimeout(()=>tone(659,.13),75); setTimeout(()=>tone(784,.22),150); };
-const sndBad = () => { tone(220,.28,'sawtooth',.14); setTimeout(()=>tone(180,.28,'sawtooth',.09),130); };
-const sndDrop= () => tone(440,.07,'sine',.09);
-const sndTick= () => tone(880,.05,'square',.05);
+function chord(freqs,dur,type='sine',vol=.13) { freqs.forEach(f=>tone(f,dur,type,vol)); }
+
+// Correct — bright C major arpeggio + sparkle
+const sndOk = () => {
+  tone(523,.15,'sine',.22);
+  setTimeout(()=>tone(659,.15,'sine',.2),85);
+  setTimeout(()=>tone(784,.28,'sine',.2),170);
+  setTimeout(()=>tone(1047,.16,'sine',.11),255);
+};
+// Wrong — classic error buzz
+const sndBad = () => {
+  tone(220,.12,'sawtooth',.15);
+  setTimeout(()=>tone(196,.28,'sawtooth',.12),90);
+};
+// Drop note/sig onto staff — soft pluck
+const sndDrop = () => {
+  tone(660,.05,'sine',.14);
+  setTimeout(()=>tone(880,.08,'sine',.09),35);
+};
+// Remove note from slot — reverse click
+const sndRemove = () => {
+  tone(440,.08,'sine',.1);
+  setTimeout(()=>tone(330,.06,'sine',.07),40);
+};
+// Drag pickup — subtle high tick
+const sndDragStart = () => tone(1200,.04,'sine',.07);
+// Countdown urgent tick
+const sndTick = () => tone(1100,.04,'square',.07);
+// Time's up — alarming descend
+const sndTimeUp = () => {
+  tone(880,.1,'square',.12);
+  setTimeout(()=>tone(660,.12,'square',.12),100);
+  setTimeout(()=>tone(440,.22,'sawtooth',.1),220);
+};
+// Game start — ascending fanfare
+const sndStart = () => {
+  [261,329,392,523].forEach((f,i)=>setTimeout(()=>tone(f,.14,'triangle',.18),i*90));
+  setTimeout(()=>chord([523,659,784],.3,'sine',.12),400);
+};
+// Combo streak — triumphant scale, more notes = bigger streak
+const sndCombo = (n) => {
+  const base=[523,659,784,1047,1175];
+  base.slice(0,Math.min(n,5)).forEach((f,i)=>setTimeout(()=>tone(f,.12,'sine',.16),i*55));
+};
+// Level up — ascending sweep + chord
+const sndLevelUp = () => {
+  [392,494,587,698,880].forEach((f,i)=>setTimeout(()=>tone(f,.13,'triangle',.18),i*65));
+  setTimeout(()=>chord([784,988,1175],.35,'sine',.13),380);
+};
+// Game over — scales with accuracy
+const sndGameOver = (acc) => {
+  if (acc>=90) {
+    setTimeout(()=>chord([523,659,784],.35,'sine',.15),0);
+    setTimeout(()=>chord([659,784,1047],.4,'sine',.16),320);
+    setTimeout(()=>chord([784,988,1175,1319],.6,'sine',.14),640);
+  } else if (acc>=70) {
+    [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.16,'sine',.18),i*90));
+  } else if (acc>=50) {
+    tone(440,.18,'triangle',.14);
+    setTimeout(()=>tone(523,.22,'triangle',.14),180);
+  } else {
+    tone(392,.25,'triangle',.1);
+    setTimeout(()=>tone(330,.35,'triangle',.09),220);
+  }
+};
 
 // ── SVG HELPERS ───────────────────────────────────────────────
 function noteSVG(n, size=32, h=42) {
@@ -448,6 +509,7 @@ function goMenu() { clearInterval(S.timer); showScreen('mode-select'); }
 // ── GAME FLOW ─────────────────────────────────────────────────
 function startGame(mode) {
   S = resetState(mode);
+  sndStart();
   showScreen('game');
   nextRound();
 }
@@ -499,7 +561,7 @@ function renderSlots() {
     div.className = 'measure-slot-item';
     div.title = `${n.label} (${n.beats}b) — click to remove`;
     div.innerHTML = noteSVG(n) + `<div class="slot-beats">${n.beats}b</div><div class="slot-rm">×</div>`;
-    div.onclick = () => { S.placed.splice(i,1); sndDrop(); renderSlots(); refreshStaffNotes(); updateBeatCount(); };
+    div.onclick = () => { S.placed.splice(i,1); sndRemove(); renderSlots(); refreshStaffNotes(); updateBeatCount(); };
     el.appendChild(div);
   });
 
@@ -606,11 +668,11 @@ function checkAnswer() {
     const pts = 100 * mult;
     S.score += pts;
     S.xp = Math.min(100, S.xp + 15 + mult*3);
-    if (S.xp >= 100) { S.xp=0; S.level++; }
+    if (S.xp >= 100) { S.xp=0; S.level++; sndLevelUp(); }
     feedback(true, `+${pts} pts`, mult > 1 ? `${mult}× combo!` : 'Nice!');
     glow(document.getElementById('staff-card'));
     sndOk();
-    if (S.streak >= 2) showCombo(S.streak);
+    if (S.streak >= 2) { showCombo(S.streak); sndCombo(S.streak); }
   } else {
     S.streak = 0;
     const validSigs = SIGS.filter(s=>s.beats===S.sig.beats).map(s=>s.id).join(' or ');
@@ -648,6 +710,7 @@ function renderPalette(type, items) {
 
     // Mouse drag
     chip.onmousedown = e => {
+      sndDragStart();
       drag.type = type; drag.id = type === 'note' ? item.id : item.id;
       const ghost = document.getElementById('ghost');
       ghost.style.display='flex';
@@ -747,6 +810,7 @@ document.addEventListener('touchstart', e => {
   drag.type = chip.dataset.nid ? 'note' : 'sig';
   drag.id = chip.dataset.nid || chip.dataset.sid;
   chip.classList.add('dragging');
+  sndDragStart();
 }, {passive:true});
 document.addEventListener('touchmove', e => {
   if (!touchItem) return;
@@ -790,7 +854,7 @@ function startTimer() {
       if (!S.done) {
         S.done=true; S.streak=0;
         feedback(false,"Time's up!",'');
-        sndBad(); updateHUD();
+        sndTimeUp(); updateHUD();
         if (S.round>=10) setTimeout(showGameOver,1800);
         else setTimeout(nextRound,1800);
       }
@@ -852,6 +916,7 @@ function showGameOver() {
   document.getElementById('go-streak').textContent = S.bestStreak;
   document.getElementById('go-rounds').textContent = S.round;
 
+  sndGameOver(acc);
   showScreen('gameover');
   if (acc >= 50) launchConfetti(acc);
 }
