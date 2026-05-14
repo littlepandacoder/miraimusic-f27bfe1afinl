@@ -282,7 +282,7 @@ const StudentHome = () => {
                       <a
                         key={t.label}
                         href={t.href}
-                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-yellow-500/15 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/25 transition-colors"
+                        className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                       >
                         🎯 {t.label}
                       </a>
