@@ -4,7 +4,7 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye } from "lucide-react";
+import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import BookLesson from "./student/BookLesson";
@@ -122,7 +122,7 @@ const StudentHome = () => {
 
       const rows: any[] = data || [];
       const summary: Record<string, GameScoreSummary> = {};
-      for (const game of ["note_naming", "sight_reading", "piano_hero"]) {
+      for (const game of ["note_naming", "sight_reading", "piano_hero", "rhythm_quiz"]) {
         const gameSessions = rows.filter((r) => r.game === game);
         if (gameSessions.length === 0) continue;
         const bestScore = Math.max(...gameSessions.map((r) => r.score));
@@ -256,15 +256,18 @@ const StudentHome = () => {
             Game Performance
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { key: "note_naming",  label: "Note Naming",  icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",    tests: null },
-            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,    accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html",  tests: [
+            { key: "note_naming",  label: "Note Naming",    icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",   tests: null },
+            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,      accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html", tests: [
               { label: "Treble Test", href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1" },
               { label: "Bass Test",   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1" },
             ]},
-            { key: "piano_hero",   label: "Piano Hero",   icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",     tests: null },
-          ].map(({ key, label, icon, accentClass, bgClass, href, tests }) => {
+            { key: "piano_hero",   label: "Piano Hero",     icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",    tests: null },
+            { key: "rhythm_quiz",  label: "Rhythm Quiz",    icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
+              passThreshold: 70,
+            },
+          ].map(({ key, label, icon, accentClass, bgClass, href, tests, passThreshold }: any) => {
             const gs = gameScores[key];
             return (
               <div key={key} className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
@@ -292,6 +295,17 @@ const StudentHome = () => {
 
                 {gs ? (
                   <>
+                    {/* Pass badge for rhythm quiz */}
+                    {passThreshold && (
+                      <div className={`text-xs font-semibold px-2 py-1 rounded-full w-fit ${
+                        (gs.bestAccuracy ?? 0) >= passThreshold
+                          ? "bg-green-500/20 text-green-400 border border-green-500/40"
+                          : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                      }`}>
+                        {(gs.bestAccuracy ?? 0) >= passThreshold ? "✓ Passed" : `Need ${passThreshold}% to pass`}
+                      </div>
+                    )}
+
                     {/* Best score highlight */}
                     <div className="flex items-end gap-1">
                       <span className={`text-3xl font-bold ${accentClass}`}>{gs.bestScore.toLocaleString()}</span>
@@ -301,17 +315,17 @@ const StudentHome = () => {
                     {/* Accuracy bar */}
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Avg Accuracy</span>
-                        <span className="font-semibold">{gs.avgAccuracy !== null ? `${gs.avgAccuracy}%` : "—"}</span>
+                        <span className="text-muted-foreground">Best Accuracy</span>
+                        <span className="font-semibold">{gs.bestAccuracy !== null ? `${gs.bestAccuracy}%` : "—"}</span>
                       </div>
-                      <Progress value={gs.avgAccuracy ?? 0} className="h-1.5" />
+                      <Progress value={gs.bestAccuracy ?? 0} className="h-1.5" />
                     </div>
 
                     {/* Row stats */}
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="text-xs text-muted-foreground">Best %</p>
-                        <p className="text-sm font-bold">{gs.bestAccuracy !== null ? `${gs.bestAccuracy}%` : "—"}</p>
+                        <p className="text-xs text-muted-foreground">Avg %</p>
+                        <p className="text-sm font-bold">{gs.avgAccuracy !== null ? `${gs.avgAccuracy}%` : "—"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Best Streak</p>

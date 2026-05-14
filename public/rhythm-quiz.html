@@ -164,17 +164,32 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 
 /* GAME OVER */
 #gameover{min-height:100vh;display:none;align-items:center;justify-content:center;
-  flex-direction:column;gap:1.5rem;padding:2rem;text-align:center}
+  flex-direction:column;gap:1.5rem;padding:2rem;text-align:center;position:relative;z-index:10}
 #gameover.active{display:flex}
+.go-congrats{font-size:3.2rem;animation:congrats-pop .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes congrats-pop{0%{transform:scale(0) rotate(-15deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
 .go-tag{font-family:'Orbitron',monospace;font-size:1rem;color:var(--muted);letter-spacing:.12em}
+.go-congrats-text{font-family:'Orbitron',monospace;font-weight:900;font-size:1.6rem;
+  background:linear-gradient(135deg,var(--pink),var(--purple),var(--sky));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:congrats-pop .7s .1s cubic-bezier(.34,1.56,.64,1) both}
 .go-score{font-family:'Orbitron',monospace;font-weight:900;font-size:5rem;
   background:linear-gradient(135deg,var(--pink),var(--purple));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.go-accuracy{font-family:'Orbitron',monospace;font-weight:900;font-size:3.2rem;
+  color:var(--green);animation:congrats-pop .7s .2s cubic-bezier(.34,1.56,.64,1) both}
+.go-acc-label{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--muted);margin-top:-.75rem}
+.go-pass-badge{display:inline-block;padding:.4rem 1.4rem;border-radius:100px;font-family:'Orbitron',monospace;
+  font-weight:700;font-size:.85rem;letter-spacing:.06em;animation:congrats-pop .7s .35s both}
+.go-pass-badge.passed{background:rgba(57,217,138,.15);border:1.5px solid var(--green);color:var(--green)}
+.go-pass-badge.not-passed{background:rgba(245,158,11,.1);border:1.5px solid var(--amber);color:var(--amber)}
 .stats-row{display:flex;gap:1.25rem;flex-wrap:wrap;justify-content:center}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:14px;
   padding:1.1rem 1.75rem;min-width:110px}
 .stat-val{font-family:'Orbitron',monospace;font-size:1.8rem;color:var(--sky);font-weight:700}
 .stat-lbl{font-size:.8rem;color:var(--muted);margin-top:.3rem}
+/* CONFETTI */
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:5;display:none}
 
 /* ANIMATIONS */
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
@@ -195,6 +210,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 </head>
 <body>
 
+<canvas id="confetti-canvas"></canvas>
 <nav id="nav">
   <a class="nav-logo" href="/dashboard">Musicable</a>
   <a class="nav-back" href="/dashboard">
@@ -306,13 +322,18 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 
 <!-- GAME OVER -->
 <div id="gameover">
+  <div class="go-congrats" id="go-emoji">🎉</div>
+  <div class="go-congrats-text" id="go-congrats-text">Congratulations!</div>
   <div class="go-tag">ROUND COMPLETE</div>
+  <div class="go-accuracy" id="go-acc">0%</div>
+  <div class="go-acc-label">Accuracy</div>
+  <div class="go-pass-badge" id="go-pass-badge">—</div>
   <div class="go-score" id="go-score">0</div>
   <div style="color:var(--muted);font-size:.9rem">Total Score</div>
   <div class="stats-row">
     <div class="stat"><div class="stat-val" id="go-correct">0</div><div class="stat-lbl">Correct</div></div>
     <div class="stat"><div class="stat-val" id="go-streak">0</div><div class="stat-lbl">Best Streak</div></div>
-    <div class="stat"><div class="stat-val" id="go-acc">0%</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat"><div class="stat-val" id="go-rounds">10</div><div class="stat-lbl">Rounds</div></div>
   </div>
   <div class="btn-row">
     <button class="btn-primary" onclick="restartGame()">Play Again</button>
@@ -808,12 +829,79 @@ function glow(el)  { el.classList.add('glow-ok'); setTimeout(()=>el.classList.re
 function showGameOver() {
   clearInterval(S.timer);
   saveScore();
-  const acc=S.round>0?Math.round(S.correct/S.round*100):0;
-  document.getElementById('go-score').textContent=S.score.toLocaleString();
-  document.getElementById('go-correct').textContent=S.correct;
-  document.getElementById('go-streak').textContent=S.bestStreak;
-  document.getElementById('go-acc').textContent=acc+'%';
+  const acc = S.round > 0 ? Math.round(S.correct / S.round * 100) : 0;
+  const passed = acc >= 70;
+
+  // Emoji + heading
+  document.getElementById('go-emoji').textContent = acc >= 90 ? '🏆' : acc >= 70 ? '🎉' : acc >= 50 ? '💪' : '🎵';
+  document.getElementById('go-congrats-text').textContent =
+    acc >= 90 ? 'Outstanding!' : acc >= 70 ? 'Congratulations!' : acc >= 50 ? 'Good effort!' : 'Keep practising!';
+
+  // Accuracy colour
+  const accEl = document.getElementById('go-acc');
+  accEl.textContent = acc + '%';
+  accEl.style.color = acc >= 70 ? 'var(--green)' : acc >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  // Pass badge
+  const badge = document.getElementById('go-pass-badge');
+  badge.textContent = passed ? '✓ Quiz Passed — Module Unlocked!' : `${acc}% — need 70% to pass`;
+  badge.className = 'go-pass-badge ' + (passed ? 'passed' : 'not-passed');
+
+  document.getElementById('go-score').textContent = S.score.toLocaleString();
+  document.getElementById('go-correct').textContent = S.correct;
+  document.getElementById('go-streak').textContent = S.bestStreak;
+  document.getElementById('go-rounds').textContent = S.round;
+
   showScreen('gameover');
+  if (acc >= 50) launchConfetti(acc);
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────
+function launchConfetti(acc) {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+
+  const colors = acc >= 70
+    ? ['#FF2D78','#A855F7','#00D4FF','#39D98A','#F59E0B','#fff']
+    : ['#F59E0B','#FF2D78','#A855F7','#fff'];
+
+  const pieces = Array.from({length: acc >= 70 ? 160 : 80}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height - canvas.height,
+    w: Math.random() * 10 + 5,
+    h: Math.random() * 6 + 3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * Math.PI * 2,
+    rotV: (Math.random() - .5) * .18,
+    vx: (Math.random() - .5) * 3,
+    vy: Math.random() * 3 + 2,
+    opacity: 1,
+  }));
+
+  let frame = 0;
+  const total = acc >= 70 ? 220 : 160;
+
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
+      if (frame > total * .6) p.opacity = Math.max(0, p.opacity - .018);
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x + p.w/2, p.y + p.h/2);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    if (frame < total) requestAnimationFrame(tick);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display='none'; }
+  }
+  requestAnimationFrame(tick);
 }
 
 // ── SUPABASE SCORE SAVE ───────────────────────────────────────
