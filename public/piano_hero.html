@@ -5419,8 +5419,11 @@ function fbSaveSongs() {
     if (!ref) return;
     const obj = {};
     SONGS.filter(s => !s._personal).forEach(s => { obj[s.id] = normaliseSong(s); });
-    ref.set(obj).then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
-                .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
+    const globalSongs = SONGS.filter(s => !s._personal);
+    ref.set(obj).then(() => {
+      adminShowAlert('Saved to Firebase ✓', 'success');
+      syncSongsToSupabase(globalSongs);
+    }).catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
   } else {
     const ref = fbUserSongsRef();
     if (!ref) {
@@ -5443,7 +5446,10 @@ function fbSaveSong(song) {
     const data = normaliseSong(song);
     delete data._personal;
     ref.child(song.id).set(data)
-      .then(() => adminShowAlert('Saved to Firebase ✓', 'success'))
+      .then(() => {
+        adminShowAlert('Saved to Firebase ✓', 'success');
+        syncSongsToSupabase([song]);
+      })
       .catch(e => adminShowAlert('Firebase save failed: ' + e.message, 'error'));
   } else {
     const ref = fbUserSongsRef();
@@ -5502,9 +5508,45 @@ async function fbLoadSongs() {
     }
     buildPracticeSongList?.();
     buildSongList?.();
+    // Sync global songs to Supabase so the admin panel can see them
+    const globalSongs = SONGS.filter(s => !s._personal);
+    if (globalSongs.length) syncSongsToSupabase(globalSongs);
   } catch(e) {
     console.warn('fbLoadSongs failed, falling back to cache:', e);
     loadSongsFromCache();
+  }
+}
+
+async function syncSongsToSupabase(songs) {
+  // Grab the logged-in user's Supabase token (if any)
+  let token = null;
+  try {
+    const raw = localStorage.getItem('sb-tychkyunjfbkksyxknhn-auth-token');
+    if (raw) { const p = JSON.parse(raw); token = p?.access_token; }
+  } catch(_) {}
+  if (!token) return; // Not logged in — skip (only admin/teacher need this sync)
+
+  const payload = songs.map(s => ({
+    song_key:   s.id,
+    title:      s.name  || s.title || 'Untitled',
+    composer:   s.composer || null,
+    difficulty: s.difficulty || 'intermediate',
+    bpm:        s.bpm    || 100,
+  }));
+
+  try {
+    await fetch(_SUPA_URL + '/rest/v1/piano_hero_songs?on_conflict=song_key', {
+      method:  'POST',
+      headers: {
+        apikey:          _SUPA_KEY,
+        Authorization:   'Bearer ' + token,
+        'Content-Type':  'application/json',
+        Prefer:          'resolution=merge-duplicates',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch(e) {
+    console.warn('Supabase song sync failed:', e);
   }
 }
 
