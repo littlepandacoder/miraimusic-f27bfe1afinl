@@ -393,7 +393,7 @@ const ModuleMap = () => {
                   >
                     Take Test →
                   </a>
-                ) : module.status !== "locked" && !isSRAdventureModule && !isRhythmModule ? (
+                ) : module.status !== "locked" && !isSRAdventureModule ? (
                   <Button
                     size="sm"
                     variant={module.status === "completed" ? "outline" : "default"}
