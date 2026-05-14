@@ -39,8 +39,6 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     { href: "/rhythm-quiz.html",     icon: Gamepad2,      label: "Rhythm Quiz",   external: true },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
-    { href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1", icon: Gamepad2, label: "Treble Test", external: true },
-    { href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1",     icon: Gamepad2, label: "Bass Test",   external: true },
     { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true },
   ];
 
