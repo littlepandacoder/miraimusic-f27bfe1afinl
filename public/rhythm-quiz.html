@@ -570,7 +570,7 @@ function checkAnswer() {
     const t = S.placed.reduce((a,n)=>a+n.beats,0);
     ok = Math.abs(t - S.sig.beats) < 0.001;
   } else {
-    ok = S.placedSig?.id === S.sig.id;
+    ok = !!S.placedSig && S.placedSig.beats === S.sig.beats;
   }
 
   if (ok) {
@@ -588,7 +588,8 @@ function checkAnswer() {
     if (S.streak >= 2) showCombo(S.streak);
   } else {
     S.streak = 0;
-    const hint = S.mode === 'build' ? `Needed exactly ${S.sig.beats} beats` : `Answer: ${S.sig.id}`;
+    const validSigs = SIGS.filter(s=>s.beats===S.sig.beats).map(s=>s.id).join(' or ');
+    const hint = S.mode === 'build' ? `Needed exactly ${S.sig.beats} beats` : `Answer: ${validSigs}`;
     feedback(false, 'Not quite', hint);
     shake(document.getElementById('staff-card'));
     sndBad();
