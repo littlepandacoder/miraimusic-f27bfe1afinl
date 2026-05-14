@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
-  Music,
   LogOut,
   Home,
   Users,
@@ -109,10 +108,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
       {/* ── Desktop sidebar ─────────────────────────────────── */}
       <aside className="hidden md:flex h-screen w-64 shrink-0 bg-card border-r border-border flex-col">
-        <div className="p-6 border-b border-border">
-          <Link to="/" className="flex items-center gap-2">
-            <Music className="w-8 h-8 text-primary" />
-            <span className="text-xl font-bold">Musicable</span>
+        <div className="p-4 border-b border-border">
+          <Link to="/">
+            <img src="/logo.png" alt="Musicable" className="h-10 w-auto" />
           </Link>
         </div>
 
@@ -165,9 +163,8 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <Link to="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-            <Music className="w-7 h-7 text-primary" />
-            <span className="text-lg font-bold">Musicable</span>
+          <Link to="/" onClick={() => setMobileOpen(false)}>
+            <img src="/logo.png" alt="Musicable" className="h-9 w-auto" />
           </Link>
           <button
             onClick={() => setMobileOpen(false)}

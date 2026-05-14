@@ -19,8 +19,8 @@ const Navbar = () => {
 
         {/* Desktop row — all items centered */}
         <div className="hidden md:flex items-center justify-center gap-8">
-          <Link to="/" className="text-2xl font-black text-foreground">
-            Musicable
+          <Link to="/">
+            <img src="/logo.png" alt="Musicable" className="h-9 w-auto" />
           </Link>
 
           {isHomePage && navLinks.map((link) => (
@@ -40,8 +40,8 @@ const Navbar = () => {
 
         {/* Mobile row */}
         <div className="flex md:hidden items-center justify-between">
-          <Link to="/" className="text-2xl font-black text-foreground">
-            Musicable
+          <Link to="/">
+            <img src="/logo.png" alt="Musicable" className="h-9 w-auto" />
           </Link>
           <button className="p-2 text-foreground hover:text-primary transition-colors rounded-lg" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
             {isOpen ? <X size={24} /> : <Menu size={24} />}
