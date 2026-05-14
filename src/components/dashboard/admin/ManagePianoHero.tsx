@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -60,7 +59,7 @@ const ManagePianoHero = () => {
 
   // Song assign dialog
   const [songDialog, setSongDialog] = useState(false);
-  const [assignSongId, setAssignSongId] = useState("");
+  const [selectedSongIds, setSelectedSongIds] = useState<Set<string>>(new Set());
   const [songSaving, setSongSaving] = useState(false);
 
   const fetchAll = async () => {
@@ -144,14 +143,23 @@ const ManagePianoHero = () => {
   const unassignedSongs = songs.filter(s => !s.category_id);
   const categorySongs = openCategory ? songs.filter(s => s.category_id === openCategory.id) : [];
 
-  const assignSong = async () => {
-    if (!assignSongId || !openCategory) return;
+  const toggleSongSelection = (id: string) => {
+    setSelectedSongIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const assignSongs = async () => {
+    if (!selectedSongIds.size || !openCategory) return;
     setSongSaving(true);
     try {
+      const ids = Array.from(selectedSongIds);
       const { error } = await (supabase as any)
-        .from("piano_hero_songs").update({ category_id: openCategory.id }).eq("id", assignSongId);
+        .from("piano_hero_songs").update({ category_id: openCategory.id }).in("id", ids);
       if (error) throw error;
-      setAssignSongId("");
+      setSelectedSongIds(new Set());
       setSongDialog(false);
       fetchAll();
     } catch (e: any) {
@@ -231,36 +239,61 @@ const ManagePianoHero = () => {
           </div>
         )}
 
-        {/* Add song dialog */}
-        <Dialog open={songDialog} onOpenChange={setSongDialog}>
-          <DialogContent className="bg-card border-border">
-            <DialogHeader><DialogTitle>Add Song to "{openCategory.name}"</DialogTitle></DialogHeader>
+        {/* Add song dialog — multi-select */}
+        <Dialog open={songDialog} onOpenChange={(o) => { if (!o) { setSongDialog(false); setSelectedSongIds(new Set()); } }}>
+          <DialogContent className="bg-card border-border max-w-md">
+            <DialogHeader><DialogTitle>Add Songs to "{openCategory.name}"</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-2">
               {unassignedSongs.length === 0 ? (
                 <p className="text-sm text-muted-foreground">All songs are already assigned to a category.</p>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label>Select Song</Label>
-                    <Select value={assignSongId} onValueChange={setAssignSongId}>
-                      <SelectTrigger className="bg-secondary border-border">
-                        <SelectValue placeholder="Choose a song…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {unassignedSongs.map(s => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.title} {s.composer ? `— ${s.composer}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Select Songs</Label>
+                      <button
+                        className="text-xs text-primary hover:underline"
+                        onClick={() => setSelectedSongIds(
+                          selectedSongIds.size === unassignedSongs.length
+                            ? new Set()
+                            : new Set(unassignedSongs.map(s => s.id))
+                        )}
+                      >
+                        {selectedSongIds.size === unassignedSongs.length ? "Deselect all" : "Select all"}
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-1 border border-border rounded-lg p-2">
+                      {unassignedSongs.map(s => (
+                        <label
+                          key={s.id}
+                          className={cn(
+                            "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
+                            selectedSongIds.has(s.id) ? "bg-primary/15 border border-primary/30" : "hover:bg-secondary"
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedSongIds.has(s.id)}
+                            onChange={() => toggleSongSelection(s.id)}
+                            className="accent-pink-500 w-4 h-4 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{s.title}</p>
+                            <p className="text-xs text-muted-foreground">{s.composer} · <span className="capitalize">{s.difficulty}</span> · ♩={s.bpm}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    {selectedSongIds.size > 0 && (
+                      <p className="text-xs text-primary pt-1">{selectedSongIds.size} song{selectedSongIds.size !== 1 ? "s" : ""} selected</p>
+                    )}
                   </div>
                   <div className="flex gap-3">
-                    <Button onClick={assignSong} disabled={!assignSongId || songSaving} className="flex-1 btn-primary">
+                    <Button onClick={assignSongs} disabled={!selectedSongIds.size || songSaving} className="flex-1 btn-primary">
                       {songSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                      Add to Category
+                      Add {selectedSongIds.size > 0 ? selectedSongIds.size : ""} Song{selectedSongIds.size !== 1 ? "s" : ""}
                     </Button>
-                    <Button variant="outline" onClick={() => setSongDialog(false)} className="flex-1">Cancel</Button>
+                    <Button variant="outline" onClick={() => { setSongDialog(false); setSelectedSongIds(new Set()); }} className="flex-1">Cancel</Button>
                   </div>
                 </>
               )}

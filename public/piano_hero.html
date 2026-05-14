@@ -225,6 +225,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   overflow-y:auto;
   padding:1.5rem;
 }
+.category-section{max-width:900px;margin:0 auto 2.5rem;}
+.category-header{display:flex;align-items:center;gap:.65rem;margin-bottom:1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border)}
+.category-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.category-label{font-family:'Orbitron',monospace;font-size:.88rem;font-weight:700;color:var(--white)}
+.category-count{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin-left:auto}
+.category-songs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
 .songs-grid{
   max-width:900px;margin:0 auto;
   display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;
@@ -1868,8 +1874,8 @@ window.musicableUserId   = null;
 
 <!-- SCREEN 3: SONG SELECT -->
 <div class="screen" id="screen-songs">
-  <div class="page-title">Choose a <span>Song</span></div>
-  <div class="songs-grid" id="songsGrid"></div>
+  <div class="page-title" style="max-width:900px;margin:0 auto 1rem">Choose a <span>Song</span></div>
+  <div id="songsGrid"></div>
 </div>
 
 <!-- SCREEN 5: PIANO ROOM -->
@@ -4793,38 +4799,96 @@ function loadSavedSongs() { /* handled by fbLoadSongs() at startup */ }
 /* ═══════════════════════════════════════════════════════════
    SONG SELECT
 ═══════════════════════════════════════════════════════════ */
-function buildSongList() {
+function buildSongCardHtml(song) {
+  const diffClass = 'diff-' + song.difficulty;
+  const diffLabel = song.difficulty.charAt(0).toUpperCase() + song.difficulty.slice(1);
+  const stars     = song.difficulty === 'easy' ? 2 : song.difficulty === 'medium' ? 3 : 5;
+  const dots      = Array.from({length:5}, (_,i) =>
+    `<div class="song-dot${i < stars ? ' filled' : ''}"></div>`).join('');
+  return `
+    <div class="song-card" style="border-color:rgba(${hexToRgb(song.color)},.2)" id="card-${song.id}">
+      <div class="song-diff ${diffClass}">${diffLabel}</div>
+      ${song._personal ? '<div style="display:inline-block;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;border-radius:6px;padding:.15rem .55rem;font-size:.6rem;font-family:\'DM Mono\',monospace;margin-bottom:.3rem">My Song</div>' : ''}
+      <div class="song-name">${song.name}</div>
+      <div class="song-meta">${song.composer}</div>
+      <div class="song-bpm">♩= ${song.bpm} BPM</div>
+      <div class="song-dots">${dots}</div>
+      <div class="mode-row">
+        <button class="mode-btn selected" id="mode-normal-${song.id}"
+          onclick="setCardMode('${song.id}','normal')">▶ Normal</button>
+        <button class="mode-btn" id="mode-wait-${song.id}"
+          onclick="setCardMode('${song.id}','wait')">⏸ Wait Mode</button>
+      </div>
+      <button class="play-song-btn" id="play-btn-${song.id}"
+        onclick="selectSong('${song.id}')"
+        style="background:${song.color}">
+        ▶ Play
+      </button>
+    </div>`;
+}
+
+const _SUPA_URL = 'https://tychkyunjfbkksyxknhn.supabase.co';
+const _SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw';
+
+async function buildSongList() {
   const grid = document.getElementById('songsGrid');
   grid.innerHTML = '';
-  SONGS.forEach(song => {
-    const diffClass = 'diff-' + song.difficulty;
-    const diffLabel = song.difficulty.charAt(0).toUpperCase() + song.difficulty.slice(1);
-    const stars     = song.difficulty === 'easy' ? 2 : song.difficulty === 'medium' ? 3 : 5;
-    const dots      = Array.from({length:5}, (_,i) =>
-      `<div class="song-dot${i < stars ? ' filled' : ''}"></div>`).join('');
 
-    grid.innerHTML += `
-      <div class="song-card" style="border-color:rgba(${hexToRgb(song.color)},.2)" id="card-${song.id}">
-        <div class="song-diff ${diffClass}">${diffLabel}</div>
-        ${song._personal ? '<div style="display:inline-block;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#00d4ff;border-radius:6px;padding:.15rem .55rem;font-size:.6rem;font-family:\'DM Mono\',monospace;margin-bottom:.3rem">My Song</div>' : ''}
-        <div class="song-name">${song.name}</div>
-        <div class="song-meta">${song.composer}</div>
-        <div class="song-bpm">♩= ${song.bpm} BPM</div>
-        <div class="song-dots">${dots}</div>
-        <div class="mode-row">
-          <button class="mode-btn selected" id="mode-normal-${song.id}"
-            onclick="setCardMode('${song.id}','normal')">▶ Normal</button>
-          <button class="mode-btn" id="mode-wait-${song.id}"
-            onclick="setCardMode('${song.id}','wait')">⏸ Wait Mode</button>
-        </div>
-        <button class="play-song-btn" id="play-btn-${song.id}"
-          onclick="selectSong('${song.id}')"
-          style="background:${song.color}">
-          ▶ Play
-        </button>
+  let categories = [];
+  let songAssignments = {}; // song_key → category_id
+
+  try {
+    const [catRes, assignRes] = await Promise.all([
+      fetch(_SUPA_URL + '/rest/v1/piano_hero_categories?select=id,name,color,sort_order&order=sort_order,name', { headers: { apikey: _SUPA_KEY } }),
+      fetch(_SUPA_URL + '/rest/v1/piano_hero_songs?select=song_key,category_id&not.category_id.is.null', { headers: { apikey: _SUPA_KEY } }),
+    ]);
+    categories = await catRes.json();
+    const rows = await assignRes.json();
+    if (Array.isArray(rows)) rows.forEach(r => { if (r.song_key && r.category_id) songAssignments[r.song_key] = r.category_id; });
+  } catch(_) {}
+
+  const hasCategories = Array.isArray(categories) && categories.length > 0;
+  const anyAssigned   = Object.keys(songAssignments).length > 0;
+
+  if (!hasCategories || !anyAssigned) {
+    // Flat fallback
+    const wrap = document.createElement('div');
+    wrap.className = 'songs-grid';
+    SONGS.forEach(s => { wrap.innerHTML += buildSongCardHtml(s); });
+    grid.appendChild(wrap);
+    return;
+  }
+
+  // Grouped view
+  categories.forEach(cat => {
+    const catSongs = SONGS.filter(s => songAssignments[s.id] === cat.id);
+    if (!catSongs.length) return;
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-dot" style="background:${cat.color}"></div>
+        <span class="category-label" style="color:${cat.color}">${cat.name}</span>
+        <span class="category-count">${catSongs.length} song${catSongs.length !== 1 ? 's' : ''}</span>
       </div>
-    `;
+      <div class="category-songs-grid">${catSongs.map(buildSongCardHtml).join('')}</div>`;
+    grid.appendChild(section);
   });
+
+  // Uncategorized songs
+  const uncat = SONGS.filter(s => !songAssignments[s.id]);
+  if (uncat.length) {
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.innerHTML = `
+      <div class="category-header">
+        <div class="category-dot" style="background:var(--muted2)"></div>
+        <span class="category-label" style="color:var(--muted)">Other Songs</span>
+        <span class="category-count">${uncat.length} songs</span>
+      </div>
+      <div class="category-songs-grid">${uncat.map(buildSongCardHtml).join('')}</div>`;
+    grid.appendChild(section);
+  }
 }
 
 // Track selected mode per song
