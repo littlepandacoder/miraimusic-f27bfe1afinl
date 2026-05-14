@@ -196,11 +196,16 @@ const ModuleMap = () => {
       ) : (
         <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
-            // Determine if this module is locked specifically due to a sight-reading gate
-            const prevModuleTitle = (index > 0 ? modules[index - 1]?.title ?? "" : "").toLowerCase();
-            const lockedByTrebleTest = module.status === "locked" && prevModuleTitle.includes("treble")
+            // Determine if this module is locked specifically due to a sight-reading gate.
+            // prevModule must be *completed* — if it's just sequentially locked we don't show SR gate UI.
+            const prevModule = index > 0 ? modules[index - 1] : null;
+            const prevModuleTitle = (prevModule?.title ?? "").toLowerCase();
+            const prevModuleCompleted = prevModule?.status === "completed";
+            const lockedByTrebleTest = module.status === "locked" && prevModuleCompleted
+              && prevModuleTitle.includes("treble")
               && (!srGate.trebleTestPassed || srGate.totalSessions < SESSIONS_REQUIRED);
-            const lockedByBassTest   = module.status === "locked" && prevModuleTitle.includes("bass")
+            const lockedByBassTest   = module.status === "locked" && prevModuleCompleted
+              && prevModuleTitle.includes("bass")
               && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
             const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
 
