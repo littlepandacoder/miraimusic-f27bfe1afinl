@@ -298,7 +298,8 @@ const ModuleMap = () => {
                   )}
 
                   {isSRAdventureModule && module.status !== "locked" && (
-                    <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                    <div className="mt-3 space-y-3" onClick={e => e.stopPropagation()}>
+                      {/* Treble Clef Songs session counter */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Sessions to unlock Treble Clef Songs</span>
@@ -316,6 +317,26 @@ const ModuleMap = () => {
                           </p>
                         )}
                       </div>
+
+                      {/* Bass Clef Songs session counter */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Sessions to unlock Bass Clef Songs</span>
+                          <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                          </span>
+                        </div>
+                        <Progress
+                          value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100}
+                          className="h-1.5"
+                        />
+                        {srGate.totalSessions < SESSIONS_REQUIRED && (
+                          <p className="text-xs text-muted-foreground">
+                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                          </p>
+                        )}
+                      </div>
+
                       <div className="flex gap-2">
                         <a
                           href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
