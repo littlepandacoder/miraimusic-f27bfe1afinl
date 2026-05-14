@@ -54,6 +54,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         { href: "/dashboard/lessons",    icon: Calendar,      label: "All Lessons" },
         { href: "/dashboard/slots",      icon: ClipboardList, label: "Time Slots" },
         { href: "/dashboard/foundation", icon: Gamepad2,      label: "Foundation Modules" },
+        { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: "Piano Hero Songs" },
         { href: "/dashboard/districts",  icon: Settings,      label: "Districts" },
         ...gameItems,
       ];
