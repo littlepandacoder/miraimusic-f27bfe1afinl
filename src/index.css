@@ -7,6 +7,22 @@
   cursor: none !important;
 }
 
+/* Pink scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ec4899;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #db2777;
+}
+
 /* Google Font (correct placement: AFTER tailwind or better moved to index.html) */
 
 @layer base {

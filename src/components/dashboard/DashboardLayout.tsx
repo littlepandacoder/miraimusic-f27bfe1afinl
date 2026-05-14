@@ -103,10 +103,10 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     );
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
 
       {/* ── Desktop sidebar ─────────────────────────────────── */}
-      <aside className="hidden md:flex w-64 shrink-0 bg-card border-r border-border flex-col">
+      <aside className="hidden md:flex h-screen w-64 shrink-0 bg-card border-r border-border flex-col">
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-8 h-8 text-primary" />
@@ -212,7 +212,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       </div>
 
       {/* ── Main content ─────────────────────────────────────── */}
-      <main className="flex-1 min-w-0 overflow-auto">
+      <main className="flex-1 min-w-0 h-screen overflow-y-auto">
         <header className="bg-card border-b border-border px-4 py-3 md:px-8 md:py-5 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             {/* Hamburger — mobile only */}
