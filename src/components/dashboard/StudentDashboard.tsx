@@ -288,7 +288,7 @@ const StudentHome = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap justify-center gap-8 py-4">
+          <div className="flex flex-wrap justify-center gap-16 py-4">
             {[
               { href: "/piano_hero.html#room", emoji: "🎹", label: "Piano Room",    shadow: "0 0 22px 7px rgba(139,92,246,0.55)",  bg: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.5)" },
               { href: "/piano_hero.html",      emoji: "🎮", label: "Piano Hero",    shadow: "0 0 22px 7px rgba(236,72,153,0.55)",  bg: "rgba(236,72,153,0.15)", border: "rgba(236,72,153,0.5)" },
