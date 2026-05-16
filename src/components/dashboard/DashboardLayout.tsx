@@ -97,7 +97,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => {
     const isActive = !(item as any).external && location.pathname === item.href;
     const baseClass = isActive
-      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary text-foreground font-semibold transition-colors"
+      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.35)]"
       : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
 
     return (item as any).external ? (

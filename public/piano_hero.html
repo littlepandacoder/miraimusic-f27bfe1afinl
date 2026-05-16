@@ -3638,20 +3638,22 @@ function drawPracticeStaff() {
   }
 
   // ── Measure barlines ──────────────────────────────────────
-  // Offset 3 px left of the beat so notes never land ON a barline.
+  // Drawn at the exact bar-beat pixel. Notes are redistributed
+  // within [barBeat + BAR_MARGIN, nextBarBeat - BAR_MARGIN] so
+  // they always have equal clearance on both sides of every barline.
   {
-    const _btx     = b => cursorX + (b - curBeat) * pxPerBeat;
-    const bpb      = pr.beatsPerBar || 8;
-    const sTop     = geo.tTop;
-    const sBot     = geo.bTop + 4 * LG;
-    const lb       = curBeat - cursorX / pxPerBeat - bpb;
-    const rb       = curBeat + SCROLL_BEATS_VISIBLE + bpb;
-    const fb       = Math.ceil(lb / bpb) * bpb;
+    const _btx = b => cursorX + (b - curBeat) * pxPerBeat;
+    const bpb  = pr.beatsPerBar || 8;
+    const sTop = geo.tTop;
+    const sBot = geo.bTop + 4 * LG;
+    const lb   = curBeat - cursorX / pxPerBeat - bpb;
+    const rb   = curBeat + SCROLL_BEATS_VISIBLE + bpb;
+    const fb   = Math.ceil(lb / bpb) * bpb;
     prCtx.save();
     prCtx.strokeStyle = STAFF_COLOR;
     prCtx.lineWidth   = 1.8;
     for (let bb = fb; bb <= rb; bb += bpb) {
-      const bx = _btx(bb) - RX - 6; // clear of note head radius
+      const bx = _btx(bb);
       if (bx <= HEADER_W + 2) continue;
       if (bx > PR_W + 2) break;
       prCtx.beginPath();
@@ -3703,20 +3705,47 @@ function drawPracticeStaff() {
     return midiToY(midi) >= staffMidY ? 1 : -1; // 1=up, -1=down
   };
 
-  // Build enriched visible note array
-  const visible = pr.notes
+  // Margin from barline to nearest note edge (both sides)
+  const BAR_MARGIN = RX + Math.round(LG * 0.65);
+
+  // Enrich ALL active notes (not just visible) so redistribution
+  // uses every note in a bar, giving stable positions as notes scroll in.
+  const allActive = pr.notes
     .filter(n => !n.missed && !n.hit)
     .map(n => {
-      const x        = beatToX(n.beat);
-      const step     = diatonicStep(n.midi);
-      const useT     = step >= -1;
-      const y        = noteYFromStep(step, geo);
-      const sd       = stemDir(n.midi, useT);
-      const stemX    = sd > 0 ? x + RX * 0.85 : x - RX * 0.85;
-      const stemTip  = y - sd * STEM_LEN;
+      const x       = beatToX(n.beat);
+      const step    = diatonicStep(n.midi);
+      const useT    = step >= -1;
+      const y       = noteYFromStep(step, geo);
+      const sd      = stemDir(n.midi, useT);
+      const stemX   = sd > 0 ? x + RX * 0.85 : x - RX * 0.85;
+      const stemTip = y - sd * STEM_LEN;
       return { ...n, x, y, step, useT, sd, stemX, stemTip, _isSolo: false };
-    })
-    .filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
+    });
+
+  // Redistribute notes evenly within each bar so the first note
+  // is never crowded against the barline and spacing is uniform.
+  {
+    const bpb2 = pr.beatsPerBar || 8;
+    const barMap = new Map();
+    allActive.forEach(n => {
+      const bi = Math.floor(n.beat / bpb2);
+      if (!barMap.has(bi)) barMap.set(bi, []);
+      barMap.get(bi).push(n);
+    });
+    barMap.forEach((group, bi) => {
+      group.sort((a, b) => a.beat - b.beat);
+      const bxL = beatToX(bi * bpb2) + BAR_MARGIN;
+      const bxR = beatToX((bi + 1) * bpb2) - BAR_MARGIN;
+      const N   = group.length;
+      group.forEach((n, i) => {
+        n.x     = N === 1 ? (bxL + bxR) / 2 : bxL + (bxR - bxL) * i / (N - 1);
+        n.stemX = n.sd > 0 ? n.x + RX * 0.85 : n.x - RX * 0.85;
+      });
+    });
+  }
+
+  const visible = allActive.filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
 
   // ── Missed note ghosts (recent misses shown as fading red X) ──
   pr.notes
@@ -3882,15 +3911,6 @@ function drawPracticeStaff() {
       prCtx.restore();
     }
 
-    // ── Note letter inside head ────────────────────────────────
-    if (!isWhole && !isHalf) {
-      prCtx.save(); prCtx.fillStyle = '#fff';
-      prCtx.font = `bold ${Math.max(11, Math.round(LG * 0.62))}px "DM Mono",monospace`;
-      prCtx.textAlign = 'center'; prCtx.textBaseline = 'middle';
-      prCtx.shadowColor = 'rgba(0,0,0,0.6)'; prCtx.shadowBlur = 3;
-      prCtx.fillText(NOTE_NAMES[n.midi % 12].replace('#', ''), noteX, noteY + 0.5);
-      prCtx.restore();
-    }
 
     prCtx.globalAlpha = 1;
   });
@@ -4112,6 +4132,15 @@ function drawTrebleClef(ctx, x, tTop, L, color) {
     ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
     ctx.restore();
   });
+  // Also draw from cache synchronously if already loaded (covers frame 1+)
+  if (_trebleClefImgCache.has(color)) {
+    const img = _trebleClefImgCache.get(color);
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
+      ctx.restore();
+    }
+  }
 }
 // ══════════════════════════════════════════════════════════
 //  BASS CLEF — SVG image (rickvanderzwet, public domain)
@@ -4173,7 +4202,25 @@ function drawBassClef(ctx, x, bTop, L, color) {
     ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
     ctx.restore();
   });
+  // Also draw from cache synchronously if already loaded (covers frame 1+)
+  if (_bassClefImgCache.has(color)) {
+    const img = _bassClefImgCache.get(color);
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
+      ctx.restore();
+    }
+  }
 }
+
+// Pre-warm clef SVG caches immediately so the images are fully
+// loaded before the first practice frame — eliminates the flicker
+// that occurs when the async load callback fires mid-frame.
+(function _prewarmClefs() {
+  const _C = '#90a4ae';
+  getTrebleClefImage(_C, () => {});
+  getBassClefImage(_C, () => {});
+})();
 
 // ── Practice keyboard canvas ──────────────────────────────
 let prKbHeld = null;
