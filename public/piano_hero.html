@@ -3418,8 +3418,11 @@ function updatePracticeLogic() {
     pr.notes.forEach(n => {
       if (n.hit || n.missed) return;
       if (curBeat > n.beat + 2.5) {
-        n.missed = true;
-        pr.combo = 0;
+        n.missed   = true;
+        n.missedAt = curBeat;
+        pr.combo   = 0;
+        pr.score   = Math.max(0, pr.score - 150);
+        showPracticeHitFB('MISS!', '#EF4444');
       }
     });
   }
@@ -3614,74 +3617,46 @@ function drawPracticeStaff() {
   const RX = Math.round(LG * 0.72);
   const RY = Math.round(LG * 0.46);
 
-  // ── Layout zones ─────────────────────────────────────────
-  const CLEF_ZONE   = Math.round(LG * 8.0);  // wider to fit clef + time sig
-  const STAFF_START = CLEF_ZONE + 6;
+  // ── Layout ───────────────────────────────────────────────
+  // HEADER_W: protected left zone where the clef + time sig live.
+  // Staff lines run the FULL canvas width; notes are clipped to x > HEADER_W.
+  // Clef and time sig are drawn LAST so they always sit on top.
+  const HEADER_W   = Math.round(LG * 8.5);
   const STAFF_COLOR = '#546e7a';
   const CLEF_COLOR  = '#90a4ae';
 
-  // ── 5 staff lines (treble) ────────────────────────────────
+  // ── 5 staff lines — full width ────────────────────────────
   prCtx.strokeStyle = STAFF_COLOR;
   prCtx.lineWidth   = 1.8;
   for (let i = 0; i < 5; i++) {
     const y = geo.tTop + i * LG;
-    prCtx.beginPath(); prCtx.moveTo(STAFF_START, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
+    prCtx.beginPath(); prCtx.moveTo(4, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
   }
-  // ── 5 staff lines (bass) ─────────────────────────────────
   for (let i = 0; i < 5; i++) {
     const y = geo.bTop + i * LG;
-    prCtx.beginPath(); prCtx.moveTo(STAFF_START, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
+    prCtx.beginPath(); prCtx.moveTo(4, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
   }
 
-  // ── System barline ────────────────────────────────────────
-  prCtx.strokeStyle = STAFF_COLOR; prCtx.lineWidth = 2.5;
-  prCtx.beginPath();
-  prCtx.moveTo(STAFF_START, geo.tTop);
-  prCtx.lineTo(STAFF_START, geo.bTop + 4 * LG);
-  prCtx.stroke();
-
-  // ── CLEF SYMBOLS ─────────────────────────────────────────
-  drawTrebleClef(prCtx, 4, geo.tTop, LG, CLEF_COLOR);
-  drawBassClef  (prCtx, 4, geo.bTop, LG, CLEF_COLOR);
-
-  // ── Time signature ────────────────────────────────────────
-  const tsNum  = pr.timeSigNum || 4;
-  const tsDen  = pr.timeSigDen || 4;
-  const tsFontSz = Math.round(LG * 2.1);
-  const tsX    = Math.round(LG * 6.3);   // right of clef, left of system barline
-  prCtx.save();
-  prCtx.fillStyle    = CLEF_COLOR;
-  prCtx.font         = `bold ${tsFontSz}px serif`;
-  prCtx.textAlign    = 'center';
-  prCtx.textBaseline = 'middle';
-  // Treble staff
-  prCtx.fillText(tsNum, tsX, geo.tTop + LG * 1.0);
-  prCtx.fillText(tsDen, tsX, geo.tTop + LG * 3.0);
-  // Bass staff
-  prCtx.fillText(tsNum, tsX, geo.bTop + LG * 1.0);
-  prCtx.fillText(tsDen, tsX, geo.bTop + LG * 3.0);
-  prCtx.restore();
-
-  // ── Measure barlines (computed with beatToX inline) ───────
+  // ── Measure barlines ──────────────────────────────────────
+  // Offset 3 px left of the beat so notes never land ON a barline.
   {
-    const _beatToX   = b => cursorX + (b - curBeat) * pxPerBeat;
-    const bpb        = pr.beatsPerBar || 8;
-    const staffTop   = geo.tTop;
-    const staffBot   = geo.bTop + 4 * LG;
-    const leftBeat   = curBeat - cursorX / pxPerBeat - bpb;
-    const rightBeat  = curBeat + SCROLL_BEATS_VISIBLE + bpb;
-    const firstBar   = Math.ceil(leftBeat / bpb) * bpb;
-
+    const _btx     = b => cursorX + (b - curBeat) * pxPerBeat;
+    const bpb      = pr.beatsPerBar || 8;
+    const sTop     = geo.tTop;
+    const sBot     = geo.bTop + 4 * LG;
+    const lb       = curBeat - cursorX / pxPerBeat - bpb;
+    const rb       = curBeat + SCROLL_BEATS_VISIBLE + bpb;
+    const fb       = Math.ceil(lb / bpb) * bpb;
     prCtx.save();
     prCtx.strokeStyle = STAFF_COLOR;
     prCtx.lineWidth   = 1.8;
-    for (let bb = firstBar; bb <= rightBeat; bb += bpb) {
-      const bx = _beatToX(bb);
-      if (bx < STAFF_START + 2) continue;
+    for (let bb = fb; bb <= rb; bb += bpb) {
+      const bx = _btx(bb) - RX - 6; // clear of note head radius
+      if (bx <= HEADER_W + 2) continue;
       if (bx > PR_W + 2) break;
       prCtx.beginPath();
-      prCtx.moveTo(bx, staffTop);
-      prCtx.lineTo(bx, staffBot);
+      prCtx.moveTo(bx, sTop);
+      prCtx.lineTo(bx, sBot);
       prCtx.stroke();
     }
     prCtx.restore();
@@ -3741,7 +3716,28 @@ function drawPracticeStaff() {
       const stemTip  = y - sd * STEM_LEN;
       return { ...n, x, y, step, useT, sd, stemX, stemTip, _isSolo: false };
     })
-    .filter(n => n.x >= STAFF_START - 20 && n.x <= PR_W + 80);
+    .filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
+
+  // ── Missed note ghosts (recent misses shown as fading red X) ──
+  pr.notes
+    .filter(n => n.missed && n.missedAt !== undefined && (curBeat - n.missedAt) < 5)
+    .forEach(n => {
+      const age   = curBeat - n.missedAt; // 0..5
+      const alpha = Math.max(0, 1 - age / 5);
+      const x     = beatToX(n.beat);
+      const y     = midiToY(n.midi);
+      if (x <= HEADER_W || x > PR_W + 80) return;
+      prCtx.save();
+      prCtx.globalAlpha = alpha * 0.65;
+      prCtx.strokeStyle = '#EF4444';
+      prCtx.lineWidth   = Math.max(2.5, LG * 0.16);
+      prCtx.shadowColor = '#EF4444';
+      prCtx.shadowBlur  = 12;
+      const xr = RX * 0.9, yr = RY * 0.9;
+      prCtx.beginPath(); prCtx.moveTo(x - xr, y - yr); prCtx.lineTo(x + xr, y + yr); prCtx.stroke();
+      prCtx.beginPath(); prCtx.moveTo(x + xr, y - yr); prCtx.lineTo(x - xr, y + yr); prCtx.stroke();
+      prCtx.restore();
+    });
 
   // ──────────────────────────────────────────────────────────
   // Music-theory beaming
@@ -4023,6 +4019,39 @@ function drawPracticeStaff() {
 
   // ── Staff firework particles ──────────────────────────────
   updateStaffParticles(prCtx);
+
+  // ── Header mask: hide note overflow, redraw clef + time sig on top ──
+  prCtx.fillStyle = '#0a0812';
+  prCtx.fillRect(0, 0, HEADER_W, PR_H);
+  // Redraw staff lines in header zone
+  prCtx.strokeStyle = STAFF_COLOR;
+  prCtx.lineWidth   = 1.8;
+  for (let i = 0; i < 5; i++) {
+    prCtx.beginPath(); prCtx.moveTo(4, geo.tTop + i * LG); prCtx.lineTo(HEADER_W, geo.tTop + i * LG); prCtx.stroke();
+    prCtx.beginPath(); prCtx.moveTo(4, geo.bTop + i * LG); prCtx.lineTo(HEADER_W, geo.bTop + i * LG); prCtx.stroke();
+  }
+  // System barline at header boundary
+  prCtx.strokeStyle = STAFF_COLOR;
+  prCtx.lineWidth   = 2.5;
+  prCtx.beginPath(); prCtx.moveTo(HEADER_W, geo.tTop); prCtx.lineTo(HEADER_W, geo.bTop + 4 * LG); prCtx.stroke();
+  // Clef symbols drawn last (on top of everything)
+  drawTrebleClef(prCtx, 4, geo.tTop, LG, CLEF_COLOR);
+  drawBassClef(prCtx, 4, geo.bTop, LG, CLEF_COLOR);
+  // Time signature drawn last
+  const tsNum    = pr.timeSigNum || 4;
+  const tsDen    = pr.timeSigDen || 4;
+  const tsFontSz = Math.round(LG * 2.1);
+  const tsX      = Math.round(LG * 6.5);
+  prCtx.save();
+  prCtx.fillStyle     = CLEF_COLOR;
+  prCtx.font          = `bold ${tsFontSz}px serif`;
+  prCtx.textAlign     = 'center';
+  prCtx.textBaseline  = 'middle';
+  prCtx.fillText(String(tsNum), tsX, geo.tTop + LG * 1.0);
+  prCtx.fillText(String(tsDen), tsX, geo.tTop + LG * 3.0);
+  prCtx.fillText(String(tsNum), tsX, geo.bTop + LG * 1.0);
+  prCtx.fillText(String(tsDen), tsX, geo.bTop + LG * 3.0);
+  prCtx.restore();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4397,6 +4426,27 @@ function showMpResult(myAcc) {
   document.getElementById('prMpOpponent').textContent = detail;
 }
 
+function startPracticeCountdown(song, waitMode, inputMode) {
+  const overlay = document.getElementById('countdown');
+  document.getElementById('countdownSong').textContent = song.name + (waitMode ? ' — Wait Mode' : '');
+  overlay.classList.add('active');
+  let n = 3;
+  document.getElementById('countdownNum').textContent = n;
+  const tick = setInterval(() => {
+    n--;
+    if (n <= 0) {
+      clearInterval(tick);
+      overlay.classList.remove('active');
+      launchPractice(song, waitMode, inputMode);
+    } else {
+      const el = document.getElementById('countdownNum');
+      el.textContent = n;
+      el.style.animation = 'none';
+      requestAnimationFrame(() => { el.style.animation = ''; });
+    }
+  }, 900);
+}
+
 // Patch confirmAndPlay to route to practice when appropriate
 const _origConfirmAndPlay = confirmAndPlay;
 window.confirmAndPlay = function() {
@@ -4408,9 +4458,9 @@ window.confirmAndPlay = function() {
     closeInputModal();
     game.inputMode = inputMode;
     if (inputMode === 'mic') {
-      startMic().then(() => launchPractice(song, waitMode, inputMode));
+      startMic().then(() => startPracticeCountdown(song, waitMode, inputMode));
     } else {
-      launchPractice(song, waitMode, inputMode);
+      startPracticeCountdown(song, waitMode, inputMode);
     }
   } else {
     _origConfirmAndPlay();
