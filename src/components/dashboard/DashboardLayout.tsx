@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
 
@@ -86,7 +87,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
     return [
       ...baseItems,
-      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation"), highlight: true },
+      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation") },
       { href: "/dashboard/resources",  icon: BookOpen, label: t("dashboard.nav.aiTeacher") },
     ];
   };
@@ -94,9 +95,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const navItems = getNavItems();
 
   const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => {
-    const isHighlight = (item as any).highlight;
-    const baseClass = isHighlight
-      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.4)]"
+    const isActive = !(item as any).external && location.pathname === item.href;
+    const baseClass = isActive
+      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary text-foreground font-semibold transition-colors"
       : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
 
     return (item as any).external ? (
