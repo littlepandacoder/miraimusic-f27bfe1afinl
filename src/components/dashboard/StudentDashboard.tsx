@@ -4,7 +4,7 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum } from "lucide-react";
+import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import BookLesson from "./student/BookLesson";
@@ -37,6 +37,12 @@ const StudentHome = () => {
     totalXp: 0,
   });
   const [gameScores, setGameScores] = useState<Record<string, GameScoreSummary>>({});
+  const [sessionStats, setSessionStats] = useState({
+    totalLogins: 0,
+    totalSeconds: 0,
+    avgSeconds: 0,
+    lastLogin: null as string | null,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -139,7 +145,53 @@ const StudentHome = () => {
       setGameScores(summary);
     };
     fetchGameScores();
+
+    const fetchSessionStats = async () => {
+      const { data } = await (supabase as any)
+        .from("user_sessions")
+        .select("started_at, duration_seconds")
+        .eq("user_id", user.id)
+        .order("started_at", { ascending: false });
+
+      const rows: any[] = data || [];
+      if (rows.length === 0) return;
+
+      const totalSeconds = rows.reduce((s: number, r: any) => s + (r.duration_seconds || 0), 0);
+      const withDuration = rows.filter((r: any) => (r.duration_seconds || 0) > 0);
+      const avgSeconds   = withDuration.length > 0
+        ? Math.round(withDuration.reduce((s: number, r: any) => s + r.duration_seconds, 0) / withDuration.length)
+        : 0;
+
+      setSessionStats({
+        totalLogins: rows.length,
+        totalSeconds,
+        avgSeconds,
+        lastLogin: rows[0]?.started_at ?? null,
+      });
+    };
+    fetchSessionStats();
   }, [user]);
+
+  const fmtDuration = (secs: number) => {
+    if (secs < 60)  return `${secs}s`;
+    if (secs < 3600) return `${Math.floor(secs / 60)}m`;
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  };
+
+  const fmtLastLogin = (iso: string | null) => {
+    if (!iso) return "—";
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins  = Math.floor(diff / 60_000);
+    const hours = Math.floor(diff / 3_600_000);
+    const days  = Math.floor(diff / 86_400_000);
+    if (mins  < 2)   return "Just now";
+    if (hours < 1)   return `${mins}m ago`;
+    if (hours < 24)  return `${hours}h ago`;
+    if (days  < 7)   return `${days}d ago`;
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 
   const formatNextLesson = () => {
     if (!stats.nextLesson) return "No upcoming lessons";
@@ -149,48 +201,80 @@ const StudentHome = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Lessons</CardTitle>
-            <Calendar className="w-5 h-5 text-primary" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
+            <Calendar className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.upcomingLessons}</p>
+            <p className="text-xs text-muted-foreground mt-1">lessons</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Lessons</CardTitle>
-            <BookOpen className="w-5 h-5 text-green-400" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            <BookOpen className="w-4 h-4 text-green-400" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.completedLessons}</p>
+            <p className="text-xs text-muted-foreground mt-1">lessons</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Quiz Avg Score</CardTitle>
-            <TrendingUp className="w-5 h-5 text-yellow-400" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Quiz Avg</CardTitle>
+            <TrendingUp className="w-4 h-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
             {stats.quizAvgScore !== null ? (
               <p className="text-3xl font-bold text-yellow-400">{stats.quizAvgScore}%</p>
             ) : (
-              <p className="text-sm text-muted-foreground mt-2">No quizzes taken yet</p>
+              <p className="text-sm text-muted-foreground mt-2">—</p>
             )}
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total XP Earned</CardTitle>
-            <Trophy className="w-5 h-5 text-yellow-400" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total XP</CardTitle>
+            <Trophy className="w-4 h-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-yellow-400">{stats.totalXp.toLocaleString()} <span className="text-lg font-semibold">XP</span></p>
+            <p className="text-3xl font-bold text-yellow-400">{stats.totalXp.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">XP earned</p>
+          </CardContent>
+        </Card>
+
+        {/* ── Session stats ── */}
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Logins</CardTitle>
+            <LogIn className="w-4 h-4 text-sky-400" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-sky-400">{sessionStats.totalLogins}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {sessionStats.lastLogin ? `Last: ${fmtLastLogin(sessionStats.lastLogin)}` : "No data yet"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Time Spent</CardTitle>
+            <Clock className="w-4 h-4 text-purple-400" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-purple-400">
+              {sessionStats.totalSeconds > 0 ? fmtDuration(sessionStats.totalSeconds) : "—"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {sessionStats.avgSeconds > 0 ? `avg ${fmtDuration(sessionStats.avgSeconds)}/visit` : "across all visits"}
+            </p>
           </CardContent>
         </Card>
       </div>

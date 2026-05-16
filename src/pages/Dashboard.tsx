@@ -10,6 +10,7 @@ import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import { DashboardErrorBoundary } from "@/components/DashboardErrorBoundary";
 import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSessionTracking } from "@/hooks/useSessionTracking";
 
 const SubscriptionGate = () => (
   <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -36,6 +37,7 @@ const SubscriptionGate = () => (
 
 const Dashboard = () => {
   const { user, loading, hasRole, roles } = useAuth();
+  useSessionTracking(user); // record login + duration for every role
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
 
