@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
+
+const AGENT_ID = "agent_7401krc6fjd4e1hvvce2m7mn0ss0";
 
 interface AITutorProps {
   lessonContext?: {
@@ -16,22 +18,36 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const { toast } = useToast();
+  const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userEndedRef = useRef(false);
+
+  const doStart = useCallback(async (conv: ReturnType<typeof useConversation>) => {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    await conv.startSession({ agentId: AGENT_ID });
+  }, []);
 
   const conversation = useConversation({
     onConnect: () => {
-      toast({
-        title: "Connected!",
-        description: "You can now speak with your AI music tutor.",
-      });
+      setIsConnecting(false);
+      toast({ title: "Connected!", description: "You can now speak with your AI music tutor." });
     },
     onDisconnect: () => {
-      toast({
-        title: "Disconnected",
-        description: "Your session with the AI tutor has ended.",
-      });
+      if (!userEndedRef.current) return;
+      userEndedRef.current = false;
+      toast({ title: "Disconnected", description: "Your session with the AI tutor has ended." });
     },
     onError: (error) => {
       console.error("Conversation error:", error);
+      const msg = error instanceof Error ? error.message : String(error);
+      // NegotiationError / transport errors are transient — auto-retry once
+      if (!userEndedRef.current && (msg.includes("negotiation") || msg.includes("rtc") || msg.includes("404"))) {
+        console.warn("Transient connection error, retrying in 2 s…", msg);
+        retryTimeout.current = setTimeout(() => {
+          doStart(conversation).catch(console.error);
+        }, 2000);
+        return;
+      }
+      setIsConnecting(false);
       toast({
         title: "Connection Error",
         description: "Failed to connect to AI tutor. Please try again.",
@@ -41,27 +57,25 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
   });
 
   const startConversation = useCallback(async () => {
+    userEndedRef.current = false;
+    if (retryTimeout.current) clearTimeout(retryTimeout.current);
     setIsConnecting(true);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      await conversation.startSession({
-        agentId: "agent_7401krc6fjd4e1hvvce2m7mn0ss0",
-        connectionType: "webrtc",
-      });
+      await doStart(conversation);
     } catch (error) {
       console.error("Failed to start conversation:", error);
+      setIsConnecting(false);
       toast({
         title: "Failed to start",
         description: error instanceof Error ? error.message : "Could not start AI tutor session.",
         variant: "destructive",
       });
-    } finally {
-      setIsConnecting(false);
     }
-  }, [conversation, toast]);
+  }, [conversation, doStart, toast]);
 
   const stopConversation = useCallback(async () => {
+    userEndedRef.current = true;
+    if (retryTimeout.current) clearTimeout(retryTimeout.current);
     await conversation.endSession();
   }, [conversation]);
 
