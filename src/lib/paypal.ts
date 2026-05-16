@@ -28,25 +28,43 @@ function _resolveMode(): "sandbox" | "live" {
 export const PAYPAL_MODE: "sandbox" | "live" = _resolveMode();
 export const IS_SANDBOX = PAYPAL_MODE === "sandbox";
 
+/**
+ * Sanitise an env-var value.
+ * Handles two common copy-paste mistakes from .env files:
+ *   1. Surrounding quotes:  "AZUMX5..."  →  AZUMX5...
+ *   2. Full line pasted:    VITE_PAYPAL_CLIENT_ID_LIVE="AZUMX5..."  →  AZUMX5...
+ */
+function _clean(raw: string | undefined, varName?: string): string {
+  if (!raw) return "";
+  let v = raw.trim();
+  // Strip "VARNAME=" prefix if user pasted the full .env line into Vercel
+  if (varName && v.startsWith(varName + "=")) {
+    v = v.slice(varName.length + 1);
+  }
+  // Strip surrounding single or double quotes
+  v = v.replace(/^["']|["']$/g, "");
+  return v;
+}
+
 // Client IDs
 const CLIENT_ID_SANDBOX =
-  import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX ||
+  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX, "VITE_PAYPAL_CLIENT_ID_SANDBOX") ||
   "AfnMfp3KJ3SSN2jJUuaRmqwFw5y1zcEprZeaJMD9tpxsx8sops-apbq0cYyoRNjyJbyS3W8Gham915X8";
 const CLIENT_ID_LIVE =
-  import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE ||
+  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE, "VITE_PAYPAL_CLIENT_ID_LIVE") ||
   "AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr";
 
 // Student plan IDs
 const PLAN_ID_SANDBOX =
-  import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX ||
+  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX, "VITE_PAYPAL_PLAN_ID_SANDBOX") ||
   "P-4L07924847135773VNIAMVRA";
 const PLAN_ID_LIVE =
-  import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE ||
+  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE, "VITE_PAYPAL_PLAN_ID_LIVE") ||
   "P-204241322W266371XNIAXACQ";
 
 // Teacher plan IDs ($20/month, 10 student seats — create at developer.paypal.com)
-const TEACHER_PLAN_ID_SANDBOX = import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX || "";
-const TEACHER_PLAN_ID_LIVE    = import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_LIVE    || "";
+const TEACHER_PLAN_ID_SANDBOX = _clean(import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX, "VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX") || "";
+const TEACHER_PLAN_ID_LIVE    = _clean(import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_LIVE,    "VITE_PAYPAL_TEACHER_PLAN_ID_LIVE")    || "";
 
 export const PAYPAL_CLIENT_ID      = IS_SANDBOX ? CLIENT_ID_SANDBOX : CLIENT_ID_LIVE;
 export const PAYPAL_PLAN_ID        = IS_SANDBOX ? PLAN_ID_SANDBOX   : PLAN_ID_LIVE;

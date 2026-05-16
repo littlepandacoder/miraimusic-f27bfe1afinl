@@ -366,7 +366,31 @@ const SIGS = [
 let S = {};
 function resetState(mode) {
   return { mode, score:0, streak:0, bestStreak:0, round:0, correct:0,
-    xp:0, level:1, secs:30, timer:null, sig:null, placed:[], placedSig:null, done:false };
+    xp:0, level:1, secs:30, timer:null, sig:null, placed:[], placedSig:null, done:false,
+    usedSigIds: new Set(),      // sigs used this session — prefer unused when picking
+    lastSigId: null,            // never repeat the same sig back-to-back
+    usedBuildCombos: new Set(), // note-id combos already accepted in build mode
+  };
+}
+
+// Pick a time signature that isn't the same as last round and prefers unseen ones
+function pickSig() {
+  const lastId = S.lastSigId;
+  const allIds = SIGS.map(s => s.id);
+
+  // Prefer sigs not yet used this session
+  let pool = SIGS.filter(s => !S.usedSigIds.has(s.id));
+  if (pool.length === 0) {
+    // All sigs have been seen — reset history and use all (but still avoid consecutive repeat)
+    S.usedSigIds = new Set();
+    pool = SIGS.slice();
+  }
+  // Exclude the last sig to prevent back-to-back repeats
+  const candidates = pool.filter(s => s.id !== lastId);
+  const chosen = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : pool[0];
+  S.lastSigId = chosen.id;
+  S.usedSigIds.add(chosen.id);
+  return chosen;
 }
 
 // ── AUDIO ─────────────────────────────────────────────────────
@@ -529,7 +553,7 @@ function nextRound() {
 
 // ── MODE 1: BUILD ─────────────────────────────────────────────
 function setupBuild() {
-  S.sig = pick(SIGS);
+  S.sig = pickSig();
   renderStaffSig(S.sig);
   clearStaffNotes();
   document.getElementById('svg-hint').style.display='block';
@@ -599,7 +623,7 @@ function refreshStaffNotes() {
 
 // ── MODE 2: GUESS SIG ─────────────────────────────────────────
 function setupGuess() {
-  S.sig = pick(SIGS);
+  S.sig = pickSig();
   clearStaffSig();
   clearStaffNotes();
 
@@ -655,7 +679,24 @@ function checkAnswer() {
   let ok = false;
   if (S.mode === 'build') {
     const t = S.placed.reduce((a,n)=>a+n.beats,0);
-    ok = Math.abs(t - S.sig.beats) < 0.001;
+    const beatsFull = Math.abs(t - S.sig.beats) < 0.001;
+    if (beatsFull) {
+      // Reject duplicate rhythms the player has already used this session
+      const comboKey = S.placed.map(n=>n.id).join('+');
+      if (S.usedBuildCombos.has(comboKey)) {
+        // Don't count as wrong — just nudge to try something new
+        S.done = false;
+        clearInterval(S.timer); // pause; will restart after feedback
+        feedback(false, 'Already used!', 'Try a different rhythm combination');
+        shake(document.getElementById('staff-card'));
+        sndBad();
+        // Restart timer so they can keep editing
+        startTimer();
+        return;
+      }
+      S.usedBuildCombos.add(comboKey);
+    }
+    ok = beatsFull;
   } else {
     ok = !!S.placedSig && S.placedSig.beats === S.sig.beats;
   }

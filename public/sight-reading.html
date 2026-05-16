@@ -181,6 +181,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .streak-icon{font-size:1rem}
 .streak-text{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--amber);font-weight:500}
 
+/* ── ADAPTIVE DIFFICULTY ── */
+.adaptive-display{display:flex;align-items:center;gap:.5rem;padding:.5rem .9rem;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.16);border-radius:8px;margin-bottom:.8rem}
+.adaptive-dots{display:flex;gap:3px;align-items:center}
+.adapt-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .3s}
+.adapt-dot.lit{background:var(--sky);box-shadow:0 0 5px rgba(0,212,255,.55)}
+
 /* ── IDLE OVERLAY ── */
 .idle-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;border-radius:12px;background:rgba(13,17,23,.7)}
 .idle-icon{font-size:2.5rem}
@@ -368,10 +374,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
         </div>
 
         <div class="setting-group" id="chordSizeGroup" style="margin-bottom:.8rem;display:none">
-          <label>Notes per chord</label>
+          <label>Notes per chord (start)</label>
           <div class="seg-control">
-            <button class="seg-btn" data-csize="2" onclick="setChordSize(2,this)">2 notes</button>
-            <button class="seg-btn active" data-csize="3" onclick="setChordSize(3,this)">3 notes</button>
+            <button class="seg-btn" data-csize="2" onclick="setChordSize(2,this)">2</button>
+            <button class="seg-btn active" data-csize="3" onclick="setChordSize(3,this)">3</button>
+            <button class="seg-btn" data-csize="4" onclick="setChordSize(4,this)">4</button>
           </div>
         </div>
 
@@ -414,6 +421,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
         <div class="streak-display" id="streakDisplay" style="display:none">
           <div class="streak-icon">🔥</div>
           <div class="streak-text" id="streakText">3 in a row!</div>
+        </div>
+        <div class="adaptive-display" id="adaptiveDisplay" style="display:none">
+          <span style="font-size:.88rem">🎯</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2)">ADAPTIVE</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--sky);font-weight:600;flex:1;margin-left:.3rem" id="adaptiveText">Beginner</span>
+          <div class="adaptive-dots">
+            <span class="adapt-dot lit" data-adot="0"></span>
+            <span class="adapt-dot" data-adot="1"></span>
+            <span class="adapt-dot" data-adot="2"></span>
+            <span class="adapt-dot" data-adot="3"></span>
+            <span class="adapt-dot" data-adot="4"></span>
+          </div>
         </div>
       </div>
 
@@ -572,6 +591,7 @@ let state = {
   currentNote:   null,
   currentChord:  [],
   chordSelected: new Set(),
+  chordSelectedDisplay: [],  // with accidentals for feedback display
   currentClef:   'treble',
   questionNum:   0,
   totalQ:        0,
@@ -582,8 +602,12 @@ let state = {
   timerRAF:      null,
   log:           [],
   notePool:      [],
+  accidentalPool: [],        // always built with accidentals for adaptive mode
   answered:      false,
-  testMode:      null,   // 'treble_test' | 'bass_test' | null
+  testMode:      null,       // 'treble_test' | 'bass_test' | null
+  adaptiveDiffLevel:  0,     // 0-4, auto-adjusts based on chord performance
+  chordCorrectStreak: 0,
+  chordWrongStreak:   0,
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -664,6 +688,7 @@ function setMode(v, btn) {
     ? 'Select ALL notes in the chord →'
     : 'Or click the note name →';
   if (!state.running) document.getElementById('chordCheckRow').style.display = 'none';
+  updateAdaptiveLevelDisplay();
 }
 function setChordSize(v, btn) {
   state.chordSize = v;
@@ -681,13 +706,23 @@ function pickChord(pool, size) {
   for (const n of shuffled) {
     if (usedNames.has(n.note)) continue;
     const dSteps = diatonicStepsFromC4(n.note, n.octave);
+
+    // Not adjacent to any existing note (interval ≥ 2nd)
     const tooClose = chord.some(c => Math.abs(diatonicStepsFromC4(c.note, c.octave) - dSteps) <= 1);
     if (tooClose) continue;
+
+    // Span from lowest to highest must stay within a 6th (6 diatonic steps)
+    if (chord.length > 0) {
+      const allSteps = chord.map(c => diatonicStepsFromC4(c.note, c.octave));
+      allSteps.push(dSteps);
+      if (Math.max(...allSteps) - Math.min(...allSteps) > 6) continue;
+    }
+
     chord.push(n);
     usedNames.add(n.note);
     if (chord.length >= size) break;
   }
-  // Fallback: relax adjacency if pool is too small
+  // Fallback: relax constraints if pool is too small
   if (chord.length < 2) {
     const names = new Set(chord.map(n => n.note));
     for (const n of shuffled) {
@@ -721,30 +756,63 @@ function checkChordAnswer() {
 /* ─── Multiple-choice chord cards (shown when MIDI not connected) ─── */
 const NOTE_ORDER_MC = ['C','D','E','F','G','A','B'];
 
-function sortNotes(arr) {
-  return [...arr].sort((a,b) => NOTE_ORDER_MC.indexOf(a) - NOTE_ORDER_MC.indexOf(b));
+// Sort note-name strings (may have # or b) by base letter
+function sortNotesWithAcc(arr) {
+  return [...arr].sort((a, b) => {
+    const baseA = a.replace(/[#b]/g, '');
+    const baseB = b.replace(/[#b]/g, '');
+    return NOTE_ORDER_MC.indexOf(baseA) - NOTE_ORDER_MC.indexOf(baseB);
+  });
+}
+
+// Backward-compat alias
+const sortNotes = sortNotesWithAcc;
+
+// Pretty-print note name: C# → C♯, Bb → B♭
+function noteSymbol(n) {
+  return n.replace(/#/g, '♯').replace(/b(?=[A-G#♯]|$)/g, '♭');
 }
 
 function generateChordChoices(correctChord) {
-  const correctKey = sortNotes(correctChord.map(n => n.note)).join('+');
+  const correctNoteNames = correctChord.map(n => n.note + (n.accidental || ''));
+  const sorted     = sortNotesWithAcc(correctNoteNames);
+  const correctKey = sorted.join('+');
   const size       = correctChord.length;
-  const choices    = [sortNotes(correctChord.map(n => n.note))];
-  const seen       = new Set([correctKey]);
-  let   tries      = 0;
+  const hasAcc     = correctChord.some(n => n.accidental);
 
-  while (choices.length < 4 && tries++ < 300) {
-    const shuffled  = [...NOTE_ORDER_MC].sort(() => Math.random() - 0.5);
-    const candidate = sortNotes(shuffled.slice(0, size));
-    const key       = candidate.join('+');
-    if (!seen.has(key)) { seen.add(key); choices.push(candidate); }
+  const NATURALS   = ['C','D','E','F','G','A','B'];
+  const WITH_SHARPS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+  const choices = [sorted];
+  const seen    = new Set([correctKey]);
+  let   tries   = 0;
+
+  while (choices.length < 4 && tries++ < 500) {
+    // Mix in accidentals as distractors when correct chord has them
+    const pool     = (hasAcc && Math.random() < 0.55) ? WITH_SHARPS : NATURALS;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const used     = new Set();
+    const cand     = [];
+    for (const n of shuffled) {
+      const base = n.replace('#', '');
+      if (used.has(base)) continue;
+      used.add(base);
+      cand.push(n);
+      if (cand.length >= size) break;
+    }
+    if (cand.length < size) continue;
+    const sortedCand = sortNotesWithAcc(cand);
+    const key        = sortedCand.join('+');
+    if (!seen.has(key)) { seen.add(key); choices.push(sortedCand); }
   }
 
   return choices.sort(() => Math.random() - 0.5);
 }
 
 function renderChordChoices(choices, correctChord) {
-  const correctKey = sortNotes(correctChord.map(n => n.note)).join('+');
-  const container  = document.getElementById('chordChoices');
+  const correctNotes = sortNotesWithAcc(correctChord.map(n => n.note + (n.accidental || '')));
+  const correctKey   = correctNotes.join('+');
+  const container    = document.getElementById('chordChoices');
   container.innerHTML = '';
   choices.forEach(notes => {
     const key  = notes.join('+');
@@ -752,7 +820,8 @@ function renderChordChoices(choices, correctChord) {
     card.className       = 'chord-choice';
     card.dataset.notes   = key;
     card.dataset.correct = key === correctKey ? '1' : '0';
-    card.innerHTML = `<div class="chord-choice-notes">${notes.join(' · ')}</div>
+    const display = notes.map(noteSymbol).join(' · ');
+    card.innerHTML = `<div class="chord-choice-notes">${display}</div>
                       <div class="chord-choice-label">${notes.length}-note chord</div>`;
     card.onclick = () => selectChordChoice(notes, card);
     container.appendChild(card);
@@ -761,8 +830,8 @@ function renderChordChoices(choices, correctChord) {
 
 function selectChordChoice(notes, cardEl) {
   if (state.answered) return;
-  const correctKey = sortNotes(state.currentChord.map(n => n.note)).join('+');
-  const isCorrect  = sortNotes(notes).join('+') === correctKey;
+  const correctNotes = sortNotesWithAcc(state.currentChord.map(n => n.note + (n.accidental || '')));
+  const isCorrect    = sortNotesWithAcc(notes).join('+') === correctNotes.join('+');
 
   document.querySelectorAll('.chord-choice').forEach(c => {
     c.setAttribute('disabled', 'true');
@@ -770,8 +839,68 @@ function selectChordChoice(notes, cardEl) {
   });
   if (!isCorrect) cardEl.classList.add('wrong');
 
-  state.chordSelected = new Set(notes);
+  // Store base names for chord-button colouring; store full names for feedback display
+  state.chordSelected        = new Set(notes.map(n => n.replace(/[#b]/g, '')));
+  state.chordSelectedDisplay = notes;
   handleAnswer(isCorrect ? '__CHORD_OK__' : '__CHORD_WRONG__');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADAPTIVE DIFFICULTY (chord mode)
+═══════════════════════════════════════════════════════════ */
+const ADAPT_LEVELS = [
+  { label: 'Beginner', chordSize: 2, useAcc: false },
+  { label: 'Easy',     chordSize: 3, useAcc: false },
+  { label: 'Medium',   chordSize: 4, useAcc: false },
+  { label: 'Hard',     chordSize: 3, useAcc: true  },
+  { label: 'Expert',   chordSize: 4, useAcc: true  },
+];
+
+function getAdaptivePool() {
+  const lvl = ADAPT_LEVELS[Math.min(state.adaptiveDiffLevel, 4)];
+  return (lvl.useAcc && state.accidentalPool.length >= lvl.chordSize)
+    ? state.accidentalPool
+    : state.notePool;
+}
+
+function getAdaptiveChordSize() {
+  return ADAPT_LEVELS[Math.min(state.adaptiveDiffLevel, 4)].chordSize;
+}
+
+function updateAdaptiveLevelDisplay() {
+  const el    = document.getElementById('adaptiveDisplay');
+  const label = document.getElementById('adaptiveText');
+  if (!el) return;
+  const show = state.mode === 'chord' && state.running;
+  el.style.display = show ? 'flex' : 'none';
+  if (!show) return;
+  label.textContent = ADAPT_LEVELS[Math.min(state.adaptiveDiffLevel, 4)].label;
+  document.querySelectorAll('[data-adot]').forEach(dot => {
+    dot.classList.toggle('lit', parseInt(dot.dataset.adot, 10) <= state.adaptiveDiffLevel);
+  });
+}
+
+function checkAdaptiveDiff(wasCorrect) {
+  if (state.mode !== 'chord') return;
+  if (wasCorrect) {
+    state.chordCorrectStreak++;
+    state.chordWrongStreak = 0;
+    if (state.chordCorrectStreak >= 3 && state.adaptiveDiffLevel < 4) {
+      state.adaptiveDiffLevel++;
+      state.chordCorrectStreak = 0;
+      showToast('🆙 Difficulty → ' + ADAPT_LEVELS[state.adaptiveDiffLevel].label);
+      updateAdaptiveLevelDisplay();
+    }
+  } else {
+    state.chordWrongStreak++;
+    state.chordCorrectStreak = 0;
+    if (state.chordWrongStreak >= 2 && state.adaptiveDiffLevel > 0) {
+      state.adaptiveDiffLevel--;
+      state.chordWrongStreak = 0;
+      showToast('📉 Adjusted → ' + ADAPT_LEVELS[state.adaptiveDiffLevel].label);
+      updateAdaptiveLevelDisplay();
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -783,11 +912,17 @@ function startSession() {
   const to     = document.getElementById('rangeTo').value;
   const incAcc = state.accidentals === 'all';
 
-  state.notePool = buildNotePool(from, to, state.clef, incAcc);
+  state.notePool       = buildNotePool(from, to, state.clef, incAcc);
+  state.accidentalPool = buildNotePool(from, to, state.clef, true); // always with sharps/flats for adaptive
   if (state.notePool.length === 0) {
     showToast('⚠ No notes in that range for this clef — adjust settings');
     return;
   }
+
+  // Adaptive starting level: matches user's selected chord size
+  state.adaptiveDiffLevel  = state.chordSize >= 4 ? 2 : state.chordSize >= 3 ? 1 : 0;
+  state.chordCorrectStreak = 0;
+  state.chordWrongStreak   = 0;
 
   state.running      = true;
   state.questionNum  = 0;
@@ -799,6 +934,7 @@ function startSession() {
   state.answered     = false;
   state.currentChord = [];
   state.chordSelected = new Set();
+  state.chordSelectedDisplay = [];
   document.getElementById('chordCheckRow').style.display = 'none';
 
   document.getElementById('startBtn').style.display  = 'none';
@@ -809,6 +945,7 @@ function startSession() {
   document.getElementById('analyseBtn').disabled     = true;
   hideFeedback();
   updateStats();
+  updateAdaptiveLevelDisplay();
   nextQuestion();
 }
 
@@ -822,6 +959,7 @@ function stopSession() {
   document.getElementById('chordCheckRow').style.display = 'none';
   document.getElementById('chordChoices').style.display  = 'none';
   document.getElementById('noteBtns').style.display      = 'grid';
+  updateAdaptiveLevelDisplay();
   setButtonsDisabled(true);
   drawStaff(null, null);
   drawMiniKb(null);
@@ -840,9 +978,11 @@ function nextQuestion() {
   state.totalQ++;
   state.answered     = false;
   state.chordSelected = new Set();
+  state.chordSelectedDisplay = [];
 
   if (state.mode === 'chord') {
-    const chord = pickChord(state.notePool, state.chordSize);
+    updateAdaptiveLevelDisplay();
+    const chord = pickChord(getAdaptivePool(), getAdaptiveChordSize());
     if (chord.length < 2) {
       showToast('⚠ Not enough distinct notes in this range for chords — adjust settings');
       stopSession();
@@ -938,6 +1078,8 @@ function handleAnswer(guessNote) {
     tooSlow  = elapsed > timerLimit;
     win      = correct && !tooSlow;
 
+    checkAdaptiveDiff(!isTimeout && win);
+
     // Colour chord buttons: correct selections green, missing ones green, wrong ones red
     const chordNames = new Set(state.currentChord.map(n => n.note));
     document.querySelectorAll('.note-btn').forEach(b => {
@@ -982,13 +1124,15 @@ function handleAnswer(guessNote) {
 
   // Feedback
   if (state.mode === 'chord') {
-    const chordLabel = state.currentChord.map(n => n.note + (n.accidental || '')).join(' + ');
+    const chordLabel = state.currentChord.map(n => noteSymbol(n.note + (n.accidental || ''))).join(' + ');
     if (isTimeout) {
       showFeedback('slow', '⏰', 'Too slow!', `The chord was ${chordLabel}`);
     } else if (win) {
       showFeedback('correct', '✓', `Correct! ${chordLabel}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
     } else {
-      const selected = [...state.chordSelected].join(', ') || '(none)';
+      const selected = state.chordSelectedDisplay.length
+        ? state.chordSelectedDisplay.map(noteSymbol).join(', ')
+        : ([...state.chordSelected].join(', ') || '(none)');
       showFeedback('wrong', '✗', `Not quite — chord was ${chordLabel}`, `You selected: ${selected}`);
     }
   } else {
@@ -1010,7 +1154,7 @@ function handleAnswer(guessNote) {
 
   // Log
   const logNote  = state.mode === 'chord'
-    ? state.currentChord.map(n => n.note).join('+')
+    ? state.currentChord.map(n => noteSymbol(n.note + (n.accidental || ''))).join('+')
     : state.currentNote.display;
   const logGuess = state.mode === 'chord'
     ? (isTimeout ? '(timeout)' : [...state.chordSelected].join('+') || '(none)')
