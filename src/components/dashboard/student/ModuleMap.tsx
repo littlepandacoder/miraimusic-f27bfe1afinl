@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Lock, Check, Star, Music, Trophy, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -142,23 +144,29 @@ const ModuleMap = () => {
     fetchData();
   }, [user]);
 
-  // Winding x-offsets (px) — creates a Duolingo-style snake path
-  const SNAKE_X = [0, 80, 110, 80, 0, -80, -110, -80];
-  const getX = (i: number) => SNAKE_X[i % SNAKE_X.length];
-
-  const nodeClass = (module: FoundationModule, lockedBySRTest: boolean) => {
-    if (module.status === "completed") return "bg-green-500 border-green-400 shadow-[0_0_22px_rgba(34,197,94,0.5)]";
-    if (module.status === "in-progress") return "bg-primary border-primary/80 shadow-[0_0_22px_hsl(330_85%_55%/0.5)]";
-    if (module.status === "available") return "bg-cyan-500 border-cyan-400 shadow-[0_0_18px_rgba(6,182,212,0.45)] cursor-pointer";
-    if (lockedBySRTest) return "bg-yellow-500/20 border-yellow-500/50 cursor-default";
-    return "bg-muted/30 border-border cursor-default opacity-60";
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case "intermediate": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
+      case "advanced": return "bg-red-500/20 text-red-400 border-red-500/50";
+      default: return "bg-green-500/20 text-green-400 border-green-500/50";
+    }
   };
 
-  const dotColor = (prev: FoundationModule | null) => {
-    if (!prev) return "#4b5563";
-    if (prev.status === "completed") return "#22c55e";
-    if (prev.status === "in-progress") return "hsl(330 85% 55%)";
-    return "#374151";
+  const getStatusStyles = (status: FoundationModule["status"]) => {
+    switch (status) {
+      case "completed": return "bg-green-500/20 border-green-500 text-green-400";
+      case "in-progress": return "bg-primary/20 border-primary text-primary";
+      case "available": return "bg-cyan-500/20 border-cyan-500 text-cyan-400 hover:scale-[1.02] cursor-pointer";
+      case "locked": return "bg-muted/50 border-border text-muted-foreground opacity-60";
+    }
+  };
+
+  const getConnectorStyle = (idx: number) => {
+    if (idx === 0) return "";
+    const prev = modules[idx - 1];
+    if (prev?.status === "completed") return "bg-green-500";
+    if (prev?.status === "in-progress") return "bg-primary/40";
+    return "bg-border";
   };
 
   if (loading) {
@@ -198,8 +206,10 @@ const ModuleMap = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex flex-col items-center pb-12">
+        <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
+            // SR gate matches the module's OWN title (same logic as fetchData).
+            // Also require the previous module to be completed so sequential locks don't falsely show SR gate UI.
             const prevModule = index > 0 ? modules[index - 1] : null;
             const prevModuleCompleted = prevModule?.status === "completed";
             const moduleTitleLcForGate = module.title.toLowerCase();
@@ -211,7 +221,6 @@ const ModuleMap = () => {
               && (!srGate.bassTestPassed   || srGate.totalSessions < SESSIONS_REQUIRED);
             const lockedBySRTest = lockedByTrebleTest || lockedByBassTest;
             const isRhythmModule = moduleTitleLcForGate.includes("rhythm");
-            const isSRAdventureModule = moduleTitleLcForGate.includes("sight reading adventure");
 
             const srTestUrl = lockedByTrebleTest
               ? "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
@@ -219,161 +228,191 @@ const ModuleMap = () => {
                 ? "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
                 : null;
 
-            const currX = getX(index);
-            const prevX = index > 0 ? getX(index - 1) : currX;
-            const dc = dotColor(prevModule);
+            const isSRAdventureModule = module.title.toLowerCase().includes("sight reading adventure");
 
             return (
-              <div key={module.id} className="flex flex-col items-center">
+            <div key={module.id} className="w-full max-w-2xl">
+              {index > 0 && (
+                <div className="flex justify-center">
+                  <div className={cn("w-1 h-8 rounded-full", getConnectorStyle(index))} />
+                </div>
+              )}
 
-                {/* ── Winding dot connector ─────────────────────── */}
-                {index > 0 && (
-                  <div className="flex flex-col items-center gap-[10px] py-2 h-[72px] justify-center">
-                    {[0, 1, 2, 3, 4].map(d => {
-                      const t = (d + 1) / 6;
-                      const dotX = prevX + (currX - prevX) * t;
-                      return (
-                        <div
-                          key={d}
-                          className="w-[10px] h-[10px] rounded-full shrink-0"
-                          style={{ transform: `translateX(${dotX}px)`, backgroundColor: dc, opacity: 0.75 }}
-                        />
-                      );
-                    })}
-                  </div>
+              <div
+                className={cn(
+                  "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
+                  lockedBySRTest ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" : getStatusStyles(module.status),
+                  index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full"
                 )}
-
-                {/* ── Node + label + action ─────────────────────── */}
-                <div
-                  className="flex flex-col items-center"
-                  style={{ transform: `translateX(${currX}px)` }}
-                >
-                  {/* Ping ring on current active node */}
-                  <div className="relative">
-                    {module.status === "available" && (
-                      <div className="absolute -inset-3 rounded-full bg-cyan-400/20 animate-ping" />
-                    )}
-                    {module.status === "in-progress" && (
-                      <div className="absolute -inset-3 rounded-full bg-primary/20 animate-pulse" />
-                    )}
-
-                    {/* Main circle */}
-                    <button
-                      className={cn(
-                        "w-[84px] h-[84px] rounded-full border-4 flex items-center justify-center transition-transform duration-200",
-                        module.status !== "locked" && "hover:scale-110 active:scale-95",
-                        nodeClass(module, lockedBySRTest)
-                      )}
-                      onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
-                    >
-                      {module.status === "completed" ? (
-                        <Check className="w-10 h-10 text-white" />
-                      ) : module.status === "locked" && !lockedBySRTest ? (
-                        <Lock className="w-7 h-7 text-muted-foreground/70" />
-                      ) : lockedBySRTest ? (
-                        <span className="text-3xl">🎯</span>
-                      ) : (
-                        <Music className="w-9 h-9 text-white" />
-                      )}
-                    </button>
-
-                    {/* XP badge */}
-                    {module.xp_reward > 0 && module.status !== "locked" && (
-                      <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-full px-1.5 py-0.5 flex items-center gap-0.5 shadow">
-                        <Star className="w-2.5 h-2.5" />{module.xp_reward}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title */}
-                  <p className={cn(
-                    "mt-2 text-sm font-bold text-center leading-tight",
-                    module.status === "locked" && !lockedBySRTest ? "text-muted-foreground" : "text-foreground"
-                  )} style={{ maxWidth: 140 }}>
-                    {module.title}
-                  </p>
-
-                  {/* Progress bar */}
-                  {(module.status === "in-progress" || module.status === "completed") && module.totalLessons > 0 && (
-                    <div className="mt-1 w-24">
-                      <Progress value={(module.completedLessons / module.totalLessons) * 100} className="h-1.5" />
-                      <p className="text-[10px] text-muted-foreground text-center mt-0.5">
-                        {module.completedLessons}/{module.totalLessons} lessons
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Action button */}
-                  {module.status !== "locked" && !lockedBySRTest && (
-                    <button
-                      className={cn(
-                        "mt-2 px-5 py-1 rounded-full text-xs font-bold border-2 transition-all",
-                        module.status === "completed"
-                          ? "border-green-500 text-green-400 hover:bg-green-500/20"
-                          : module.status === "in-progress"
-                          ? "bg-primary text-white border-primary hover:bg-primary/90 shadow-[0_4px_14px_hsl(330_85%_55%/0.4)]"
-                          : "bg-cyan-500 text-white border-cyan-500 hover:bg-cyan-600 shadow-[0_4px_14px_rgba(6,182,212,0.4)]"
-                      )}
-                      onClick={() => navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
-                    >
-                      {module.status === "completed" ? "Review" : module.status === "in-progress" ? "Continue" : "Start"}
-                    </button>
-                  )}
-
-                  {/* SR test unlock button */}
-                  {lockedBySRTest && srTestUrl && (
-                    <div className="mt-2 flex flex-col items-center gap-1">
-                      <p className="text-[10px] text-yellow-400 font-medium text-center">Test required to unlock</p>
-                      <a
-                        href={srTestUrl}
-                        className="px-4 py-1 rounded-full text-xs font-bold bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors"
-                      >
-                        Take Test →
-                      </a>
-                    </div>
-                  )}
-
-                  {/* SR Adventure gate details */}
-                  {isSRAdventureModule && module.status !== "locked" && (
-                    <div className="mt-3 w-44 space-y-2" onClick={e => e.stopPropagation()}>
-                      {[
-                        { label: "Treble Clef unlock", href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1", emoji: "🎯" },
-                        { label: "Bass Clef unlock",   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1",   emoji: "🎯" },
-                      ].map(({ label, href, emoji }) => (
-                        <div key={label} className="space-y-1">
-                          <div className="flex justify-between text-[10px]">
-                            <span className="text-muted-foreground">{label}</span>
-                            <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
-                              {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
-                            </span>
-                          </div>
-                          <Progress value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100} className="h-1" />
-                          <a href={href} className="block text-center text-[10px] font-semibold py-1 rounded-full bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors">
-                            {emoji} Take Test
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Rhythm gate */}
-                  {isRhythmModule && module.status !== "locked" && (
-                    <div className="mt-3 w-44 space-y-1" onClick={e => e.stopPropagation()}>
-                      {module.completedLessons === module.totalLessons && module.totalLessons > 0 && !srGate.rhythmQuizPassed && (
-                        <p className="text-[10px] text-amber-400 font-medium text-center">Pass Rhythm Quiz to complete</p>
-                      )}
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-muted-foreground">Best score</span>
-                        <span className={srGate.rhythmQuizPassed ? "text-green-400 font-semibold" : "font-semibold"}>{srGate.rhythmBestAcc}%</span>
-                      </div>
-                      <Progress value={srGate.rhythmBestAcc} className="h-1" />
-                      <a href="/rhythm-quiz.html" className="block text-center text-[10px] font-semibold py-1 rounded-full bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors">
-                        🎵 {srGate.rhythmQuizPassed ? "✓ Passed" : "Take Quiz"}
-                      </a>
-                    </div>
+                onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
+              >
+                <div className={cn(
+                  "w-14 h-14 rounded-full flex items-center justify-center border-2 shrink-0",
+                  module.status === "completed" ? "bg-green-500/30 border-green-500" :
+                  module.status === "in-progress" ? "bg-primary/30 border-primary" :
+                  module.status === "available" ? "bg-cyan-500/30 border-cyan-500" :
+                  lockedBySRTest ? "bg-yellow-500/20 border-yellow-500/50" :
+                  "bg-muted border-border"
+                )}>
+                  {module.status === "completed" ? (
+                    <Check className="w-7 h-7 text-green-400" />
+                  ) : module.status === "locked" ? (
+                    <Lock className={cn("w-6 h-6", lockedBySRTest ? "text-yellow-400" : "text-muted-foreground")} />
+                  ) : (
+                    <Music className="w-7 h-7" />
                   )}
                 </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold truncate">{module.title}</h3>
+                    <Badge className={cn("text-xs", getLevelColor(module.level))}>
+                      {module.level}
+                    </Badge>
+                  </div>
+                  {module.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-1">{module.description}</p>
+                  )}
+
+                  {lockedBySRTest && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-yellow-400 font-medium">🎯 Sight Reading Test Required</p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className={cn(srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400" : "")}>
+                          {srGate.totalSessions >= SESSIONS_REQUIRED ? "✓" : `${srGate.totalSessions}/${SESSIONS_REQUIRED}`} sessions
+                        </span>
+                        <span className={cn((lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "text-green-400" : "")}>
+                          {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "✓ Test passed" : "Test: 100% accuracy needed"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {(module.status === "in-progress" || module.status === "completed") && module.totalLessons > 0 && (
+                    <div className="mt-2">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>{module.completedLessons}/{module.totalLessons} lessons</span>
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-yellow-400" />
+                          {module.xp_reward} XP
+                        </span>
+                      </div>
+                      <Progress value={(module.completedLessons / module.totalLessons) * 100} className="h-2" />
+                    </div>
+                  )}
+
+                  {module.status === "available" && (
+                    <div className="mt-2 flex items-center gap-2 text-xs">
+                      {module.totalLessons > 0 && <span>{module.totalLessons} lessons</span>}
+                      <span className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400" />
+                        {module.xp_reward} XP
+                      </span>
+                    </div>
+                  )}
+
+                  {isSRAdventureModule && module.status !== "locked" && (
+                    <div className="mt-3 space-y-3" onClick={e => e.stopPropagation()}>
+                      {/* Treble Clef Songs session counter */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Sessions to unlock Treble Clef Songs</span>
+                          <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                          </span>
+                        </div>
+                        <Progress
+                          value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100}
+                          className="h-1.5"
+                        />
+                        {srGate.totalSessions < SESSIONS_REQUIRED && (
+                          <p className="text-xs text-muted-foreground">
+                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Bass Clef Songs session counter */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Sessions to unlock Bass Clef Songs</span>
+                          <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
+                          </span>
+                        </div>
+                        <Progress
+                          value={(Math.min(srGate.totalSessions, SESSIONS_REQUIRED) / SESSIONS_REQUIRED) * 100}
+                          className="h-1.5"
+                        />
+                        {srGate.totalSessions < SESSIONS_REQUIRED && (
+                          <p className="text-xs text-muted-foreground">
+                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <a
+                          href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
+                          className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                        >
+                          🎯 Treble Test
+                        </a>
+                        <a
+                          href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
+                          className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                        >
+                          🎯 Bass Test
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {isRhythmModule && module.status !== "locked" && (
+                    <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
+                      {module.completedLessons === module.totalLessons && module.totalLessons > 0 && !srGate.rhythmQuizPassed && (
+                        <p className="text-xs text-amber-400 font-medium">🎯 Pass the Rhythm Quiz to complete this module</p>
+                      )}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Rhythm Quiz best score</span>
+                          <span className={srGate.rhythmQuizPassed ? "text-green-400 font-semibold" : "font-semibold"}>
+                            {srGate.rhythmBestAcc}%
+                          </span>
+                        </div>
+                        <Progress value={srGate.rhythmBestAcc} className="h-1.5" />
+                      </div>
+                      <a
+                        href="/rhythm-quiz.html"
+                        className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
+                      >
+                        🎵 {srGate.rhythmQuizPassed ? "✓ Rhythm Quiz Passed" : "Take Rhythm Quiz"}
+                      </a>
+                    </div>
+                  )}
+
+                </div>
+
+                {lockedBySRTest && srTestUrl ? (
+                  <a
+                    href={srTestUrl}
+                    onClick={e => e.stopPropagation()}
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors whitespace-nowrap"
+                  >
+                    Take Test →
+                  </a>
+                ) : module.status !== "locked" && !isSRAdventureModule ? (
+                  <Button
+                    size="sm"
+                    variant={module.status === "completed" ? "outline" : "default"}
+                    className="shrink-0"
+                    onClick={e => { e.stopPropagation(); navigate(`/dashboard/foundation/lesson-plan/${module.id}`); }}
+                  >
+                    {module.status === "completed" ? "Review" : module.status === "in-progress" ? "Continue" : "Start"}
+                  </Button>
+                ) : null}
               </div>
+            </div>
             );
           })}
         </div>
