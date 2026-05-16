@@ -322,26 +322,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
         <div class="setting-group" style="margin-bottom:.8rem">
           <label>Note Range</label>
           <div class="range-row">
-            <select class="range-select" id="rangeFrom">
-              <option value="C2">C2</option><option value="D2">D2</option><option value="E2">E2</option>
-              <option value="F2">F2</option><option value="G2">G2</option><option value="A2">A2</option>
-              <option value="B2">B2</option><option value="C3">C3</option><option value="D3">D3</option>
-              <option value="E3">E3</option><option value="F3">F3</option><option value="G3">G3</option>
-              <option value="A3">A3</option><option value="B3">B3</option>
-              <option value="C4" selected>C4</option>
-              <option value="D4">D4</option><option value="E4">E4</option><option value="F4">F4</option>
-            </select>
+            <select class="range-select" id="rangeFrom"></select>
             <span style="color:var(--muted2);font-size:.8rem">to</span>
-            <select class="range-select" id="rangeTo">
-              <option value="C3">C3</option><option value="D3">D3</option><option value="E3">E3</option>
-              <option value="F3">F3</option><option value="G3">G3</option><option value="A3">A3</option>
-              <option value="B3">B3</option><option value="C4">C4</option><option value="D4">D4</option>
-              <option value="E4">E4</option><option value="F4">F4</option><option value="G4">G4</option>
-              <option value="A4">A4</option><option value="B4" selected>B4</option>
-              <option value="C5">C5</option><option value="D5">D5</option><option value="E5">E5</option>
-              <option value="F5">F5</option><option value="G5">G5</option><option value="A5">A5</option>
-              <option value="B5">B5</option><option value="C6">C6</option>
-            </select>
+            <select class="range-select" id="rangeTo"></select>
           </div>
         </div>
 
@@ -592,11 +575,53 @@ let state = {
 /* ═══════════════════════════════════════════════════════════
    SETTINGS
 ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   RANGE DROPDOWNS — clef-aware
+═══════════════════════════════════════════════════════════ */
+const RANGE_PRESETS = {
+  treble: {
+    notes:   ['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5','C6','D6','E6','F6','G6','A6','B6','C7'],
+    from:    'C4',
+    to:      'B5',
+  },
+  bass: {
+    notes:   ['C2','D2','E2','F2','G2','A2','B2','C3','D3','E3','F3','G3','A3','B3','C4','D4','E4'],
+    from:    'C2',
+    to:      'B3',
+  },
+  both: {
+    notes:   ['C2','D2','E2','F2','G2','A2','B2','C3','D3','E3','F3','G3','A3','B3',
+              'C4','D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5','C6'],
+    from:    'C3',
+    to:      'B5',
+  },
+};
+
+function populateSelect(sel, notes, selected) {
+  sel.innerHTML = '';
+  notes.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    if (n === selected) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function updateRangeDropdowns(clef) {
+  const preset = RANGE_PRESETS[clef] || RANGE_PRESETS.treble;
+  populateSelect(document.getElementById('rangeFrom'), preset.notes, preset.from);
+  populateSelect(document.getElementById('rangeTo'),   preset.notes, preset.to);
+}
+
 function setClef(v, btn) {
   state.clef = v;
   document.querySelectorAll('[data-clef]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  updateRangeDropdowns(v);
 }
+
+// Initialise dropdowns on page load (default: treble)
+updateRangeDropdowns('treble');
 function setDiff(v, btn) {
   state.difficulty = v;
   document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
