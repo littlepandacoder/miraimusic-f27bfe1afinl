@@ -774,9 +774,13 @@ function noteSymbol(n) {
 }
 
 function generateChordChoices(correctChord) {
-  const correctNoteNames = correctChord.map(n => n.note + (n.accidental || ''));
-  const sorted     = sortNotesWithAcc(correctNoteNames);
-  const correctKey = sorted.join('+');
+  // Sort by actual pitch (octave then diatonic step) so display matches staff order (low → high)
+  const pitchSorted = [...correctChord].sort((a, b) => {
+    if (a.octave !== b.octave) return a.octave - b.octave;
+    return NOTE_ORDER_MC.indexOf(a.note) - NOTE_ORDER_MC.indexOf(b.note);
+  });
+  const sorted     = pitchSorted.map(n => n.note + (n.accidental || ''));
+  const correctKey = sortNotesWithAcc(sorted).join('+'); // canonical key for dedup
   const size       = correctChord.length;
   const hasAcc     = correctChord.some(n => n.accidental);
 
