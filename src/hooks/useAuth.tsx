@@ -29,6 +29,34 @@ const log  = import.meta.env.DEV ? console.log.bind(console)  : () => {};
 const warn = import.meta.env.DEV ? console.warn.bind(console) : () => {};
 const dbg  = import.meta.env.DEV ? console.debug.bind(console): () => {};
 
+/* ── Roles cache ─────────────────────────────────────────────────────────────
+   Stores roles in localStorage so returning users never see a loading spinner.
+   TTL is 10 minutes; stale on sign-out or when fresh fetch returns new values.
+──────────────────────────────────────────────────────────────────────────── */
+const ROLES_CACHE_KEY = 'musicable_roles_v1';
+const ROLES_CACHE_TTL = 10 * 60 * 1000; // 10 min
+
+function getCachedRoles(userId: string): UserRole[] | null {
+  try {
+    const raw = localStorage.getItem(ROLES_CACHE_KEY);
+    if (!raw) return null;
+    const { uid, roles, ts } = JSON.parse(raw);
+    if (uid !== userId) return null;
+    if (Date.now() - ts > ROLES_CACHE_TTL) return null;
+    return Array.isArray(roles) && roles.length > 0 ? roles : null;
+  } catch { return null; }
+}
+
+function setCachedRoles(userId: string, roles: UserRole[]) {
+  try {
+    localStorage.setItem(ROLES_CACHE_KEY, JSON.stringify({ uid: userId, roles, ts: Date.now() }));
+  } catch {}
+}
+
+function clearRolesCache() {
+  try { localStorage.removeItem(ROLES_CACHE_KEY); } catch {}
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -77,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchRoles = async (userId: string): Promise<UserRole[]> => {
       log("[auth] fetchRoles START — userId:", userId);
 
-      // Generous timeout — only called on INITIAL_SESSION or USER_UPDATED (not TOKEN_REFRESHED)
+      // 3-second timeout per attempt — keeps total wait under 6s if both fail
       const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
         Promise.race([p, new Promise<T>(r => setTimeout(() => r(fallback), ms))]);
 
@@ -85,12 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const result = await withTimeout(
           supabase.rpc("get_my_roles" as any),
-          8000,
+          3000,
           { data: null, error: new Error("rpc timeout") }
         );
         const { data, error } = result as any;
-        log("[auth] fetchRoles RPC result — data:", data, "error:", error?.message ?? error);
-        if (!error && Array.isArray(data)) {
+        if (!error && Array.isArray(data) && data.length > 0) {
           log("[auth] fetchRoles → roles from RPC:", data);
           return data as UserRole[];
         }
@@ -99,19 +126,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // 2. Fallback: direct table query
-      log("[auth] fetchRoles falling back to direct table query");
       try {
         const result = await withTimeout(
           supabase.from("user_roles").select("role").eq("user_id", userId),
-          8000,
+          3000,
           { data: null, error: new Error("direct query timeout") }
         );
         const { data, error } = result as any;
-        log("[auth] fetchRoles direct query result — data:", data, "error:", error?.message ?? error);
-        if (!error && data) {
-          const roles = data.map((r: any) => r.role as UserRole);
-          log("[auth] fetchRoles → roles from direct query:", roles);
-          return roles;
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const fetched = data.map((r: any) => r.role as UserRole);
+          log("[auth] fetchRoles → roles from direct query:", fetched);
+          return fetched;
         }
       } catch (e) {
         warn("[auth] fetchRoles direct query threw:", e);
@@ -127,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'SIGNED_OUT') {
           clearSupabaseStorage();
+          clearRolesCache();
           setSession(null);
           setUser(null);
           setRoles([]);
@@ -161,19 +187,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           log("[auth] INITIAL_SESSION — marking initialSessionFired, fetching roles now");
         }
 
-        // Hold loading=true while roles are being fetched so routing guards
-        // (e.g. Login's useEffect) don't fire with stale empty roles between
-        // the setUser call and the async setRoles call below.
-        if (session?.user) setLoading(true);
-
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          const uid = session.user.id;
+
+          // Cache-first: serve cached roles immediately so there's no loading spinner
+          // for returning users. Fresh roles are fetched in the background.
+          const cached = getCachedRoles(uid);
+          if (cached) {
+            log("[auth] roles cache hit →", cached);
+            setRoles(cached);
+            currentRolesRef.current = cached;
+            setLoading(false); // instant — no spinner
+          } else {
+            // No cache: show spinner while we fetch
+            setLoading(true);
+          }
+
           // Best-effort: seed lesson_progress rows on first login (non-blocking)
           (async () => {
             try {
-              const uid = session.user.id;
               const { data: existing } = await (supabase as any)
                 .from('lesson_progress').select('id').eq('student_id', uid).limit(1);
               if (!existing?.length) {
@@ -190,24 +225,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           })();
 
-          const userRoles = await fetchRoles(session.user.id);
-          // Guard: if fetchRoles returned [] but we already have roles, the query likely timed
-          // out. Keep the existing roles rather than wiping them and forcing SubscriptionGate.
-          if (userRoles.length === 0 && currentRolesRef.current.length > 0) {
-            warn("[auth] fetchRoles returned [] but existing roles are", currentRolesRef.current, "— keeping existing roles to prevent spurious logout");
-          } else {
-            log("[auth] setRoles →", userRoles, "| setLoading(false) next");
-            setRoles(userRoles);
-            currentRolesRef.current = userRoles;
+          // Fetch fresh roles (background if cache hit, blocking if not)
+          const freshRoles = await fetchRoles(uid);
+
+          if (freshRoles.length > 0) {
+            // Got real roles — update state and refresh cache
+            setCachedRoles(uid, freshRoles);
+            setRoles(freshRoles);
+            currentRolesRef.current = freshRoles;
+          } else if (!cached) {
+            // No cache and fetch failed — fall back to in-memory if present
+            if (currentRolesRef.current.length > 0) {
+              warn("[auth] fetch failed, keeping in-memory roles:", currentRolesRef.current);
+            } else {
+              setRoles([]);
+              currentRolesRef.current = [];
+            }
           }
+          // If cache hit but fetch failed, cached roles are already in state — no change needed.
+
         } else {
-          log("[auth] no session user — setRoles([]) | setLoading(false) next");
           setRoles([]);
           currentRolesRef.current = [];
         }
 
         setLoading(false);
-        log("[auth] setLoading(false) called ✓");
+        log("[auth] setLoading(false) ✓");
       }
     );
 
@@ -279,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    clearRolesCache();
     await supabase.auth.signOut();
     clearSupabaseStorage();
     setUser(null);
