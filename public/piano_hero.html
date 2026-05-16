@@ -3272,6 +3272,9 @@ function launchPractice(song, waitMode, inputMode) {
   pr.hitNotes      = 0;
   pr.totalNotes    = song.notes.length;
   pr.beatDur       = (60000 / song.bpm) / 2;
+  pr.timeSigNum    = (song.timeSig || [4,4])[0];
+  pr.timeSigDen    = (song.timeSig || [4,4])[1];
+  pr.beatsPerBar   = pr.timeSigNum * (8 / pr.timeSigDen); // 8th-note units per bar
   // Normalize notes to arrays in case they're objects (from in-session editor)
   const normNotes  = song.notes.map(n => Array.isArray(n) ? n : [n.midi, n.beat, n.dur]);
   pr.totalBeats    = normNotes.reduce((mx,n) => Math.max(mx, n[1]+n[2]), 0) + 8;
@@ -3612,12 +3615,14 @@ function drawPracticeStaff() {
   const RY = Math.round(LG * 0.46);
 
   // ── Layout zones ─────────────────────────────────────────
-  const CLEF_ZONE   = Math.round(LG * 5.5);
+  const CLEF_ZONE   = Math.round(LG * 8.0);  // wider to fit clef + time sig
   const STAFF_START = CLEF_ZONE + 6;
+  const STAFF_COLOR = '#546e7a';
+  const CLEF_COLOR  = '#90a4ae';
 
   // ── 5 staff lines (treble) ────────────────────────────────
-  prCtx.strokeStyle = '#3a5570';
-  prCtx.lineWidth   = 1.6;
+  prCtx.strokeStyle = STAFF_COLOR;
+  prCtx.lineWidth   = 1.8;
   for (let i = 0; i < 5; i++) {
     const y = geo.tTop + i * LG;
     prCtx.beginPath(); prCtx.moveTo(STAFF_START, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
@@ -3629,15 +3634,58 @@ function drawPracticeStaff() {
   }
 
   // ── System barline ────────────────────────────────────────
-  prCtx.strokeStyle = '#4a6070'; prCtx.lineWidth = 2.5;
+  prCtx.strokeStyle = STAFF_COLOR; prCtx.lineWidth = 2.5;
   prCtx.beginPath();
   prCtx.moveTo(STAFF_START, geo.tTop);
   prCtx.lineTo(STAFF_START, geo.bTop + 4 * LG);
   prCtx.stroke();
 
   // ── CLEF SYMBOLS ─────────────────────────────────────────
-  drawTrebleClef(prCtx, 4, geo.tTop, LG, '#00D4FF');
-  drawBassClef  (prCtx, 4, geo.bTop, LG, '#FF2D78');
+  drawTrebleClef(prCtx, 4, geo.tTop, LG, CLEF_COLOR);
+  drawBassClef  (prCtx, 4, geo.bTop, LG, CLEF_COLOR);
+
+  // ── Time signature ────────────────────────────────────────
+  const tsNum  = pr.timeSigNum || 4;
+  const tsDen  = pr.timeSigDen || 4;
+  const tsFontSz = Math.round(LG * 2.1);
+  const tsX    = Math.round(LG * 6.3);   // right of clef, left of system barline
+  prCtx.save();
+  prCtx.fillStyle    = CLEF_COLOR;
+  prCtx.font         = `bold ${tsFontSz}px serif`;
+  prCtx.textAlign    = 'center';
+  prCtx.textBaseline = 'middle';
+  // Treble staff
+  prCtx.fillText(tsNum, tsX, geo.tTop + LG * 1.0);
+  prCtx.fillText(tsDen, tsX, geo.tTop + LG * 3.0);
+  // Bass staff
+  prCtx.fillText(tsNum, tsX, geo.bTop + LG * 1.0);
+  prCtx.fillText(tsDen, tsX, geo.bTop + LG * 3.0);
+  prCtx.restore();
+
+  // ── Measure barlines (computed with beatToX inline) ───────
+  {
+    const _beatToX   = b => cursorX + (b - curBeat) * pxPerBeat;
+    const bpb        = pr.beatsPerBar || 8;
+    const staffTop   = geo.tTop;
+    const staffBot   = geo.bTop + 4 * LG;
+    const leftBeat   = curBeat - cursorX / pxPerBeat - bpb;
+    const rightBeat  = curBeat + SCROLL_BEATS_VISIBLE + bpb;
+    const firstBar   = Math.ceil(leftBeat / bpb) * bpb;
+
+    prCtx.save();
+    prCtx.strokeStyle = STAFF_COLOR;
+    prCtx.lineWidth   = 1.8;
+    for (let bb = firstBar; bb <= rightBeat; bb += bpb) {
+      const bx = _beatToX(bb);
+      if (bx < STAFF_START + 2) continue;
+      if (bx > PR_W + 2) break;
+      prCtx.beginPath();
+      prCtx.moveTo(bx, staffTop);
+      prCtx.lineTo(bx, staffBot);
+      prCtx.stroke();
+    }
+    prCtx.restore();
+  }
 
   // ── Cursor / playhead ─────────────────────────────────────
   const cTop = geo.tTop - LG * 1.0;
@@ -4518,7 +4566,7 @@ let SONGS = [
     id: 'hb',
     name: 'Happy Birthday',
     composer: 'Hill Sisters',
-    bpm: 100, difficulty: 'easy', color: '#A855F7',
+    bpm: 100, difficulty: 'easy', color: '#A855F7', timeSig: [3,4],
     notes: [
       [60,0,1],[60,1,1],[62,2,2],[60,4,2],[65,6,2],[64,8,4],
       [60,12,1],[60,13,1],[62,14,2],[60,16,2],[67,18,2],[65,20,4],
