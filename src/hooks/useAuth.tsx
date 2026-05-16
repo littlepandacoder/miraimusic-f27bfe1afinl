@@ -25,6 +25,10 @@ interface AuthContextType {
   clearLastAuthError: () => void;
 }
 
+const log  = import.meta.env.DEV ? console.log.bind(console)  : () => {};
+const warn = import.meta.env.DEV ? console.warn.bind(console) : () => {};
+const dbg  = import.meta.env.DEV ? console.debug.bind(console): () => {};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -55,11 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Remove the identified keys
       keysToRemove.forEach(k => localStorage.removeItem(k));
       if (import.meta.env.DEV) {
-        console.debug(`[auth] cleared ${keysToRemove.length} Supabase storage keys`);
+        dbg(`[auth] cleared ${keysToRemove.length} Supabase storage keys`);
       }
       return keysToRemove.length;
     } catch (e) {
-      console.warn('[auth] error clearing storage:', e);
+      warn('[auth] error clearing storage:', e);
       return 0;
     }
   };
@@ -71,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch roles: try SECURITY DEFINER RPC first (bypasses RLS), then fall back
     // to direct table query. The RPC requires get_my_roles() to exist in Supabase.
     const fetchRoles = async (userId: string): Promise<UserRole[]> => {
-      console.log("[auth] fetchRoles START — userId:", userId);
+      log("[auth] fetchRoles START — userId:", userId);
 
       // Generous timeout — only called on INITIAL_SESSION or USER_UPDATED (not TOKEN_REFRESHED)
       const withTimeout = <T,>(p: Promise<T>, ms: number, fallback: T): Promise<T> =>
@@ -85,17 +89,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           { data: null, error: new Error("rpc timeout") }
         );
         const { data, error } = result as any;
-        console.log("[auth] fetchRoles RPC result — data:", data, "error:", error?.message ?? error);
+        log("[auth] fetchRoles RPC result — data:", data, "error:", error?.message ?? error);
         if (!error && Array.isArray(data)) {
-          console.log("[auth] fetchRoles → roles from RPC:", data);
+          log("[auth] fetchRoles → roles from RPC:", data);
           return data as UserRole[];
         }
       } catch (e) {
-        console.warn("[auth] fetchRoles RPC threw:", e);
+        warn("[auth] fetchRoles RPC threw:", e);
       }
 
       // 2. Fallback: direct table query
-      console.log("[auth] fetchRoles falling back to direct table query");
+      log("[auth] fetchRoles falling back to direct table query");
       try {
         const result = await withTimeout(
           supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -103,23 +107,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           { data: null, error: new Error("direct query timeout") }
         );
         const { data, error } = result as any;
-        console.log("[auth] fetchRoles direct query result — data:", data, "error:", error?.message ?? error);
+        log("[auth] fetchRoles direct query result — data:", data, "error:", error?.message ?? error);
         if (!error && data) {
           const roles = data.map((r: any) => r.role as UserRole);
-          console.log("[auth] fetchRoles → roles from direct query:", roles);
+          log("[auth] fetchRoles → roles from direct query:", roles);
           return roles;
         }
       } catch (e) {
-        console.warn("[auth] fetchRoles direct query threw:", e);
+        warn("[auth] fetchRoles direct query threw:", e);
       }
 
-      console.warn("[auth] fetchRoles → returning [] (all methods failed)");
+      warn("[auth] fetchRoles → returning [] (all methods failed)");
       return [];
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[auth] onAuthStateChange — event: ${event}, user: ${session?.user?.email ?? "null"}`);
+        log(`[auth] onAuthStateChange — event: ${event}, user: ${session?.user?.email ?? "null"}`);
 
         if (event === 'SIGNED_OUT') {
           clearSupabaseStorage();
@@ -127,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setRoles([]);
           setLoading(false);
-          console.log("[auth] SIGNED_OUT — cleared state ✓");
+          log("[auth] SIGNED_OUT — cleared state ✓");
           return;
         }
 
@@ -135,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Re-fetching roles here causes intermittent timeouts that wipe roles to [] and log the
         // user out to SubscriptionGate. Just update session/user and keep existing roles.
         if (event === 'TOKEN_REFRESHED') {
-          console.log("[auth] TOKEN_REFRESHED — updating session only, roles unchanged:", currentRolesRef.current);
+          log("[auth] TOKEN_REFRESHED — updating session only, roles unchanged:", currentRolesRef.current);
           setSession(session);
           setUser(session?.user ?? null);
           return;
@@ -146,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // INITIAL_SESSION fires ~immediately after and IS reliable.
         // Skip role fetching on the first SIGNED_IN and let INITIAL_SESSION handle it.
         if (event === 'SIGNED_IN' && !initialSessionFiredRef.current) {
-          console.log("[auth] SIGNED_IN (pre-INITIAL_SESSION) — updating user/session, deferring roles to INITIAL_SESSION");
+          log("[auth] SIGNED_IN (pre-INITIAL_SESSION) — updating user/session, deferring roles to INITIAL_SESSION");
           setSession(session);
           setUser(session?.user ?? null);
           return; // keep loading=true until INITIAL_SESSION completes
@@ -154,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'INITIAL_SESSION') {
           initialSessionFiredRef.current = true;
-          console.log("[auth] INITIAL_SESSION — marking initialSessionFired, fetching roles now");
+          log("[auth] INITIAL_SESSION — marking initialSessionFired, fetching roles now");
         }
 
         // Hold loading=true while roles are being fetched so routing guards
@@ -182,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
               }
             } catch (e) {
-              console.debug('ensureUserProgress failed (non-blocking):', e);
+              dbg('ensureUserProgress failed (non-blocking):', e);
             }
           })();
 
@@ -190,20 +194,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Guard: if fetchRoles returned [] but we already have roles, the query likely timed
           // out. Keep the existing roles rather than wiping them and forcing SubscriptionGate.
           if (userRoles.length === 0 && currentRolesRef.current.length > 0) {
-            console.warn("[auth] fetchRoles returned [] but existing roles are", currentRolesRef.current, "— keeping existing roles to prevent spurious logout");
+            warn("[auth] fetchRoles returned [] but existing roles are", currentRolesRef.current, "— keeping existing roles to prevent spurious logout");
           } else {
-            console.log("[auth] setRoles →", userRoles, "| setLoading(false) next");
+            log("[auth] setRoles →", userRoles, "| setLoading(false) next");
             setRoles(userRoles);
             currentRolesRef.current = userRoles;
           }
         } else {
-          console.log("[auth] no session user — setRoles([]) | setLoading(false) next");
+          log("[auth] no session user — setRoles([]) | setLoading(false) next");
           setRoles([]);
           currentRolesRef.current = [];
         }
 
         setLoading(false);
-        console.log("[auth] setLoading(false) called ✓");
+        log("[auth] setLoading(false) called ✓");
       }
     );
 
@@ -226,12 +230,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let data: any = null;
       let error: any = null;
 
-      console.log("[auth] signInWithPassword — email:", email, "passwordLength:", password.length);
+      log("[auth] signInWithPassword — email:", email, "passwordLength:", password.length);
       try {
         const res = await supabase.auth.signInWithPassword({ email, password });
         data = res.data;
         error = res.error;
-        console.log("[auth] signInWithPassword result — user:", data?.user?.email ?? "null", "error:", error?.message ?? "none", "status:", (error as any)?.status ?? "n/a");
+        log("[auth] signInWithPassword result — user:", data?.user?.email ?? "null", "error:", error?.message ?? "none", "status:", (error as any)?.status ?? "n/a");
       } catch (fetchErr: any) {
         const msg = String(fetchErr?.message || fetchErr || 'Network error while contacting auth server');
         console.error('[auth] network/fetch error during signIn:', msg);
@@ -240,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
-        console.debug('[auth] signInWithPassword result', { data, error });
+        dbg('[auth] signInWithPassword result', { data, error });
       }
 
       if (import.meta.env.DEV && error && (error as any)?.status === 400 && DEV_SUPABASE_URL && DEV_SUPABASE_PUBLISHABLE_KEY) {
@@ -252,10 +256,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           const text = await debugResp.text();
           // eslint-disable-next-line no-console
-          console.debug('[auth][dev-debug] raw token endpoint response', { status: debugResp.status, body: text });
+          dbg('[auth][dev-debug] raw token endpoint response', { status: debugResp.status, body: text });
         } catch (dbgErr) {
           // eslint-disable-next-line no-console
-          console.warn('[auth][dev-debug] failed to fetch token endpoint for debug:', dbgErr);
+          warn('[auth][dev-debug] failed to fetch token endpoint for debug:', dbgErr);
         }
       }
 

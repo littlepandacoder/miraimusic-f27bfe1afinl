@@ -89,7 +89,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .note-btn:hover{border-color:var(--pink);color:var(--pink);background:var(--pink-dim)}
 .note-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green) !important;animation:pulse-green .4s ease}
 .note-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red) !important;animation:shake .3s ease}
+.note-btn.selected{background:rgba(168,85,247,.2);border-color:var(--purple);color:var(--purple) !important}
 .note-btn:disabled{opacity:.35;cursor:not-allowed}
+.chord-check-row{margin-top:.7rem}
+.chord-hint{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted2);margin-bottom:.5rem;letter-spacing:.04em}
+.chord-check-btn{width:100%;padding:.75rem;background:var(--purple);color:#fff;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-size:.88rem;letter-spacing:.03em;transition:opacity .2s}
+.chord-check-btn:hover{opacity:.88}
+.chord-check-btn:disabled{opacity:.35;cursor:not-allowed}
 @keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
@@ -252,7 +258,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 
       <!-- Clickable note name buttons -->
       <div class="answer-section">
-        <div class="answer-label">Or click the note name →</div>
+        <div class="answer-label" id="answerLabel">Or click the note name →</div>
         <div class="note-btns" id="noteBtns">
           <button class="note-btn" data-note="C">C</button>
           <button class="note-btn" data-note="D">D</button>
@@ -261,6 +267,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
           <button class="note-btn" data-note="G">G</button>
           <button class="note-btn" data-note="A">A</button>
           <button class="note-btn" data-note="B">B</button>
+        </div>
+        <div class="chord-check-row" id="chordCheckRow" style="display:none">
+          <div class="chord-hint" id="chordHint">Select all notes in the chord, then click Check</div>
+          <button class="chord-check-btn" id="chordCheckBtn" onclick="checkChordAnswer()">Check Chord ✓</button>
         </div>
       </div>
 
@@ -353,6 +363,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
           </div>
         </div>
 
+        <div class="setting-group" style="margin-bottom:.8rem">
+          <label>Mode</label>
+          <div class="seg-control">
+            <button class="seg-btn active" data-mode="single" onclick="setMode('single',this)">Single Notes</button>
+            <button class="seg-btn" data-mode="chord" onclick="setMode('chord',this)">Chords</button>
+          </div>
+        </div>
+
+        <div class="setting-group" id="chordSizeGroup" style="margin-bottom:.8rem;display:none">
+          <label>Notes per chord</label>
+          <div class="seg-control">
+            <button class="seg-btn" data-csize="2" onclick="setChordSize(2,this)">2 notes</button>
+            <button class="seg-btn active" data-csize="3" onclick="setChordSize(3,this)">3 notes</button>
+          </div>
+        </div>
+
         <button class="start-btn" id="startBtn" onclick="startSession()">▶ Start Session</button>
         <button class="start-btn" id="stopBtn" onclick="stopSession()" style="display:none;background:var(--card2);border:1px solid var(--border);color:var(--muted)">⏹ End Session</button>
       </div>
@@ -368,7 +394,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
           <div class="timer-text" id="timerText">—</div>
           <div class="timer-sublabel">SECONDS</div>
         </div>
-        <div style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);text-align:center">Limit: 3.0s · Faster = better score</div>
+        <div id="timerLimitLabel" style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);text-align:center">Limit: 3.0s · Faster = better score</div>
       </div>
 
       <!-- Live stats -->
@@ -544,7 +570,11 @@ let state = {
   difficulty:    'beginner',
   count:         10,
   accidentals:   'natural',
+  mode:          'single',   // 'single' | 'chord'
+  chordSize:     3,
   currentNote:   null,
+  currentChord:  [],
+  chordSelected: new Set(),
   currentClef:   'treble',
   questionNum:   0,
   totalQ:        0,
@@ -582,6 +612,72 @@ function setAcc(v, btn) {
   document.querySelectorAll('[data-acc]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+function setMode(v, btn) {
+  state.mode = v;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const isChord = v === 'chord';
+  document.getElementById('chordSizeGroup').style.display = isChord ? 'block' : 'none';
+  document.getElementById('timerLimitLabel').textContent  = isChord
+    ? 'Limit: 8.0s · Select all chord notes'
+    : 'Limit: 3.0s · Faster = better score';
+  document.getElementById('answerLabel').textContent = isChord
+    ? 'Select ALL notes in the chord →'
+    : 'Or click the note name →';
+  if (!state.running) document.getElementById('chordCheckRow').style.display = 'none';
+}
+function setChordSize(v, btn) {
+  state.chordSize = v;
+  document.querySelectorAll('[data-csize]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHORD HELPERS
+═══════════════════════════════════════════════════════════ */
+function pickChord(pool, size) {
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const chord    = [];
+  const usedNames = new Set();
+  for (const n of shuffled) {
+    if (usedNames.has(n.note)) continue;
+    const dSteps = diatonicStepsFromC4(n.note, n.octave);
+    const tooClose = chord.some(c => Math.abs(diatonicStepsFromC4(c.note, c.octave) - dSteps) <= 1);
+    if (tooClose) continue;
+    chord.push(n);
+    usedNames.add(n.note);
+    if (chord.length >= size) break;
+  }
+  // Fallback: relax adjacency if pool is too small
+  if (chord.length < 2) {
+    const names = new Set(chord.map(n => n.note));
+    for (const n of shuffled) {
+      if (!names.has(n.note)) { chord.push(n); names.add(n.note); }
+      if (chord.length >= size) break;
+    }
+  }
+  return chord;
+}
+
+function toggleChordNote(noteName, btn) {
+  if (state.chordSelected.has(noteName)) {
+    state.chordSelected.delete(noteName);
+    btn.classList.remove('selected');
+  } else {
+    state.chordSelected.add(noteName);
+    btn.classList.add('selected');
+  }
+  const total = new Set(state.currentChord.map(n => n.note)).size;
+  document.getElementById('chordHint').textContent =
+    `Select all ${total} notes · ${state.chordSelected.size} selected`;
+}
+
+function checkChordAnswer() {
+  const chordNames = new Set(state.currentChord.map(n => n.note));
+  const allMatch   = [...chordNames].every(n => state.chordSelected.has(n)) &&
+                     [...state.chordSelected].every(n => chordNames.has(n));
+  handleAnswer(allMatch ? '__CHORD_OK__' : '__CHORD_WRONG__');
+}
 
 /* ═══════════════════════════════════════════════════════════
    SESSION CONTROL
@@ -598,14 +694,17 @@ function startSession() {
     return;
   }
 
-  state.running     = true;
-  state.questionNum = 0;
-  state.totalQ      = 0;
-  state.correct     = 0;
-  state.streak      = 0;
-  state.bestStreak  = 0;
-  state.log         = [];
-  state.answered    = false;
+  state.running      = true;
+  state.questionNum  = 0;
+  state.totalQ       = 0;
+  state.correct      = 0;
+  state.streak       = 0;
+  state.bestStreak   = 0;
+  state.log          = [];
+  state.answered     = false;
+  state.currentChord = [];
+  state.chordSelected = new Set();
+  document.getElementById('chordCheckRow').style.display = 'none';
 
   document.getElementById('startBtn').style.display  = 'none';
   document.getElementById('stopBtn').style.display   = 'block';
@@ -625,6 +724,7 @@ function stopSession() {
   document.getElementById('startBtn').style.display = 'block';
   document.getElementById('stopBtn').style.display  = 'none';
   document.getElementById('idleOverlay').style.display = 'flex';
+  document.getElementById('chordCheckRow').style.display = 'none';
   setButtonsDisabled(true);
   drawStaff(null, null);
   drawMiniKb(null);
@@ -641,39 +741,62 @@ function nextQuestion() {
 
   state.questionNum++;
   state.totalQ++;
-  state.answered = false;
+  state.answered     = false;
+  state.chordSelected = new Set();
 
-  // Pick random note from pool
-  const pick = state.notePool[Math.floor(Math.random() * state.notePool.length)];
-  const noteLabel = pick.note + (pick.accidental || '');
-  state.currentNote = {
-    ...pick,
-    label:   noteLabel,
-    display: noteLabel + pick.octave,
-  };
+  if (state.mode === 'chord') {
+    const chord = pickChord(state.notePool, state.chordSize);
+    if (chord.length < 2) {
+      showToast('⚠ Not enough distinct notes in this range for chords — adjust settings');
+      stopSession();
+      return;
+    }
+    state.currentChord = chord;
+    state.currentNote  = chord[0];
 
-  // Determine clef
-  if (state.clef === 'both') {
-    const dSteps = diatonicStepsFromC4(pick.note, pick.octave);
-    state.currentClef = dSteps >= 0 ? 'treble' : 'bass';
+    if (state.clef === 'both') {
+      const avg = chord.reduce((s, n) => s + diatonicStepsFromC4(n.note, n.octave), 0) / chord.length;
+      state.currentClef = avg >= 0 ? 'treble' : 'bass';
+    } else {
+      state.currentClef = state.clef;
+    }
+
+    drawStaff(chord, state.currentClef);
+    drawMiniKb(null);
+    chord.forEach((n, i) => {
+      const hz = noteHz(n.note + (n.accidental || ''), n.octave);
+      setTimeout(() => playNote(hz, 0.7), i * 120);
+    });
+
+    const total = new Set(chord.map(n => n.note)).size;
+    document.getElementById('chordCheckRow').style.display = 'block';
+    document.getElementById('chordHint').textContent = `Select all ${total} notes · 0 selected`;
+
   } else {
-    state.currentClef = state.clef;
+    // Single note mode
+    const pick      = state.notePool[Math.floor(Math.random() * state.notePool.length)];
+    const noteLabel = pick.note + (pick.accidental || '');
+    state.currentNote  = { ...pick, label: noteLabel, display: noteLabel + pick.octave };
+    state.currentChord = [];
+
+    if (state.clef === 'both') {
+      const dSteps = diatonicStepsFromC4(pick.note, pick.octave);
+      state.currentClef = dSteps >= 0 ? 'treble' : 'bass';
+    } else {
+      state.currentClef = state.clef;
+    }
+
+    drawStaff(state.currentNote, state.currentClef);
+    drawMiniKb(null);
+    playNote(noteHz(pick.note + (pick.accidental || ''), pick.octave), 0.6);
+    document.getElementById('chordCheckRow').style.display = 'none';
   }
 
-  drawStaff(state.currentNote, state.currentClef);
-  drawMiniKb(null);
-
-  // Play the note so they can also hear it
-  const hz = noteHz(pick.note + (pick.accidental || ''), pick.octave);
-  playNote(hz, 0.6);
-
-  // Progress bar
   if (state.count > 0) {
     document.getElementById('progressFill').style.width =
       ((state.questionNum - 1) / state.count * 100) + '%';
   }
-  document.getElementById('sessionCounter').textContent =
-    `${state.correct} / ${state.totalQ}`;
+  document.getElementById('sessionCounter').textContent = `${state.correct} / ${state.totalQ}`;
 
   setButtonsDisabled(false);
   hideFeedback();
@@ -689,35 +812,52 @@ function handleAnswer(guessNote) {
   if (!state.running || state.answered) return;
   state.answered = true;
   cancelAnimationFrame(state.timerRAF);
+  document.getElementById('chordCheckRow').style.display = 'none';
 
   const elapsed   = (performance.now() - state.questionStart) / 1000;
   const isTimeout = guessNote === '__TIMEOUT__';
-  const correct   = !isTimeout && guessNote === state.currentNote.note;
-  const tooSlow   = elapsed > 3.0;
-  const win       = correct && !tooSlow;
+  const timerLimit = state.mode === 'chord' ? 8.0 : 3.0;
 
-  setTimerDisplay(elapsed, elapsed <= 1.5 ? 'green' : elapsed <= 3 ? 'amber' : 'red');
+  let correct, tooSlow, win;
+  if (state.mode === 'chord') {
+    correct  = guessNote === '__CHORD_OK__';
+    tooSlow  = elapsed > timerLimit;
+    win      = correct && !tooSlow;
+
+    // Colour chord buttons: correct selections green, missing ones green, wrong ones red
+    const chordNames = new Set(state.currentChord.map(n => n.note));
+    document.querySelectorAll('.note-btn').forEach(b => {
+      const n = b.dataset.note;
+      if (chordNames.has(n)) {
+        b.classList.remove('selected');
+        b.classList.add('correct');
+      } else if (state.chordSelected.has(n)) {
+        b.classList.remove('selected');
+        b.classList.add('wrong');
+      }
+    });
+  } else {
+    correct  = !isTimeout && guessNote === state.currentNote.note;
+    tooSlow  = elapsed > timerLimit;
+    win      = correct && !tooSlow;
+
+    if (!isTimeout) drawMiniKb({ note: guessNote, correct: win });
+    if (!isTimeout) {
+      const btn = document.querySelector(`.note-btn[data-note="${guessNote}"]`);
+      if (btn) btn.classList.add(win ? 'correct' : 'wrong');
+    }
+    if (!win && !isTimeout) {
+      const cb = document.querySelector(`.note-btn[data-note="${state.currentNote.note}"]`);
+      if (cb) cb.classList.add('correct');
+    }
+  }
+
+  setTimerDisplay(elapsed, elapsed <= timerLimit * 0.5 ? 'green' : elapsed <= timerLimit * 0.85 ? 'amber' : 'red');
   setButtonsDisabled(true);
-
-  // Highlight on mini keyboard (skip for timeout)
-  if (!isTimeout) drawMiniKb({ note: guessNote, correct: win });
-
-  // Colour the pressed button
-  if (!isTimeout) {
-    const btn = document.querySelector(`.note-btn[data-note="${guessNote}"]`);
-    if (btn) btn.classList.add(win ? 'correct' : 'wrong');
-  }
-
-  // Always show the correct answer
-  if (!win) {
-    const correctBtn = document.querySelector(`.note-btn[data-note="${state.currentNote.note}"]`);
-    if (correctBtn) correctBtn.classList.add('correct');
-  }
 
   if (win)  playCorrect();
   else      playWrong();
 
-  // Update state
   if (win) {
     state.correct++;
     state.streak++;
@@ -726,36 +866,44 @@ function handleAnswer(guessNote) {
     state.streak = 0;
   }
 
-  // Feedback message
-  if (isTimeout) {
-    showFeedback('slow', '⏰',
-      "Too slow — keep practising!",
-      `Your response time is more than 3 seconds. The note was ${state.currentNote.display}`);
-  } else if (tooSlow && correct) {
-    showFeedback('slow', '⏰',
-      "Correct note, but too slow!",
-      `${elapsed.toFixed(1)}s — your response time is more than 3 seconds, keep practising`);
-  } else if (win) {
-    const speed = elapsed < 1 ? 'Lightning fast! ⚡' : elapsed < 2 ? 'Nice!' : 'Correct!';
-    showFeedback('correct', '✓',
-      `${speed} That's ${state.currentNote.display}`,
-      `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+  // Feedback
+  if (state.mode === 'chord') {
+    const chordLabel = state.currentChord.map(n => n.note + (n.accidental || '')).join(' + ');
+    if (isTimeout) {
+      showFeedback('slow', '⏰', 'Too slow!', `The chord was ${chordLabel}`);
+    } else if (win) {
+      showFeedback('correct', '✓', `Correct! ${chordLabel}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+    } else {
+      const selected = [...state.chordSelected].join(', ') || '(none)';
+      showFeedback('wrong', '✗', `Not quite — chord was ${chordLabel}`, `You selected: ${selected}`);
+    }
   } else {
-    showFeedback('wrong', '✗',
-      `Not quite — it was ${state.currentNote.display}`,
-      `You guessed ${guessNote} · ${elapsed.toFixed(2)}s`);
+    if (isTimeout) {
+      showFeedback('slow', '⏰', "Too slow — keep practising!",
+        `The note was ${state.currentNote.display}`);
+    } else if (tooSlow && correct) {
+      showFeedback('slow', '⏰', "Correct note, but too slow!",
+        `${elapsed.toFixed(1)}s — more than ${timerLimit}s, keep practising`);
+    } else if (win) {
+      const speed = elapsed < 1 ? 'Lightning fast! ⚡' : elapsed < 2 ? 'Nice!' : 'Correct!';
+      showFeedback('correct', '✓', `${speed} That's ${state.currentNote.display}`,
+        `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+    } else {
+      showFeedback('wrong', '✗', `Not quite — it was ${state.currentNote.display}`,
+        `You guessed ${guessNote} · ${elapsed.toFixed(2)}s`);
+    }
   }
 
   // Log
+  const logNote  = state.mode === 'chord'
+    ? state.currentChord.map(n => n.note).join('+')
+    : state.currentNote.display;
+  const logGuess = state.mode === 'chord'
+    ? (isTimeout ? '(timeout)' : [...state.chordSelected].join('+') || '(none)')
+    : (isTimeout ? '(timeout)' : guessNote);
+
   const result = tooSlow || isTimeout ? 'slow' : win ? 'ok' : 'no';
-  state.log.push({
-    note:    state.currentNote.display,
-    guess:   isTimeout ? '(timeout)' : guessNote,
-    time:    elapsed,
-    correct: win,
-    tooSlow: tooSlow || isTimeout,
-    result,
-  });
+  state.log.push({ note: logNote, guess: logGuess, time: elapsed, correct: win, tooSlow: tooSlow || isTimeout, result });
   appendLogRow(state.log[state.log.length - 1]);
   updateStats();
 
@@ -764,7 +912,7 @@ function handleAnswer(guessNote) {
   setTimeout(() => {
     resetNoteButtons();
     nextQuestion();
-  }, 1200);
+  }, 1400);
 }
 
 function sessionComplete() {
@@ -882,29 +1030,31 @@ function saveGameScore(game, score, correct, total, bestStreak) {
 /* ═══════════════════════════════════════════════════════════
    TIMER
 ═══════════════════════════════════════════════════════════ */
-const TIMER_LIMIT = 3.0;
+const TIMER_LIMIT       = 3.0;
+const CHORD_TIMER_LIMIT = 8.0;
 const RING_CIRCUM = 2 * Math.PI * 35; // 219.9
 
 function startTimer() {
   cancelAnimationFrame(state.timerRAF);
-  const t0 = performance.now();
+  const t0    = performance.now();
+  const limit = state.mode === 'chord' ? CHORD_TIMER_LIMIT : TIMER_LIMIT;
 
   function tick() {
     if (!state.running || state.answered) return;
     const elapsed  = (performance.now() - t0) / 1000;
-    const fraction = Math.min(elapsed / TIMER_LIMIT, 1);
+    const fraction = Math.min(elapsed / limit, 1);
     const offset   = RING_CIRCUM * (1 - fraction);
 
     const ring = document.getElementById('timerRing');
     const text = document.getElementById('timerText');
     ring.style.strokeDashoffset = offset;
-    ring.style.stroke = elapsed < 1.5 ? '#39D98A' : elapsed < 2.5 ? '#F59E0B' : '#EF4444';
+    ring.style.stroke = fraction < 0.5 ? '#39D98A' : fraction < 0.85 ? '#F59E0B' : '#EF4444';
     text.textContent  = elapsed.toFixed(1);
-    text.style.color  = elapsed > 2.5 ? '#EF4444' : 'var(--white)';
+    text.style.color  = fraction > 0.85 ? '#EF4444' : 'var(--white)';
 
-    if (elapsed >= TIMER_LIMIT) {
+    if (elapsed >= limit) {
       ring.style.strokeDashoffset = 0;
-      text.textContent = '3.0';
+      text.textContent = limit.toFixed(1);
       if (!state.answered) handleAnswer('__TIMEOUT__');
       return;
     }
@@ -990,9 +1140,10 @@ function appendLogRow(entry) {
 
 function resetNoteButtons() {
   document.querySelectorAll('.note-btn').forEach(b => {
-    b.classList.remove('correct', 'wrong');
+    b.classList.remove('correct', 'wrong', 'selected');
     b.disabled = false;
   });
+  state.chordSelected = new Set();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1002,19 +1153,21 @@ const staffCanvas = document.getElementById('staffCanvas');
 const sCtx        = staffCanvas.getContext('2d');
 const SW = 900, SH = 270;
 
-function drawStaff(noteObj, clef) {
+function drawStaff(noteInput, clef) {
+  const noteList = Array.isArray(noteInput) ? noteInput : (noteInput ? [noteInput] : []);
+
   sCtx.clearRect(0, 0, SW, SH);
   sCtx.fillStyle = '#0D1117';
   sCtx.fillRect(0, 0, SW, SH);
 
-  if (!noteObj) return;           // early exit — nothing to draw
+  if (!noteList.length) return;
 
-  const isTreble   = clef === 'treble';
-  const lineGap    = 22;
-  const staffTop   = isTreble ? 70 : 105;
-  const staffLeft  = 90;
-  const staffW     = SW - 130;
-  const stepSize   = lineGap / 2;
+  const isTreble = clef === 'treble';
+  const lineGap  = 22;
+  const staffTop = isTreble ? 70 : 105;
+  const staffLeft = 90;
+  const staffW    = SW - 130;
+  const stepSize  = lineGap / 2;
 
   // Staff lines
   sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
@@ -1026,7 +1179,7 @@ function drawStaff(noteObj, clef) {
     sCtx.stroke();
   }
 
-  // Clef
+  // Clef symbol
   sCtx.font      = '92px serif';
   sCtx.textAlign = 'left';
   if (isTreble) {
@@ -1037,77 +1190,71 @@ function drawStaff(noteObj, clef) {
     sCtx.fillText('𝄢', staffLeft - 62, staffTop + 2 * lineGap + 8);
   }
 
-  // Clef label
   sCtx.font      = '12px "DM Mono",monospace';
   sCtx.fillStyle = isTreble ? '#00D4FF' : '#FF2D78';
   sCtx.fillText(isTreble ? 'TREBLE CLEF' : 'BASS CLEF', staffLeft + 5, staffTop - 14);
   sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
 
-  // Note Y position on staff
-  // Middle C = one ledger line below treble staff = staffTop + 5*lineGap
-  //            one ledger line above bass staff   = staffTop - lineGap
-  const middleCY   = isTreble
-    ? staffTop + 5 * lineGap
-    : staffTop - lineGap;
-  const dSteps     = diatonicStepsFromC4(noteObj.note, noteObj.octave);
-  const noteY      = middleCY - dSteps * stepSize;
-  const noteX      = SW / 2;
+  const middleCY = isTreble ? staffTop + 5 * lineGap : staffTop - lineGap;
+  const noteX    = SW / 2;
 
-  // Ledger lines — treble: below staff and above staff
+  // Compute Y for each note
+  const positions = noteList.map(n => ({
+    noteObj: n,
+    noteY:   middleCY - diatonicStepsFromC4(n.note, n.octave) * stepSize,
+  }));
+
+  // Ledger lines — union across all notes
   sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
   sCtx.lineWidth   = 2;
-  if (isTreble) {
-    for (let ly = staffTop + 5 * lineGap; ly <= noteY + stepSize / 2; ly += lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
-    }
-    for (let ly = staffTop - lineGap; ly >= noteY - stepSize / 2; ly -= lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
-    }
-  } else {
-    for (let ly = staffTop - lineGap; ly >= noteY - stepSize / 2; ly -= lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
-    }
-    for (let ly = staffTop + 5 * lineGap; ly <= noteY + stepSize / 2; ly += lineGap) {
-      sCtx.beginPath(); sCtx.moveTo(noteX - 24, ly); sCtx.lineTo(noteX + 24, ly); sCtx.stroke();
-    }
-  }
+  const staffBottom = staffTop + 4 * lineGap;
+  const ledgerSet   = new Set();
+  positions.forEach(({ noteY }) => {
+    for (let ly = staffBottom + lineGap; ly <= noteY + stepSize / 2; ly += lineGap) ledgerSet.add(ly);
+    for (let ly = staffTop  - lineGap;  ly >= noteY - stepSize / 2; ly -= lineGap)  ledgerSet.add(ly);
+  });
+  ledgerSet.forEach(ly => {
+    sCtx.beginPath();
+    sCtx.moveTo(noteX - 28, ly);
+    sCtx.lineTo(noteX + 28, ly);
+    sCtx.stroke();
+  });
 
-  // Note head glow + fill
-  sCtx.shadowColor = '#FF2D78';
-  sCtx.shadowBlur  = 26;
-  sCtx.fillStyle   = '#FF2D78';
-  sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
-  sCtx.fill();
-  sCtx.shadowBlur = 0;
+  // Draw each note head
+  positions.forEach(({ noteObj, noteY }) => {
+    sCtx.shadowColor = '#FF2D78';
+    sCtx.shadowBlur  = 26;
+    sCtx.fillStyle   = '#FF2D78';
+    sCtx.beginPath();
+    sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
+    sCtx.fill();
+    sCtx.shadowBlur = 0;
 
-  // Accidental
-  if (noteObj.accidental === '#' || noteObj.accidental === 'b') {
-    sCtx.fillStyle  = '#FF2D78';
-    sCtx.font       = 'bold 28px serif';
-    sCtx.textAlign  = 'right';
-    sCtx.fillText(noteObj.accidental === '#' ? '♯' : '♭', noteX - 22, noteY + 10);
-  }
+    if (noteObj.accidental === '#' || noteObj.accidental === 'b') {
+      sCtx.fillStyle  = '#FF2D78';
+      sCtx.font       = 'bold 28px serif';
+      sCtx.textAlign  = 'right';
+      sCtx.fillText(noteObj.accidental === '#' ? '♯' : '♭', noteX - 22, noteY + 10);
+    }
 
-  // Outer ring
-  sCtx.strokeStyle = '#FF2D78';
-  sCtx.lineWidth   = 1.5;
-  sCtx.globalAlpha = 0.3;
-  sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 26, 18, -0.18, 0, Math.PI * 2);
-  sCtx.stroke();
-  sCtx.globalAlpha = 1;
+    sCtx.strokeStyle = '#FF2D78';
+    sCtx.lineWidth   = 1.5;
+    sCtx.globalAlpha = 0.3;
+    sCtx.beginPath();
+    sCtx.ellipse(noteX, noteY, 26, 18, -0.18, 0, Math.PI * 2);
+    sCtx.stroke();
+    sCtx.globalAlpha = 1;
 
-  // ? badge
-  sCtx.fillStyle    = '#fff';
-  sCtx.font         = 'bold 16px "DM Mono",monospace';
-  sCtx.textAlign    = 'center';
-  sCtx.textBaseline = 'middle';
-  sCtx.shadowColor  = '#FF2D78';
-  sCtx.shadowBlur   = 10;
-  sCtx.fillText('?', noteX, noteY);
-  sCtx.shadowBlur   = 0;
-  sCtx.textBaseline = 'alphabetic';
+    sCtx.fillStyle    = '#fff';
+    sCtx.font         = 'bold 16px "DM Mono",monospace';
+    sCtx.textAlign    = 'center';
+    sCtx.textBaseline = 'middle';
+    sCtx.shadowColor  = '#FF2D78';
+    sCtx.shadowBlur   = 10;
+    sCtx.fillText('?', noteX, noteY);
+    sCtx.shadowBlur   = 0;
+    sCtx.textBaseline = 'alphabetic';
+  });
 
   // Closing barline
   sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
@@ -1223,18 +1370,20 @@ midiKbCanvas.addEventListener('click', e => {
   }
 });
 
-// Note name buttons — play sound + submit answer
+// Note name buttons — play sound + submit (single) or toggle (chord)
 document.getElementById('noteBtns').addEventListener('click', e => {
   const btn = e.target.closest('.note-btn');
   if (!btn) return;
 
-  // Always play sound for the note that was clicked
   const hz = noteHz(btn.dataset.note, 4);
   if (hz > 0) playNote(hz, 0.7);
 
-  // Only submit answer when session is active and not already answered
   if (!btn.disabled && state.running && !state.answered) {
-    handleAnswer(btn.dataset.note);
+    if (state.mode === 'chord') {
+      toggleChordNote(btn.dataset.note, btn);
+    } else {
+      handleAnswer(btn.dataset.note);
+    }
   }
 });
 

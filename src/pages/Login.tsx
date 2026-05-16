@@ -36,20 +36,20 @@ const Login = () => {
       toast({ title: "Validation Error", description: "Please enter both email and password", variant: "destructive" });
       return;
     }
-    console.log("[login] attempting sign in — email:", email.trim(), "password length:", password.length);
+    if (import.meta.env.DEV) console.log("[login] attempting sign in — email:", email.trim());
     setIsLoading(true);
     try {
       const { error } = await signIn(email.trim(), password);
       if (error) {
-        console.error("[login] signIn error:", error.message, error);
+        if (import.meta.env.DEV) console.error("[login] signIn error:", error.message);
         toast({ title: "Login failed", description: error.message || "Invalid email or password", variant: "destructive" });
       } else {
-        console.log("[login] signIn success");
+        if (import.meta.env.DEV) console.log("[login] signIn success");
         const firstName = email.split("@")[0];
         toast({ title: `Welcome back, ${firstName}!`, description: "You have successfully logged in." });
       }
     } catch (err) {
-      console.error("[login] unexpected error:", err);
+      if (import.meta.env.DEV) console.error("[login] unexpected error:", err);
       toast({ title: "Error", description: "An unexpected error occurred. Please try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);

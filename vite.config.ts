@@ -10,8 +10,7 @@ export default defineConfig(({ mode }) => ({
     allowedHosts: [
       "localhost",
       "127.0.0.1",
-      "192.168.68.126",
-      "nag-wooing-regular.ngrok-free.dev",
+      ...(process.env.VITE_DEV_ALLOWED_HOST ? [process.env.VITE_DEV_ALLOWED_HOST] : []),
     ],
   },
   plugins: [
