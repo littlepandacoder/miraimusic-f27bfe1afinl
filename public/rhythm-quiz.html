@@ -126,6 +126,16 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 #ghost svg{width:36px;height:46px}
 #ghost-lbl{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
 
+/* ── Mode 3: note beats ── */
+.beats-choices{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;width:100%;max-width:380px;margin:0 auto}
+.beats-btn{background:var(--card2);border:1.5px solid var(--border);border-radius:14px;
+  padding:1rem;font-size:1.5rem;font-weight:700;font-family:'Orbitron',monospace;
+  color:var(--off-white);cursor:pointer;transition:all .18s;text-align:center;width:100%}
+.beats-btn:hover:not([disabled]){border-color:var(--pink);color:var(--pink);background:rgba(255,45,120,.12);transform:translateY(-2px)}
+.beats-btn.correct{background:rgba(57,217,138,.15)!important;border-color:var(--green)!important;color:var(--green)!important}
+.beats-btn.wrong{background:rgba(239,68,68,.1)!important;border-color:var(--red)!important;color:var(--red)!important}
+.beats-btn[disabled]{opacity:.45;cursor:not-allowed;transform:none;pointer-events:none}
+
 /* BUTTONS */
 .btn-row{display:flex;gap:.9rem;align-items:center;justify-content:center;flex-wrap:wrap}
 .btn-primary{background:var(--pink);color:#fff;border:none;border-radius:13px;
@@ -247,6 +257,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
         <p class="mode-desc">A measure full of notes is shown. Count the beats and drag the correct time signature onto the staff.</p>
         <span class="diff diff-med">Intermediate</span>
       </div>
+      <div class="mode-card" onclick="startGame('beats')">
+        <span class="mode-icon">🎶</span>
+        <div class="mode-name">Note Beat Value</div>
+        <p class="mode-desc">A note or rest is shown. Tap how many beats it receives. Tests your knowledge of note values and rests.</p>
+        <span class="diff diff-easy">Beginner Friendly</span>
+      </div>
     </div>
   </div>
 </div>
@@ -297,6 +313,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
         </span>
       </div>
       <div class="beat-counter">Beats: <span id="beat-count">0</span> / <span id="beat-target">4</span></div>
+    </div>
+
+    <!-- Mode 3: note beat value -->
+    <div id="beats-area" style="display:none;flex-direction:column;align-items:center;gap:.9rem;width:100%">
+      <div id="beats-note-display" style="display:flex;align-items:center;justify-content:center;min-height:110px"></div>
+      <div id="beats-choices" class="beats-choices"></div>
     </div>
 
     <!-- Mode 2: time sig drop -->
@@ -370,6 +392,8 @@ function resetState(mode) {
     usedSigIds: new Set(),      // sigs used this session — prefer unused when picking
     lastSigId: null,            // never repeat the same sig back-to-back
     usedBuildCombos: new Set(), // note-id combos already accepted in build mode
+    beatsNote: null,            // current note/rest in beats mode
+    lastBeatsId: null,          // avoid back-to-back repeat in beats mode
   };
 }
 
@@ -548,7 +572,9 @@ function nextRound() {
   clearInterval(S.timer);
   S.secs = Math.max(14, 30 - Math.floor((S.level-1)/2)*3);
   startTimer();
-  S.mode === 'build' ? setupBuild() : setupGuess();
+  if (S.mode === 'build') setupBuild();
+  else if (S.mode === 'guess') setupGuess();
+  else setupBeats();
 }
 
 // ── MODE 1: BUILD ─────────────────────────────────────────────
@@ -558,8 +584,12 @@ function setupBuild() {
   clearStaffNotes();
   document.getElementById('svg-hint').style.display='block';
 
+  document.getElementById('beats-area').style.display='none';
+  document.getElementById('staff-card').style.display='';
   document.getElementById('measure-area').style.display='flex';
   document.getElementById('timesig-area').style.display='none';
+  document.getElementById('check-btn').style.display='';
+  document.getElementById('palette-lbl').style.display='';
   renderSlots();
 
   const avail = NOTES.filter(n => n.beats <= S.sig.beats + 0.01);
@@ -636,8 +666,12 @@ function setupGuess() {
   g.innerHTML = notes.map(n => { const s=noteInStaff(n.id,x); x+=80; return s; }).join('');
   document.getElementById('svg-hint').style.display='none';
 
+  document.getElementById('beats-area').style.display='none';
+  document.getElementById('staff-card').style.display='';
   document.getElementById('measure-area').style.display='none';
   document.getElementById('timesig-area').style.display='flex';
+  document.getElementById('check-btn').style.display='';
+  document.getElementById('palette-lbl').style.display='';
 
   const slot = document.getElementById('timesig-slot');
   slot.classList.remove('filled','over');
@@ -648,6 +682,88 @@ function setupGuess() {
   document.getElementById('q-text').innerHTML = `Count the beats shown. Drag the correct <strong>time signature</strong> below.`;
   document.getElementById('palette-lbl').textContent = 'Drag the correct time signature';
   document.getElementById('check-btn').disabled = false;
+}
+
+// ── MODE 3: NOTE BEAT VALUE ───────────────────────────────────
+const BEATS_POOL = [0.5, 1, 1.5, 2, 3, 4];
+
+function setupBeats() {
+  const pool = NOTES.filter(n => n.id !== S.lastBeatsId);
+  S.beatsNote = pool[Math.floor(Math.random() * pool.length)];
+  S.lastBeatsId = S.beatsNote.id;
+
+  document.getElementById('staff-card').style.display = 'none';
+  document.getElementById('measure-area').style.display = 'none';
+  document.getElementById('timesig-area').style.display = 'none';
+  document.getElementById('beats-area').style.display = 'flex';
+  document.getElementById('palette').innerHTML = '';
+  document.getElementById('palette-lbl').style.display = 'none';
+  document.getElementById('check-btn').style.display = 'none';
+
+  const n = S.beatsNote;
+  document.getElementById('beats-note-display').innerHTML =
+    `<div style="display:flex;flex-direction:column;align-items:center;gap:.5rem">
+       <div style="width:90px;height:120px">${noteSVG(n, 90, 120)}</div>
+       <div style="font-size:.8rem;color:var(--muted);font-family:'DM Mono',monospace">${n.label}</div>
+     </div>`;
+
+  document.getElementById('q-text').innerHTML =
+    `How many beats does a <strong>${n.label}</strong> get?`;
+
+  const correct = n.beats;
+  const others  = BEATS_POOL.filter(b => Math.abs(b - correct) > 0.001)
+    .sort(() => Math.random() - 0.5).slice(0, 3);
+  const choices = [correct, ...others].sort(() => Math.random() - 0.5);
+
+  const container = document.getElementById('beats-choices');
+  container.innerHTML = '';
+  choices.forEach(val => {
+    const btn = document.createElement('button');
+    btn.className = 'beats-btn';
+    btn.dataset.val = val;
+    btn.innerHTML = `<div style="font-size:1.8rem;line-height:1">${val}</div>
+                     <div style="font-size:.6rem;color:var(--muted);font-family:Inter,sans-serif;margin-top:.3rem">beat${val !== 1 ? 's' : ''}</div>`;
+    btn.onclick = () => answerBeats(val);
+    container.appendChild(btn);
+  });
+}
+
+function answerBeats(selected) {
+  if (S.done) return;
+  S.done = true;
+  clearInterval(S.timer);
+
+  const ok = Math.abs(selected - S.beatsNote.beats) < 0.001;
+
+  document.querySelectorAll('.beats-btn').forEach(btn => {
+    const v = parseFloat(btn.dataset.val);
+    btn.disabled = true;
+    if (Math.abs(v - S.beatsNote.beats) < 0.001) btn.classList.add('correct');
+    else if (Math.abs(v - selected) < 0.001) btn.classList.add('wrong');
+  });
+
+  if (ok) {
+    S.correct++;
+    S.streak++;
+    if (S.streak > S.bestStreak) S.bestStreak = S.streak;
+    const mult = Math.min(S.streak, 5);
+    const pts  = 100 * mult;
+    S.score += pts;
+    S.xp = Math.min(100, S.xp + 15 + mult * 3);
+    if (S.xp >= 100) { S.xp = 0; S.level++; sndLevelUp(); }
+    feedback(true, `+${pts} pts`, mult > 1 ? `${mult}× combo!` : 'Correct!');
+    sndOk();
+    if (S.streak >= 2) { showCombo(S.streak); sndCombo(S.streak); }
+  } else {
+    S.streak = 0;
+    const b = S.beatsNote.beats;
+    feedback(false, 'Not quite', `${S.beatsNote.label} = ${b} beat${b !== 1 ? 's' : ''}`);
+    sndBad();
+  }
+
+  updateHUD();
+  if (S.round >= 10) setTimeout(showGameOver, 1800);
+  else setTimeout(nextRound, 1800);
 }
 
 function genMeasure(beats) {
@@ -672,6 +788,7 @@ function clearStaffNotes() { document.getElementById('svg-notes').innerHTML=''; 
 
 // ── CHECK ANSWER ──────────────────────────────────────────────
 function checkAnswer() {
+  if (S.mode === 'beats') return; // handled by button tap
   if (S.done) return;
   S.done = true;
   clearInterval(S.timer);
