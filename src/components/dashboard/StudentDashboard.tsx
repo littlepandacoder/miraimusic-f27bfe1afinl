@@ -304,7 +304,7 @@ const StudentHome = () => {
                     style={{ boxShadow: shadow, opacity: 0.65 }}
                   />
                   <div
-                    className="relative w-28 h-28 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110"
+                    className="relative w-36 h-36 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110"
                     style={{ boxShadow: shadow }}
                   >
                     <img src={img} alt={label} className="w-full h-full object-cover" />
