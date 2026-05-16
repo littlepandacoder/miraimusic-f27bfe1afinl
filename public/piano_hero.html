@@ -3638,9 +3638,9 @@ function drawPracticeStaff() {
   }
 
   // ── Measure barlines ──────────────────────────────────────
-  // Drawn at the exact bar-beat pixel. Notes are redistributed
-  // within [barBeat + BAR_MARGIN, nextBarBeat - BAR_MARGIN] so
-  // they always have equal clearance on both sides of every barline.
+  // BAR_MARGIN keeps the barline clear of note heads on both sides.
+  // Drawn BEFORE cursor/notes so notes always render on top.
+  const BAR_MARGIN = RX + Math.round(LG * 0.9);
   {
     const _btx = b => cursorX + (b - curBeat) * pxPerBeat;
     const bpb  = pr.beatsPerBar || 8;
@@ -3653,7 +3653,7 @@ function drawPracticeStaff() {
     prCtx.strokeStyle = STAFF_COLOR;
     prCtx.lineWidth   = 1.8;
     for (let bb = fb; bb <= rb; bb += bpb) {
-      const bx = _btx(bb);
+      const bx = _btx(bb) - BAR_MARGIN;
       if (bx <= HEADER_W + 2) continue;
       if (bx > PR_W + 2) break;
       prCtx.beginPath();
@@ -3705,12 +3705,8 @@ function drawPracticeStaff() {
     return midiToY(midi) >= staffMidY ? 1 : -1; // 1=up, -1=down
   };
 
-  // Margin from barline to nearest note edge (both sides)
-  const BAR_MARGIN = RX + Math.round(LG * 0.65);
-
-  // Enrich ALL active notes (not just visible) so redistribution
-  // uses every note in a bar, giving stable positions as notes scroll in.
-  const allActive = pr.notes
+  // Build visible notes at their beat-proportional positions (correct scroll timing)
+  const visible = pr.notes
     .filter(n => !n.missed && !n.hit)
     .map(n => {
       const x       = beatToX(n.beat);
@@ -3721,31 +3717,8 @@ function drawPracticeStaff() {
       const stemX   = sd > 0 ? x + RX * 0.85 : x - RX * 0.85;
       const stemTip = y - sd * STEM_LEN;
       return { ...n, x, y, step, useT, sd, stemX, stemTip, _isSolo: false };
-    });
-
-  // Redistribute notes evenly within each bar so the first note
-  // is never crowded against the barline and spacing is uniform.
-  {
-    const bpb2 = pr.beatsPerBar || 8;
-    const barMap = new Map();
-    allActive.forEach(n => {
-      const bi = Math.floor(n.beat / bpb2);
-      if (!barMap.has(bi)) barMap.set(bi, []);
-      barMap.get(bi).push(n);
-    });
-    barMap.forEach((group, bi) => {
-      group.sort((a, b) => a.beat - b.beat);
-      const bxL = beatToX(bi * bpb2) + BAR_MARGIN;
-      const bxR = beatToX((bi + 1) * bpb2) - BAR_MARGIN;
-      const N   = group.length;
-      group.forEach((n, i) => {
-        n.x     = N === 1 ? (bxL + bxR) / 2 : bxL + (bxR - bxL) * i / (N - 1);
-        n.stemX = n.sd > 0 ? n.x + RX * 0.85 : n.x - RX * 0.85;
-      });
-    });
-  }
-
-  const visible = allActive.filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
+    })
+    .filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
 
   // ── Missed note ghosts (recent misses shown as fading red X) ──
   pr.notes
