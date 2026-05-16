@@ -43,12 +43,12 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   ];
 
   const studentGameIcons = [
-    { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", label: "Sight Reading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
-    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    label: "Piano Hero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
-    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   label: "Rhythm Quiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
-    { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   label: "Note Naming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano_hero.html#room",img: "/game-icons/piano_room.png",    label: "Piano Room",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
+    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    label: "Piano Hero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
+    { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", label: "Sight Reading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
+    { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   label: "Note Naming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  label: "Piano Theory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)"  },
+    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   label: "Rhythm Quiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
   ];
 
   const getNavItems = () => {
@@ -137,7 +137,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">Play a Game</p>
-              <div className="grid grid-cols-3 gap-3 px-1">
+              <div className="grid grid-cols-2 gap-3 px-1">
                 {studentGameIcons.map(({ href, img, label, shadow }) => (
                   <a key={label} href={href} title={label} className="group flex flex-col items-center gap-1">
                     <div className="relative">
@@ -219,7 +219,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">Play a Game</p>
-              <div className="grid grid-cols-3 gap-3 px-1">
+              <div className="grid grid-cols-2 gap-3 px-1">
                 {studentGameIcons.map(({ href, img, label, shadow }) => (
                   <a key={label} href={href} title={label} onClick={() => setMobileOpen(false)} className="group flex flex-col items-center gap-1">
                     <div className="relative">
