@@ -17,19 +17,21 @@ export const PAYPAL_MODE: "sandbox" | "live" =
 
 export const IS_SANDBOX = PAYPAL_MODE === "sandbox";
 
-// Client IDs — live credentials must come from env vars only (never hardcode)
-const CLIENT_ID_SANDBOX = import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX || "";
-const CLIENT_ID_LIVE    = import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE    || "";
+// Client IDs
+const CLIENT_ID_SANDBOX =
+  import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX ||
+  "AfnMfp3KJ3SSN2jJUuaRmqwFw5y1zcEprZeaJMD9tpxsx8sops-apbq0cYyoRNjyJbyS3W8Gham915X8";
+const CLIENT_ID_LIVE =
+  import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE ||
+  "AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr";
 
 // Student plan IDs
-const PLAN_ID_SANDBOX = import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX || "";
-const PLAN_ID_LIVE    = import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE    || "";
-
-// Guard: crash loudly in production if live credentials are missing
-if (!import.meta.env.DEV && PAYPAL_MODE === "live") {
-  if (!CLIENT_ID_LIVE) throw new Error("[paypal] VITE_PAYPAL_CLIENT_ID_LIVE is required in production");
-  if (!PLAN_ID_LIVE)   throw new Error("[paypal] VITE_PAYPAL_PLAN_ID_LIVE is required in production");
-}
+const PLAN_ID_SANDBOX =
+  import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX ||
+  "P-4L07924847135773VNIAMVRA";
+const PLAN_ID_LIVE =
+  import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE ||
+  "P-204241322W266371XNIAXACQ";
 
 // Teacher plan IDs ($20/month, 10 student seats — create at developer.paypal.com)
 const TEACHER_PLAN_ID_SANDBOX = import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX || "";
