@@ -47,7 +47,6 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
 
       await conversation.startSession({
         agentId: "agent_7401krc6fjd4e1hvvce2m7mn0ss0",
-        connectionType: "webrtc",
       });
     } catch (error) {
       console.error("Failed to start conversation:", error);
