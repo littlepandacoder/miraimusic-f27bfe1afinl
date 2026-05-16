@@ -77,7 +77,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       ...baseItems,
       { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Fundamentals" },
       { href: "/dashboard/resources",  icon: BookOpen, label: "AI Music Teacher" },
-      ...gameItems,
+      // Games are launched from the dashboard circle buttons, not the sidebar
     ];
   };
 

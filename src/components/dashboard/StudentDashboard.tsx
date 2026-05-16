@@ -279,6 +279,44 @@ const StudentHome = () => {
         </Card>
       </div>
 
+      {/* Game Launchers */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gamepad2 className="w-5 h-5 text-primary" />
+            Play a Game
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap justify-center gap-8 py-4">
+            {[
+              { href: "/piano_hero.html#room", emoji: "🎹", label: "Piano Room",    shadow: "0 0 22px 7px rgba(139,92,246,0.55)",  bg: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.5)" },
+              { href: "/piano_hero.html",      emoji: "🎮", label: "Piano Hero",    shadow: "0 0 22px 7px rgba(236,72,153,0.55)",  bg: "rgba(236,72,153,0.15)", border: "rgba(236,72,153,0.5)" },
+              { href: "/rhythm-quiz.html",     emoji: "🥁", label: "Rhythm Quiz",   shadow: "0 0 22px 7px rgba(245,158,11,0.55)",  bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.5)" },
+              { href: "/note_naming.html",     emoji: "🎵", label: "Note Naming",   shadow: "0 0 22px 7px rgba(244,63,94,0.55)",   bg: "rgba(244,63,94,0.15)",  border: "rgba(244,63,94,0.5)" },
+              { href: "/sight-reading.html",   emoji: "👁️",  label: "Sight Reading", shadow: "0 0 22px 7px rgba(14,165,233,0.55)",  bg: "rgba(14,165,233,0.15)", border: "rgba(14,165,233,0.5)" },
+              { href: "/piano-theory.html",    emoji: "📚", label: "Piano Theory",  shadow: "0 0 22px 7px rgba(34,197,94,0.55)",   bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.5)" },
+            ].map(({ href, emoji, label, shadow, bg, border }) => (
+              <a key={href} href={href} className="flex flex-col items-center gap-3 group">
+                <div className="relative">
+                  <div
+                    className="absolute inset-0 rounded-full animate-pulse"
+                    style={{ boxShadow: shadow, opacity: 0.65 }}
+                  />
+                  <div
+                    className="relative w-24 h-24 rounded-full flex items-center justify-center text-4xl transition-transform duration-200 group-hover:scale-110"
+                    style={{ background: bg, border: `2px solid ${border}`, boxShadow: shadow }}
+                  >
+                    {emoji}
+                  </div>
+                </div>
+                <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Foundation & Performance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
