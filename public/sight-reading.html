@@ -96,6 +96,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .chord-check-btn{width:100%;padding:.75rem;background:var(--purple);color:#fff;font-weight:700;border:none;border-radius:10px;cursor:pointer;font-size:.88rem;letter-spacing:.03em;transition:opacity .2s}
 .chord-check-btn:hover{opacity:.88}
 .chord-check-btn:disabled{opacity:.35;cursor:not-allowed}
+/* ── Chord multiple-choice cards (no MIDI) ── */
+.chord-choices{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:.7rem}
+.chord-choice{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;
+  padding:1rem .75rem;cursor:pointer;text-align:center;transition:all .18s;
+  font-family:'DM Mono',monospace;font-size:.92rem;font-weight:600;color:var(--off-white);
+  line-height:1.5;user-select:none}
+.chord-choice:hover:not([disabled]){border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.1);transform:translateY(-2px)}
+.chord-choice.correct{background:rgba(57,217,138,.15);border-color:var(--green);color:var(--green) !important;animation:pulse-green .4s ease}
+.chord-choice.wrong{background:rgba(239,68,68,.1);border-color:var(--red);color:var(--red) !important;animation:shake .3s ease}
+.chord-choice[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+.chord-choice-notes{font-size:1.05rem;letter-spacing:.06em}
+.chord-choice-label{font-size:.65rem;color:var(--muted2);margin-top:.2rem;font-weight:400}
 @keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
@@ -272,6 +284,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
           <div class="chord-hint" id="chordHint">Select all notes in the chord, then click Check</div>
           <button class="chord-check-btn" id="chordCheckBtn" onclick="checkChordAnswer()">Check Chord ✓</button>
         </div>
+        <div class="chord-choices" id="chordChoices" style="display:none"></div>
       </div>
 
       <!-- AI Analysis -->
@@ -555,6 +568,7 @@ let state = {
   accidentals:   'natural',
   mode:          'single',   // 'single' | 'chord'
   chordSize:     3,
+  midiConnected: false,
   currentNote:   null,
   currentChord:  [],
   chordSelected: new Set(),
@@ -704,6 +718,62 @@ function checkChordAnswer() {
   handleAnswer(allMatch ? '__CHORD_OK__' : '__CHORD_WRONG__');
 }
 
+/* ─── Multiple-choice chord cards (shown when MIDI not connected) ─── */
+const NOTE_ORDER_MC = ['C','D','E','F','G','A','B'];
+
+function sortNotes(arr) {
+  return [...arr].sort((a,b) => NOTE_ORDER_MC.indexOf(a) - NOTE_ORDER_MC.indexOf(b));
+}
+
+function generateChordChoices(correctChord) {
+  const correctKey = sortNotes(correctChord.map(n => n.note)).join('+');
+  const size       = correctChord.length;
+  const choices    = [sortNotes(correctChord.map(n => n.note))];
+  const seen       = new Set([correctKey]);
+  let   tries      = 0;
+
+  while (choices.length < 4 && tries++ < 300) {
+    const shuffled  = [...NOTE_ORDER_MC].sort(() => Math.random() - 0.5);
+    const candidate = sortNotes(shuffled.slice(0, size));
+    const key       = candidate.join('+');
+    if (!seen.has(key)) { seen.add(key); choices.push(candidate); }
+  }
+
+  return choices.sort(() => Math.random() - 0.5);
+}
+
+function renderChordChoices(choices, correctChord) {
+  const correctKey = sortNotes(correctChord.map(n => n.note)).join('+');
+  const container  = document.getElementById('chordChoices');
+  container.innerHTML = '';
+  choices.forEach(notes => {
+    const key  = notes.join('+');
+    const card = document.createElement('button');
+    card.className       = 'chord-choice';
+    card.dataset.notes   = key;
+    card.dataset.correct = key === correctKey ? '1' : '0';
+    card.innerHTML = `<div class="chord-choice-notes">${notes.join(' · ')}</div>
+                      <div class="chord-choice-label">${notes.length}-note chord</div>`;
+    card.onclick = () => selectChordChoice(notes, card);
+    container.appendChild(card);
+  });
+}
+
+function selectChordChoice(notes, cardEl) {
+  if (state.answered) return;
+  const correctKey = sortNotes(state.currentChord.map(n => n.note)).join('+');
+  const isCorrect  = sortNotes(notes).join('+') === correctKey;
+
+  document.querySelectorAll('.chord-choice').forEach(c => {
+    c.setAttribute('disabled', 'true');
+    if (c.dataset.correct === '1') c.classList.add('correct');
+  });
+  if (!isCorrect) cardEl.classList.add('wrong');
+
+  state.chordSelected = new Set(notes);
+  handleAnswer(isCorrect ? '__CHORD_OK__' : '__CHORD_WRONG__');
+}
+
 /* ═══════════════════════════════════════════════════════════
    SESSION CONTROL
 ═══════════════════════════════════════════════════════════ */
@@ -750,6 +820,8 @@ function stopSession() {
   document.getElementById('stopBtn').style.display  = 'none';
   document.getElementById('idleOverlay').style.display = 'flex';
   document.getElementById('chordCheckRow').style.display = 'none';
+  document.getElementById('chordChoices').style.display  = 'none';
+  document.getElementById('noteBtns').style.display      = 'grid';
   setButtonsDisabled(true);
   drawStaff(null, null);
   drawMiniKb(null);
@@ -793,9 +865,23 @@ function nextQuestion() {
       setTimeout(() => playNote(hz, 0.7), i * 120);
     });
 
-    const total = new Set(chord.map(n => n.note)).size;
-    document.getElementById('chordCheckRow').style.display = 'block';
-    document.getElementById('chordHint').textContent = `Select all ${total} notes · 0 selected`;
+    if (state.midiConnected) {
+      // MIDI connected: multi-select toggle buttons
+      document.getElementById('noteBtns').style.display        = 'grid';
+      document.getElementById('chordCheckRow').style.display   = 'block';
+      document.getElementById('chordChoices').style.display    = 'none';
+      const total = new Set(chord.map(n => n.note)).size;
+      document.getElementById('chordHint').textContent         = `Select all ${total} notes · 0 selected`;
+      document.getElementById('answerLabel').textContent       = 'Select ALL notes in the chord →';
+    } else {
+      // No MIDI: multiple-choice cards
+      const choices = generateChordChoices(chord);
+      renderChordChoices(choices, chord);
+      document.getElementById('noteBtns').style.display        = 'none';
+      document.getElementById('chordCheckRow').style.display   = 'none';
+      document.getElementById('chordChoices').style.display    = 'grid';
+      document.getElementById('answerLabel').textContent       = 'Choose the correct chord →';
+    }
 
   } else {
     // Single note mode
@@ -814,7 +900,10 @@ function nextQuestion() {
     drawStaff(state.currentNote, state.currentClef);
     drawMiniKb(null);
     playNote(noteHz(pick.note + (pick.accidental || ''), pick.octave), 0.6);
+    document.getElementById('noteBtns').style.display      = 'grid';
     document.getElementById('chordCheckRow').style.display = 'none';
+    document.getElementById('chordChoices').style.display  = 'none';
+    document.getElementById('answerLabel').textContent     = 'Or click the note name →';
   }
 
   if (state.count > 0) {
@@ -1168,6 +1257,7 @@ function resetNoteButtons() {
     b.classList.remove('correct', 'wrong', 'selected');
     b.disabled = false;
   });
+  document.getElementById('chordChoices').innerHTML = '';
   state.chordSelected = new Set();
 }
 
@@ -1443,7 +1533,8 @@ function initMidi() {
     const update = () => {
       let count = 0;
       access.inputs.forEach(input => { input.onmidimessage = onMidiMessage; count++; });
-      document.getElementById('midiDot').className   = 'midi-dot' + (count ? ' connected' : '');
+      state.midiConnected = count > 0;
+      document.getElementById('midiDot').className    = 'midi-dot' + (count ? ' connected' : '');
       document.getElementById('midiLabel').textContent = count
         ? `MIDI: ${count} device${count !== 1 ? 's' : ''}`
         : 'MIDI: no device';
