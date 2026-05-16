@@ -144,9 +144,12 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                     <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5 w-[72px]">
                       <div className="relative w-[68px] h-[68px] shrink-0">
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                        <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
-                          <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
-                        </div>
+                        <img
+                          src={img}
+                          alt={t(labelKey)}
+                          className="relative w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                          style={{ filter: `drop-shadow(0 0 6px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})` }}
+                        />
                       </div>
                       <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full">{t(labelKey)}</span>
                     </a>
@@ -228,9 +231,12 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                     <a href={href} title={t(labelKey)} onClick={() => setMobileOpen(false)} className="group flex flex-col items-center gap-1.5 w-[68px]">
                       <div className="relative w-[64px] h-[64px] shrink-0">
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                        <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
-                          <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
-                        </div>
+                        <img
+                          src={img}
+                          alt={t(labelKey)}
+                          className="relative w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
+                          style={{ filter: `drop-shadow(0 0 5px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})` }}
+                        />
                       </div>
                       <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full">{t(labelKey)}</span>
                     </a>
