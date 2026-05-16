@@ -86,33 +86,31 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
     return [
       ...baseItems,
-      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation") },
+      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation"), highlight: true },
       { href: "/dashboard/resources",  icon: BookOpen, label: t("dashboard.nav.aiTeacher") },
     ];
   };
 
   const navItems = getNavItems();
 
-  const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) =>
-    (item as any).external ? (
-      <a
-        href={item.href}
-        onClick={onClick}
-        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-      >
+  const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => {
+    const isHighlight = (item as any).highlight;
+    const baseClass = isHighlight
+      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.4)]"
+      : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
+
+    return (item as any).external ? (
+      <a href={item.href} onClick={onClick} className={baseClass}>
         <item.icon className="w-5 h-5 shrink-0" />
         <span className="truncate">{item.label}</span>
       </a>
     ) : (
-      <Link
-        to={item.href}
-        onClick={onClick}
-        className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-      >
+      <Link to={item.href} onClick={onClick} className={baseClass}>
         <item.icon className="w-5 h-5 shrink-0" />
         <span className="truncate">{item.label}</span>
       </Link>
     );
+  };
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
