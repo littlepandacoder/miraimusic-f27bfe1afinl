@@ -138,17 +138,19 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
-              <div className="grid grid-cols-2 place-items-center gap-y-4 gap-x-2 px-1">
+              <div className="grid grid-cols-2 gap-y-5">
                 {studentGameIcons.map(({ href, img, labelKey, shadow }) => (
-                  <a key={labelKey} href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5">
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                      <div className="relative w-16 h-16 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
-                        <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
+                  <div key={labelKey} className="flex justify-center">
+                    <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5 w-[72px]">
+                      <div className="relative w-[68px] h-[68px] shrink-0">
+                        <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
+                        <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
+                          <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full text-center">{t(labelKey)}</span>
-                  </a>
+                      <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full">{t(labelKey)}</span>
+                    </a>
+                  </div>
                 ))}
               </div>
             </div>
@@ -219,18 +221,20 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">Play a Game</p>
-              <div className="grid grid-cols-2 gap-3 px-1">
-                {studentGameIcons.map(({ href, img, label, shadow }) => (
-                  <a key={label} href={href} title={label} onClick={() => setMobileOpen(false)} className="group flex flex-col items-center gap-1">
-                    <div className="relative">
-                      <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                      <div className="relative w-14 h-14 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
-                        <img src={img} alt={label} className="w-full h-full object-cover" />
+              <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
+              <div className="grid grid-cols-2 gap-y-5">
+                {studentGameIcons.map(({ href, img, labelKey, shadow }) => (
+                  <div key={labelKey} className="flex justify-center">
+                    <a href={href} title={t(labelKey)} onClick={() => setMobileOpen(false)} className="group flex flex-col items-center gap-1.5 w-[68px]">
+                      <div className="relative w-[64px] h-[64px] shrink-0">
+                        <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
+                        <div className="relative w-full h-full rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
+                          <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight truncate w-full text-center">{label}</span>
-                  </a>
+                      <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full">{t(labelKey)}</span>
+                    </a>
+                  </div>
                 ))}
               </div>
             </div>
