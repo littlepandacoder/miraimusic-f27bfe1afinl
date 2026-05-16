@@ -290,24 +290,24 @@ const StudentHome = () => {
         <CardContent>
           <div className="flex flex-wrap justify-center gap-16 py-4">
             {[
-              { href: "/piano_hero.html#room", emoji: "🎹", label: "Piano Room",    shadow: "0 0 22px 7px rgba(139,92,246,0.55)",  bg: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.5)" },
-              { href: "/piano_hero.html",      emoji: "🎮", label: "Piano Hero",    shadow: "0 0 22px 7px rgba(236,72,153,0.55)",  bg: "rgba(236,72,153,0.15)", border: "rgba(236,72,153,0.5)" },
-              { href: "/rhythm-quiz.html",     emoji: "🥁", label: "Rhythm Quiz",   shadow: "0 0 22px 7px rgba(245,158,11,0.55)",  bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.5)" },
-              { href: "/note_naming.html",     emoji: "🎵", label: "Note Naming",   shadow: "0 0 22px 7px rgba(244,63,94,0.55)",   bg: "rgba(244,63,94,0.15)",  border: "rgba(244,63,94,0.5)" },
-              { href: "/sight-reading.html",   emoji: "👁️",  label: "Sight Reading", shadow: "0 0 22px 7px rgba(14,165,233,0.55)",  bg: "rgba(14,165,233,0.15)", border: "rgba(14,165,233,0.5)" },
-              { href: "/piano-theory.html",    emoji: "📚", label: "Piano Theory",  shadow: "0 0 22px 7px rgba(34,197,94,0.55)",   bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.5)" },
-            ].map(({ href, emoji, label, shadow, bg, border }) => (
-              <a key={href} href={href} className="flex flex-col items-center gap-3 group">
+              { href: "/sight-reading.html",   img: "/game-icons/sight_reading.png", label: "Sight Reading", shadow: "0 0 22px 7px rgba(139,92,246,0.55)" },
+              { href: "/piano_hero.html",       img: "/game-icons/piano_hero.png",    label: "Piano Hero",    shadow: "0 0 22px 7px rgba(14,165,233,0.55)" },
+              { href: "/rhythm-quiz.html",      img: "/game-icons/rhythm_quiz.png",   label: "Rhythm Quiz",   shadow: "0 0 22px 7px rgba(20,184,166,0.55)" },
+              { href: "/note_naming.html",      img: "/game-icons/note_naming.png",   label: "Note Naming",   shadow: "0 0 22px 7px rgba(244,63,94,0.55)"  },
+              { href: "/piano_hero.html#room",  img: "/game-icons/piano_room.png",    label: "Piano Room",    shadow: "0 0 22px 7px rgba(139,92,246,0.55)" },
+              { href: "/piano-theory.html",     img: "/game-icons/piano_theory.png",  label: "Piano Theory",  shadow: "0 0 22px 7px rgba(202,138,4,0.55)"  },
+            ].map(({ href, img, label, shadow }) => (
+              <a key={href + label} href={href} className="flex flex-col items-center gap-3 group">
                 <div className="relative">
                   <div
                     className="absolute inset-0 rounded-full animate-pulse"
                     style={{ boxShadow: shadow, opacity: 0.65 }}
                   />
                   <div
-                    className="relative w-24 h-24 rounded-full flex items-center justify-center text-4xl transition-transform duration-200 group-hover:scale-110"
-                    style={{ background: bg, border: `2px solid ${border}`, boxShadow: shadow }}
+                    className="relative w-28 h-28 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110"
+                    style={{ boxShadow: shadow }}
                   >
-                    {emoji}
+                    <img src={img} alt={label} className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
