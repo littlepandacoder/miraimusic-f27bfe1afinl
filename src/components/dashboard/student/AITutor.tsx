@@ -81,7 +81,7 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="w-5 h-5 text-primary" />
-          AI Music Tutor
+          Ask Tutor
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
