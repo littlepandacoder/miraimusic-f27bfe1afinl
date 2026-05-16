@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Lock, Music, Users, Zap, Loader2 } from "lucide-react";
-import { PAYPAL_SDK_URL, PAYPAL_PLAN_ID, IS_SANDBOX } from "@/lib/paypal";
+import { PAYPAL_SDK_URL, PAYPAL_PLAN_ID, IS_SANDBOX, PAYPAL_MODE } from "@/lib/paypal";
 
 declare global {
   interface Window {
@@ -118,7 +118,7 @@ const PayPalSubscriptionGate = () => {
           </a>
           {IS_SANDBOX && (
             <span className="text-xs font-semibold bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 px-3 py-1 rounded-full">
-              🧪 Sandbox — test mode
+              🧪 Sandbox — test mode {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("sandbox") === "1" ? "(URL override)" : ""}
             </span>
           )}
         </div>

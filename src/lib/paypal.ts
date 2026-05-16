@@ -1,20 +1,31 @@
 /**
  * PayPal configuration utility.
  *
- * Controls sandbox vs live mode via VITE_PAYPAL_MODE env var.
- * Set to "sandbox" during development/testing; "live" for production.
+ * Default mode comes from VITE_PAYPAL_MODE env var ("sandbox" | "live").
+ * Override per-request via URL param: ?sandbox=1 forces sandbox, ?live=1 forces live.
+ * This lets both modes run on the same deployment without env var changes.
  *
  * Required env vars:
- *   VITE_PAYPAL_MODE              - "sandbox" | "live"
+ *   VITE_PAYPAL_MODE              - "sandbox" | "live"  (default: "live")
  *   VITE_PAYPAL_CLIENT_ID_SANDBOX - Sandbox client ID from developer.paypal.com
  *   VITE_PAYPAL_CLIENT_ID_LIVE    - Live client ID
  *   VITE_PAYPAL_PLAN_ID_SANDBOX   - Sandbox subscription plan ID
  *   VITE_PAYPAL_PLAN_ID_LIVE      - Live subscription plan ID
  */
 
-export const PAYPAL_MODE: "sandbox" | "live" =
-  (import.meta.env.VITE_PAYPAL_MODE as "sandbox" | "live") || "live";
+const _envMode = (import.meta.env.VITE_PAYPAL_MODE as "sandbox" | "live") || "live";
 
+// URL-param override: ?sandbox=1 → sandbox, ?live=1 → live
+function _resolveMode(): "sandbox" | "live" {
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("sandbox") === "1") return "sandbox";
+    if (params.get("live") === "1") return "live";
+  }
+  return _envMode;
+}
+
+export const PAYPAL_MODE: "sandbox" | "live" = _resolveMode();
 export const IS_SANDBOX = PAYPAL_MODE === "sandbox";
 
 // Client IDs
