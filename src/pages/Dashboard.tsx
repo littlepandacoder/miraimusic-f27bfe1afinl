@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 const log  = import.meta.env.DEV ? console.log.bind(console)  : () => {};
 const warn = import.meta.env.DEV ? console.warn.bind(console) : () => {};
 import { Link } from "react-router-dom";
@@ -12,28 +13,29 @@ import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSessionTracking } from "@/hooks/useSessionTracking";
 
-const SubscriptionGate = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center p-4">
-    <div className="max-w-md text-center space-y-6">
-      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-        <Lock className="w-8 h-8 text-primary" />
+const SubscriptionGate = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="max-w-md text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <Lock className="w-8 h-8 text-primary" />
+        </div>
+        <h1 className="text-2xl font-bold">{t("subscription.required")}</h1>
+        <p className="text-muted-foreground">{t("subscription.description")}</p>
+        <Button asChild size="lg" className="w-full">
+          <Link to="/signup">{t("subscription.startTrial")}</Link>
+        </Button>
+        <p className="text-sm text-muted-foreground">
+          {t("subscription.alreadySubscribed")}{" "}
+          <Link to="/courses" className="underline text-primary">
+            {t("subscription.activate")}
+          </Link>
+        </p>
       </div>
-      <h1 className="text-2xl font-bold">Subscription Required</h1>
-      <p className="text-muted-foreground">
-        You need an active subscription to access the Music Learning Portal. Choose a plan to start your musical journey.
-      </p>
-      <Button asChild size="lg" className="w-full">
-        <Link to="/signup">Start Free Trial</Link>
-      </Button>
-      <p className="text-sm text-muted-foreground">
-        Already subscribed?{" "}
-        <Link to="/courses" className="underline text-primary">
-          Activate access
-        </Link>
-      </p>
     </div>
-  </div>
-);
+  );
+};
 
 const Dashboard = () => {
   const { user, loading, hasRole, roles } = useAuth();

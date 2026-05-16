@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Music, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,6 +23,7 @@ const Login = () => {
   const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!user || authLoading) return;
@@ -33,7 +35,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast({ title: "Validation Error", description: "Please enter both email and password", variant: "destructive" });
+      toast({ title: t("login.errors.validation"), description: t("login.errors.enterBoth"), variant: "destructive" });
       return;
     }
     if (import.meta.env.DEV) console.log("[login] attempting sign in — email:", email.trim());
@@ -42,15 +44,15 @@ const Login = () => {
       const { error } = await signIn(email.trim(), password);
       if (error) {
         if (import.meta.env.DEV) console.error("[login] signIn error:", error.message);
-        toast({ title: "Login failed", description: error.message || "Invalid email or password", variant: "destructive" });
+        toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
       } else {
         if (import.meta.env.DEV) console.log("[login] signIn success");
         const firstName = email.split("@")[0];
-        toast({ title: `Welcome back, ${firstName}!`, description: "You have successfully logged in." });
+        toast({ title: t("login.welcome", { name: firstName }), description: t("login.loggedIn") });
       }
     } catch (err) {
       if (import.meta.env.DEV) console.error("[login] unexpected error:", err);
-      toast({ title: "Error", description: "An unexpected error occurred. Please try again.", variant: "destructive" });
+      toast({ title: t("login.errors.loginFailed"), description: t("login.errors.unexpected"), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +65,7 @@ const Login = () => {
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
-      toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
+      toast({ title: t("login.errors.googleFailed"), description: error.message, variant: "destructive" });
       setIsGoogleLoading(false);
     }
   };
@@ -71,7 +73,7 @@ const Login = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail.trim()) {
-      toast({ title: "Enter your email", description: "Please enter your email address.", variant: "destructive" });
+      toast({ title: t("login.errors.enterEmail"), description: t("login.errors.enterEmailDesc"), variant: "destructive" });
       return;
     }
     setIsSendingReset(true);
@@ -96,10 +98,10 @@ const Login = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">
-            {showForgot ? "Reset Password" : "Welcome to Musicable"}
+            {showForgot ? t("login.resetTitle") : t("login.title")}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {showForgot ? "We'll send a reset link to your email" : "Sign in to access your dashboard"}
+            {showForgot ? t("login.resetSubtitle") : t("login.subtitle")}
           </CardDescription>
         </CardHeader>
 
@@ -108,10 +110,10 @@ const Login = () => {
             forgotSent ? (
               <div className="text-center space-y-4 py-4">
                 <p className="text-sm text-muted-foreground">
-                  A password reset link has been sent to <span className="font-medium text-foreground">{forgotEmail}</span>. Check your inbox.
+                  {t("login.resetSent", { email: forgotEmail })}
                 </p>
                 <Button variant="outline" className="w-full" onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); }}>
-                  Back to Login
+                  {t("login.backToLogin")}
                 </Button>
               </div>
             ) : (
@@ -123,15 +125,15 @@ const Login = () => {
                     type="email"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder={t("login.emailPlaceholder")}
                     className="bg-secondary border-border"
                   />
                 </div>
                 <Button type="submit" className="w-full btn-primary" disabled={isSendingReset}>
-                  {isSendingReset ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : "Send Reset Link"}
+                  {isSendingReset ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("login.sending")}</> : t("login.sendReset")}
                 </Button>
                 <button type="button" onClick={() => setShowForgot(false)} className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Back to Login
+                  {t("login.backToLogin")}
                 </button>
               </form>
             )
@@ -145,9 +147,7 @@ const Login = () => {
                 onClick={handleGoogleLogin}
                 disabled={isGoogleLoading}
               >
-                {isGoogleLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
+                {isGoogleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -155,38 +155,38 @@ const Login = () => {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                 )}
-                Continue with Google
+                {t("login.google")}
               </Button>
 
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">or</span>
+                <span className="text-xs text-muted-foreground">{t("login.or")}</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
 
               {/* Email / Password */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("login.email")}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
+                    placeholder={t("login.emailPlaceholder")}
                     required
                     className="bg-secondary border-border"
                   />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t("login.password")}</Label>
                     <button
                       type="button"
                       onClick={() => { setShowForgot(true); setForgotEmail(email); }}
                       className="text-xs text-primary hover:underline"
                     >
-                      Forgot password?
+                      {t("login.forgot")}
                     </button>
                   </div>
                   <Input
@@ -194,13 +194,13 @@ const Login = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={t("login.passwordPlaceholder")}
                     required
                     className="bg-secondary border-border"
                   />
                 </div>
                 <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
-                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in...</> : "Sign In"}
+                  {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("login.signingIn")}</> : t("login.signIn")}
                 </Button>
               </form>
             </>

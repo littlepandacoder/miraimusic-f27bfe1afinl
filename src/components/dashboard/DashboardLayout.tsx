@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import {
   LogOut,
   Home,
@@ -27,6 +28,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -43,29 +45,29 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   ];
 
   const studentGameIcons = [
-    { href: "/piano_hero.html#room",img: "/game-icons/piano_room.png",    label: "Piano Room",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
-    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    label: "Piano Hero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
-    { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", label: "Sight Reading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
-    { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   label: "Note Naming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
-    { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  label: "Piano Theory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)"  },
-    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   label: "Rhythm Quiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
+    { href: "/piano_hero.html#room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
+    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
+    { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
+    { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
+    { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)"  },
+    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
   ];
 
   const getNavItems = () => {
     const baseItems = [
-      { href: "/dashboard", icon: Home, label: "Dashboard" },
+      { href: "/dashboard", icon: Home, label: t("dashboard.nav.dashboard") },
     ];
 
     if (role === "admin") {
       return [
         ...baseItems,
-        { href: "/dashboard/users",      icon: Users,         label: "Manage Users" },
-        { href: "/dashboard/courses",    icon: BookOpen,      label: "Course Content" },
-        { href: "/dashboard/lessons",    icon: Calendar,      label: "All Lessons" },
-        { href: "/dashboard/slots",      icon: ClipboardList, label: "Time Slots" },
-        { href: "/dashboard/foundation", icon: Gamepad2,      label: "Foundation Modules" },
-        { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: "Piano Hero Songs" },
-        { href: "/dashboard/districts",  icon: Settings,      label: "Districts" },
+        { href: "/dashboard/users",      icon: Users,         label: t("dashboard.nav.manageUsers") },
+        { href: "/dashboard/courses",    icon: BookOpen,      label: t("dashboard.nav.courseContent") },
+        { href: "/dashboard/lessons",    icon: Calendar,      label: t("dashboard.nav.allLessons") },
+        { href: "/dashboard/slots",      icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
+        { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
+        { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
+        { href: "/dashboard/districts",  icon: Settings,      label: t("dashboard.nav.districts") },
         ...gameItems,
       ];
     }
@@ -73,20 +75,19 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     if (role === "teacher") {
       return [
         ...baseItems,
-        { href: "/dashboard/my-students",  icon: Users,         label: "My Students" },
-        { href: "/dashboard/lesson-plans", icon: BookOpen,      label: "Lesson Plans" },
-        { href: "/dashboard/schedule",     icon: Calendar,      label: "Schedule" },
-        { href: "/dashboard/slots",        icon: ClipboardList, label: "My Slots" },
-        { href: "/dashboard/foundation",   icon: Gamepad2,      label: "Foundation Modules" },
+        { href: "/dashboard/my-students",  icon: Users,         label: t("dashboard.nav.myStudents") },
+        { href: "/dashboard/lesson-plans", icon: BookOpen,      label: t("dashboard.nav.lessonPlans") },
+        { href: "/dashboard/schedule",     icon: Calendar,      label: t("dashboard.nav.schedule") },
+        { href: "/dashboard/slots",        icon: ClipboardList, label: t("dashboard.nav.mySlots") },
+        { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         ...gameItems,
       ];
     }
 
     return [
       ...baseItems,
-      { href: "/dashboard/foundation", icon: Gamepad2, label: "Foundation Fundamentals" },
-      { href: "/dashboard/resources",  icon: BookOpen, label: "AI Music Teacher" },
-      // Games are launched from the dashboard circle buttons, not the sidebar
+      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation") },
+      { href: "/dashboard/resources",  icon: BookOpen, label: t("dashboard.nav.aiTeacher") },
     ];
   };
 
@@ -136,17 +137,17 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">Play a Game</p>
-              <div className="grid grid-cols-2 gap-3 px-1">
-                {studentGameIcons.map(({ href, img, label, shadow }) => (
-                  <a key={label} href={href} title={label} className="group flex flex-col items-center gap-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
+              <div className="grid grid-cols-2 place-items-center gap-y-4 gap-x-2 px-1">
+                {studentGameIcons.map(({ href, img, labelKey, shadow }) => (
+                  <a key={labelKey} href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5">
                     <div className="relative">
                       <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                      <div className="relative w-14 h-14 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
-                        <img src={img} alt={label} className="w-full h-full object-cover" />
+                      <div className="relative w-16 h-16 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110" style={{ boxShadow: shadow }}>
+                        <img src={img} alt={t(labelKey)} className="w-full h-full object-cover" />
                       </div>
                     </div>
-                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight truncate w-full text-center">{label}</span>
+                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full text-center">{t(labelKey)}</span>
                   </a>
                 ))}
               </div>
@@ -172,7 +173,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
             onClick={handleSignOut}
           >
             <LogOut className="w-5 h-5" />
-            Sign Out
+            {t("dashboard.signOut")}
           </Button>
         </div>
       </aside>
@@ -255,7 +256,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
             onClick={handleSignOut}
           >
             <LogOut className="w-5 h-5" />
-            Sign Out
+            {t("dashboard.signOut")}
           </Button>
         </div>
       </div>

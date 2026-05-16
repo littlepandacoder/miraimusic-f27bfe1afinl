@@ -433,35 +433,6 @@ const StudentHome = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/dashboard/book" className="feature-card flex items-center gap-4 p-4">
-            <Calendar className="w-8 h-8 text-primary" />
-            <div>
-              <p className="font-semibold">Book a Lesson</p>
-              <p className="text-sm text-muted-foreground">Schedule your next class</p>
-            </div>
-          </Link>
-<Link to="/dashboard/foundation" className="feature-card flex items-center gap-4 p-4">
-            <Map className="w-8 h-8 text-yellow-400" />
-            <div>
-              <p className="font-semibold">Foundation Journey</p>
-              <p className="text-sm text-muted-foreground">Learn the fundamentals</p>
-            </div>
-          </Link>
-          <Link to="/dashboard/resources" className="feature-card flex items-center gap-4 p-4">
-            <BookOpen className="w-8 h-8 text-green-400" />
-            <div>
-              <p className="font-semibold">Learning Resources</p>
-              <p className="text-sm text-muted-foreground">Access lesson materials</p>
-            </div>
-          </Link>
-        </CardContent>
-      </Card>
-
     </div>
   );
 };
