@@ -279,44 +279,6 @@ const StudentHome = () => {
         </Card>
       </div>
 
-      {/* Game Launchers */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-primary" />
-            Play a Game
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap justify-center gap-16 py-4">
-            {[
-              { href: "/sight-reading.html",   img: "/game-icons/sight_reading.png", label: "Sight Reading", shadow: "0 0 22px 7px rgba(139,92,246,0.55)" },
-              { href: "/piano_hero.html",       img: "/game-icons/piano_hero.png",    label: "Piano Hero",    shadow: "0 0 22px 7px rgba(14,165,233,0.55)" },
-              { href: "/rhythm-quiz.html",      img: "/game-icons/rhythm_quiz.png",   label: "Rhythm Quiz",   shadow: "0 0 22px 7px rgba(20,184,166,0.55)" },
-              { href: "/note_naming.html",      img: "/game-icons/note_naming.png",   label: "Note Naming",   shadow: "0 0 22px 7px rgba(244,63,94,0.55)"  },
-              { href: "/piano_hero.html#room",  img: "/game-icons/piano_room.png",    label: "Piano Room",    shadow: "0 0 22px 7px rgba(139,92,246,0.55)" },
-              { href: "/piano-theory.html",     img: "/game-icons/piano_theory.png",  label: "Piano Theory",  shadow: "0 0 22px 7px rgba(202,138,4,0.55)"  },
-            ].map(({ href, img, label, shadow }) => (
-              <a key={href + label} href={href} className="flex flex-col items-center gap-3 group">
-                <div className="relative">
-                  <div
-                    className="absolute inset-0 rounded-full animate-pulse"
-                    style={{ boxShadow: shadow, opacity: 0.65 }}
-                  />
-                  <div
-                    className="relative w-36 h-36 rounded-full overflow-hidden transition-transform duration-200 group-hover:scale-110"
-                    style={{ boxShadow: shadow }}
-                  >
-                    <img src={img} alt={label} className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Foundation & Performance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
