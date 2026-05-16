@@ -3291,11 +3291,14 @@ function launchPractice(song, waitMode, inputMode) {
   document.getElementById('practice-view').style.display = 'flex';
   document.getElementById('practiceResults').style.display = 'none';
 
-  resizePracticeCanvases();
-  drawPracticeKb(null);
-
+  // Defer one frame so the browser finishes layout after display:flex —
+  // this prevents the "big then small" size jump on the first render.
   cancelAnimationFrame(pr.raf);
-  practiceLoop();
+  requestAnimationFrame(() => {
+    resizePracticeCanvases();
+    drawPracticeKb(null);
+    practiceLoop();
+  });
 }
 
 function stopPractice() {
@@ -3330,11 +3333,17 @@ function resizePracticeCanvases() {
   const view = document.getElementById('practice-view');
   if (!view || view.style.display === 'none') return;
   const staffWrap = prStaffEl.parentElement;
-  PR_W = staffWrap.clientWidth  || 900;
-  PR_H = staffWrap.clientHeight || 400;
-  prStaffEl.width  = PR_W;
-  prStaffEl.height = PR_H;
-  prKbEl.width = prKbEl.parentElement.clientWidth || PR_W;
+  const newW = staffWrap.clientWidth  || 900;
+  const newH = staffWrap.clientHeight || 400;
+  // Only reset canvas dimensions when they actually change — setting
+  // .width/.height always clears the canvas and resets context state.
+  if (newW !== PR_W || newH !== PR_H) {
+    PR_W = newW; PR_H = newH;
+    prStaffEl.width  = PR_W;
+    prStaffEl.height = PR_H;
+  }
+  const kbW = prKbEl.parentElement.clientWidth || PR_W;
+  if (kbW !== prKbEl.width) prKbEl.width = kbW;
 }
 window.addEventListener('resize', resizePracticeCanvases);
 
@@ -3607,23 +3616,24 @@ function drawPracticeStaff() {
   prCtx.fillStyle = '#0a0812';
   prCtx.fillRect(0, 0, PR_W, PR_H);
 
-  const geo       = staffGeometry(PR_H);
-  const LG        = geo.LINE_GAP;
-  const curBeat   = pr.curBeat || 0;
-  const cursorX   = PR_W * CURSOR_X_FRAC;
-  const pxPerBeat = (PR_W * (1 - CURSOR_X_FRAC)) / SCROLL_BEATS_VISIBLE;
+  const geo         = staffGeometry(PR_H);
+  const LG          = geo.LINE_GAP;
+  const curBeat     = pr.curBeat || 0;
+
+  // ── Layout ───────────────────────────────────────────────
+  // HEADER_W: protected left zone where the clef + time sig live.
+  // cursorX is pinned exactly to HEADER_W so the red cursor aligns
+  // with the system barline — the left boundary of the note area.
+  const HEADER_W    = Math.round(LG * 8.5);
+  const cursorX     = HEADER_W;
+  const pxPerBeat   = (PR_W - HEADER_W) / SCROLL_BEATS_VISIBLE;
+
+  const STAFF_COLOR = '#546e7a';
+  const CLEF_COLOR  = '#c0d4e0';  // bright enough to see on dark background
 
   // Note head radii — FIXED size (same across all notes/songs)
   const RX = Math.round(LG * 0.72);
   const RY = Math.round(LG * 0.46);
-
-  // ── Layout ───────────────────────────────────────────────
-  // HEADER_W: protected left zone where the clef + time sig live.
-  // Staff lines run the FULL canvas width; notes are clipped to x > HEADER_W.
-  // Clef and time sig are drawn LAST so they always sit on top.
-  const HEADER_W   = Math.round(LG * 8.5);
-  const STAFF_COLOR = '#546e7a';
-  const CLEF_COLOR  = '#90a4ae';
 
   // ── 5 staff lines — full width ────────────────────────────
   prCtx.strokeStyle = STAFF_COLOR;
@@ -4108,7 +4118,7 @@ function drawTrebleClef(ctx, x, tTop, L, color) {
   // Also draw from cache synchronously if already loaded (covers frame 1+)
   if (_trebleClefImgCache.has(color)) {
     const img = _trebleClefImgCache.get(color);
-    if (img.complete && img.naturalWidth > 0) {
+    if (img.complete) {
       ctx.save();
       ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
       ctx.restore();
@@ -4178,7 +4188,7 @@ function drawBassClef(ctx, x, bTop, L, color) {
   // Also draw from cache synchronously if already loaded (covers frame 1+)
   if (_bassClefImgCache.has(color)) {
     const img = _bassClefImgCache.get(color);
-    if (img.complete && img.naturalWidth > 0) {
+    if (img.complete) {
       ctx.save();
       ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
       ctx.restore();
@@ -4190,7 +4200,7 @@ function drawBassClef(ctx, x, bTop, L, color) {
 // loaded before the first practice frame — eliminates the flicker
 // that occurs when the async load callback fires mid-frame.
 (function _prewarmClefs() {
-  const _C = '#90a4ae';
+  const _C = '#c0d4e0';
   getTrebleClefImage(_C, () => {});
   getBassClefImage(_C, () => {});
 })();
