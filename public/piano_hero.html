@@ -2976,9 +2976,9 @@ function kbSettingsRedrawAll() {
 ═══════════════════════════════════════════════════════════ */
 
 // ── Constants ─────────────────────────────────────────────
-// LINE_GAP is now computed dynamically from canvas height in staffGeometry()
-// so the grand staff always fills the available space correctly.
-const CURSOR_X_FRAC = 0.25; // playhead position as fraction of canvas width
+// LINE_GAP is a fixed pixel constant — must never be computed from canvas size.
+// Every size derived from it (clef, notes, time sig) is therefore identical on every load.
+const LINE_GAP = 24; // px between staff lines
 const SCROLL_BEATS_VISIBLE = 14; // how many beats visible ahead of cursor
 
 // ── Diatonic step helper (C4=0) ───────────────────────────
@@ -3352,26 +3352,13 @@ window.addEventListener('resize', resizePracticeCanvases);
 // LINE_GAP is derived from canvas height so the staff always
 // fills ~80% of the available space — matching the reference image.
 function staffGeometry(h) {
-  // Target: grand staff (10 lines + gap between) fills 80% of height
-  // 10 lines = 9 line-gaps of staff + ~3 line-gaps gap between staves = 12 gaps total
-  // We want 12 gaps ≈ 0.80 * h  →  gap = h * 0.80 / 12
-  const LINE_GAP = Math.max(10, Math.round(h * 0.80 / 12));
-
-  // Vertical layout:
-  //   topPad   = 1.5 LINE_GAPs above treble top line
-  //   tTop     = top of treble staff
-  //   gap      = 2 LINE_GAPs between bottom of treble and top of bass (matches reference)
-  //   bTop     = top of bass staff
-  const topPad = LINE_GAP * 1.5;
-  const tTop   = topPad;
-  const bTop   = tTop + 4 * LINE_GAP + LINE_GAP * 2.5; // 4 treble spans + 2.5 gap
-
-  // Middle C positions:
-  //   Treble: 1 ledger line below treble bottom = tTop + 5*LINE_GAP
-  //   Bass:   1 ledger line above bass top      = bTop - LINE_GAP
+  // LINE_GAP is the global fixed constant above — never recomputed here.
+  // h is only used to center the grand staff vertically in the canvas.
+  const totalH = LINE_GAP * 10.5; // 4 treble + 2.5 gap + 4 bass spans
+  const tTop   = Math.max(8, Math.round((h - totalH) / 2));
+  const bTop   = tTop + LINE_GAP * 6.5; // tTop + 4*LG treble + 2.5*LG gap
   const midCyT = tTop + 5 * LINE_GAP;
   const midCyB = bTop - LINE_GAP;
-
   return { tTop, bTop, midCyT, midCyB, LINE_GAP };
 }
 
@@ -3495,7 +3482,7 @@ function scorePracticeHit(midi, perfect) {
   // Firework burst on the staff at the hit note's position
   const geo     = staffGeometry(PR_H);
   const LG      = geo.LINE_GAP;
-  const cursorX = PR_W * CURSOR_X_FRAC;
+  const cursorX = Math.round(LINE_GAP * 8.5); // HEADER_W — identical to drawPracticeStaff
   const step    = diatonicStep(midi);
   const noteY   = noteYFromStep(step, geo);
   const burstCount = perfect ? 24 : 16;
