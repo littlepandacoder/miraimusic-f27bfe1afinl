@@ -5,8 +5,6 @@ import { useTranslation } from "react-i18next";
 
 const LANGS = [
   { code: "en", label: "EN" },
-  { code: "ru", label: "RU" },
-  { code: "ar", label: "AR" },
 ];
 
 const Navbar = () => {

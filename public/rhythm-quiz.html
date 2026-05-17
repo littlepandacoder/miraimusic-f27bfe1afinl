@@ -275,6 +275,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 .tr-diff-icon{font-size:1.6rem;margin-bottom:.35rem}
 .tr-diff-name{font-weight:700;font-size:.85rem}
 .tr-diff-bpm{color:var(--muted);font-size:.72rem;font-family:'DM Mono',monospace;margin-top:.2rem}
+.tr-diff-sub{color:var(--muted);font-size:.68rem;margin-top:.15rem}
 .tr-diff-btn.easy .tr-diff-name{color:var(--green)}
 .tr-diff-btn.medium .tr-diff-name{color:var(--amber)}
 .tr-diff-btn.hard .tr-diff-name{color:var(--red)}
@@ -563,16 +564,25 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
           <div class="tr-diff-btn easy" onclick="startTapGame('easy')">
             <div class="tr-diff-icon">🟢</div>
             <div class="tr-diff-name">EASY</div>
-            <div class="tr-diff-bpm">72 BPM</div>
+            <div class="tr-diff-sub">Quarter &amp; Half notes</div>
+            <div class="tr-diff-bpm">60 BPM</div>
           </div>
           <div class="tr-diff-btn medium" onclick="startTapGame('medium')">
             <div class="tr-diff-icon">🟡</div>
             <div class="tr-diff-name">MEDIUM</div>
-            <div class="tr-diff-bpm">84 BPM</div>
+            <div class="tr-diff-sub">Dotted &amp; mixed</div>
+            <div class="tr-diff-bpm">72 BPM</div>
           </div>
           <div class="tr-diff-btn hard" onclick="startTapGame('hard')">
             <div class="tr-diff-icon">🔴</div>
             <div class="tr-diff-name">HARD</div>
+            <div class="tr-diff-sub">Eighth notes + sync</div>
+            <div class="tr-diff-bpm">84 BPM</div>
+          </div>
+          <div class="tr-diff-btn" style="border-color:rgba(255,45,120,.4)" onclick="startTapGame('expert')">
+            <div class="tr-diff-icon">💀</div>
+            <div class="tr-diff-name" style="color:var(--pink)">EXPERT</div>
+            <div class="tr-diff-sub">All note values</div>
             <div class="tr-diff-bpm">96 BPM</div>
           </div>
         </div>
@@ -650,7 +660,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
         </div>
       </div>
 
-      <button class="btn-ghost" style="align-self:center" onclick="goMenu()">↩ Menu</button>
+      <button class="btn-ghost" style="align-self:center;opacity:.7" onclick="trEndSession()">✕ End Session</button>
     </div>
 
   </div>
@@ -1475,30 +1485,48 @@ const fmtB = b => b===Math.floor(b) ? b : b.toFixed(1);
 // ══════════════════════════════════════════════════════════════
 
 // ── Patterns (bits = 8 slots at eighth-note resolution) ────────
+// bits[] = 8 eighth-note slots per bar (4/4 at eighth resolution)
+// noteTypes[] = per-slot visual: 'q'=quarter, 'h'=half, 'dq'=dotted-quarter, 'e'=eighth, 'r'=rest
 const TR_PATTERNS = {
   easy: [
-    { name:"Four Quarter Notes",    bits:[1,0,1,0,1,0,1,0], hint:"Beat on every quarter — 1, 2, 3, 4" },
-    { name:"Two Half Notes",         bits:[1,0,0,0,1,0,0,0], hint:"Two long taps — beats 1 and 3 only" },
-    { name:"Half + Two Quarters",    bits:[1,0,0,0,1,0,1,0], hint:"Long … short short" },
-    { name:"Beats 2 and 4",          bits:[0,0,1,0,0,0,1,0], hint:"The backbeat — skip beats 1 and 3" },
-    { name:"Three Quarters + Rest",  bits:[1,0,1,0,1,0,0,0], hint:"Three taps then silence" },
+    { name:"Four Crotchets",         bits:[1,0,1,0,1,0,1,0], types:['q','r','q','r','q','r','q','r'], hint:"One tap per beat — steady as a clock" },
+    { name:"Two Minims",             bits:[1,0,0,0,1,0,0,0], types:['h','r','r','r','h','r','r','r'], hint:"Hold for two beats each time" },
+    { name:"Minim + Two Crotchets",  bits:[1,0,0,0,1,0,1,0], types:['h','r','r','r','q','r','q','r'], hint:"Long… short short" },
+    { name:"Crotchets 2 & 4",        bits:[0,0,1,0,0,0,1,0], types:['r','r','q','r','r','r','q','r'], hint:"The backbeat — skip beats 1 and 3" },
+    { name:"Three Crotchets + Rest", bits:[1,0,1,0,1,0,0,0], types:['q','r','q','r','q','r','r','r'], hint:"Three taps then silence" },
+    { name:"Semibreve",              bits:[1,0,0,0,0,0,0,0], types:['h','r','r','r','r','r','r','r'], hint:"One big long tap for the whole bar" },
+    { name:"Crotchet Pairs",         bits:[1,0,1,0,0,0,1,0], types:['q','r','q','r','r','r','q','r'], hint:"Two together, gap, then one" },
   ],
   medium: [
-    { name:"Eighth Note Pairs",      bits:[1,1,0,0,1,1,0,0], hint:"Two quick, rest, two quick, rest" },
-    { name:"Syncopated",             bits:[1,0,0,1,0,1,0,0], hint:"Off-beat feel — count carefully!" },
-    { name:"Mixed Pattern",          bits:[1,0,1,1,0,0,1,0], hint:"Quarter, two eighths, quarter — tricky!" },
-    { name:"All Off-Beats",          bits:[0,1,0,1,0,1,0,1], hint:"Only the '+' beats — pure upbeat energy" },
-    { name:"Latin Groove",           bits:[1,1,0,1,0,1,1,0], hint:"Five taps with a syncopated feel" },
+    { name:"Dotted Minim + Crotchet",bits:[1,0,0,0,0,0,1,0], types:['dq','r','r','r','r','r','q','r'], hint:"Three-beat tap then a quick one" },
+    { name:"Dotted Crotchet Pairs",  bits:[1,0,0,1,0,1,0,0], types:['dq','r','r','q','r','dq','r','r'], hint:"Long-short swing feel" },
+    { name:"Quaver Pairs",           bits:[1,1,0,0,1,1,0,0], types:['e','e','r','r','e','e','r','r'], hint:"Two quick, rest — repeat" },
+    { name:"Syncopated",             bits:[1,0,0,1,0,1,0,0], types:['q','r','r','e','r','q','r','r'], hint:"Off-beat feel — count carefully!" },
+    { name:"Mixed Values",           bits:[1,0,1,1,0,0,1,0], types:['q','r','e','e','r','r','q','r'], hint:"Crotchet, two quavers, crotchet" },
+    { name:"All Off-Beats",          bits:[0,1,0,1,0,1,0,1], types:['r','e','r','e','r','e','r','e'], hint:"Only the '+' beats — pure upbeat" },
+    { name:"Minim + Dotted Crotchet",bits:[1,0,0,0,1,0,0,1], types:['h','r','r','r','dq','r','r','e'], hint:"Long, then dotted swing at the end" },
   ],
   hard: [
-    { name:"All Eighth Notes",       bits:[1,1,1,1,1,1,1,1], hint:"Every single eighth — stay perfectly steady!" },
-    { name:"Complex Syncopation",    bits:[1,1,0,1,1,0,1,0], hint:"Three quick bursts with rests between" },
-    { name:"Charleston Beat",        bits:[1,0,1,1,0,0,1,0], hint:"Classic jazz Charleston pattern" },
-    { name:"Afro-Cuban Clave",       bits:[1,0,1,0,0,1,0,1], hint:"Clave — the heartbeat of Afro-Cuban music" },
-    { name:"Polyrhythm Challenge",   bits:[1,0,0,1,1,0,1,1], hint:"The trickiest yet — good luck!" },
+    { name:"All Quavers",            bits:[1,1,1,1,1,1,1,1], types:['e','e','e','e','e','e','e','e'], hint:"Every single eighth — stay steady!" },
+    { name:"Complex Syncopation",    bits:[1,1,0,1,1,0,1,0], types:['e','e','r','e','e','r','q','r'], hint:"Three quick bursts with rests" },
+    { name:"Charleston Beat",        bits:[1,0,1,1,0,0,1,0], types:['q','r','e','e','r','r','q','r'], hint:"Classic jazz Charleston pattern" },
+    { name:"Afro-Cuban Clave",       bits:[1,0,1,0,0,1,0,1], types:['q','r','q','r','r','e','r','e'], hint:"Clave — heartbeat of Afro-Cuban music" },
+    { name:"Dotted Quaver Feel",     bits:[1,0,1,1,1,0,1,1], types:['dq','r','e','e','dq','r','e','e'], hint:"Dotted-quaver + semiquaver lilt" },
+    { name:"Polyrhythm Challenge",   bits:[1,0,0,1,1,0,1,1], types:['q','r','r','e','e','r','e','e'], hint:"Shifting accents — good luck!" },
+    { name:"Offbeat Quavers",        bits:[0,1,1,0,0,1,1,0], types:['r','e','e','r','r','e','e','r'], hint:"Only the off-beats — keep steady" },
+  ],
+  expert: [
+    { name:"Mixed Everything",       bits:[1,1,0,1,0,0,1,0], types:['e','e','r','dq','r','r','q','r'], hint:"Quavers into dotted — feel the change" },
+    { name:"Dotted Chaos",           bits:[1,0,1,1,0,1,0,1], types:['dq','r','e','e','r','e','r','e'], hint:"No two slots the same value" },
+    { name:"Synco-Dotted",           bits:[0,1,0,0,1,1,0,1], types:['r','e','r','r','dq','r','r','e'], hint:"Starts off-beat — tricky entry!" },
+    { name:"Hemiola Hint",           bits:[1,0,0,1,0,0,1,0], types:['dq','r','r','dq','r','r','q','r'], hint:"Three equal groups across the bar" },
+    { name:"All Note Values",        bits:[1,0,0,0,1,1,0,1], types:['h','r','r','r','e','e','r','e'], hint:"Minim then quavers — feel the contrast" },
+    { name:"Riff Builder",           bits:[1,1,1,0,1,1,1,0], types:['e','e','e','r','e','e','e','r'], hint:"Three quavers and rest — repeat!" },
+    { name:"Expert Challenge",       bits:[1,0,1,1,1,1,0,1], types:['dq','r','e','e','e','e','r','e'], hint:"Dotted start then quaver run" },
+    { name:"Master Class",           bits:[1,1,0,1,0,1,1,0], types:['e','e','r','dq','r','e','e','r'], hint:"The ultimate test — no hint will save you!" },
   ],
 };
-const TR_BPM = { easy:72, medium:84, hard:96 };
+const TR_BPM = { easy:60, medium:72, hard:84, expert:96 };
 const TR_PASS = 60; // % accuracy to pass
 const TR_GRADE_COLORS = { S:'#39D98A', A:'#00D4FF', B:'#A855F7', C:'#F59E0B', D:'#FF6B35', F:'#EF4444' };
 
@@ -1516,31 +1544,36 @@ function trReset() {
 TR = trReset();
 
 // ── Note SVG for cell (small, inline) ─────────────────────────
-// Returns SVG string for an eighth note or rest
-function trNoteSvg(isOn) {
-  if (!isOn) {
-    // Quarter rest (zigzag line) – small
+// type: 'e'=quaver, 'q'=crotchet, 'h'=minim, 'dq'=dotted crotchet, 'r'=rest
+function trNoteSvg(type, hit=false) {
+  const col = hit ? '#39D98A' : (type === 'r' ? 'rgba(255,255,255,.22)' : '#FF2D78');
+  if (type === 'r') {
     return `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13 5 Q18 10 10 15 Q18 19 9 23 Q15 25 13 30" stroke="rgba(255,255,255,.25)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M13 5 Q18 10 10 15 Q18 19 9 23 Q15 25 13 30" stroke="${col}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
     </svg>`;
   }
-  // Eighth note (filled notehead + stem + flag)
-  return `<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="9" cy="28" rx="7" ry="4.5" transform="rotate(-14,9,28)" fill="#FF2D78"/>
-    <line x1="15.8" y1="24" x2="15.8" y2="5" stroke="#FF2D78" stroke-width="1.8"/>
-    <path d="M15.8 5 Q23 9 19 16" stroke="#FF2D78" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-  </svg>`;
+  // notehead
+  const open = type === 'h';
+  const hasStem = type !== 'h' || true; // all have stem except semibreve (not used here)
+  const hasFlag = type === 'e';
+  const hasDot  = type === 'dq';
+  const nh = `<ellipse cx="8" cy="28" rx="6.5" ry="4" transform="rotate(-14,8,28)" fill="${open?'none':col}" stroke="${col}" stroke-width="1.7"/>`;
+  const stem = `<line x1="14" y1="24.5" x2="14" y2="6" stroke="${col}" stroke-width="1.7"/>`;
+  const flag = hasFlag ? `<path d="M14 6 Q21 10 17 17" stroke="${col}" stroke-width="1.7" fill="none" stroke-linecap="round"/>` : '';
+  const dot  = hasDot  ? `<circle cx="22" cy="27" r="2.2" fill="${col}"/>` : '';
+  return `<svg viewBox="0 0 26 36" xmlns="http://www.w3.org/2000/svg">${nh}${stem}${flag}${dot}</svg>`;
 }
 
 // ── Build grid ─────────────────────────────────────────────────
 function trBuildGrid() {
   const grid = document.getElementById('tr-grid');
   grid.innerHTML = '';
+  const types = TR.pattern.types || TR.pattern.bits.map(b => b ? 'e' : 'r');
   TR.pattern.bits.forEach((on, i) => {
     const cell = document.createElement('div');
     cell.className = 'tr-cell' + (on ? ' on' : '');
     cell.id = 'trc-' + i;
-    cell.innerHTML = `<div class="tr-note-svg">${trNoteSvg(on)}</div>`;
+    cell.innerHTML = `<div class="tr-note-svg">${trNoteSvg(types[i])}</div>`;
     grid.appendChild(cell);
   });
 }
@@ -1821,6 +1854,23 @@ function trStopRound() {
   document.getElementById('tr-tap-btn').disabled = true;
 }
 
+function trEndSession() {
+  trStopRound();
+  // Show end-of-session summary on the gameover screen
+  document.getElementById('go-emoji').textContent = '👋';
+  document.getElementById('go-congrats-text').textContent = 'Session Ended';
+  document.getElementById('go-acc').textContent = Math.round(TR.cleared / Math.max(1, TR.idx + 1) * 100) + '%';
+  document.getElementById('go-acc-label').textContent = 'Completion so far';
+  document.getElementById('go-score').textContent = TR.score.toLocaleString();
+  document.getElementById('go-correct').textContent = TR.cleared;
+  document.getElementById('go-streak').textContent = TR.maxStreak;
+  document.getElementById('go-rounds').textContent = TR.idx + 1;
+  document.querySelector('#gameover .go-pass-badge').style.display = 'none';
+  document.querySelector('#gameover .btn-primary').onclick = () => startTapGame(TR.diff);
+  document.querySelector('#gameover .btn-ghost').onclick = goMenu;
+  showScreen('gameover');
+}
+
 // ── Tap handler ────────────────────────────────────────────────
 function trDoTap() {
   if (TR.phase !== 'playing') return;
@@ -1849,12 +1899,10 @@ function trDoTap() {
     const c = document.getElementById('trc-' + bestIdx);
     c?.classList.remove('on', 'active');
     c?.classList.add('hit');
-    // Update note to green
-    if (c) c.innerHTML = `<div class="tr-note-svg"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="9" cy="28" rx="7" ry="4.5" transform="rotate(-14,9,28)" fill="#39D98A"/>
-      <line x1="15.8" y1="24" x2="15.8" y2="5" stroke="#39D98A" stroke-width="1.8"/>
-      <path d="M15.8 5 Q23 9 19 16" stroke="#39D98A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-    </svg></div>`;
+    if (c) {
+      const types = TR.pattern.types || TR.pattern.bits.map(b => b ? 'e' : 'r');
+      c.innerHTML = `<div class="tr-note-svg">${trNoteSvg(types[bestIdx], true)}</div>`;
+    }
     tone(660, .1, 'triangle', .22);
 
     const label = bestDist < TR.eighthMs * 0.15 ? 'PERFECT!' : bestDist < TR.eighthMs * 0.28 ? 'GOOD' : 'OK';
