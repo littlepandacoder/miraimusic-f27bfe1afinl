@@ -229,7 +229,18 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
   const stopConversation = useCallback(async () => {
     userEndedRef.current = true;
     if (retryTimeout.current) clearTimeout(retryTimeout.current);
-    stopMicStream(); // stop audio worklet source BEFORE closing WebSocket to prevent stale sends
+    stopMicStream();
+
+    // The SDK's AudioWorklet keeps posting messages even after endSession closes
+    // the WebSocket. Patch ws.send() to silently drop writes on closing/closed
+    // sockets for 500 ms — long enough for the worklet queue to drain — then restore.
+    const origSend = WebSocket.prototype.send;
+    (WebSocket.prototype as any).send = function (this: WebSocket, data: unknown) {
+      if (this.readyState >= WebSocket.CLOSING) return;
+      return origSend.call(this, data);
+    };
+    setTimeout(() => { WebSocket.prototype.send = origSend; }, 500);
+
     await conversation.endSession();
   }, [conversation, stopMicStream]);
 
