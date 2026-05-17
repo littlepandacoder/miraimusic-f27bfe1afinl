@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
+import DailyReviewModal from "./student/DailyReviewModal";
 import BookLesson from "./student/BookLesson";
 import ModuleMap from "./student/ModuleMap";
 import FoundationLessonPlan from "./student/FoundationLessonPlan";
@@ -440,6 +441,7 @@ const StudentHome = () => {
 const StudentDashboard = () => {
   return (
     <DashboardLayout title="Music Lesson Dashboard" role="student">
+      <DailyReviewModal />
       <Routes>
         <Route index element={<StudentHome />} />
         <Route path="/" element={<StudentHome />} />
