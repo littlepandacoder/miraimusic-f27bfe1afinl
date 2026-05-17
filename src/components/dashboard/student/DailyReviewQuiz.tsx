@@ -6,6 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Trophy, ArrowRight, RotateCcw, Flame, Star, Zap } from "lucide-react";
 
+// ─── Voice announcer (Web Speech API) ────────────────────────────────────────
+function say(text: string, pitch = 1.15, rate = 1.05) {
+  try {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.pitch  = pitch;
+    u.rate   = rate;
+    u.volume = 0.9;
+    window.speechSynthesis.speak(u);
+  } catch (_) { /* unsupported — ignore */ }
+}
+
 // ─── Sound engine (Web Audio API — no external deps) ─────────────────────────
 let _audioCtx: AudioContext | null = null;
 function getAudioCtx(): AudioContext {
@@ -318,9 +331,22 @@ const DailyReviewQuiz = () => {
       setBounce(idx);
       setTimeout(() => setBounce(null), 500);
       addPop(newStreak >= 5 ? `+${bonus} 🔥 BLAZING!` : newStreak >= 3 ? `+${bonus} ⚡ STREAK!` : `+${bonus}`, "#39D98A");
-      if (newStreak >= 5) SFX.streak5();
-      else if (newStreak >= 3) SFX.streak3();
-      else SFX.correct();
+      if (newStreak >= 5) {
+        SFX.streak5();
+        const msg = newStreak >= 7 ? "Unstoppable!" : newStreak === 5 ? "Incredible!" : "Blazing!";
+        addPop(`${msg} 🔥`, "#FF2D78");
+        say(msg, 1.3, 1.1);
+      } else if (newStreak === 3) {
+        SFX.streak3();
+        addPop("AMAZING! 🌟", "#F59E0B");
+        say("Amazing!", 1.25, 1.05);
+      } else if (newStreak === 4) {
+        SFX.streak3();
+        addPop("GOOD JOB! ⚡", "#A855F7");
+        say("Good job!", 1.2, 1.05);
+      } else {
+        SFX.correct();
+      }
     } else {
       setStreak(0);
       setShake(true);
