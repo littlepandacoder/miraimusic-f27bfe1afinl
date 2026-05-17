@@ -6,6 +6,65 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Trophy, ArrowRight, RotateCcw, Flame, Star, Zap } from "lucide-react";
 
+// ─── Sound engine (Web Audio API — no external deps) ─────────────────────────
+let _audioCtx: AudioContext | null = null;
+function getAudioCtx(): AudioContext {
+  if (!_audioCtx || _audioCtx.state === "closed") {
+    _audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return _audioCtx;
+}
+
+function playTone(
+  freq: number, type: OscillatorType, startOffset: number,
+  duration: number, volume = 0.28, pitchEnd?: number
+) {
+  try {
+    const ctx  = getAudioCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    const t = ctx.currentTime + startOffset;
+    osc.frequency.setValueAtTime(freq, t);
+    if (pitchEnd !== undefined) osc.frequency.linearRampToValueAtTime(pitchEnd, t + duration);
+    gain.gain.setValueAtTime(volume, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    osc.start(t);
+    osc.stop(t + duration + 0.01);
+  } catch (_) { /* audio blocked — silently ignore */ }
+}
+
+const SFX = {
+  correct() {
+    // Ascending major-third chime: C5 → E5
+    playTone(523.25, "sine", 0,    0.25, 0.28);
+    playTone(659.25, "sine", 0.1,  0.28, 0.28);
+  },
+  wrong() {
+    // Descending buzz
+    playTone(220, "sawtooth", 0, 0.04, 0.18);
+    playTone(180, "sawtooth", 0.06, 0.04, 0.18);
+    playTone(150, "sawtooth", 0.12, 0.18, 0.15, 80);
+  },
+  streak3() {
+    // C5 → E5 → G5 arpeggio
+    [523.25, 659.25, 783.99].forEach((f, i) => playTone(f, "sine", i * 0.09, 0.3, 0.26));
+  },
+  streak5() {
+    // C5 → E5 → G5 → C6 power arpeggio
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, "sine", i * 0.09, 0.35, 0.26));
+  },
+  victory() {
+    // Short fanfare: C E G E C(oct)
+    const notes = [523.25, 659.25, 783.99, 659.25, 1046.5];
+    const durs  = [0.14,   0.14,   0.14,   0.1,    0.45 ];
+    let t = 0;
+    notes.forEach((f, i) => { playTone(f, "sine", t, durs[i] + 0.05, 0.3); t += durs[i] * 0.82; });
+  },
+};
+
 // ─── Confetti ─────────────────────────────────────────────────────────────────
 const CONFETTI_COLORS = ["#FF2D78", "#39D98A", "#00D4FF", "#F59E0B", "#A855F7", "#FF6B35", "#ffffff"];
 
@@ -254,11 +313,15 @@ const DailyReviewQuiz = () => {
       setBounce(idx);
       setTimeout(() => setBounce(null), 500);
       addPop(newStreak >= 5 ? `+${bonus} 🔥 BLAZING!` : newStreak >= 3 ? `+${bonus} ⚡ STREAK!` : `+${bonus}`, "#39D98A");
+      if (newStreak >= 5) SFX.streak5();
+      else if (newStreak >= 3) SFX.streak3();
+      else SFX.correct();
     } else {
       setStreak(0);
       setShake(true);
       setTimeout(() => setShake(false), 500);
       addPop("MISS!", "#EF4444");
+      SFX.wrong();
     }
   };
 
@@ -280,6 +343,9 @@ const DailyReviewQuiz = () => {
       }
     }
   };
+
+  // ── Play victory sound once when results appear ───────────────────────────
+  useEffect(() => { if (done) SFX.victory(); }, [done]);
 
   // ── Results ────────────────────────────────────────────────────────────────
   if (done) {
