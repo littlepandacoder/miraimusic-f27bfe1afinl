@@ -659,14 +659,14 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 <script>
 // ── DATA ─────────────────────────────────────────────────────
 const NOTES = [
-  { id:'whole',      label:'Whole',     beats:4,   open:true,  stem:false, flag:false, dot:false },
-  { id:'half',       label:'Half',      beats:2,   open:true,  stem:true,  flag:false, dot:false },
-  { id:'dot-half',   label:'Dot Half',  beats:3,   open:true,  stem:true,  flag:false, dot:true  },
-  { id:'quarter',    label:'Quarter',   beats:1,   open:false, stem:true,  flag:false, dot:false },
-  { id:'dot-qtr',    label:'Dot Qtr',   beats:1.5, open:false, stem:true,  flag:false, dot:true  },
-  { id:'eighth',     label:'Eighth',    beats:0.5, open:false, stem:true,  flag:true,  dot:false },
-  { id:'qtr-rest',   label:'Qtr Rest',  beats:1,   rest:true  },
-  { id:'half-rest',  label:'Half Rest', beats:2,   rest:true  },
+  { id:'whole',      label:'Semibreve',        beats:4,   open:true,  stem:false, flag:false, dot:false },
+  { id:'half',       label:'Minim',            beats:2,   open:true,  stem:true,  flag:false, dot:false },
+  { id:'dot-half',   label:'Dotted Minim',     beats:3,   open:true,  stem:true,  flag:false, dot:true  },
+  { id:'quarter',    label:'Crotchet',         beats:1,   open:false, stem:true,  flag:false, dot:false },
+  { id:'dot-qtr',    label:'Dotted Crotchet',  beats:1.5, open:false, stem:true,  flag:false, dot:true  },
+  { id:'eighth',     label:'Quaver',           beats:0.5, open:false, stem:true,  flag:true,  dot:false },
+  { id:'qtr-rest',   label:'Crotchet Rest',    beats:1,   rest:true  },
+  { id:'half-rest',  label:'Minim Rest',       beats:2,   rest:true  },
 ];
 
 const SIGS = [
@@ -791,7 +791,7 @@ const sndGameOver = (acc) => {
 
 // ── SVG HELPERS ───────────────────────────────────────────────
 function noteSVG(n, size=32, h=42) {
-  const W=size, H=h, cx=W*.45, cy=H*.76, rx=W*.38, ry=H*.16;
+  const W=size, H=h, cx=W*.40, cy=H*.76, rx=W*.36, ry=H*.16;
   const rot=`rotate(-14,${cx},${cy})`;
   if (n.rest) {
     if (n.id==='qtr-rest') return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
@@ -802,7 +802,7 @@ function noteSVG(n, size=32, h=42) {
   }
   const stemX=cx+rx*.85, stemY1=cy-ry, stemY2=H*.1;
   const flagPath=n.flag?`<path d="M${stemX} ${stemY2} Q${stemX+W*.42} ${stemY2+H*.2} ${stemX+W*.1} ${stemY2+H*.38}" stroke="#E8ECF0" stroke-width="1.6" fill="none"/>`:''
-  const dotMark=n.dot?`<circle cx="${cx+rx+W*.18}" cy="${cy+ry}" r="${W*.1}" fill="#E8ECF0"/>`:''
+  const dotMark=n.dot?`<circle cx="${cx+rx+W*.11}" cy="${cy}" r="${W*.09}" fill="#E8ECF0"/>`:''
   const stemLine=n.stem?`<line x1="${stemX}" y1="${stemY1}" x2="${stemX}" y2="${stemY2}" stroke="#E8ECF0" stroke-width="1.7"/>`:''
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
     <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="${rot}" fill="${n.open?'none':'#E8ECF0'}" stroke="#E8ECF0" stroke-width="1.7"/>
@@ -819,7 +819,7 @@ function noteInStaff(nid, x) {
       <line x1="${cx-16}" y1="${cy-5}" x2="${cx+16}" y2="${cy-5}" stroke="#E8ECF0" stroke-width="1.8"/>`;
   }
   const flag=n.flag?`<path d="M${stemX} ${stemY2} Q${stemX+18} ${stemY2+12} ${stemX+5} ${stemY2+22}" stroke="#E8ECF0" stroke-width="1.8" fill="none"/>`:''
-  const dot=n.dot?`<circle cx="${cx+rx+9}" cy="${cy+ry}" r="3.5" fill="#E8ECF0"/>`:''
+  const dot=n.dot?`<circle cx="${cx+rx+7}" cy="${cy}" r="3.5" fill="#E8ECF0"/>`:''
   const stem=n.stem?`<line x1="${stemX}" y1="${stemY1}" x2="${stemX}" y2="${stemY2}" stroke="#E8ECF0" stroke-width="2"/>`:''
   return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="${rot}" fill="${n.open?'none':'#E8ECF0'}" stroke="#E8ECF0" stroke-width="2"/>
     ${stem}${flag}${dot}`;
