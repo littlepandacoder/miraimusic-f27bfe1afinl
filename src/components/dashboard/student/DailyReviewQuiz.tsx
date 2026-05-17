@@ -56,6 +56,11 @@ const SFX = {
     // C5 → E5 → G5 → C6 power arpeggio
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, "sine", i * 0.09, 0.35, 0.26));
   },
+  next() {
+    // Soft neutral pop — quick sine blip
+    playTone(880, "sine", 0, 0.07, 0.18);
+    playTone(660, "sine", 0.05, 0.07, 0.10);
+  },
   victory() {
     // Short fanfare: C E G E C(oct)
     const notes = [523.25, 659.25, 783.99, 659.25, 1046.5];
@@ -326,6 +331,7 @@ const DailyReviewQuiz = () => {
   };
 
   const next = async () => {
+    SFX.next();
     if (current < questions.length - 1) {
       setCurrent((c) => c + 1);
       setRevealed(false);
