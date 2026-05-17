@@ -355,7 +355,7 @@ const StudentHome = () => {
             { key: "rhythm_quiz",  label: t("student.gameNames.rhythmQuiz"),   icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
               passThreshold: 70,
             },
-            { key: "tap_rhythm",   label: t("student.gameNames.tapRhythm"),    icon: <Drum className="w-5 h-5 text-pink-400" />,    accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/tap-rhythm.html",    tests: null },
+            { key: "tap_rhythm",   label: t("student.gameNames.tapRhythm"),    icon: <Drum className="w-5 h-5 text-pink-400" />,    accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/rhythm-quiz.html",   tests: null },
           ].map(({ key, label, icon, accentClass, bgClass, href, tests, passThreshold }: any) => {
             const gs = gameScores[key];
             return (

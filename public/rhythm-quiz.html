@@ -256,6 +256,125 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   .hud-score{font-size:1.25rem}
   .btn-primary,.btn-ghost{padding:.85rem 1.5rem;font-size:.9rem}
 }
+
+/* ── TAP THE RHYTHM ─────────────────────────────────────────── */
+#tap-screen{align-items:center;padding:1rem 1rem 2.5rem;gap:.9rem}
+.tr-inner{width:100%;max-width:560px;display:flex;flex-direction:column;gap:.9rem}
+
+/* Diff picker */
+.tr-diff-wrap{display:flex;flex-direction:column;align-items:center;gap:1.25rem;padding:1.5rem 0}
+.tr-diff-title{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tr-diff-btns{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center}
+.tr-diff-btn{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem 1.5rem;cursor:pointer;transition:all .2s;text-align:center;min-width:130px}
+.tr-diff-btn:hover{transform:translateY(-2px)}
+.tr-diff-btn.easy:hover{border-color:var(--green);box-shadow:0 0 20px rgba(57,217,138,.25)}
+.tr-diff-btn.medium:hover{border-color:var(--amber);box-shadow:0 0 20px rgba(245,158,11,.25)}
+.tr-diff-btn.hard:hover{border-color:var(--red);box-shadow:0 0 20px rgba(239,68,68,.25)}
+.tr-diff-icon{font-size:1.6rem;margin-bottom:.35rem}
+.tr-diff-name{font-weight:700;font-size:.85rem}
+.tr-diff-bpm{color:var(--muted);font-size:.72rem;font-family:'DM Mono',monospace;margin-top:.2rem}
+.tr-diff-btn.easy .tr-diff-name{color:var(--green)}
+.tr-diff-btn.medium .tr-diff-name{color:var(--amber)}
+.tr-diff-btn.hard .tr-diff-name{color:var(--red)}
+
+/* Pattern info */
+.tr-pattern-info{text-align:center}
+.tr-level-lbl{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.tr-pattern-name{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--off-white);margin:.3rem 0}
+.tr-pattern-hint{font-size:.82rem;color:var(--muted)}
+
+/* Phase label */
+.tr-phase{font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:.14em;color:var(--muted);
+  text-transform:uppercase;text-align:center;min-height:1.2em}
+.tr-phase.go{color:var(--green);animation:tr-glow .3s ease}
+@keyframes tr-glow{0%{text-shadow:0 0 24px var(--green)}100%{text-shadow:none}}
+
+/* Progress dots */
+.tr-dots{display:flex;gap:7px;justify-content:center}
+.tr-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12);transition:all .3s}
+.tr-dot.done{background:var(--green)}
+.tr-dot.cur{background:var(--pink);box-shadow:0 0 8px var(--pink);transform:scale(1.35)}
+.tr-dot.fail{background:var(--red)}
+
+/* Rhythm grid */
+.tr-beat-labels{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:5px}
+.tr-beat-lbl{text-align:center;font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);padding:1px 0}
+.tr-beat-lbl.strong{color:var(--sky);font-weight:700}
+.tr-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.tr-cell{aspect-ratio:1;border-radius:10px;border:2px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.025);display:flex;align-items:center;justify-content:center;
+  transition:all .12s;position:relative;overflow:hidden;user-select:none;flex-direction:column}
+.tr-cell.on{background:rgba(255,45,120,.1);border-color:rgba(255,45,120,.35)}
+.tr-cell.on .tr-note-svg{opacity:1}
+.tr-cell .tr-note-svg{opacity:.18;width:70%;height:70%;display:flex;align-items:center;justify-content:center}
+.tr-cell .tr-note-svg svg{width:100%;height:100%}
+.tr-cell.active{border-color:rgba(255,255,255,.7);box-shadow:0 0 14px rgba(255,255,255,.25)}
+.tr-cell.active.on{border-color:var(--pink);box-shadow:0 0 22px rgba(255,45,120,.55);
+  animation:tr-cell-pulse .12s ease}
+@keyframes tr-cell-pulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.tr-cell.hit{background:rgba(57,217,138,.25)!important;border-color:var(--green)!important;
+  box-shadow:0 0 18px rgba(57,217,138,.4)!important;animation:tr-hit .28s ease!important}
+.tr-cell.hit .tr-note-svg{opacity:1}
+@keyframes tr-hit{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+.tr-cell.miss{background:rgba(239,68,68,.18)!important;border-color:var(--red)!important;
+  animation:tr-miss-shake .28s ease}
+@keyframes tr-miss-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.tr-cell.false-tap{background:rgba(239,68,68,.1)!important;border-color:rgba(239,68,68,.4)!important}
+.tr-rest-dash{width:40%;height:2px;border-radius:1px;background:rgba(255,255,255,.15)}
+
+/* Tap button */
+#tr-tap-btn{width:100%;padding:1.4rem;border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,45,120,.12),rgba(168,85,247,.12));
+  border:2px solid rgba(255,45,120,.35);
+  color:var(--pink);font-family:'Orbitron',monospace;font-size:1.25rem;font-weight:900;
+  cursor:pointer;letter-spacing:.1em;transition:all .1s;user-select:none;
+  box-shadow:0 0 18px rgba(255,45,120,.12)}
+#tr-tap-btn:active,#tr-tap-btn.pressed{
+  transform:scale(.96);background:linear-gradient(135deg,rgba(255,45,120,.35),rgba(168,85,247,.35));
+  box-shadow:0 0 36px rgba(255,45,120,.5)}
+#tr-tap-btn:disabled{opacity:.25;cursor:default}
+
+/* Accuracy strip */
+.tr-acc-strip{height:4px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+.tr-acc-fill{height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--green));
+  transition:width .25s;border-radius:99px}
+
+/* Inline result */
+.tr-result{border:1px solid var(--border);border-radius:16px;overflow:hidden;
+  background:var(--card);animation:tr-result-in .35s ease}
+@keyframes tr-result-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.tr-result-strip{height:3px;background:linear-gradient(90deg,var(--pink),var(--purple),var(--sky))}
+.tr-result-body{padding:1.1rem 1.25rem}
+.tr-grade{font-family:'Orbitron',monospace;font-size:3.5rem;font-weight:900;text-align:center;
+  animation:tr-grade-in .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tr-grade-in{from{transform:scale(.2) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.tr-result-cells{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin:.75rem 0}
+.tr-rcell{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.6rem}
+.tr-rcell.rh{background:rgba(57,217,138,.3);border:1px solid var(--green)}
+.tr-rcell.rm{background:rgba(239,68,68,.3);border:1px solid var(--red)}
+.tr-rcell.rr{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+
+/* Metronome toggle */
+.tr-metro{background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:8px;padding:5px 10px;cursor:pointer;font-size:1.1rem;transition:all .2s;
+  line-height:1}
+.tr-metro.on{border-color:var(--sky);box-shadow:0 0 10px rgba(0,212,255,.2)}
+
+/* Countdown overlay (reuse existing #dup-modal backdrop idea) */
+#tr-countdown{position:fixed;inset:0;z-index:700;display:none;align-items:center;
+  justify-content:center;background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
+#tr-countdown.show{display:flex}
+.tr-cd-num{font-family:'Orbitron',monospace;font-size:8rem;font-weight:900;color:var(--pink);
+  text-shadow:0 0 60px rgba(255,45,120,.6);animation:tr-cd .38s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tr-cd{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Score pops for tap mode */
+.tr-pop{position:absolute;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;
+  font-size:1.1rem;font-weight:900;pointer-events:none;white-space:nowrap;
+  animation:tr-pop-up .95s ease-out forwards;text-shadow:0 0 18px currentColor}
+@keyframes tr-pop-up{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-55px)}}
 </style>
 </head>
 <body>
@@ -319,6 +438,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
         <div class="mode-name">Note Beat Value</div>
         <p class="mode-desc">A note or rest is shown. Tap how many beats it receives. Tests your knowledge of note values and rests.</p>
         <span class="diff diff-easy">Beginner Friendly</span>
+      </div>
+      <div class="mode-card" onclick="showTapDiffSelect()">
+        <span class="mode-icon">🥁</span>
+        <div class="mode-name">Tap the Rhythm</div>
+        <p class="mode-desc">A rhythm pattern is shown with real note symbols. Listen, then tap it out on the spacebar in perfect time!</p>
+        <span class="diff diff-med">All Levels</span>
       </div>
     </div>
   </div>
@@ -417,6 +542,117 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   <div class="btn-row">
     <button class="btn-primary" onclick="restartGame()">Play Again</button>
     <button class="btn-ghost" onclick="goMenu()">Change Mode</button>
+  </div>
+</div>
+
+<!-- COUNTDOWN OVERLAY FOR TAP MODE -->
+<div id="tr-countdown">
+  <div class="tr-cd-num" id="tr-cd-num">3</div>
+</div>
+
+<!-- TAP THE RHYTHM SCREEN -->
+<div class="screen" id="tap-screen">
+  <div class="tr-inner">
+
+    <!-- Difficulty picker (shown first) -->
+    <div id="tr-diff-select">
+      <div class="tr-diff-wrap">
+        <div class="tr-diff-title">Tap the Rhythm</div>
+        <p style="color:var(--muted);text-align:center;font-size:.9rem">Listen to the pattern — then tap it out!</p>
+        <div class="tr-diff-btns">
+          <div class="tr-diff-btn easy" onclick="startTapGame('easy')">
+            <div class="tr-diff-icon">🟢</div>
+            <div class="tr-diff-name">EASY</div>
+            <div class="tr-diff-bpm">72 BPM</div>
+          </div>
+          <div class="tr-diff-btn medium" onclick="startTapGame('medium')">
+            <div class="tr-diff-icon">🟡</div>
+            <div class="tr-diff-name">MEDIUM</div>
+            <div class="tr-diff-bpm">84 BPM</div>
+          </div>
+          <div class="tr-diff-btn hard" onclick="startTapGame('hard')">
+            <div class="tr-diff-icon">🔴</div>
+            <div class="tr-diff-name">HARD</div>
+            <div class="tr-diff-bpm">96 BPM</div>
+          </div>
+        </div>
+        <button class="btn-ghost" onclick="goMenu()">↩ Back to Modes</button>
+      </div>
+    </div>
+
+    <!-- Game UI (hidden until difficulty chosen) -->
+    <div id="tr-game" style="display:none">
+      <!-- HUD -->
+      <div class="hud" style="justify-content:space-between">
+        <div class="hud-score">⭐ <span id="tr-score">0</span></div>
+        <div class="hud-streak">🔥 <span id="tr-streak">0</span></div>
+        <button class="tr-metro on" id="tr-metro-btn" onclick="trToggleMetro()" title="Toggle metronome">🎵</button>
+      </div>
+
+      <!-- Pattern progress dots -->
+      <div class="tr-dots" id="tr-dots"></div>
+
+      <!-- Phase label -->
+      <div class="tr-phase" id="tr-phase">READY</div>
+
+      <!-- Pattern info -->
+      <div class="tr-pattern-info">
+        <div class="tr-level-lbl" id="tr-level-lbl">LEVEL 1</div>
+        <div class="tr-pattern-name" id="tr-pattern-name">Loading...</div>
+        <div class="tr-pattern-hint" id="tr-pattern-hint"></div>
+      </div>
+
+      <!-- Rhythm grid -->
+      <div style="position:relative">
+        <div id="tr-pop-layer" style="position:absolute;top:-10px;left:0;right:0;height:0;pointer-events:none;z-index:10"></div>
+        <div class="tr-beat-labels">
+          <div class="tr-beat-lbl strong">1</div>
+          <div class="tr-beat-lbl">+</div>
+          <div class="tr-beat-lbl strong">2</div>
+          <div class="tr-beat-lbl">+</div>
+          <div class="tr-beat-lbl strong">3</div>
+          <div class="tr-beat-lbl">+</div>
+          <div class="tr-beat-lbl strong">4</div>
+          <div class="tr-beat-lbl">+</div>
+        </div>
+        <div class="tr-grid" id="tr-grid"></div>
+      </div>
+
+      <!-- Accuracy strip -->
+      <div class="tr-acc-strip"><div class="tr-acc-fill" id="tr-acc-fill"></div></div>
+
+      <!-- Control buttons -->
+      <div class="btn-row">
+        <button class="btn-ghost" id="tr-preview-btn" onclick="trPreview()">🔊 Preview</button>
+        <button class="btn-primary" id="tr-tap-start-btn" onclick="trStartTapping()">🎯 Tap It!</button>
+      </div>
+
+      <!-- Tap button -->
+      <button id="tr-tap-btn" disabled onclick="trDoTap()">TAP</button>
+      <p style="text-align:center;color:var(--muted);font-size:.72rem;font-family:'DM Mono',monospace">
+        or press <kbd style="background:rgba(255,255,255,.1);padding:1px 7px;border-radius:4px;font-family:inherit">Space</kbd>
+      </p>
+
+      <!-- Inline result (shown after each bar) -->
+      <div class="tr-result" id="tr-result" style="display:none">
+        <div class="tr-result-strip"></div>
+        <div class="tr-result-body">
+          <div class="tr-grade" id="tr-grade">S</div>
+          <div style="text-align:center;margin-top:.3rem">
+            <span id="tr-res-pct" style="font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700"></span>
+            <span style="color:var(--muted);font-size:.8rem;margin-left:.4rem">accuracy</span>
+          </div>
+          <div class="tr-result-cells" id="tr-result-cells"></div>
+          <div class="btn-row" style="margin-top:.5rem">
+            <button class="btn-ghost" id="tr-retry-btn" onclick="trRetry()">↺ Retry</button>
+            <button class="btn-primary" id="tr-next-btn" onclick="trNext()">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-ghost" style="align-self:center" onclick="goMenu()">↩ Menu</button>
+    </div>
+
   </div>
 </div>
 
@@ -597,19 +833,26 @@ function sigSVG(s) {
 
 // ── SCREENS ───────────────────────────────────────────────────
 function showScreen(id) {
-  ['mode-select','game','gameover'].forEach(s => {
+  ['mode-select','game','gameover','tap-screen'].forEach(s => {
     const el=document.getElementById(s);
     if (!el) return;
-    if (s==='gameover') el.classList.remove('active');
-    else el.classList.remove('active');
+    el.classList.remove('active');
   });
   const el=document.getElementById(id);
-  if (!el) return;
-  if (id==='gameover') el.classList.add('active');
-  else el.classList.add('active');
+  if (el) el.classList.add('active');
 }
 
-function goMenu() { clearInterval(S.timer); showScreen('mode-select'); }
+function goMenu() {
+  clearInterval(S.timer);
+  trStopRound();
+  showScreen('mode-select');
+}
+
+function showTapDiffSelect() {
+  showScreen('tap-screen');
+  document.getElementById('tr-diff-select').style.display='';
+  document.getElementById('tr-game').style.display='none';
+}
 
 // ── GAME FLOW ─────────────────────────────────────────────────
 function startGame(mode) {
@@ -1226,6 +1469,554 @@ async function saveScore() {
 // ── UTILS ─────────────────────────────────────────────────────
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const fmtB = b => b===Math.floor(b) ? b : b.toFixed(1);
+
+// ══════════════════════════════════════════════════════════════
+// TAP THE RHYTHM
+// ══════════════════════════════════════════════════════════════
+
+// ── Patterns (bits = 8 slots at eighth-note resolution) ────────
+const TR_PATTERNS = {
+  easy: [
+    { name:"Four Quarter Notes",    bits:[1,0,1,0,1,0,1,0], hint:"Beat on every quarter — 1, 2, 3, 4" },
+    { name:"Two Half Notes",         bits:[1,0,0,0,1,0,0,0], hint:"Two long taps — beats 1 and 3 only" },
+    { name:"Half + Two Quarters",    bits:[1,0,0,0,1,0,1,0], hint:"Long … short short" },
+    { name:"Beats 2 and 4",          bits:[0,0,1,0,0,0,1,0], hint:"The backbeat — skip beats 1 and 3" },
+    { name:"Three Quarters + Rest",  bits:[1,0,1,0,1,0,0,0], hint:"Three taps then silence" },
+  ],
+  medium: [
+    { name:"Eighth Note Pairs",      bits:[1,1,0,0,1,1,0,0], hint:"Two quick, rest, two quick, rest" },
+    { name:"Syncopated",             bits:[1,0,0,1,0,1,0,0], hint:"Off-beat feel — count carefully!" },
+    { name:"Mixed Pattern",          bits:[1,0,1,1,0,0,1,0], hint:"Quarter, two eighths, quarter — tricky!" },
+    { name:"All Off-Beats",          bits:[0,1,0,1,0,1,0,1], hint:"Only the '+' beats — pure upbeat energy" },
+    { name:"Latin Groove",           bits:[1,1,0,1,0,1,1,0], hint:"Five taps with a syncopated feel" },
+  ],
+  hard: [
+    { name:"All Eighth Notes",       bits:[1,1,1,1,1,1,1,1], hint:"Every single eighth — stay perfectly steady!" },
+    { name:"Complex Syncopation",    bits:[1,1,0,1,1,0,1,0], hint:"Three quick bursts with rests between" },
+    { name:"Charleston Beat",        bits:[1,0,1,1,0,0,1,0], hint:"Classic jazz Charleston pattern" },
+    { name:"Afro-Cuban Clave",       bits:[1,0,1,0,0,1,0,1], hint:"Clave — the heartbeat of Afro-Cuban music" },
+    { name:"Polyrhythm Challenge",   bits:[1,0,0,1,1,0,1,1], hint:"The trickiest yet — good luck!" },
+  ],
+};
+const TR_BPM = { easy:72, medium:84, hard:96 };
+const TR_PASS = 60; // % accuracy to pass
+const TR_GRADE_COLORS = { S:'#39D98A', A:'#00D4FF', B:'#A855F7', C:'#F59E0B', D:'#FF6B35', F:'#EF4444' };
+
+// ── State ──────────────────────────────────────────────────────
+let TR = {};
+function trReset() {
+  return {
+    diff:'easy', idx:0, score:0, streak:0, maxStreak:0, cleared:0,
+    lives:3, phase:'idle', metroOn:true, eighthMs:0,
+    pattern:null, barStart:0, tapped:new Set(), pending:[],
+    curSlot:-1, roundHits:0, roundFalse:0, localStreak:0,
+    rafId:null, barTimer:null,
+  };
+}
+TR = trReset();
+
+// ── Note SVG for cell (small, inline) ─────────────────────────
+// Returns SVG string for an eighth note or rest
+function trNoteSvg(isOn) {
+  if (!isOn) {
+    // Quarter rest (zigzag line) – small
+    return `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13 5 Q18 10 10 15 Q18 19 9 23 Q15 25 13 30" stroke="rgba(255,255,255,.25)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    </svg>`;
+  }
+  // Eighth note (filled notehead + stem + flag)
+  return `<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="9" cy="28" rx="7" ry="4.5" transform="rotate(-14,9,28)" fill="#FF2D78"/>
+    <line x1="15.8" y1="24" x2="15.8" y2="5" stroke="#FF2D78" stroke-width="1.8"/>
+    <path d="M15.8 5 Q23 9 19 16" stroke="#FF2D78" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ── Build grid ─────────────────────────────────────────────────
+function trBuildGrid() {
+  const grid = document.getElementById('tr-grid');
+  grid.innerHTML = '';
+  TR.pattern.bits.forEach((on, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'tr-cell' + (on ? ' on' : '');
+    cell.id = 'trc-' + i;
+    cell.innerHTML = `<div class="tr-note-svg">${trNoteSvg(on)}</div>`;
+    grid.appendChild(cell);
+  });
+}
+
+// ── Start tap game (after difficulty selected) ─────────────────
+function startTapGame(diff) {
+  TR = trReset();
+  TR.diff = diff;
+  TR.eighthMs = (60000 / TR_BPM[diff]) / 2;
+  document.getElementById('tr-diff-select').style.display = 'none';
+  document.getElementById('tr-game').style.display = '';
+  trLoadPattern(0);
+  trBuildDots();
+}
+
+// ── Load pattern ───────────────────────────────────────────────
+function trLoadPattern(idx) {
+  const patterns = TR_PATTERNS[TR.diff];
+  if (idx >= patterns.length) { trGameClear(); return; }
+  TR.idx = idx;
+  TR.pattern = patterns[idx];
+  TR.phase = 'idle';
+  TR.tapped = new Set();
+  TR.roundHits = 0;
+  TR.roundFalse = 0;
+  TR.localStreak = 0;
+  TR.curSlot = -1;
+
+  document.getElementById('tr-level-lbl').textContent = `LEVEL ${idx+1} / ${patterns.length}`;
+  document.getElementById('tr-pattern-name').textContent = TR.pattern.name;
+  document.getElementById('tr-pattern-hint').textContent = TR.pattern.hint;
+  document.getElementById('tr-phase').textContent = 'READY';
+  document.getElementById('tr-phase').className = 'tr-phase';
+  document.getElementById('tr-result').style.display = 'none';
+  document.getElementById('tr-preview-btn').disabled = false;
+  document.getElementById('tr-tap-start-btn').disabled = false;
+  document.getElementById('tr-tap-btn').disabled = true;
+  document.getElementById('tr-acc-fill').style.width = '0%';
+
+  trBuildGrid();
+  trUpdateDots();
+  trUpdateHUD();
+}
+
+function trBuildDots() {
+  const c = document.getElementById('tr-dots');
+  c.innerHTML = '';
+  TR_PATTERNS[TR.diff].forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'tr-dot';
+    d.id = 'trd-' + i;
+    c.appendChild(d);
+  });
+  trUpdateDots();
+}
+
+function trUpdateDots() {
+  TR_PATTERNS[TR.diff].forEach((_, i) => {
+    const d = document.getElementById('trd-' + i);
+    if (!d) return;
+    d.className = 'tr-dot' + (i < TR.idx ? ' done' : i === TR.idx ? ' cur' : '');
+  });
+}
+
+function trUpdateHUD() {
+  document.getElementById('tr-score').textContent = TR.score.toLocaleString();
+  document.getElementById('tr-streak').textContent = TR.streak;
+}
+
+// ── Metronome ─────────────────────────────────────────────────
+function trToggleMetro() {
+  TR.metroOn = !TR.metroOn;
+  const btn = document.getElementById('tr-metro-btn');
+  btn.className = 'tr-metro' + (TR.metroOn ? ' on' : '');
+  btn.textContent = TR.metroOn ? '🎵' : '🔕';
+}
+
+function trClick(isDownbeat, when = 0) {
+  if (!TR.metroOn) return;
+  try {
+    const ctx = ac();
+    const t = ctx.currentTime + when;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.value = isDownbeat ? 1100 : 880;
+    g.gain.setValueAtTime(isDownbeat ? 0.32 : 0.18, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.start(t); o.stop(t + 0.06);
+  } catch(_) {}
+}
+
+// ── Preview ───────────────────────────────────────────────────
+function trPreview() {
+  if (TR.phase === 'playing') return;
+  TR.phase = 'preview';
+  document.getElementById('tr-preview-btn').disabled = true;
+  document.getElementById('tr-tap-start-btn').disabled = true;
+  document.getElementById('tr-phase').textContent = 'LISTEN…';
+
+  const eighth = TR.eighthMs / 1000;
+  const ctx = ac();
+  const now = ctx.currentTime + 0.15;
+
+  // One bar count-in (4 quarter clicks)
+  for (let b = 0; b < 4; b++) trClick(b === 0, now - ctx.currentTime + b * eighth * 2);
+
+  // Pattern notes + beat clicks
+  const offset = now - ctx.currentTime + 4 * eighth * 2;
+  TR.pattern.bits.forEach((on, i) => {
+    if (i % 2 === 0) trClick(i === 0, offset + i * eighth);
+    if (on) {
+      try {
+        const t = ctx.currentTime + offset + i * eighth;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = 'triangle'; o.frequency.value = 440;
+        g.gain.setValueAtTime(0.28, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+        o.start(t); o.stop(t + 0.16);
+      } catch(_) {}
+    }
+  });
+
+  // Highlight cells during preview
+  const delayBase = 4 * 2 * TR.eighthMs;
+  TR.pattern.bits.forEach((_, i) => {
+    setTimeout(() => {
+      document.querySelectorAll('.tr-cell').forEach(c => c.classList.remove('active'));
+      document.getElementById('trc-' + i)?.classList.add('active');
+    }, delayBase + i * TR.eighthMs);
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll('.tr-cell').forEach(c => c.classList.remove('active'));
+    document.getElementById('tr-phase').textContent = 'READY TO TAP?';
+    document.getElementById('tr-preview-btn').disabled = false;
+    document.getElementById('tr-tap-start-btn').disabled = false;
+    TR.phase = 'idle';
+  }, delayBase + 8 * TR.eighthMs + 350);
+}
+
+// ── Countdown + begin ─────────────────────────────────────────
+function trStartTapping() {
+  if (TR.phase === 'playing' || TR.phase === 'countdown') return;
+  TR.phase = 'countdown';
+  document.getElementById('tr-preview-btn').disabled = true;
+  document.getElementById('tr-tap-start-btn').disabled = true;
+  document.getElementById('tr-result').style.display = 'none';
+  trBuildGrid(); // reset cell colours
+
+  let count = 3;
+  const overlay = document.getElementById('tr-countdown');
+  const numEl   = document.getElementById('tr-cd-num');
+
+  function step() {
+    if (count > 0) {
+      overlay.classList.add('show');
+      numEl.textContent = count;
+      numEl.style.color = 'var(--pink)';
+      numEl.style.fontSize = '8rem';
+      numEl.style.animation = 'none'; void numEl.offsetWidth;
+      numEl.style.animation = 'tr-cd .38s cubic-bezier(.34,1.56,.64,1)';
+      trClick(true);
+      count--;
+      setTimeout(step, TR.eighthMs * 2);
+    } else {
+      numEl.textContent = 'GO!';
+      numEl.style.color = 'var(--green)';
+      numEl.style.fontSize = '5rem';
+      trClick(true);
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        trBeginBar();
+      }, TR.eighthMs * 2 * 0.8);
+    }
+  }
+  step();
+}
+
+function trBeginBar() {
+  TR.phase = 'playing';
+  TR.barStart = performance.now();
+  TR.tapped = new Set();
+  TR.pending = TR.pattern.bits.map((on, i) => on ? i : -1).filter(i => i >= 0);
+
+  document.getElementById('tr-tap-btn').disabled = false;
+  document.getElementById('tr-phase').textContent = 'TAP NOW!';
+  document.getElementById('tr-phase').className = 'tr-phase go';
+
+  // Schedule metronome clicks for this bar
+  const es = TR.eighthMs / 1000;
+  for (let b = 0; b < 8; b++) trClick(b === 0, es * b);
+
+  // End bar after 8 eighths + buffer
+  TR.barTimer = setTimeout(trEndBar, TR.eighthMs * 8 + 200);
+  TR.rafId = requestAnimationFrame(trTick);
+}
+
+function trTick() {
+  if (TR.phase !== 'playing') return;
+  const elapsed = performance.now() - TR.barStart;
+  const slot = Math.min(Math.floor(elapsed / TR.eighthMs), 7);
+
+  if (slot !== TR.curSlot) {
+    // Previous slot expired — check for miss
+    if (TR.curSlot >= 0) {
+      const prev = document.getElementById('trc-' + TR.curSlot);
+      prev?.classList.remove('active');
+      if (TR.pattern.bits[TR.curSlot] && !TR.tapped.has(TR.curSlot)) {
+        prev?.classList.add('miss');
+        TR.roundHits; // no change
+        TR.localStreak = 0;
+        trPop('MISS', 'var(--red)');
+      }
+    }
+    TR.curSlot = slot;
+    if (slot < 8) document.getElementById('trc-' + slot)?.classList.add('active');
+  }
+
+  // Update accuracy fill
+  const req = TR.pattern.bits.filter(Boolean).length;
+  if (req > 0) document.getElementById('tr-acc-fill').style.width = (TR.tapped.size / req * 100) + '%';
+
+  TR.rafId = requestAnimationFrame(trTick);
+}
+
+function trEndBar() {
+  if (TR.phase !== 'playing') return;
+  cancelAnimationFrame(TR.rafId);
+  TR.phase = 'result';
+
+  document.getElementById('trc-' + TR.curSlot)?.classList.remove('active');
+
+  // Mark remaining pending as miss
+  TR.pending.forEach(i => {
+    if (!TR.tapped.has(i)) {
+      const c = document.getElementById('trc-' + i);
+      if (c && !c.classList.contains('miss')) {
+        c.classList.add('miss');
+      }
+    }
+  });
+
+  document.getElementById('tr-tap-btn').disabled = true;
+  document.getElementById('tr-phase').textContent = '';
+
+  const req = TR.pattern.bits.filter(Boolean).length;
+  const hits = TR.tapped.size;
+  const acc = req > 0 ? Math.round(hits / req * 100) : 0;
+  const passed = acc >= TR_PASS;
+
+  const pts = Math.max(0, hits * 100 - TR.roundFalse * 25 + TR.localStreak * 50);
+  TR.score = Math.max(0, TR.score + pts);
+
+  if (passed) {
+    TR.streak++;
+    TR.maxStreak = Math.max(TR.maxStreak, TR.streak);
+    TR.cleared++;
+    sndOk();
+    trPop(`+${pts}`, 'var(--green)');
+  } else {
+    TR.streak = 0;
+    TR.lives--;
+    sndBad();
+    trPop('FAILED', 'var(--red)');
+  }
+
+  trUpdateHUD();
+  setTimeout(() => trShowResult(acc, passed, hits, req), 500);
+}
+
+function trStopRound() {
+  clearTimeout(TR.barTimer);
+  cancelAnimationFrame(TR.rafId);
+  TR.phase = 'idle';
+  document.getElementById('tr-countdown').classList.remove('show');
+  document.getElementById('tr-tap-btn').disabled = true;
+}
+
+// ── Tap handler ────────────────────────────────────────────────
+function trDoTap() {
+  if (TR.phase !== 'playing') return;
+
+  const elapsed = performance.now() - TR.barStart;
+  const WIN = TR.eighthMs * 0.42;
+
+  // Find nearest untapped required slot
+  let bestIdx = -1, bestDist = Infinity;
+  TR.pending.forEach(i => {
+    if (TR.tapped.has(i)) return;
+    const expected = i * TR.eighthMs + TR.eighthMs * 0.5;
+    const d = Math.abs(elapsed - expected);
+    if (d < bestDist) { bestDist = d; bestIdx = i; }
+  });
+
+  // Flash tap button
+  const btn = document.getElementById('tr-tap-btn');
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 90);
+
+  if (bestIdx >= 0 && bestDist <= WIN) {
+    TR.tapped.add(bestIdx);
+    TR.roundHits++;
+    TR.localStreak++;
+    const c = document.getElementById('trc-' + bestIdx);
+    c?.classList.remove('on', 'active');
+    c?.classList.add('hit');
+    // Update note to green
+    if (c) c.innerHTML = `<div class="tr-note-svg"><svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="9" cy="28" rx="7" ry="4.5" transform="rotate(-14,9,28)" fill="#39D98A"/>
+      <line x1="15.8" y1="24" x2="15.8" y2="5" stroke="#39D98A" stroke-width="1.8"/>
+      <path d="M15.8 5 Q23 9 19 16" stroke="#39D98A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    </svg></div>`;
+    tone(660, .1, 'triangle', .22);
+
+    const label = bestDist < TR.eighthMs * 0.15 ? 'PERFECT!' : bestDist < TR.eighthMs * 0.28 ? 'GOOD' : 'OK';
+    const col = { 'PERFECT!':'var(--green)', 'GOOD':'var(--sky)', 'OK':'var(--amber)' }[label];
+    trPop(label, col);
+  } else {
+    TR.roundFalse++;
+    TR.localStreak = 0;
+    if (TR.curSlot >= 0) {
+      const c = document.getElementById('trc-' + TR.curSlot);
+      if (c && !c.classList.contains('hit') && !c.classList.contains('miss')) {
+        c.classList.add('false-tap');
+        setTimeout(() => c.classList.remove('false-tap'), 280);
+      }
+    }
+    tone(220, .08, 'sawtooth', .12);
+    trPop('WRONG', 'var(--red)');
+  }
+}
+
+// ── Result ─────────────────────────────────────────────────────
+function trShowResult(acc, passed, hits, req) {
+  const grade = acc>=95?'S':acc>=85?'A':acc>=70?'B':acc>=55?'C':acc>=40?'D':'F';
+  const el = document.getElementById('tr-result');
+  const gradeEl = document.getElementById('tr-grade');
+  gradeEl.textContent = grade;
+  gradeEl.style.color = TR_GRADE_COLORS[grade];
+  gradeEl.style.textShadow = `0 0 40px ${TR_GRADE_COLORS[grade]}80`;
+  gradeEl.style.animation = 'none'; void gradeEl.offsetWidth;
+  gradeEl.style.animation = 'tr-grade-in .4s cubic-bezier(.34,1.56,.64,1)';
+
+  document.getElementById('tr-res-pct').textContent = acc + '%';
+
+  // Mini result cells
+  const rc = document.getElementById('tr-result-cells');
+  rc.innerHTML = '';
+  TR.pattern.bits.forEach((on, i) => {
+    const d = document.createElement('div');
+    if (on && TR.tapped.has(i))        d.className = 'tr-rcell rh';
+    else if (on && !TR.tapped.has(i)) d.className = 'tr-rcell rm';
+    else                               d.className = 'tr-rcell rr';
+    d.innerHTML = on ? (TR.tapped.has(i) ? '✓' : '✕') : '';
+    rc.appendChild(d);
+  });
+
+  const nextBtn = document.getElementById('tr-next-btn');
+  const patterns = TR_PATTERNS[TR.diff];
+
+  if (TR.lives <= 0) {
+    nextBtn.textContent = 'GAME OVER →';
+    nextBtn.onclick = trGameOver;
+  } else if (TR.idx >= patterns.length - 1 && passed) {
+    nextBtn.textContent = '🏆 Complete!';
+    nextBtn.onclick = trGameClear;
+  } else {
+    nextBtn.textContent = passed ? 'Next →' : (TR.lives > 0 ? 'Skip →' : 'GAME OVER →');
+    nextBtn.onclick = passed ? trNext : (TR.lives > 0 ? trNext : trGameOver);
+  }
+
+  el.style.display = '';
+  trSaveScore(acc);
+}
+
+function trNext() {
+  if (TR.lives <= 0) { trGameOver(); return; }
+  const next = TR.idx + 1;
+  if (next >= TR_PATTERNS[TR.diff].length) { trGameClear(); return; }
+  trLoadPattern(next);
+}
+
+function trRetry() {
+  trLoadPattern(TR.idx);
+}
+
+function trGameOver() {
+  // Reuse existing gameover screen
+  document.getElementById('go-emoji').textContent = '💀';
+  document.getElementById('go-congrats-text').textContent = 'Game Over!';
+  document.getElementById('go-acc').textContent = Math.round(TR.cleared / TR_PATTERNS[TR.diff].length * 100) + '%';
+  document.getElementById('go-acc-label').textContent = 'Completion';
+  document.getElementById('go-score').textContent = TR.score.toLocaleString();
+  document.getElementById('go-correct').textContent = TR.cleared;
+  document.getElementById('go-streak').textContent = TR.maxStreak;
+  document.getElementById('go-rounds').textContent = TR_PATTERNS[TR.diff].length;
+  document.querySelector('#gameover .go-pass-badge').style.display = 'none';
+  document.querySelector('#gameover .btn-primary').onclick = () => startTapGame(TR.diff);
+  document.querySelector('#gameover .btn-ghost').onclick = goMenu;
+  showScreen('gameover');
+}
+
+function trGameClear() {
+  const acc = 100;
+  document.getElementById('go-emoji').textContent = '🏆';
+  document.getElementById('go-congrats-text').textContent = 'All Patterns Cleared!';
+  document.getElementById('go-acc').textContent = '100%';
+  document.getElementById('go-acc-label').textContent = 'Completion';
+  document.getElementById('go-score').textContent = TR.score.toLocaleString();
+  document.getElementById('go-correct').textContent = TR.cleared;
+  document.getElementById('go-streak').textContent = TR.maxStreak;
+  document.getElementById('go-rounds').textContent = TR_PATTERNS[TR.diff].length;
+  const badge = document.querySelector('#gameover .go-pass-badge');
+  badge.textContent = '✓ All Cleared!';
+  badge.className = 'go-pass-badge passed';
+  badge.style.display = '';
+  document.querySelector('#gameover .btn-primary').onclick = () => startTapGame(TR.diff);
+  document.querySelector('#gameover .btn-ghost').onclick = goMenu;
+  showScreen('gameover');
+  sndGameOver(95);
+  confetti(95);
+  trSaveScore(acc);
+}
+
+// ── Score pop ──────────────────────────────────────────────────
+let trPopId = 0;
+function trPop(text, color) {
+  const layer = document.getElementById('tr-pop-layer');
+  if (!layer) return;
+  const el = document.createElement('div');
+  el.className = 'tr-pop';
+  el.style.color = color;
+  el.style.top = (Math.random() * 10) + 'px';
+  el.textContent = text;
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ── Save score ─────────────────────────────────────────────────
+async function trSaveScore(acc) {
+  try {
+    const raw = localStorage.getItem('sb-tychkyunjfbkksyxknhn-auth-token');
+    if (!raw) return;
+    const { access_token, user } = JSON.parse(raw);
+    if (!access_token || !user?.id) return;
+    await fetch(`${_SUPA_URL}/rest/v1/game_scores`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':_SUPA_KEY,
+        'Authorization':`Bearer ${access_token}`,
+        'Prefer':'return=minimal',
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        game: 'tap_rhythm',
+        score: TR.score,
+        correct: TR.cleared,
+        total: TR_PATTERNS[TR.diff].length,
+        best_streak: TR.maxStreak,
+      }),
+    });
+  } catch(_) {}
+}
+
+// ── Spacebar: shared handler for tap mode ─────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.repeat) return;
+  const tapScreen = document.getElementById('tap-screen');
+  if (!tapScreen.classList.contains('active')) return;
+  e.preventDefault();
+  if (TR.phase === 'playing') trDoTap();
+  else if (TR.phase === 'idle') { ac(); trStartTapping(); }
+});
 </script>
 </body>
 </html>
