@@ -344,7 +344,7 @@ const StudentHome = () => {
             {t("student.gamePerformance")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
             { key: "note_naming",  label: t("student.gameNames.noteNaming"),   icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",   tests: null },
             { key: "sight_reading", label: t("student.gameNames.sightReading"), icon: <Eye className="w-5 h-5 text-sky-400" />,      accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html", tests: [
@@ -355,7 +355,6 @@ const StudentHome = () => {
             { key: "rhythm_quiz",  label: t("student.gameNames.rhythmQuiz"),   icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
               passThreshold: 70,
             },
-            { key: "tap_rhythm",   label: t("student.gameNames.tapRhythm"),    icon: <Drum className="w-5 h-5 text-pink-400" />,    accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/rhythm-quiz.html",   tests: null },
           ].map(({ key, label, icon, accentClass, bgClass, href, tests, passThreshold }: any) => {
             const gs = gameScores[key];
             return (
