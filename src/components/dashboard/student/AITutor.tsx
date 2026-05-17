@@ -90,6 +90,7 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const retryTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userEndedRef = useRef(false);
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -152,9 +153,18 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
     fetchStats().catch(console.error);
   }, [user]);
 
+  const stopMicStream = useCallback(() => {
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+    }
+  }, []);
+
   const doStart = useCallback(
     async (conv: ReturnType<typeof useConversation>) => {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      stopMicStream(); // stop any previous stream before requesting a new one
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
       const sessionConfig: any = { agentId: AGENT_ID };
       if (studentStats) {
         sessionConfig.overrides = {
@@ -165,7 +175,7 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
       }
       await conv.startSession(sessionConfig);
     },
-    [studentStats]
+    [studentStats, stopMicStream]
   );
 
   const conversation = useConversation({
@@ -174,6 +184,7 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
       toast({ title: "Connected!", description: "You can now speak with your AI music tutor." });
     },
     onDisconnect: () => {
+      stopMicStream(); // kill the audio worklet source so it stops posting to the closed WebSocket
       if (!userEndedRef.current) return;
       userEndedRef.current = false;
       toast({ title: "Disconnected", description: "Your session with the AI tutor has ended." });
@@ -188,6 +199,7 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
         }, 2000);
         return;
       }
+      stopMicStream();
       setIsConnecting(false);
       toast({
         title: "Connection Error",
@@ -217,8 +229,9 @@ const AITutor = ({ lessonContext }: AITutorProps) => {
   const stopConversation = useCallback(async () => {
     userEndedRef.current = true;
     if (retryTimeout.current) clearTimeout(retryTimeout.current);
+    stopMicStream(); // stop audio worklet source BEFORE closing WebSocket to prevent stale sends
     await conversation.endSession();
-  }, [conversation]);
+  }, [conversation, stopMicStream]);
 
   const toggleMute = useCallback(async () => {
     if (isMuted) {
