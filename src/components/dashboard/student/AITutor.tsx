@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useConversation } from "@elevenlabs/react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -8,13 +9,14 @@ import { Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
 const AGENT_ID = "agent_7401krc6fjd4e1hvvce2m7mn0ss0";
 
 const AITutor = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const micStreamRef = useRef<MediaStream | null>(null);
 
   const stopMic = () => {
-    micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current?.getTracks().forEach((tr) => tr.stop());
     micStreamRef.current = null;
   };
 
@@ -30,19 +32,19 @@ const AITutor = () => {
   const conversation = useConversation({
     onConnect: () => {
       setIsConnecting(false);
-      toast({ title: "Connected!", description: "You can now speak with your AI music tutor." });
+      toast({ title: t("aiTutor.connected"), description: t("aiTutor.connectedDesc") });
     },
     onDisconnect: () => {
       stopMic();
-      toast({ title: "Disconnected", description: "Your session with the AI tutor has ended." });
+      toast({ title: t("aiTutor.disconnected"), description: t("aiTutor.disconnectedDesc") });
     },
     onError: (error) => {
       console.error("Tutor error:", error);
       stopMic();
       setIsConnecting(false);
       toast({
-        title: "Connection Error",
-        description: "Could not connect to AI tutor. Please try again.",
+        title: t("aiTutor.connectionError"),
+        description: t("aiTutor.connectionErrorDesc"),
         variant: "destructive",
       });
     },
@@ -58,12 +60,12 @@ const AITutor = () => {
       stopMic();
       setIsConnecting(false);
       toast({
-        title: "Failed to start",
-        description: error instanceof Error ? error.message : "Could not start session.",
+        title: t("aiTutor.failedToStart"),
+        description: error instanceof Error ? error.message : t("aiTutor.failedToStartDesc"),
         variant: "destructive",
       });
     }
-  }, [conversation, toast]);
+  }, [conversation, toast, t]);
 
   const stopConversation = useCallback(async () => {
     patchWsSend();
@@ -83,7 +85,7 @@ const AITutor = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="w-5 h-5 text-primary" />
-          Ask Tutor
+          {t("aiTutor.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -111,9 +113,9 @@ const AITutor = () => {
           <p className="text-sm text-muted-foreground">
             {isConnected
               ? conversation.isSpeaking
-                ? "AI Tutor is speaking..."
-                : "Listening... Ask your question!"
-              : "Click Start to begin your session"}
+                ? t("aiTutor.speaking")
+                : t("aiTutor.listening")
+              : t("aiTutor.clickToStart")}
           </p>
 
           <div className="flex justify-center gap-4">
@@ -122,12 +124,12 @@ const AITutor = () => {
                 {isConnecting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Connecting...
+                    {t("aiTutor.connecting")}
                   </>
                 ) : (
                   <>
                     <Mic className="w-4 h-4 mr-2" />
-                    Start Session
+                    {t("aiTutor.startSession")}
                   </>
                 )}
               </Button>
@@ -138,7 +140,7 @@ const AITutor = () => {
                 </Button>
                 <Button onClick={stopConversation} variant="destructive">
                   <MicOff className="w-4 h-4 mr-2" />
-                  End Session
+                  {t("aiTutor.endSession")}
                 </Button>
               </>
             )}
@@ -146,12 +148,12 @@ const AITutor = () => {
         </div>
 
         <div className="bg-secondary/30 rounded-lg p-4">
-          <p className="text-sm font-medium mb-2">Tips for your session:</p>
+          <p className="text-sm font-medium mb-2">{t("aiTutor.tipsTitle")}</p>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• Ask about music theory concepts</li>
-            <li>• Get help with practice techniques</li>
-            <li>• Learn about your instrument</li>
-            <li>• Understand rhythm and timing</li>
+            <li>• {t("aiTutor.tip1")}</li>
+            <li>• {t("aiTutor.tip2")}</li>
+            <li>• {t("aiTutor.tip3")}</li>
+            <li>• {t("aiTutor.tip4")}</li>
           </ul>
         </div>
       </CardContent>

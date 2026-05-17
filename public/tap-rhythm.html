@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Tap the Rhythm — Musicable</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;600;700&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --card: #151228;
+      --border: rgba(255,255,255,0.08);
+      --pink: #FF2D78;
+      --purple: #A855F7;
+      --cyan: #00D4FF;
+      --green: #39D98A;
+      --red: #EF4444;
+      --amber: #F59E0B;
+      --text: #E8ECF0;
+      --muted: #6B7280;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overscroll-behavior: none; }
+
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ─── Top bar ─── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: rgba(10,10,15,0.95);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
+      transition: all .2s;
+    }
+    .back-btn:hover { border-color: var(--pink); color: var(--pink); }
+    .game-title { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: var(--pink); letter-spacing: .08em; }
+
+    /* ─── Screen wrapper ─── */
+    .screen { flex: 1; display: none; flex-direction: column; align-items: center; padding: 24px 16px; }
+    .screen.active { display: flex; }
+
+    /* ─── Home screen ─── */
+    .home-hero { text-align: center; margin-bottom: 36px; }
+    .home-icon { font-size: 64px; margin-bottom: 12px; animation: bounce 2s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .home-title { font-family: 'Orbitron', monospace; font-size: clamp(24px,5vw,36px); font-weight: 900; background: linear-gradient(135deg,var(--pink),var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .home-sub { color: var(--muted); margin-top: 8px; font-size: 14px; }
+
+    .diff-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; width: 100%; max-width: 480px; margin-bottom: 28px; }
+    .diff-btn {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 12px; text-align: center; cursor: pointer; transition: all .2s;
+    }
+    .diff-btn:hover { transform: translateY(-2px); }
+    .diff-btn.easy:hover,.diff-btn.easy.selected  { border-color: var(--green);  box-shadow: 0 0 20px rgba(57,217,138,.2); }
+    .diff-btn.medium:hover,.diff-btn.medium.selected { border-color: var(--amber); box-shadow: 0 0 20px rgba(245,158,11,.2); }
+    .diff-btn.hard:hover,.diff-btn.hard.selected   { border-color: var(--red);   box-shadow: 0 0 20px rgba(239,68,68,.2); }
+    .diff-icon { font-size: 28px; margin-bottom: 6px; }
+    .diff-label { font-weight: 700; font-size: 14px; }
+    .diff-bpm { color: var(--muted); font-size: 12px; margin-top: 3px; font-family: 'DM Mono',monospace; }
+    .diff-btn.easy .diff-label  { color: var(--green); }
+    .diff-btn.medium .diff-label{ color: var(--amber); }
+    .diff-btn.hard .diff-label  { color: var(--red); }
+
+    .start-btn {
+      background: linear-gradient(135deg,var(--pink),var(--purple)); border: none;
+      color: #fff; font-family: 'Orbitron',monospace; font-size: 15px; font-weight: 700;
+      padding: 16px 48px; border-radius: 12px; cursor: pointer; letter-spacing: .06em;
+      box-shadow: 0 0 30px rgba(255,45,120,.35); transition: all .2s;
+    }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(255,45,120,.5); }
+    .start-btn:disabled { opacity: .4; cursor: default; transform: none; }
+
+    .best-display { color: var(--muted); font-size: 13px; margin-top: 16px; font-family: 'DM Mono',monospace; }
+
+    /* ─── HUD ─── */
+    .hud {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 540px; margin-bottom: 16px; gap: 8px;
+    }
+    .hud-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 99px;
+    }
+    .hud-score { background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.3); }
+    .hud-lives { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.3); }
+    .hud-streak{ background: rgba(255,45,120,.15); border: 1px solid rgba(255,45,120,.3); }
+    .hud-val { font-family: 'Orbitron',monospace; font-size: 15px; font-weight: 700; }
+    .hud-score .hud-val  { color: var(--amber); }
+    .hud-lives .hud-val  { color: var(--red); }
+    .hud-streak .hud-val { color: var(--pink); }
+    .hud-lbl { font-size: 10px; color: var(--muted); font-family: 'DM Mono',monospace; }
+
+    /* ─── Metronome toggle ─── */
+    .metro-btn {
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 18px;
+      transition: all .2s; user-select: none;
+    }
+    .metro-btn.on { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,212,255,.2); }
+    .metro-btn.pulse { animation: metro-pulse .1s ease; }
+    @keyframes metro-pulse { 0%{transform:scale(1)} 50%{transform:scale(1.25)} 100%{transform:scale(1)} }
+
+    /* ─── Pattern info ─── */
+    .pattern-info { text-align: center; margin-bottom: 16px; }
+    .pattern-level { font-size: 11px; color: var(--muted); font-family: 'DM Mono',monospace; letter-spacing: .1em; text-transform: uppercase; }
+    .pattern-name { font-family: 'Orbitron',monospace; font-size: 16px; color: var(--text); margin: 4px 0; }
+    .pattern-hint { font-size: 12px; color: var(--muted); }
+
+    /* ─── Countdown ─── */
+    .countdown-overlay {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(4px); z-index: 100;
+    }
+    .countdown-overlay.show { display: flex; }
+    .countdown-num {
+      font-family: 'Orbitron',monospace; font-size: 120px; font-weight: 900;
+      color: var(--pink); text-shadow: 0 0 60px rgba(255,45,120,.6);
+      animation: cd-pop .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes cd-pop { from{transform:scale(.3);opacity:0} to{transform:scale(1);opacity:1} }
+
+    /* ─── Rhythm grid ─── */
+    .grid-container { width: 100%; max-width: 540px; margin-bottom: 8px; }
+    .beat-labels { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; margin-bottom: 6px; }
+    .beat-label {
+      text-align: center; font-family: 'DM Mono',monospace; font-size: 11px;
+      color: var(--muted); padding: 2px 0;
+    }
+    .beat-label.strong { color: var(--cyan); font-weight: 700; }
+
+    .rhythm-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 4px; }
+    .cell {
+      aspect-ratio: 1; border-radius: 10px; border: 2px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.03); display: flex; align-items: center; justify-content: center;
+      font-size: 20px; transition: all .12s; position: relative; overflow: hidden; cursor: default;
+      user-select: none;
+    }
+    .cell.tap-required {
+      background: rgba(255,45,120,.12); border-color: rgba(255,45,120,.4);
+    }
+    .cell.tap-required::after {
+      content: ''; position: absolute; inset: 4px; border-radius: 6px;
+      background: rgba(255,45,120,.3);
+    }
+    .cell.active {
+      border-color: #fff; box-shadow: 0 0 20px rgba(255,255,255,.3);
+    }
+    .cell.active.tap-required {
+      border-color: var(--pink); box-shadow: 0 0 25px rgba(255,45,120,.6);
+      animation: cell-pulse .15s ease;
+    }
+    @keyframes cell-pulse { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+    .cell.hit {
+      background: rgba(57,217,138,.25) !important; border-color: var(--green) !important;
+      box-shadow: 0 0 20px rgba(57,217,138,.4) !important; animation: hit-pop .3s ease !important;
+    }
+    @keyframes hit-pop { 0%{transform:scale(1)} 40%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    .cell.miss {
+      background: rgba(239,68,68,.2) !important; border-color: var(--red) !important;
+      animation: miss-shake .3s ease;
+    }
+    @keyframes miss-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .cell.false-tap {
+      background: rgba(239,68,68,.15) !important; border-color: rgba(239,68,68,.5) !important;
+    }
+    .cell .cell-icon { position: relative; z-index: 1; font-size: 16px; }
+
+    /* ─── Controls ─── */
+    .ctrl-row { display: flex; gap: 10px; margin-top: 12px; width: 100%; max-width: 540px; }
+    .preview-btn {
+      flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.04); color: var(--text); cursor: pointer; font-size: 13px;
+      font-weight: 600; transition: all .2s;
+    }
+    .preview-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .preview-btn:disabled { opacity: .4; cursor: default; }
+
+    /* ─── Tap button ─── */
+    .tap-area { width: 100%; max-width: 540px; margin-top: 18px; }
+    .tap-btn {
+      width: 100%; padding: 22px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(255,45,120,.15), rgba(168,85,247,.15));
+      border: 2px solid rgba(255,45,120,.4);
+      color: var(--pink); font-family: 'Orbitron',monospace; font-size: 18px; font-weight: 900;
+      cursor: pointer; letter-spacing: .1em; transition: all .1s; user-select: none;
+      box-shadow: 0 0 20px rgba(255,45,120,.15);
+    }
+    .tap-btn:active, .tap-btn.pressed {
+      transform: scale(.96); background: linear-gradient(135deg,rgba(255,45,120,.4),rgba(168,85,247,.4));
+      box-shadow: 0 0 40px rgba(255,45,120,.5);
+    }
+    .tap-btn:disabled { opacity: .3; cursor: default; }
+    .tap-hint { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; font-family: 'DM Mono',monospace; }
+
+    /* ─── Phase label ─── */
+    .phase-label {
+      font-family: 'Orbitron',monospace; font-size: 12px; letter-spacing: .12em;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 12px; text-align: center;
+    }
+    .phase-label.go { color: var(--green); animation: glow-text .4s ease; }
+    @keyframes glow-text { 0%{text-shadow:0 0 30px currentColor} 100%{text-shadow:none} }
+
+    /* ─── Score pop ─── */
+    .pop-container { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 200; }
+    .pop { position: absolute; left: 50%; transform: translateX(-50%); font-family: 'Orbitron',monospace; font-size: 20px; font-weight: 900; animation: pop-up 1s ease-out forwards; white-space: nowrap; text-shadow: 0 0 20px currentColor; }
+    @keyframes pop-up { 0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} 100%{opacity:0;transform:translateX(-50%) translateY(-70px) scale(1.2)} }
+
+    /* ─── Result screen ─── */
+    .result-card { width: 100%; max-width: 480px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.5); }
+    .result-strip { height: 4px; background: linear-gradient(90deg,var(--pink),var(--purple),var(--cyan)); }
+    .result-body { background: var(--card); border: 1px solid var(--border); padding: 28px 24px; border-top: none; }
+    .grade-display { text-align: center; margin-bottom: 20px; }
+    .grade-letter { font-family: 'Orbitron',monospace; font-size: 96px; font-weight: 900; line-height: 1; animation: grade-in .5s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes grade-in { from{transform:scale(.2) rotate(-10deg);opacity:0} to{transform:scale(1) rotate(0deg);opacity:1} }
+    .grade-score { font-size: 32px; font-weight: 700; margin-top: 4px; }
+    .grade-pct { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+    .stat-val { font-family: 'Orbitron',monospace; font-size: 20px; font-weight: 700; }
+    .stat-lbl { color: var(--muted); font-size: 11px; font-family: 'DM Mono',monospace; margin-top: 3px; }
+
+    .result-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 3px; margin-bottom: 20px; }
+    .result-cell { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .result-cell.hit-cell   { background: rgba(57,217,138,.3);  border: 1px solid var(--green); }
+    .result-cell.miss-cell  { background: rgba(239,68,68,.3);   border: 1px solid var(--red); }
+    .result-cell.rest-cell  { background: rgba(255,255,255,.04);border: 1px solid var(--border); }
+    .result-cell.false-cell { background: rgba(245,158,11,.2);  border: 1px solid var(--amber); }
+
+    .result-btns { display: flex; gap: 10px; }
+    .btn-outline { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: none; color: var(--text); cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s; }
+    .btn-outline:hover { border-color: var(--pink); color: var(--pink); }
+    .btn-primary { flex: 2; padding: 12px; border-radius: 10px; border: none; background: linear-gradient(135deg,var(--pink),var(--purple)); color: #fff; font-family: 'Orbitron',monospace; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: .06em; transition: all .2s; }
+    .btn-primary:hover { box-shadow: 0 0 30px rgba(255,45,120,.4); }
+
+    /* ─── Progress dots ─── */
+    .pattern-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 14px; }
+    .pdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); transition: all .3s; }
+    .pdot.done  { background: var(--green); }
+    .pdot.current { background: var(--pink); box-shadow: 0 0 8px var(--pink); transform: scale(1.3); }
+    .pdot.fail  { background: var(--red); }
+
+    /* ─── Accuracy ring ─── */
+    .accuracy-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; margin-bottom: 8px;
+    }
+
+    @media (max-width: 400px) {
+      .diff-grid { grid-template-columns: 1fr; }
+      .diff-btn { padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; }
+      .diff-icon { font-size: 24px; margin-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <span class="game-title">TAP THE RHYTHM</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="metro-btn on" id="metroBtn" onclick="toggleMetronome()" title="Toggle metronome">🎵</button>
+  </div>
+</div>
+
+<!-- Score pops -->
+<div class="pop-container" id="popContainer"></div>
+
+<!-- Countdown overlay -->
+<div class="countdown-overlay" id="countdownOverlay">
+  <div class="countdown-num" id="countdownNum">3</div>
+</div>
+
+<!-- ═══════════════ HOME SCREEN ═══════════════ -->
+<div class="screen active" id="homeScreen">
+  <div class="home-hero">
+    <div class="home-icon">🥁</div>
+    <h1 class="home-title">TAP THE RHYTHM</h1>
+    <p class="home-sub">Listen • Read • Tap in time with the spacebar</p>
+  </div>
+
+  <div class="diff-grid">
+    <div class="diff-btn easy selected" onclick="selectDiff('easy')" id="diff-easy">
+      <div class="diff-icon">🟢</div>
+      <div class="diff-label">EASY</div>
+      <div class="diff-bpm">72 BPM</div>
+    </div>
+    <div class="diff-btn medium" onclick="selectDiff('medium')" id="diff-medium">
+      <div class="diff-icon">🟡</div>
+      <div class="diff-label">MEDIUM</div>
+      <div class="diff-bpm">84 BPM</div>
+    </div>
+    <div class="diff-btn hard" onclick="selectDiff('hard')" id="diff-hard">
+      <div class="diff-icon">🔴</div>
+      <div class="diff-label">HARD</div>
+      <div class="diff-bpm">96 BPM</div>
+    </div>
+  </div>
+
+  <button class="start-btn" onclick="startGame()">PLAY NOW</button>
+  <p class="best-display" id="bestDisplay">Best: —</p>
+
+  <div style="margin-top:28px;max-width:420px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:16px">
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">How to play:</strong><br>
+      1. Read the rhythm pattern (🟣 = tap here)<br>
+      2. Hit <strong style="color:var(--pink)">Preview</strong> to hear it first<br>
+      3. Hit <strong style="color:var(--pink)">Tap It!</strong> then press <kbd style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">Space</kbd> to the beat<br>
+      4. Time your taps to the highlighted cells
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME SCREEN ═══════════════ -->
+<div class="screen" id="gameScreen">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-pill hud-score">
+      <span style="color:var(--amber)">⚡</span>
+      <div>
+        <div class="hud-val" id="hudScore">0</div>
+        <div class="hud-lbl">SCORE</div>
+      </div>
+    </div>
+    <div class="hud-pill hud-lives">
+      <span>❤️</span>
+      <div>
+        <div class="hud-val" id="hudLives">3</div>
+        <div class="hud-lbl">LIVES</div>
+      </div>
+    </div>
+    <div class="hud-pill hud-streak">
+      <span>🔥</span>
+      <div>
+        <div class="hud-val" id="hudStreak">0</div>
+        <div class="hud-lbl">STREAK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern dots progress -->
+  <div class="pattern-dots" id="patternDots"></div>
+
+  <!-- Phase label -->
+  <div class="phase-label" id="phaseLabel">READY</div>
+
+  <!-- Pattern info -->
+  <div class="pattern-info">
+    <div class="pattern-level" id="patternLevel">LEVEL 1</div>
+    <div class="pattern-name" id="patternName">Loading...</div>
+    <div class="pattern-hint" id="patternHint"></div>
+  </div>
+
+  <!-- Rhythm grid -->
+  <div class="grid-container">
+    <div class="beat-labels">
+      <div class="beat-label strong">1</div>
+      <div class="beat-label">+</div>
+      <div class="beat-label strong">2</div>
+      <div class="beat-label">+</div>
+      <div class="beat-label strong">3</div>
+      <div class="beat-label">+</div>
+      <div class="beat-label strong">4</div>
+      <div class="beat-label">+</div>
+    </div>
+    <div class="rhythm-grid" id="rhythmGrid"></div>
+  </div>
+
+  <!-- Accuracy bar -->
+  <div style="width:100%;max-width:540px;margin-top:10px;height:4px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden">
+    <div id="accuracyBar" style="height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--green));transition:width .3s;border-radius:99px"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="ctrl-row">
+    <button class="preview-btn" id="previewBtn" onclick="previewPattern()">🔊 Preview</button>
+    <button class="preview-btn" id="tapStartBtn" onclick="startTapping()" style="border-color:rgba(255,45,120,.4);color:var(--pink)">🎯 Tap It!</button>
+  </div>
+
+  <!-- Tap button -->
+  <div class="tap-area">
+    <button class="tap-btn" id="tapBtn" disabled onclick="doTap()">TAP</button>
+    <p class="tap-hint">or press <kbd>Space</kbd></p>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULT SCREEN ═══════════════ -->
+<div class="screen" id="resultScreen">
+  <div class="result-card">
+    <div class="result-strip"></div>
+    <div class="result-body">
+      <div class="grade-display">
+        <div class="grade-letter" id="resGrade" style="color:var(--green)">S</div>
+        <div class="grade-score" id="resScore">0</div>
+        <div class="grade-pct" id="resPct">100% accuracy</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-val" id="resHits" style="color:var(--green)">0</div>
+          <div class="stat-lbl">HITS</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="resMisses" style="color:var(--red)">0</div>
+          <div class="stat-lbl">MISSES</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="resStreak" style="color:var(--pink)">0</div>
+          <div class="stat-lbl">STREAK</div>
+        </div>
+      </div>
+
+      <div class="result-grid" id="resultGrid"></div>
+
+      <div class="result-btns">
+        <button class="btn-outline" onclick="retryPattern()">↺ Retry</button>
+        <button class="btn-primary" id="nextBtn" onclick="nextPattern()">NEXT PATTERN →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GAME OVER SCREEN ═══════════════ -->
+<div class="screen" id="gameOverScreen">
+  <div style="text-align:center;max-width:420px">
+    <div style="font-size:72px;margin-bottom:12px">💀</div>
+    <h2 style="font-family:'Orbitron',monospace;font-size:28px;color:var(--red);margin-bottom:8px">GAME OVER</h2>
+    <p style="color:var(--muted);margin-bottom:24px">You ran out of lives!</p>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px">
+      <p style="color:var(--muted);font-size:12px;font-family:'DM Mono',monospace;margin-bottom:4px">FINAL SCORE</p>
+      <p id="goScore" style="font-family:'Orbitron',monospace;font-size:48px;font-weight:900;color:var(--pink)">0</p>
+      <p id="goPatternsCleared" style="color:var(--muted);font-size:13px;margin-top:4px"></p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-outline" onclick="showScreen('homeScreen')">Home</button>
+      <button class="btn-primary" onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// PATTERNS
+// Each pattern: { name, beats: bool[8], hint }
+// ─────────────────────────────────────────────────────────────────────────────
+const PATTERNS = {
+  easy: [
+    { name: "Four Quarter Notes",     beats: [1,0,1,0,1,0,1,0], hint: "Tap on every beat — 1, 2, 3, 4" },
+    { name: "Two Half Notes",         beats: [1,0,0,0,1,0,0,0], hint: "Tap on beats 1 and 3 only" },
+    { name: "Half + Two Quarters",    beats: [1,0,0,0,1,0,1,0], hint: "Long, long, short, short" },
+    { name: "Beats 2 and 4",          beats: [0,0,1,0,0,0,1,0], hint: "The backbeat — skip 1 and 3" },
+    { name: "Three Quarters + Rest",  beats: [1,0,1,0,1,0,0,0], hint: "Three taps then hold" },
+  ],
+  medium: [
+    { name: "Eighth Note Pairs",      beats: [1,1,0,0,1,1,0,0], hint: "Two quick taps, pause, two quick taps, pause" },
+    { name: "Syncopated",             beats: [1,0,0,1,0,1,0,0], hint: "Off the beat — feel the groove!" },
+    { name: "Mixed Pattern",          beats: [1,0,1,1,0,0,1,0], hint: "Quarter, two eighths, quarter — tricky!" },
+    { name: "Off-Beat Drive",         beats: [0,1,0,1,0,1,0,1], hint: "Only the '+' beats — all upbeats!" },
+    { name: "Latin Groove",           beats: [1,1,0,1,0,1,1,0], hint: "Son clave feel — lively and syncopated" },
+  ],
+  hard: [
+    { name: "All Eight Notes",        beats: [1,1,1,1,1,1,1,1], hint: "Every single eighth note — stay steady!" },
+    { name: "Complex Syncopation",    beats: [1,1,0,1,1,0,1,0], hint: "Three short bursts with rests between" },
+    { name: "Charleston Beat",        beats: [1,0,1,1,0,0,1,0], hint: "Classic jazz Charleston pattern" },
+    { name: "Afro-Cuban Clave",       beats: [1,0,1,0,0,1,0,1], hint: "Clave pattern — the heartbeat of Afro-Cuban music" },
+    { name: "Polyrhythm Challenge",   beats: [1,0,0,1,1,0,1,1], hint: "The trickiest yet — count carefully!" },
+  ],
+};
+
+const BPM = { easy: 72, medium: 84, hard: 96 };
+const PASS_THRESHOLD = 60; // % accuracy to pass
+const GRADE_COLORS = { S: '#39D98A', A: '#00D4FF', B: '#A855F7', C: '#F59E0B', D: '#FF6B35', F: '#EF4444' };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  diff: 'easy',
+  patternIdx: 0,
+  score: 0,
+  lives: 3,
+  streak: 0,
+  maxStreak: 0,
+  patternsCleared: 0,
+  phase: 'idle', // 'idle' | 'preview' | 'countdown' | 'playing' | 'result'
+  metronomeOn: true,
+  // Per-round
+  pattern: null,
+  eighthMs: 0,
+  barStartTime: 0,
+  tappedSlots: new Set(), // indices of correctly hit slots
+  falseTaps: 0,
+  pendingSlots: [],       // indices still waiting to be tapped
+  currentSlotIdx: -1,
+  roundHits: 0,
+  roundMisses: 0,
+  roundFalseTaps: 0,
+  localStreak: 0,
+  // RAF
+  rafId: null,
+  barEndTimeout: null,
+  metroTimeouts: [],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────────────────────────────────────
+let _actx = null;
+function getACtx() {
+  if (!_actx || _actx.state === 'closed') _actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+function playClick(isDownbeat, when = 0) {
+  if (!state.metronomeOn) return;
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = isDownbeat ? 1100 : 880;
+    gain.gain.setValueAtTime(isDownbeat ? 0.35 : 0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    osc.start(t); osc.stop(t + 0.06);
+  } catch(_) {}
+}
+
+function playTapFeedback(good = true) {
+  try {
+    const ctx = getACtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.value = good ? 660 : 220;
+    const t = ctx.currentTime;
+    gain.gain.setValueAtTime(good ? 0.25 : 0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + (good ? 0.12 : 0.08));
+    osc.start(t); osc.stop(t + 0.15);
+  } catch(_) {}
+}
+
+function playPatternNote(when = 0) {
+  try {
+    const ctx = getACtx();
+    const t = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+    osc.start(t); osc.stop(t + 0.18);
+  } catch(_) {}
+}
+
+function playVictory() {
+  [0, .15, .3].forEach((when, i) => {
+    const freqs = [523, 659, 784];
+    try {
+      const ctx = getACtx();
+      const t = ctx.currentTime + when;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freqs[i];
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.35);
+    } catch(_) {}
+  });
+}
+
+function playFail() {
+  [0, .2, .4].forEach((when, i) => {
+    const freqs = [300, 250, 180];
+    try {
+      const ctx = getACtx();
+      const t = ctx.currentTime + when;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freqs[i], t);
+      osc.frequency.linearRampToValueAtTime(freqs[i] - 60, t + 0.18);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      osc.start(t); osc.stop(t + 0.22);
+    } catch(_) {}
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN / NAV
+// ─────────────────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  stopRound();
+  if (document.getElementById('gameScreen').classList.contains('active') ||
+      document.getElementById('resultScreen').classList.contains('active') ||
+      document.getElementById('gameOverScreen').classList.contains('active')) {
+    showScreen('homeScreen');
+  } else {
+    history.back();
+  }
+}
+
+function selectDiff(d) {
+  state.diff = d;
+  ['easy','medium','hard'].forEach(x => document.getElementById('diff-'+x).classList.remove('selected'));
+  document.getElementById('diff-'+d).classList.add('selected');
+  updateBestDisplay();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GAME LIFECYCLE
+// ─────────────────────────────────────────────────────────────────────────────
+function startGame() {
+  getACtx(); // unlock audio
+  state.patternIdx = 0;
+  state.score = 0;
+  state.lives = 3;
+  state.streak = 0;
+  state.maxStreak = 0;
+  state.patternsCleared = 0;
+  updateHUD();
+  loadPattern(0);
+  showScreen('gameScreen');
+  buildPatternDots();
+}
+
+function loadPattern(idx) {
+  const patterns = PATTERNS[state.diff];
+  if (idx >= patterns.length) { showGameClear(); return; }
+  state.patternIdx = idx;
+  state.pattern = patterns[idx];
+  state.phase = 'idle';
+  state.tappedSlots = new Set();
+  state.falseTaps = 0;
+  state.roundHits = 0;
+  state.roundMisses = 0;
+  state.roundFalseTaps = 0;
+  state.localStreak = 0;
+  state.currentSlotIdx = -1;
+  state.eighthMs = (60000 / BPM[state.diff]) / 2;
+
+  document.getElementById('patternLevel').textContent = `LEVEL ${idx + 1} / ${patterns.length}`;
+  document.getElementById('patternName').textContent = state.pattern.name;
+  document.getElementById('patternHint').textContent = state.pattern.hint;
+  document.getElementById('phaseLabel').textContent = 'READY';
+  document.getElementById('phaseLabel').className = 'phase-label';
+  document.getElementById('previewBtn').disabled = false;
+  document.getElementById('tapStartBtn').disabled = false;
+  document.getElementById('tapBtn').disabled = true;
+  document.getElementById('accuracyBar').style.width = '0%';
+
+  buildGrid();
+  updatePatternDots();
+}
+
+function buildGrid() {
+  const grid = document.getElementById('rhythmGrid');
+  grid.innerHTML = '';
+  state.pattern.beats.forEach((on, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (on ? ' tap-required' : '');
+    cell.id = 'cell-' + i;
+    cell.innerHTML = on ? '<span class="cell-icon">●</span>' : '';
+    grid.appendChild(cell);
+  });
+}
+
+function buildPatternDots() {
+  const container = document.getElementById('patternDots');
+  container.innerHTML = '';
+  PATTERNS[state.diff].forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'pdot';
+    dot.id = 'pdot-' + i;
+    container.appendChild(dot);
+  });
+  updatePatternDots();
+}
+
+function updatePatternDots() {
+  PATTERNS[state.diff].forEach((_, i) => {
+    const dot = document.getElementById('pdot-' + i);
+    if (!dot) return;
+    dot.className = 'pdot';
+    if (i < state.patternIdx) dot.classList.add('done');
+    else if (i === state.patternIdx) dot.classList.add('current');
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PREVIEW
+// ─────────────────────────────────────────────────────────────────────────────
+function previewPattern() {
+  if (state.phase === 'playing') return;
+  state.phase = 'preview';
+  document.getElementById('previewBtn').disabled = true;
+  document.getElementById('tapStartBtn').disabled = true;
+  document.getElementById('phaseLabel').textContent = 'PREVIEW — LISTEN CAREFULLY';
+
+  const eighthSec = state.eighthMs / 1000;
+  const ctx = getACtx();
+  const now = ctx.currentTime + 0.15;
+
+  // Count-in (1 bar of quarter notes)
+  for (let b = 0; b < 4; b++) {
+    playClick(b === 0, now - ctx.currentTime + b * eighthSec * 2);
+  }
+
+  // Pattern notes
+  state.pattern.beats.forEach((on, i) => {
+    if (on) playPatternNote(now - ctx.currentTime + 4 * eighthSec * 2 + i * eighthSec);
+    // Metronome clicks during pattern
+    if (i % 2 === 0) playClick(i === 0, now - ctx.currentTime + 4 * eighthSec * 2 + i * eighthSec);
+  });
+
+  // Highlight cells during preview
+  let slotTimer = 4 * state.eighthMs * 2; // after count-in
+  state.pattern.beats.forEach((on, i) => {
+    setTimeout(() => {
+      document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
+      document.getElementById('cell-' + i)?.classList.add('active');
+    }, slotTimer + i * state.eighthMs);
+  });
+
+  // Done
+  const totalMs = (4 * 2 + 8) * state.eighthMs;
+  setTimeout(() => {
+    document.querySelectorAll('.cell').forEach(c => c.classList.remove('active'));
+    document.getElementById('phaseLabel').textContent = 'READY TO TAP?';
+    document.getElementById('previewBtn').disabled = false;
+    document.getElementById('tapStartBtn').disabled = false;
+    state.phase = 'idle';
+  }, slotTimer + 8 * state.eighthMs + 400);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COUNTDOWN + START TAPPING
+// ─────────────────────────────────────────────────────────────────────────────
+function startTapping() {
+  if (state.phase === 'playing' || state.phase === 'countdown') return;
+  state.phase = 'countdown';
+  document.getElementById('previewBtn').disabled = true;
+  document.getElementById('tapStartBtn').disabled = true;
+
+  // Reset cells
+  buildGrid();
+
+  let count = 3;
+  const overlay = document.getElementById('countdownOverlay');
+  const num = document.getElementById('countdownNum');
+
+  function showCount() {
+    if (count > 0) {
+      overlay.classList.add('show');
+      num.textContent = count;
+      num.style.animation = 'none';
+      void num.offsetWidth; // reflow
+      num.style.animation = 'cd-pop .4s cubic-bezier(.34,1.56,.64,1)';
+      playClick(true, 0);
+      count--;
+      setTimeout(showCount, state.eighthMs * 2);
+    } else {
+      overlay.innerHTML = `<div class="countdown-num" style="color:var(--green);font-size:80px">GO!</div>`;
+      playClick(true, 0);
+      setTimeout(() => {
+        overlay.classList.remove('show');
+        overlay.innerHTML = `<div class="countdown-num" id="countdownNum">3</div>`;
+        beginBar();
+      }, state.eighthMs * 2 * 0.8);
+    }
+  }
+  showCount();
+}
+
+function beginBar() {
+  state.phase = 'playing';
+  state.barStartTime = performance.now();
+  state.pendingSlots = state.pattern.beats.map((on, i) => on ? i : -1).filter(i => i >= 0);
+  state.tappedSlots = new Set();
+
+  document.getElementById('tapBtn').disabled = false;
+  document.getElementById('phaseLabel').textContent = 'TAP NOW!';
+  document.getElementById('phaseLabel').className = 'phase-label go';
+
+  // Schedule metronome clicks for this bar
+  const eighthSec = state.eighthMs / 1000;
+  const ctx = getACtx();
+  for (let b = 0; b < 8; b++) {
+    playClick(b === 0, eighthSec * b);
+  }
+
+  // After bar ends, evaluate
+  state.barEndTimeout = setTimeout(endBar, state.eighthMs * 8 + 200);
+
+  // RAF loop for active cell highlight + miss detection
+  state.rafId = requestAnimationFrame(tickPlayhead);
+}
+
+function tickPlayhead() {
+  if (state.phase !== 'playing') return;
+  const elapsed = performance.now() - state.barStartTime;
+  const slotIdx = Math.min(Math.floor(elapsed / state.eighthMs), 7);
+
+  if (slotIdx !== state.currentSlotIdx) {
+    // Deactivate old
+    if (state.currentSlotIdx >= 0) {
+      const prevCell = document.getElementById('cell-' + state.currentSlotIdx);
+      if (prevCell) prevCell.classList.remove('active');
+
+      // If the slot was required and wasn't tapped → miss
+      const wasRequired = state.pattern.beats[state.currentSlotIdx];
+      if (wasRequired && !state.tappedSlots.has(state.currentSlotIdx)) {
+        prevCell?.classList.add('miss');
+        prevCell.innerHTML = '<span class="cell-icon">✕</span>';
+        state.roundMisses++;
+        state.localStreak = 0;
+        addPop('MISS', 'var(--red)');
+      }
+    }
+
+    state.currentSlotIdx = slotIdx;
+
+    // Activate new
+    if (slotIdx >= 0 && slotIdx < 8) {
+      const cell = document.getElementById('cell-' + slotIdx);
+      if (cell) cell.classList.add('active');
+    }
+  }
+
+  // Update accuracy bar
+  const required = state.pattern.beats.filter(Boolean).length;
+  if (required > 0) {
+    const pct = (state.tappedSlots.size / required) * 100;
+    document.getElementById('accuracyBar').style.width = pct + '%';
+  }
+
+  state.rafId = requestAnimationFrame(tickPlayhead);
+}
+
+function endBar() {
+  if (state.phase !== 'playing') return;
+  cancelAnimationFrame(state.rafId);
+  state.phase = 'result';
+
+  // Deactivate current cell
+  if (state.currentSlotIdx >= 0) {
+    document.getElementById('cell-' + state.currentSlotIdx)?.classList.remove('active');
+  }
+
+  // Any remaining pending slots past the end = misses
+  state.pendingSlots.forEach(i => {
+    if (!state.tappedSlots.has(i)) {
+      const cell = document.getElementById('cell-' + i);
+      if (cell && !cell.classList.contains('miss')) {
+        cell.classList.add('miss');
+        cell.innerHTML = '<span class="cell-icon">✕</span>';
+        state.roundMisses++;
+      }
+    }
+  });
+
+  document.getElementById('tapBtn').disabled = true;
+  document.getElementById('phaseLabel').textContent = '';
+
+  const required = state.pattern.beats.filter(Boolean).length;
+  const hits = state.tappedSlots.size;
+  const accuracy = required > 0 ? Math.round((hits / required) * 100) : 0;
+  const passed = accuracy >= PASS_THRESHOLD;
+
+  const pointsEarned = hits * 100 - state.roundFalseTaps * 25 + state.localStreak * 50;
+  state.score = Math.max(0, state.score + Math.max(0, pointsEarned));
+
+  if (passed) {
+    state.streak++;
+    state.maxStreak = Math.max(state.maxStreak, state.streak);
+    state.patternsCleared++;
+    playVictory();
+    addPop(`+${Math.max(0, pointsEarned)} XP`, 'var(--green)');
+  } else {
+    state.streak = 0;
+    state.lives--;
+    playFail();
+    addPop('FAILED', 'var(--red)');
+  }
+
+  updateHUD();
+
+  setTimeout(() => showResult(accuracy, passed, hits, required), 600);
+}
+
+function stopRound() {
+  clearTimeout(state.barEndTimeout);
+  cancelAnimationFrame(state.rafId);
+  state.phase = 'idle';
+  document.getElementById('countdownOverlay').classList.remove('show');
+  document.getElementById('tapBtn').disabled = true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAP HANDLING
+// ─────────────────────────────────────────────────────────────────────────────
+function doTap() {
+  if (state.phase !== 'playing') return;
+
+  const now = performance.now();
+  const elapsed = now - state.barStartTime;
+  const WINDOW = state.eighthMs * 0.42; // tolerance window
+
+  // Find nearest untapped required slot
+  let bestIdx = -1;
+  let bestDist = Infinity;
+  state.pendingSlots.forEach(i => {
+    if (state.tappedSlots.has(i)) return;
+    const expected = i * state.eighthMs + state.eighthMs * 0.5; // centre of slot
+    const dist = Math.abs(elapsed - expected);
+    if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+  });
+
+  // Visual feedback on tap button
+  const btn = document.getElementById('tapBtn');
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 100);
+
+  if (bestIdx >= 0 && bestDist <= WINDOW) {
+    // HIT
+    state.tappedSlots.add(bestIdx);
+    state.roundHits++;
+    state.localStreak++;
+    const cell = document.getElementById('cell-' + bestIdx);
+    if (cell) {
+      cell.classList.remove('active', 'tap-required');
+      cell.classList.add('hit');
+      cell.innerHTML = '<span class="cell-icon">✓</span>';
+    }
+    playTapFeedback(true);
+
+    // Timing bonus
+    const earlyLate = bestDist < state.eighthMs * 0.15 ? 'PERFECT' : bestDist < state.eighthMs * 0.28 ? 'GOOD' : 'OK';
+    const colors = { PERFECT: 'var(--green)', GOOD: 'var(--cyan)', OK: 'var(--amber)' };
+    addPop(earlyLate, colors[earlyLate]);
+  } else {
+    // FALSE TAP — tap at wrong time
+    state.roundFalseTaps++;
+    state.falseTaps++;
+    state.localStreak = 0;
+    // Briefly flash current cell red if it's a rest
+    if (state.currentSlotIdx >= 0) {
+      const cell = document.getElementById('cell-' + state.currentSlotIdx);
+      if (cell && !cell.classList.contains('hit') && !cell.classList.contains('miss')) {
+        cell.classList.add('false-tap');
+        setTimeout(() => cell.classList.remove('false-tap'), 300);
+      }
+    }
+    playTapFeedback(false);
+    addPop('WRONG', 'var(--red)');
+  }
+}
+
+// Spacebar listener
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !e.repeat) {
+    e.preventDefault();
+    if (state.phase === 'playing') doTap();
+    else if (state.phase === 'idle') { getACtx(); startTapping(); }
+    else if (state.phase === 'preview') { /* do nothing */ }
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESULTS
+// ─────────────────────────────────────────────────────────────────────────────
+function showResult(accuracy, passed, hits, required) {
+  const grade = accuracy >= 95 ? 'S' : accuracy >= 85 ? 'A' : accuracy >= 70 ? 'B' : accuracy >= 55 ? 'C' : accuracy >= 40 ? 'D' : 'F';
+
+  document.getElementById('resGrade').textContent = grade;
+  document.getElementById('resGrade').style.color = GRADE_COLORS[grade];
+  document.getElementById('resGrade').style.textShadow = `0 0 60px ${GRADE_COLORS[grade]}90`;
+  document.getElementById('resScore').textContent = state.score.toLocaleString();
+  document.getElementById('resPct').textContent = accuracy + '% accuracy';
+  document.getElementById('resHits').textContent = hits;
+  document.getElementById('resMisses').textContent = required - hits;
+  document.getElementById('resStreak').textContent = state.maxStreak;
+
+  const nextBtn = document.getElementById('nextBtn');
+  if (state.lives <= 0) {
+    nextBtn.textContent = 'GAME OVER →';
+    nextBtn.onclick = showGameOver;
+  } else if (state.patternIdx >= PATTERNS[state.diff].length - 1 && passed) {
+    nextBtn.textContent = 'COMPLETE! 🏆';
+    nextBtn.onclick = showGameClear;
+  } else {
+    nextBtn.textContent = passed ? 'NEXT PATTERN →' : 'SKIP →';
+    nextBtn.onclick = passed ? nextPattern : () => { if (state.lives > 0) loadPattern(state.patternIdx + 1); else showGameOver(); };
+  }
+
+  // Result grid
+  const rGrid = document.getElementById('resultGrid');
+  rGrid.innerHTML = '';
+  state.pattern.beats.forEach((on, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'result-cell ';
+    if (on && state.tappedSlots.has(i)) cell.className += 'hit-cell';
+    else if (on && !state.tappedSlots.has(i)) cell.className += 'miss-cell';
+    else cell.className += 'rest-cell';
+    cell.innerHTML = on ? (state.tappedSlots.has(i) ? '✓' : '✕') : '';
+    rGrid.appendChild(cell);
+  });
+
+  showScreen('resultScreen');
+
+  // Save to Supabase
+  saveScore(accuracy);
+}
+
+function nextPattern() {
+  const next = state.patternIdx + 1;
+  if (next >= PATTERNS[state.diff].length) { showGameClear(); return; }
+  if (state.lives <= 0) { showGameOver(); return; }
+  loadPattern(next);
+  showScreen('gameScreen');
+}
+
+function retryPattern() {
+  if (state.phase === 'result' || state.phase === 'idle') {
+    loadPattern(state.patternIdx);
+    showScreen('gameScreen');
+  }
+}
+
+function showGameOver() {
+  document.getElementById('goScore').textContent = state.score.toLocaleString();
+  document.getElementById('goPatternsCleared').textContent = `${state.patternsCleared} patterns cleared`;
+  showScreen('gameOverScreen');
+  saveScore(0);
+}
+
+function showGameClear() {
+  // Show like a great result with full score
+  document.getElementById('resGrade').textContent = '🏆';
+  document.getElementById('resGrade').style.textShadow = '0 0 60px gold';
+  document.getElementById('resGrade').style.fontSize = '72px';
+  document.getElementById('resScore').textContent = state.score.toLocaleString();
+  document.getElementById('resPct').textContent = 'All patterns cleared!';
+  document.getElementById('resHits').textContent = state.patternsCleared;
+  document.getElementById('resMisses').textContent = 0;
+  document.getElementById('resStreak').textContent = state.maxStreak;
+  document.getElementById('resultGrid').innerHTML = '';
+  const nb = document.getElementById('nextBtn');
+  nb.textContent = 'PLAY AGAIN';
+  nb.onclick = startGame;
+  showScreen('resultScreen');
+  playVictory();
+  saveScore(100);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// METRONOME TOGGLE
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleMetronome() {
+  state.metronomeOn = !state.metronomeOn;
+  const btn = document.getElementById('metroBtn');
+  btn.classList.toggle('on', state.metronomeOn);
+  btn.textContent = state.metronomeOn ? '🎵' : '🔕';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCORE POPS
+// ─────────────────────────────────────────────────────────────────────────────
+let popId = 0;
+function addPop(text, color) {
+  const container = document.getElementById('popContainer');
+  const el = document.createElement('div');
+  el.className = 'pop';
+  el.style.color = color;
+  el.style.top = (Math.random() * 20 - 10) + 'px';
+  el.textContent = text;
+  container.appendChild(el);
+  const id = ++popId;
+  setTimeout(() => el.remove(), 1100);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HUD
+// ─────────────────────────────────────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hudScore').textContent = state.score.toLocaleString();
+  document.getElementById('hudLives').textContent = '❤️'.repeat(state.lives) || '💀';
+  document.getElementById('hudStreak').textContent = state.streak;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BEST SCORE
+// ─────────────────────────────────────────────────────────────────────────────
+function updateBestDisplay() {
+  const key = `musicable_taprhythm_best_${state.diff}`;
+  const best = localStorage.getItem(key);
+  document.getElementById('bestDisplay').textContent = best ? `Best (${state.diff}): ${parseInt(best).toLocaleString()}` : `Best: —`;
+}
+
+function saveBest() {
+  const key = `musicable_taprhythm_best_${state.diff}`;
+  const existing = parseInt(localStorage.getItem(key) || '0');
+  if (state.score > existing) localStorage.setItem(key, state.score);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPABASE SAVE
+// ─────────────────────────────────────────────────────────────────────────────
+async function saveScore(accuracy) {
+  saveBest();
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    const SUPABASE_URL = window.__SUPABASE_URL__ || document.querySelector('meta[name=supabase-url]')?.content;
+    const SUPABASE_KEY = window.__SUPABASE_KEY__ || document.querySelector('meta[name=supabase-key]')?.content;
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    await sb.from('game_scores').insert({
+      user_id: user.id,
+      game: 'tap_rhythm',
+      score: state.score,
+      correct: state.patternsCleared,
+      total: PATTERNS[state.diff].length,
+      best_streak: state.maxStreak,
+    });
+  } catch(_) {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+updateBestDisplay();
+
+// Mobile tap button
+document.getElementById('tapBtn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  doTap();
+}, { passive: false });
+
+</script>
+</body>
+</html>

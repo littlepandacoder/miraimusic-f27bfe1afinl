@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Trophy, Music, Drum, Piano, Eye, Flame, BookOpen } from "lucide-react";
 
 interface GameRow {
+  key: string;
   label: string;
   icon: React.ReactNode;
   color: string;
@@ -29,35 +31,34 @@ function todayKey(userId: string) {
   return `${STORAGE_KEY_PREFIX}${userId}_${new Date().toISOString().slice(0, 10)}`;
 }
 
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-function motivationalLine(data: ReviewData): string {
-  const { foundationCompleted, foundationTotal, games } = data;
-  const pct = foundationTotal > 0 ? foundationCompleted / foundationTotal : 0;
-  const totalSessions = games.reduce((s, g) => s + g.sessions, 0);
-
-  if (pct === 1) return "You've completed every foundation module — focus on your exam performance today! 🏆";
-  if (pct === 0 && totalSessions === 0) return "Welcome! Your musical journey starts today. Let's build those foundations!";
-  if (pct < 0.3) return "Great start! Keep working through your foundation modules daily.";
-  if (pct < 0.7) return "You're making solid progress. Consistent practice is the key!";
-  return "Almost there! Push through the remaining modules and you'll be exam-ready.";
-}
-
 const DailyReviewModal = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ReviewData | null>(null);
 
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return t("dailyReview.goodMorning");
+    if (h < 18) return t("dailyReview.goodAfternoon");
+    return t("dailyReview.goodEvening");
+  };
+
+  const motivationalLine = (d: ReviewData): string => {
+    const { foundationCompleted, foundationTotal, games } = d;
+    const pct = foundationTotal > 0 ? foundationCompleted / foundationTotal : 0;
+    const totalSessions = games.reduce((s, g) => s + g.sessions, 0);
+    if (pct === 1) return t("dailyReview.motivComplete");
+    if (pct === 0 && totalSessions === 0) return t("dailyReview.motivWelcome");
+    if (pct < 0.3) return t("dailyReview.motivStart");
+    if (pct < 0.7) return t("dailyReview.motivProgress");
+    return t("dailyReview.motivAlmost");
+  };
+
   useEffect(() => {
     if (!user) return;
-    // Only show once per calendar day per user
     if (localStorage.getItem(todayKey(user.id))) return;
 
     const fetchData = async () => {
@@ -89,7 +90,6 @@ const DailyReviewModal = () => {
       const progress: any[] = progressRes.data || [];
       const gameRows: any[] = gameRes.data || [];
 
-      // Foundation completion
       const completedSet = new Set<string>(
         progress.filter((p) => p.completed).map((p) => p.lesson_id)
       );
@@ -114,7 +114,6 @@ const DailyReviewModal = () => {
         }
       });
 
-      // Game stats
       const buildGame = (key: string): { sessions: number; bestAcc: number | null } => {
         const rows = gameRows.filter((r) => r.game === key);
         if (rows.length === 0) return { sessions: 0, bestAcc: null };
@@ -126,15 +125,14 @@ const DailyReviewModal = () => {
       };
 
       const gameDefinitions: Omit<GameRow, "sessions" | "bestAcc">[] = [
-        { label: "Piano Hero",    icon: <Piano className="w-4 h-4" />, color: "text-purple-400" },
-        { label: "Note Naming",   icon: <Music className="w-4 h-4" />, color: "text-pink-400"   },
-        { label: "Rhythm Quiz",   icon: <Drum  className="w-4 h-4" />, color: "text-amber-400"  },
-        { label: "Sight Reading", icon: <Eye   className="w-4 h-4" />, color: "text-sky-400"    },
+        { key: "piano_hero",    label: t("student.gameNames.pianoHero"),    icon: <Piano className="w-4 h-4" />, color: "text-purple-400" },
+        { key: "note_naming",   label: t("student.gameNames.noteNaming"),   icon: <Music className="w-4 h-4" />, color: "text-pink-400"   },
+        { key: "rhythm_quiz",   label: t("student.gameNames.rhythmQuiz"),   icon: <Drum  className="w-4 h-4" />, color: "text-amber-400"  },
+        { key: "sight_reading", label: t("student.gameNames.sightReading"), icon: <Eye   className="w-4 h-4" />, color: "text-sky-400"    },
       ];
-      const gameKeys = ["piano_hero", "note_naming", "rhythm_quiz", "sight_reading"];
 
-      const games: GameRow[] = gameDefinitions.map((def, i) => {
-        const { sessions, bestAcc } = buildGame(gameKeys[i]);
+      const games: GameRow[] = gameDefinitions.map((def) => {
+        const { sessions, bestAcc } = buildGame(def.key);
         return { ...def, sessions, bestAcc };
       });
 
@@ -163,16 +161,10 @@ const DailyReviewModal = () => {
 
   const goToQuiz = () =>
     dismiss("review-quiz", {
-      foundationPct: data ? data.foundationPct : 0,
+      foundationPct: data ? (data as any).foundationPct : 0,
       games: data
         ? Object.fromEntries(
-            data.games.map((g) => [
-              g.label === "Piano Hero"    ? "piano_hero"    :
-              g.label === "Note Naming"   ? "note_naming"   :
-              g.label === "Rhythm Quiz"   ? "rhythm_quiz"   :
-                                            "sight_reading",
-              { sessions: g.sessions, bestAcc: g.bestAcc, avgAccuracy: g.bestAcc },
-            ])
+            data.games.map((g) => [g.key, { sessions: g.sessions, bestAcc: g.bestAcc, avgAccuracy: g.bestAcc }])
           )
         : {},
       name: data?.name ?? "",
@@ -195,9 +187,7 @@ const DailyReviewModal = () => {
         className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: "linear-gradient(145deg, #151228 0%, #0f0d1a 100%)", border: "1px solid rgba(255,45,120,0.2)" }}
         onClick={(e) => e.stopPropagation()}
-
       >
-        {/* Pink glow top strip */}
         <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #FF2D78, #A855F7, #00D4FF)" }} />
 
         {loading ? (
@@ -206,10 +196,9 @@ const DailyReviewModal = () => {
           </div>
         ) : data ? (
           <div className="p-6 space-y-5">
-            {/* Header */}
             <div className="text-center space-y-1">
               <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase" style={{ fontFamily: "'DM Mono', monospace" }}>
-                Daily Progress
+                {t("dailyReview.dailyProgress")}
               </p>
               <h2
                 className="text-2xl font-black text-white"
@@ -220,27 +209,25 @@ const DailyReviewModal = () => {
               <p className="text-sm text-muted-foreground">{motivationalLine(data)}</p>
             </div>
 
-            {/* XP badge */}
             {data.totalXp > 0 && (
               <div className="flex items-center justify-center gap-2">
                 <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30">
                   <Trophy className="w-4 h-4 text-amber-400" />
                   <span className="text-sm font-bold text-amber-400" style={{ fontFamily: "'Orbitron', monospace" }}>
-                    {data.totalXp.toLocaleString()} XP earned
+                    {data.totalXp.toLocaleString()} {t("dailyReview.xpEarned")}
                   </span>
                 </div>
               </div>
             )}
 
-            {/* Foundation progress */}
             <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold text-white">Foundation Journey</span>
+                  <span className="text-sm font-semibold text-white">{t("dailyReview.foundationJourney")}</span>
                 </div>
                 <span className="text-sm font-bold" style={{ color: "#FF2D78" }}>
-                  {data.foundationCompleted}/{data.foundationTotal} modules
+                  {data.foundationCompleted}/{data.foundationTotal} {t("dailyReview.modules")}
                 </span>
               </div>
               <Progress value={foundationPct} className="h-2" />
@@ -250,20 +237,19 @@ const DailyReviewModal = () => {
                   className="w-full text-left text-xs rounded-lg px-3 py-2 transition-colors"
                   style={{ background: "rgba(255,45,120,0.08)", border: "1px solid rgba(255,45,120,0.2)", color: "#FF2D78" }}
                 >
-                  Next up: <span className="font-semibold">{data.nextModuleTitle}</span> →
+                  {t("dailyReview.nextUp", { title: data.nextModuleTitle })}
                 </button>
               )}
               {!data.nextModuleTitle && (
-                <p className="text-xs text-green-400 font-semibold">✓ All modules complete!</p>
+                <p className="text-xs text-green-400 font-semibold">{t("dailyReview.allComplete")}</p>
               )}
             </div>
 
-            {/* Game scores */}
             {data.games.some((g) => g.sessions > 0) && (
               <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex items-center gap-2">
                   <Flame className="w-4 h-4 text-amber-400" />
-                  <span className="text-sm font-semibold text-white">Game Performance</span>
+                  <span className="text-sm font-semibold text-white">{t("dailyReview.gamePerformance")}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {data.games
@@ -281,7 +267,7 @@ const DailyReviewModal = () => {
                             {g.bestAcc !== null ? (
                               <span className={`font-bold ${g.color}`}>{g.bestAcc}%</span>
                             ) : "—"}{" "}
-                            · {g.sessions} session{g.sessions !== 1 ? "s" : ""}
+                            · {g.sessions} {g.sessions !== 1 ? t("dailyReview.sessions") : t("dailyReview.session")}
                           </p>
                         </div>
                       </div>
@@ -290,7 +276,6 @@ const DailyReviewModal = () => {
               </div>
             )}
 
-            {/* CTA */}
             <Button
               onClick={goToQuiz}
               className="w-full text-base font-bold py-5"
@@ -302,7 +287,7 @@ const DailyReviewModal = () => {
                 letterSpacing: "0.06em",
               }}
             >
-              Let's Go! →
+              {t("dailyReview.letsGo")}
             </Button>
           </div>
         ) : null}

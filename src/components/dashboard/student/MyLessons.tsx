@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, FileText, X, RefreshCw } from "lucide-react";
-import { format, isAfter, startOfDay, addHours } from "date-fns";
+import { format, isAfter, addHours } from "date-fns";
 import SlotCalendarView, { TimeSlot } from "../shared/SlotCalendarView";
 
 interface Lesson {
@@ -23,6 +24,7 @@ interface Lesson {
 }
 
 const MyLessons = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,15 +48,15 @@ const MyLessons = () => {
       const lessonsWithDetails = await Promise.all(
         data.map(async (lesson) => {
           const [teacherRes, notesRes] = await Promise.all([
-            lesson.teacher_id 
-              ? supabase.from("profiles").select("full_name").eq("user_id", lesson.teacher_id).maybeSingle() 
+            lesson.teacher_id
+              ? supabase.from("profiles").select("full_name").eq("user_id", lesson.teacher_id).maybeSingle()
               : Promise.resolve({ data: null }),
             supabase.from("lesson_notes").select("notes").eq("lesson_id", lesson.id).eq("is_visible_to_student", true),
           ]);
-          return { 
-            ...lesson, 
-            teacher_name: teacherRes.data?.full_name || "TBA", 
-            notes: notesRes.data || [] 
+          return {
+            ...lesson,
+            teacher_name: teacherRes.data?.full_name || "TBA",
+            notes: notesRes.data || [],
           };
         })
       );
@@ -70,16 +72,13 @@ const MyLessons = () => {
   const fetchAvailableSlotsForReschedule = async (lesson: Lesson) => {
     setSlotsLoading(true);
     setRescheduleLesson(lesson);
-    
-    // Fetch slots from the same teacher if assigned, otherwise all teachers
+
     let query = supabase.from("available_slots").select("*").eq("is_active", true);
-    
     if (lesson.teacher_id) {
       query = query.eq("teacher_id", lesson.teacher_id);
     }
-
     const { data } = await query;
-    
+
     if (data) {
       const slotsWithNames = await Promise.all(
         data.map(async (slot) => {
@@ -103,9 +102,9 @@ const MyLessons = () => {
       .eq("id", lessonId);
 
     if (error) {
-      toast({ title: "Error", description: "Failed to cancel lesson.", variant: "destructive" });
+      toast({ title: t("myLessons.errorTitle"), description: t("myLessons.cancelFailed"), variant: "destructive" });
     } else {
-      toast({ title: "Cancelled", description: "Lesson has been cancelled." });
+      toast({ title: t("myLessons.cancelledTitle"), description: t("myLessons.cancelledDesc") });
       setLessons(lessons.map(l => l.id === lessonId ? { ...l, status: "cancelled" } : l));
     }
   };
@@ -114,10 +113,9 @@ const MyLessons = () => {
     if (!rescheduleLesson || !selectedDate || !selectedSlot) return;
 
     const newDate = format(selectedDate, "yyyy-MM-dd");
-    
     const { error } = await supabase
       .from("lessons")
-      .update({ 
+      .update({
         scheduled_date: newDate,
         scheduled_time: selectedSlot.start_time,
         teacher_id: selectedSlot.teacher_id,
@@ -125,9 +123,15 @@ const MyLessons = () => {
       .eq("id", rescheduleLesson.id);
 
     if (error) {
-      toast({ title: "Error", description: "Failed to reschedule lesson.", variant: "destructive" });
+      toast({ title: t("myLessons.errorTitle"), description: t("myLessons.rescheduleFailed"), variant: "destructive" });
     } else {
-      toast({ title: "Rescheduled", description: `Lesson moved to ${format(selectedDate, "EEE, MMM d")} at ${selectedSlot.start_time.slice(0, 5)}` });
+      toast({
+        title: t("myLessons.rescheduledTitle"),
+        description: t("myLessons.rescheduledDesc", {
+          date: format(selectedDate, "EEE, MMM d"),
+          time: selectedSlot.start_time.slice(0, 5),
+        }),
+      });
       setRescheduleLesson(null);
       setSelectedDate(undefined);
       setSelectedSlot(null);
@@ -136,14 +140,9 @@ const MyLessons = () => {
   };
 
   const canModifyLesson = (lesson: Lesson) => {
-    // Can only modify scheduled lessons that are at least 24 hours away
     if (lesson.status !== "scheduled") return false;
-    
     const lessonDateTime = new Date(`${lesson.scheduled_date}T${lesson.scheduled_time}`);
-    const now = new Date();
-    const twentyFourHoursFromNow = addHours(now, 24);
-    
-    return isAfter(lessonDateTime, twentyFourHoursFromNow);
+    return isAfter(lessonDateTime, addHours(new Date(), 24));
   };
 
   const getStatusColor = (status: string) => {
@@ -155,16 +154,16 @@ const MyLessons = () => {
     }
   };
 
-  if (loading) return <p className="text-muted-foreground">Loading lessons...</p>;
+  if (loading) return <p className="text-muted-foreground">{t("myLessons.loading")}</p>;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">My Lessons</h2>
-      
+      <h2 className="text-xl font-semibold">{t("myLessons.title")}</h2>
+
       {lessons.length === 0 ? (
         <Card className="bg-card border-border">
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No lessons yet. Book your first lesson!</p>
+            <p className="text-muted-foreground">{t("myLessons.noLessons")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -184,23 +183,22 @@ const MyLessons = () => {
                       <Clock className="w-5 h-5 text-muted-foreground" />
                       <span>{lesson.scheduled_time.slice(0, 5)}</span>
                     </div>
-                    <span className="text-muted-foreground">with {lesson.teacher_name}</span>
+                    <span className="text-muted-foreground">{t("myLessons.with", { name: lesson.teacher_name })}</span>
                     <Badge className={getStatusColor(lesson.status)}>{lesson.status}</Badge>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {lesson.notes && lesson.notes.length > 0 && (
                       <Badge variant="outline">
                         <FileText className="w-3 h-3 mr-1" />
-                        {lesson.notes.length} notes
+                        {lesson.notes.length} {t("myLessons.notes")}
                       </Badge>
                     )}
-                    
+
                     {canModifyLesson(lesson) && (
                       <>
-                        {/* Reschedule Button */}
-                        <Dialog 
-                          open={rescheduleLesson?.id === lesson.id} 
+                        <Dialog
+                          open={rescheduleLesson?.id === lesson.id}
                           onOpenChange={(open) => {
                             if (!open) {
                               setRescheduleLesson(null);
@@ -210,22 +208,25 @@ const MyLessons = () => {
                           }}
                         >
                           <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => fetchAvailableSlotsForReschedule(lesson)}
                             >
                               <RefreshCw className="w-4 h-4 mr-1" />
-                              Reschedule
+                              {t("myLessons.reschedule")}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="bg-card border-border max-w-4xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                              <DialogTitle>Reschedule Lesson</DialogTitle>
+                              <DialogTitle>{t("myLessons.rescheduleTitle")}</DialogTitle>
                             </DialogHeader>
                             <div className="mt-4">
                               <p className="text-sm text-muted-foreground mb-4">
-                                Current: {format(new Date(lesson.scheduled_date), "EEE, MMM d")} at {lesson.scheduled_time.slice(0, 5)}
+                                {t("myLessons.current", {
+                                  date: format(new Date(lesson.scheduled_date), "EEE, MMM d"),
+                                  time: lesson.scheduled_time.slice(0, 5),
+                                })}
                               </p>
                               <SlotCalendarView
                                 slots={availableSlots}
@@ -246,41 +247,43 @@ const MyLessons = () => {
                                   setSelectedSlot(null);
                                 }}
                               >
-                                Cancel
+                                {t("myLessons.cancel")}
                               </Button>
                               <Button
                                 onClick={handleReschedule}
                                 disabled={!selectedDate || !selectedSlot}
                                 className="btn-primary"
                               >
-                                Confirm Reschedule
+                                {t("myLessons.confirmReschedule")}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
 
-                        {/* Cancel Button */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
                               <X className="w-4 h-4 mr-1" />
-                              Cancel
+                              {t("myLessons.cancel")}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="bg-card border-border">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel Lesson?</AlertDialogTitle>
+                              <AlertDialogTitle>{t("myLessons.cancelTitle")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to cancel your lesson on {format(new Date(lesson.scheduled_date), "EEEE, MMMM d")} at {lesson.scheduled_time.slice(0, 5)}? This action cannot be undone.
+                                {t("myLessons.cancelDesc", {
+                                  date: format(new Date(lesson.scheduled_date), "EEEE, MMMM d"),
+                                  time: lesson.scheduled_time.slice(0, 5),
+                                })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Keep Lesson</AlertDialogCancel>
+                              <AlertDialogCancel>{t("myLessons.keepLesson")}</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleCancel(lesson.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
-                                Yes, Cancel Lesson
+                                {t("myLessons.yesCancelLesson")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -291,12 +294,12 @@ const MyLessons = () => {
                     {lesson.status === "scheduled" && !canModifyLesson(lesson) && (
                       <Badge variant="outline" className="text-muted-foreground">
                         <Clock className="w-3 h-3 mr-1" />
-                        Less than 24h away
+                        {t("myLessons.lessThan24h")}
                       </Badge>
                     )}
                   </div>
                 </div>
-                
+
                 {lesson.notes && lesson.notes.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {lesson.notes.map((note, i) => (

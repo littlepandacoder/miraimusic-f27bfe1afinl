@@ -37,11 +37,34 @@ const SubscriptionGate = () => {
   );
 };
 
+const SUB_CACHE_KEY = (uid: string) => `musicable_sub_v1_${uid}`;
+
+function readSubCache(uid: string): boolean | null {
+  try {
+    const v = sessionStorage.getItem(SUB_CACHE_KEY(uid));
+    return v !== null ? v === "1" : null;
+  } catch { return null; }
+}
+
+function writeSubCache(uid: string, value: boolean) {
+  try { sessionStorage.setItem(SUB_CACHE_KEY(uid), value ? "1" : "0"); } catch {}
+}
+
+function clearSubCache(uid: string) {
+  try { sessionStorage.removeItem(SUB_CACHE_KEY(uid)); } catch {}
+}
+
 const Dashboard = () => {
   const { user, loading, hasRole, roles } = useAuth();
   useSessionTracking(user); // record login + duration for every role
-  const [subscribed, setSubscribed] = useState<boolean | null>(null);
-  const [checkingSubscription, setCheckingSubscription] = useState(true);
+
+  // Initialise from sessionStorage so navigating back never shows a spinner
+  const [subscribed, setSubscribed] = useState<boolean | null>(() =>
+    user?.id ? readSubCache(user.id) : null
+  );
+  const [checkingSubscription, setCheckingSubscription] = useState(() =>
+    user?.id ? readSubCache(user.id) === null : true
+  );
 
   useEffect(() => {
     log("[dashboard] auth state — loading:", loading, "user:", user?.email ?? "null");
@@ -63,6 +86,7 @@ const Dashboard = () => {
 
     if (isStaff) {
       log("[dashboard] staff user → granting access immediately");
+      writeSubCache(user.id, true);
       setSubscribed(true);
       setCheckingSubscription(false);
       return;
@@ -76,6 +100,8 @@ const Dashboard = () => {
       if (!cancelled) {
         const hasRoles = roles.length > 0;
         warn("[dashboard] subscription check TIMED OUT — roles present:", hasRoles, "→ granting access");
+        // Only cache a positive result on timeout — a negative timeout is unreliable
+        if (hasRoles) writeSubCache(user.id, true);
         setSubscribed(hasRoles);
         setCheckingSubscription(false);
       }
@@ -96,14 +122,20 @@ const Dashboard = () => {
         log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
         if (error) {
           warn("[dashboard] subscription query error:", error.message, "— roles present:", roles.length > 0);
-          setSubscribed(roles.length > 0);
+          const result = roles.length > 0;
+          writeSubCache(user.id, result);
+          setSubscribed(result);
         } else {
-          log("[dashboard] subscribed:", !!data);
-          setSubscribed(!!data);
+          const result = !!data;
+          log("[dashboard] subscribed:", result);
+          writeSubCache(user.id, result);
+          setSubscribed(result);
         }
       } catch (err) {
         if (!cancelled) {
           warn("[dashboard] subscription check threw:", err);
+          // Don't cache failures — let the next mount retry
+          clearSubCache(user.id);
           setSubscribed(false);
         }
       } finally {

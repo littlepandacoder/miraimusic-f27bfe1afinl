@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,27 @@ const SFX = {
     // Soft neutral pop — quick sine blip
     playTone(880, "sine", 0, 0.07, 0.18);
     playTone(660, "sine", 0.05, 0.07, 0.10);
+  },
+  fail() {
+    // Classic "wah wah wah" trombone fail — three descending glides
+    try {
+      const ctx = getAudioCtx();
+      [[466, 233], [440, 220], [415, 185]].forEach(([hi, lo], i) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = "sawtooth";
+        const t = ctx.currentTime + i * 0.52;
+        osc.frequency.setValueAtTime(hi, t);
+        osc.frequency.exponentialRampToValueAtTime(lo, t + 0.45);
+        gain.gain.setValueAtTime(0.28, t);
+        gain.gain.setValueAtTime(0.28, t + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        osc.start(t);
+        osc.stop(t + 0.52);
+      });
+    } catch (_) {}
   },
   victory() {
     // Short fanfare: C E G E C(oct)
@@ -277,6 +299,7 @@ interface ScorePop { id: number; text: string; color: string }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const DailyReviewQuiz = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { state } = useLocation() as {
@@ -376,8 +399,8 @@ const DailyReviewQuiz = () => {
     }
   };
 
-  // ── Play victory sound once when results appear ───────────────────────────
-  useEffect(() => { if (done) SFX.victory(); }, [done]);
+  // ── Play victory or fail sound once when results appear ──────────────────
+  useEffect(() => { if (done) { pct < 50 ? SFX.fail() : SFX.victory(); } }, [done]);
 
   // ── Results ────────────────────────────────────────────────────────────────
   if (done) {
@@ -397,7 +420,7 @@ const DailyReviewQuiz = () => {
               className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3"
               style={{ fontFamily: "'DM Mono',monospace" }}
             >
-              Daily Review Complete! 🎉
+              {t("quiz.complete")}
             </p>
             <div
               className="text-8xl font-black mb-2"
@@ -411,15 +434,15 @@ const DailyReviewQuiz = () => {
               {grade}
             </div>
             <p className="text-3xl font-bold text-white">{correct} / {questions.length}</p>
-            <p className="text-sm text-muted-foreground mt-1">{pct}% accuracy</p>
+            <p className="text-sm text-muted-foreground mt-1">{pct}{t("quiz.accuracy")}</p>
           </div>
 
           {/* Stats row */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Score", value: score.toLocaleString(), icon: <Zap className="w-4 h-4" />, color: "#F59E0B" },
-              { label: "Best Streak", value: `${maxStreak} 🔥`, icon: <Flame className="w-4 h-4" />, color: "#FF2D78" },
-              { label: "Accuracy", value: `${pct}%`, icon: <Star className="w-4 h-4" />, color: "#39D98A" },
+              { label: t("quiz.score"), value: score.toLocaleString(), icon: <Zap className="w-4 h-4" />, color: "#F59E0B" },
+              { label: t("quiz.bestStreak"), value: `${maxStreak} 🔥`, icon: <Flame className="w-4 h-4" />, color: "#FF2D78" },
+              { label: t("quiz.accuracyLabel"), value: `${pct}%`, icon: <Star className="w-4 h-4" />, color: "#39D98A" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -462,14 +485,14 @@ const DailyReviewQuiz = () => {
 
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => navigate(-1)}>
-              Dashboard
+              {t("quiz.dashboard")}
             </Button>
             <Button
               className="flex-1 gap-2 font-bold"
               onClick={() => { setCurrent(0); setAnswers({}); setRevealed(false); setDone(false); setScore(0); setStreak(0); setMaxStreak(0); }}
               style={{ background: "linear-gradient(135deg,#FF2D78,#A855F7)", border: "none" }}
             >
-              <RotateCcw className="w-4 h-4" /> Retry
+              <RotateCcw className="w-4 h-4" /> {t("quiz.retry")}
             </Button>
           </div>
         </div>
@@ -674,8 +697,8 @@ const DailyReviewQuiz = () => {
           }}
         >
           {current < questions.length - 1
-            ? <><ArrowRight className="w-4 h-4" /> Next</>
-            : <><Trophy className="w-4 h-4" /> See Results</>}
+            ? <><ArrowRight className="w-4 h-4" /> {t("quiz.next")}</>
+            : <><Trophy className="w-4 h-4" /> {t("quiz.seeResults")}</>}
         </Button>
       )}
 

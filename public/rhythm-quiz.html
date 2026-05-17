@@ -201,6 +201,46 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 /* CONFETTI */
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:5;display:none}
 
+/* DUPLICATE PATTERN MODAL */
+#dup-modal{
+  position:fixed;inset:0;z-index:800;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:1.25rem
+}
+#dup-modal.open{display:flex}
+.dup-card{
+  background:linear-gradient(145deg,#151228 0%,#0f0d1a 100%);
+  border:1px solid rgba(255,45,120,.3);
+  border-radius:22px;overflow:hidden;
+  max-width:420px;width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(255,45,120,.1);
+  animation:dupIn .28s cubic-bezier(.34,1.56,.64,1) both
+}
+@keyframes dupIn{
+  from{transform:scale(.75) translateY(24px);opacity:0}
+  to{transform:scale(1) translateY(0);opacity:1}
+}
+.dup-strip{height:3px;background:linear-gradient(90deg,#FF2D78,#A855F7,#00D4FF)}
+.dup-body{padding:2rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.1rem}
+.dup-icon{font-size:3rem;animation:dupIcon .5s .1s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes dupIcon{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.dup-title{
+  font-family:'Orbitron',monospace;font-weight:900;font-size:1.3rem;
+  background:linear-gradient(135deg,#FF2D78,#A855F7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent
+}
+.dup-msg{color:#9CA3AF;font-size:.95rem;line-height:1.65;max-width:320px}
+.dup-msg strong{color:#E8ECF0}
+.dup-btn{
+  background:linear-gradient(135deg,#FF2D78,#A855F7);
+  color:#fff;border:none;border-radius:13px;
+  padding:.9rem 2.25rem;
+  font-family:'Orbitron',monospace;font-weight:700;font-size:.9rem;
+  cursor:pointer;transition:all .2s;letter-spacing:.04em;
+  box-shadow:0 4px 20px rgba(255,45,120,.35)
+}
+.dup-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,45,120,.5)}
+
 /* ANIMATIONS */
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 .shake{animation:shake .38s ease}
@@ -221,6 +261,23 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 <body>
 
 <canvas id="confetti-canvas"></canvas>
+
+<!-- DUPLICATE PATTERN MODAL -->
+<div id="dup-modal" onclick="closeDupModal()">
+  <div class="dup-card" onclick="event.stopPropagation()">
+    <div class="dup-strip"></div>
+    <div class="dup-body">
+      <div class="dup-icon">🔁</div>
+      <div class="dup-title">Pattern Already Used!</div>
+      <p class="dup-msg">
+        Please create <strong>another pattern</strong> —<br>
+        that pattern has already been used before.
+      </p>
+      <button class="dup-btn" onclick="closeDupModal()">Try a Different Pattern →</button>
+    </div>
+  </div>
+</div>
+
 <nav id="nav">
   <a class="nav-logo" href="/dashboard">Musicable</a>
   <a class="nav-back" href="/dashboard">
@@ -801,14 +858,11 @@ function checkAnswer() {
       // Reject duplicate rhythms the player has already used this session
       const comboKey = S.placed.map(n=>n.id).join('+');
       if (S.usedBuildCombos.has(comboKey)) {
-        // Don't count as wrong — just nudge to try something new
         S.done = false;
-        clearInterval(S.timer); // pause; will restart after feedback
-        feedback(false, 'Already used!', 'Try a different rhythm combination');
+        clearInterval(S.timer); // pause timer while modal is open
         shake(document.getElementById('staff-card'));
         sndBad();
-        // Restart timer so they can keep editing
-        startTimer();
+        showDupModal();
         return;
       }
       S.usedBuildCombos.add(comboKey);
@@ -1027,6 +1081,16 @@ function updateHUD() {
   document.getElementById('round-num').textContent=S.round;
   document.getElementById('level-num').textContent=S.level;
   document.getElementById('xp-fill').style.width=S.xp+'%';
+}
+
+// ── DUPLICATE PATTERN MODAL ──────────────────────────────
+function showDupModal() {
+  document.getElementById('dup-modal').classList.add('open');
+}
+function closeDupModal() {
+  document.getElementById('dup-modal').classList.remove('open');
+  // Resume timer so the player can keep editing their pattern
+  startTimer();
 }
 
 // ── FEEDBACK ─────────────────────────────────────────────────

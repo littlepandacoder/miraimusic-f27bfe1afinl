@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +9,7 @@ import { format } from "date-fns";
 import SlotCalendarView, { TimeSlot } from "../shared/SlotCalendarView";
 
 const BookLesson = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -43,7 +45,7 @@ const BookLesson = () => {
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    setSelectedSlot(null); // Reset slot when date changes
+    setSelectedSlot(null);
   };
 
   const handleSlotSelect = (slot: TimeSlot) => {
@@ -64,14 +66,17 @@ const BookLesson = () => {
 
     if (error) {
       toast({
-        title: "Error",
-        description: "Failed to book lesson.",
+        title: t("bookLesson.errorTitle"),
+        description: t("bookLesson.errorDesc"),
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Booked!",
-        description: `Your lesson has been scheduled for ${format(selectedDate, "EEEE, MMMM d")} at ${selectedSlot.start_time.slice(0, 5)}.`,
+        title: t("bookLesson.bookedTitle"),
+        description: t("bookLesson.bookedDesc", {
+          date: format(selectedDate, "EEEE, MMMM d"),
+          time: selectedSlot.start_time.slice(0, 5),
+        }),
       });
       setSelectedSlot(null);
       setSelectedDate(undefined);
@@ -81,7 +86,7 @@ const BookLesson = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Book a Lesson</h2>
+      <h2 className="text-xl font-semibold">{t("bookLesson.title")}</h2>
 
       <SlotCalendarView
         slots={slots}
@@ -94,31 +99,30 @@ const BookLesson = () => {
         disablePastDates={true}
       />
 
-      {/* Booking Summary */}
       {selectedSlot && selectedDate && (
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg">Booking Summary</CardTitle>
+            <CardTitle className="text-lg">{t("bookLesson.bookingSummary")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Date</p>
+                <p className="text-muted-foreground">{t("bookLesson.date")}</p>
                 <p className="font-medium">{format(selectedDate, "EEEE, MMMM d, yyyy")}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Time</p>
+                <p className="text-muted-foreground">{t("bookLesson.time")}</p>
                 <p className="font-medium">
                   {selectedSlot.start_time.slice(0, 5)} - {selectedSlot.end_time.slice(0, 5)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Teacher</p>
+                <p className="text-muted-foreground">{t("bookLesson.teacher")}</p>
                 <p className="font-medium">{selectedSlot.teacher_name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Duration</p>
-                <p className="font-medium">45 minutes</p>
+                <p className="text-muted-foreground">{t("bookLesson.duration")}</p>
+                <p className="font-medium">{t("bookLesson.durationValue")}</p>
               </div>
             </div>
             <Button
@@ -126,7 +130,7 @@ const BookLesson = () => {
               disabled={booking}
               className="w-full btn-primary"
             >
-              {booking ? "Booking..." : "Confirm Booking"}
+              {booking ? t("bookLesson.booking") : t("bookLesson.confirmBooking")}
             </Button>
           </CardContent>
         </Card>

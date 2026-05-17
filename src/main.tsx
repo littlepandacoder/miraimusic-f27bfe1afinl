@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
+import { initCapacitor } from "./capacitorInit";
 
 import { initMetaPixel } from "./initMetaPixel";
 
@@ -51,4 +52,7 @@ try {
   // ignore
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Boot Capacitor native plugins (no-op in web browser)
+initCapacitor().then(() => {
+  createRoot(document.getElementById("root")!).render(<App />);
+});

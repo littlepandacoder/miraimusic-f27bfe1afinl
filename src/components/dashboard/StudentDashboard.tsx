@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Routes, Route, Link } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface GameScoreSummary {
 }
 
 const StudentHome = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [stats, setStats] = useState({
     upcomingLessons: 0,
@@ -206,29 +208,29 @@ const StudentHome = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.upcoming")}</CardTitle>
             <Calendar className="w-4 h-4 text-primary" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.upcomingLessons}</p>
-            <p className="text-xs text-muted-foreground mt-1">lessons</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("student.lessons")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.completed")}</CardTitle>
             <BookOpen className="w-4 h-4 text-green-400" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.completedLessons}</p>
-            <p className="text-xs text-muted-foreground mt-1">lessons</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("student.lessons")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Quiz Avg</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.quizAvg")}</CardTitle>
             <TrendingUp className="w-4 h-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
@@ -242,32 +244,32 @@ const StudentHome = () => {
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total XP</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.totalXp")}</CardTitle>
             <Trophy className="w-4 h-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-yellow-400">{stats.totalXp.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1">XP earned</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("student.xpEarned")}</p>
           </CardContent>
         </Card>
 
         {/* ── Session stats ── */}
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Logins</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.logins")}</CardTitle>
             <LogIn className="w-4 h-4 text-sky-400" />
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-sky-400">{sessionStats.totalLogins}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {sessionStats.lastLogin ? `Last: ${fmtLastLogin(sessionStats.lastLogin)}` : "No data yet"}
+              {sessionStats.lastLogin ? t("student.lastLogin", { time: fmtLastLogin(sessionStats.lastLogin) }) : t("student.noDataYet")}
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Time Spent</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.timeSpent")}</CardTitle>
             <Clock className="w-4 h-4 text-purple-400" />
           </CardHeader>
           <CardContent>
@@ -275,7 +277,7 @@ const StudentHome = () => {
               {sessionStats.totalSeconds > 0 ? fmtDuration(sessionStats.totalSeconds) : "—"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {sessionStats.avgSeconds > 0 ? `avg ${fmtDuration(sessionStats.avgSeconds)}/visit` : "across all visits"}
+              {sessionStats.avgSeconds > 0 ? t("student.avgPerVisit", { duration: fmtDuration(sessionStats.avgSeconds) }) : t("student.acrossAllVisits")}
             </p>
           </CardContent>
         </Card>
@@ -287,21 +289,21 @@ const StudentHome = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-primary" />
-              Foundation Progress
+              {t("student.foundationProgress")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <p className="text-sm text-muted-foreground">Foundation Modules</p>
+                <p className="text-sm text-muted-foreground">{t("student.foundationModules")}</p>
                 <p className="text-sm font-semibold">{stats.foundationModulesCompleted}/{stats.foundationModulesTotal}</p>
               </div>
               <Progress value={stats.foundationProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-2">{Math.round(stats.foundationProgress)}% Complete</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("student.percentComplete", { percent: Math.round(stats.foundationProgress) })}</p>
             </div>
             <Link to="/dashboard/foundation" className="feature-card flex items-center gap-3 p-3 mt-2 inline-block w-full justify-center rounded">
               <Map className="w-4 h-4" />
-              <span>Continue Learning</span>
+              <span>{t("student.continuelearning")}</span>
             </Link>
           </CardContent>
         </Card>
@@ -310,21 +312,21 @@ const StudentHome = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
-              Learning Goals
+              {t("student.learningGoals")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Complete Foundation Modules</span>
+                  <span>{t("student.completeFoundation")}</span>
                   <span className="font-semibold">{stats.foundationModulesTotal > 0 ? Math.round((stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100) : 0}%</span>
                 </div>
                 <Progress value={stats.foundationModulesTotal > 0 ? (stats.foundationModulesCompleted / stats.foundationModulesTotal) * 100 : 0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Quiz Average</span>
+                  <span>{t("student.quizAverage")}</span>
                   <span className="font-semibold">{stats.quizAvgScore !== null ? `${stats.quizAvgScore}%` : "—"}</span>
                 </div>
                 <Progress value={stats.quizAvgScore ?? 0} className="h-2" />
@@ -339,20 +341,21 @@ const StudentHome = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gamepad2 className="w-5 h-5 text-primary" />
-            Game Performance
+            {t("student.gamePerformance")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {[
-            { key: "note_naming",  label: "Note Naming",    icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",   tests: null },
-            { key: "sight_reading", label: "Sight Reading", icon: <Eye className="w-5 h-5 text-sky-400" />,      accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html", tests: [
-              { label: "Treble Test", href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1" },
-              { label: "Bass Test",   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1" },
+            { key: "note_naming",  label: t("student.gameNames.noteNaming"),   icon: <Music className="w-5 h-5 text-pink-400" />,   accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/note_naming.html",   tests: null },
+            { key: "sight_reading", label: t("student.gameNames.sightReading"), icon: <Eye className="w-5 h-5 text-sky-400" />,      accentClass: "text-sky-400",    bgClass: "bg-sky-500/10",    href: "/sight-reading.html", tests: [
+              { label: t("student.gameNames.trebleTest"), href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1" },
+              { label: t("student.gameNames.bassTest"),   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1" },
             ]},
-            { key: "piano_hero",   label: "Piano Hero",     icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",    tests: null },
-            { key: "rhythm_quiz",  label: "Rhythm Quiz",    icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
+            { key: "piano_hero",   label: t("student.gameNames.pianoHero"),    icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",    tests: null },
+            { key: "rhythm_quiz",  label: t("student.gameNames.rhythmQuiz"),   icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
               passThreshold: 70,
             },
+            { key: "tap_rhythm",   label: t("student.gameNames.tapRhythm"),    icon: <Drum className="w-5 h-5 text-pink-400" />,    accentClass: "text-pink-400",   bgClass: "bg-pink-500/10",   href: "/tap-rhythm.html",    tests: null },
           ].map(({ key, label, icon, accentClass, bgClass, href, tests, passThreshold }: any) => {
             const gs = gameScores[key];
             return (
@@ -363,7 +366,7 @@ const StudentHome = () => {
                     <div className={`p-2 rounded-lg ${bgClass}`}>{icon}</div>
                     <p className="font-semibold text-sm">{label}</p>
                   </div>
-                  <a href={href} className="text-xs text-primary hover:underline font-medium">Play →</a>
+                  <a href={href} className="text-xs text-primary hover:underline font-medium">{t("student.play")}</a>
                 </div>
                 {tests && (
                   <div className="flex gap-2">
@@ -388,20 +391,20 @@ const StudentHome = () => {
                           ? "bg-green-500/20 text-green-400 border border-green-500/40"
                           : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
                       }`}>
-                        {(gs.bestAccuracy ?? 0) >= passThreshold ? "✓ Passed" : `Need ${passThreshold}% to pass`}
+                        {(gs.bestAccuracy ?? 0) >= passThreshold ? t("student.passed") : t("student.needToPass", { threshold: passThreshold })}
                       </div>
                     )}
 
                     {/* Best score highlight */}
                     <div className="flex items-end gap-1">
                       <span className={`text-3xl font-bold ${accentClass}`}>{gs.bestScore.toLocaleString()}</span>
-                      <span className="text-xs text-muted-foreground mb-1">best score</span>
+                      <span className="text-xs text-muted-foreground mb-1">{t("student.bestScore")}</span>
                     </div>
 
                     {/* Accuracy bar */}
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">Best Accuracy</span>
+                        <span className="text-muted-foreground">{t("student.bestAccuracy")}</span>
                         <span className="font-semibold">{gs.bestAccuracy !== null ? `${gs.bestAccuracy}%` : "—"}</span>
                       </div>
                       <Progress value={gs.bestAccuracy ?? 0} className="h-1.5" />
@@ -410,23 +413,23 @@ const StudentHome = () => {
                     {/* Row stats */}
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
-                        <p className="text-xs text-muted-foreground">Avg %</p>
+                        <p className="text-xs text-muted-foreground">{t("student.avgAccuracy")}</p>
                         <p className="text-sm font-bold">{gs.avgAccuracy !== null ? `${gs.avgAccuracy}%` : "—"}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Best Streak</p>
+                        <p className="text-xs text-muted-foreground">{t("student.bestStreak")}</p>
                         <p className="text-sm font-bold">{gs.bestStreak} 🔥</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Sessions</p>
+                        <p className="text-xs text-muted-foreground">{t("student.sessions")}</p>
                         <p className="text-sm font-bold">{gs.sessions}</p>
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="py-4 text-center">
-                    <p className="text-sm text-muted-foreground">No sessions yet</p>
-                    <a href={href} className={`text-sm font-semibold ${accentClass} hover:underline`}>Start playing →</a>
+                    <p className="text-sm text-muted-foreground">{t("student.noSessions")}</p>
+                    <a href={href} className={`text-sm font-semibold ${accentClass} hover:underline`}>{t("student.startPlaying")}</a>
                   </div>
                 )}
               </div>
@@ -440,8 +443,9 @@ const StudentHome = () => {
 };
 
 const StudentDashboard = () => {
+  const { t } = useTranslation();
   return (
-    <DashboardLayout title="Music Lesson Dashboard" role="student">
+    <DashboardLayout title={t("dashboard.title")} role="student">
       <DailyReviewModal />
       <Routes>
         <Route index element={<StudentHome />} />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +18,6 @@ interface FoundationModule {
   xp_reward: number;
   sort_order: number;
   is_published: boolean;
-  // computed
   totalLessons: number;
   completedLessons: number;
   status: "locked" | "available" | "in-progress" | "completed";
@@ -28,14 +28,15 @@ interface SightReadingGate {
   bassTestPassed:    boolean;
   totalSessions:     number;
   rhythmQuizPassed:  boolean;
-  rhythmBestAcc:     number; // best accuracy % across all rhythm_quiz attempts
+  rhythmBestAcc:     number;
 }
 
 const SESSIONS_REQUIRED = 10;
-const RHYTHM_PASS_ACCURACY = 70; // 70% correct to unlock next module
+const RHYTHM_PASS_ACCURACY = 70;
 
 const ModuleMap = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [modules, setModules] = useState<FoundationModule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,6 @@ const ModuleMap = () => {
     if (!user) return;
 
     const fetchData = async () => {
-      // Fetch published modules ordered by sort_order
       const { data: rawModules } = await (supabase as any)
         .from("foundation_modules")
         .select("id, title, description, level, xp_reward, sort_order")
@@ -59,7 +59,6 @@ const ModuleMap = () => {
         return;
       }
 
-      // Fetch all lessons for these modules (just need module_id to count)
       const moduleIds = rawModules.map((m: any) => m.id);
       const [lessonsRes, progressRes, scoresRes] = await Promise.all([
         (supabase as any).from("foundation_lessons").select("id, module_id").in("module_id", moduleIds),
@@ -72,7 +71,6 @@ const ModuleMap = () => {
         (progressRes.data || []).filter((p: any) => p.completed).map((p: any) => p.lesson_id)
       );
 
-      // Compute sight-reading + rhythm gate status
       const scores: Array<{ game: string; correct: number; total: number }> = scoresRes.data || [];
       const rhythmScores = scores.filter(s => s.game === "rhythm_quiz" && s.total > 0);
       const rhythmBestAcc = rhythmScores.length > 0
@@ -87,15 +85,12 @@ const ModuleMap = () => {
       };
       setSrGate(gate);
 
-      // Count lessons per module
       const lessonsByModule: Record<string, string[]> = {};
       (lessonsRes.data || []).forEach((l: any) => {
         if (!lessonsByModule[l.module_id]) lessonsByModule[l.module_id] = [];
         lessonsByModule[l.module_id].push(l.id);
       });
 
-      // Compute status sequentially — each module unlocks when previous is completed.
-      // SR gate: Treble Clef Songs requires treble test; Bass Clef Songs requires bass test.
       let prevCompleted = true;
       const mapped: FoundationModule[] = rawModules.map((m: any) => {
         const total = (lessonsByModule[m.id] || []).length;
@@ -112,14 +107,10 @@ const ModuleMap = () => {
           status = "locked";
         }
 
-        // Rhythm gate: rhythm module lessons all done but quiz not passed → stay in-progress
         if (status === "completed" && (m.title ?? "").toLowerCase().includes("rhythm") && !gate.rhythmQuizPassed) {
           status = "in-progress";
         }
 
-        // SR gate based on the module's OWN title:
-        // "Treble Clef Songs" → needs treble test passed
-        // "Bass Clef Songs"   → needs bass test passed
         if (status !== "locked") {
           const titleLc = (m.title ?? "").toLowerCase();
           const isTrebleGated = titleLc.includes("treble");
@@ -181,15 +172,15 @@ const ModuleMap = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Foundation Journey</h2>
-          <p className="text-muted-foreground">Master the fundamentals of piano</p>
+          <h2 className="text-2xl font-bold">{t("moduleMap.title")}</h2>
+          <p className="text-muted-foreground">{t("moduleMap.subtitle")}</p>
         </div>
         {totalXP > 0 && (
           <Card className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/50">
             <CardContent className="py-3 px-4 flex items-center gap-3">
               <Trophy className="w-6 h-6 text-yellow-400" />
               <div>
-                <p className="text-xs text-muted-foreground">Total XP</p>
+                <p className="text-xs text-muted-foreground">{t("student.totalXp")}</p>
                 <p className="text-xl font-bold text-yellow-400">{totalXP}</p>
               </div>
             </CardContent>
@@ -201,15 +192,13 @@ const ModuleMap = () => {
         <Card className="bg-card border-border">
           <CardContent className="py-16 text-center text-muted-foreground space-y-2">
             <Music className="w-12 h-12 mx-auto mb-4 opacity-40" />
-            <p className="font-medium">No modules available yet.</p>
-            <p className="text-sm">Check back soon — your instructor will add lessons here.</p>
+            <p className="font-medium">{t("moduleMap.noModules")}</p>
+            <p className="text-sm">{t("moduleMap.noModulesDesc")}</p>
           </CardContent>
         </Card>
       ) : (
         <div className="flex flex-col items-center space-y-0">
           {modules.map((module, index) => {
-            // SR gate matches the module's OWN title (same logic as fetchData).
-            // Also require the previous module to be completed so sequential locks don't falsely show SR gate UI.
             const prevModule = index > 0 ? modules[index - 1] : null;
             const prevModuleCompleted = prevModule?.status === "completed";
             const moduleTitleLcForGate = module.title.toLowerCase();
@@ -229,6 +218,7 @@ const ModuleMap = () => {
                 : null;
 
             const isSRAdventureModule = module.title.toLowerCase().includes("sight reading adventure");
+            const sessionsRemaining = SESSIONS_REQUIRED - srGate.totalSessions;
 
             return (
             <div key={module.id} className="w-full max-w-2xl">
@@ -276,13 +266,15 @@ const ModuleMap = () => {
 
                   {lockedBySRTest && (
                     <div className="mt-2 space-y-1">
-                      <p className="text-xs text-yellow-400 font-medium">🎯 Sight Reading Test Required</p>
+                      <p className="text-xs text-yellow-400 font-medium">{t("moduleMap.sightReadingTest")}</p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className={cn(srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400" : "")}>
-                          {srGate.totalSessions >= SESSIONS_REQUIRED ? "✓" : `${srGate.totalSessions}/${SESSIONS_REQUIRED}`} sessions
+                          {srGate.totalSessions >= SESSIONS_REQUIRED ? "✓" : `${srGate.totalSessions}/${SESSIONS_REQUIRED}`} {t("moduleMap.sessions")}
                         </span>
                         <span className={cn((lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "text-green-400" : "")}>
-                          {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed) ? "✓ Test passed" : "Test: 100% accuracy needed"}
+                          {(lockedByTrebleTest ? srGate.trebleTestPassed : srGate.bassTestPassed)
+                            ? t("moduleMap.testPassed")
+                            : t("moduleMap.testRequired")}
                         </span>
                       </div>
                     </div>
@@ -291,7 +283,7 @@ const ModuleMap = () => {
                   {(module.status === "in-progress" || module.status === "completed") && module.totalLessons > 0 && (
                     <div className="mt-2">
                       <div className="flex justify-between text-xs mb-1">
-                        <span>{module.completedLessons}/{module.totalLessons} lessons</span>
+                        <span>{module.completedLessons}/{module.totalLessons} {t("moduleMap.lessons")}</span>
                         <span className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-yellow-400" />
                           {module.xp_reward} XP
@@ -303,7 +295,7 @@ const ModuleMap = () => {
 
                   {module.status === "available" && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      {module.totalLessons > 0 && <span>{module.totalLessons} lessons</span>}
+                      {module.totalLessons > 0 && <span>{module.totalLessons} {t("moduleMap.lessons")}</span>}
                       <span className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-400" />
                         {module.xp_reward} XP
@@ -313,10 +305,9 @@ const ModuleMap = () => {
 
                   {isSRAdventureModule && module.status !== "locked" && (
                     <div className="mt-3 space-y-3" onClick={e => e.stopPropagation()}>
-                      {/* Treble Clef Songs session counter */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Sessions to unlock Treble Clef Songs</span>
+                          <span className="text-muted-foreground">{t("moduleMap.sessionsToUnlockTreble")}</span>
                           <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
                             {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
                           </span>
@@ -327,15 +318,16 @@ const ModuleMap = () => {
                         />
                         {srGate.totalSessions < SESSIONS_REQUIRED && (
                           <p className="text-xs text-muted-foreground">
-                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                            {sessionsRemaining === 1
+                              ? t("moduleMap.moreSessionNeeded", { count: sessionsRemaining })
+                              : t("moduleMap.moreSessionsNeeded", { count: sessionsRemaining })}
                           </p>
                         )}
                       </div>
 
-                      {/* Bass Clef Songs session counter */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Sessions to unlock Bass Clef Songs</span>
+                          <span className="text-muted-foreground">{t("moduleMap.sessionsToUnlockBass")}</span>
                           <span className={srGate.totalSessions >= SESSIONS_REQUIRED ? "text-green-400 font-semibold" : "font-semibold"}>
                             {Math.min(srGate.totalSessions, SESSIONS_REQUIRED)}/{SESSIONS_REQUIRED}
                           </span>
@@ -346,7 +338,9 @@ const ModuleMap = () => {
                         />
                         {srGate.totalSessions < SESSIONS_REQUIRED && (
                           <p className="text-xs text-muted-foreground">
-                            {SESSIONS_REQUIRED - srGate.totalSessions} more session{SESSIONS_REQUIRED - srGate.totalSessions !== 1 ? "s" : ""} needed
+                            {sessionsRemaining === 1
+                              ? t("moduleMap.moreSessionNeeded", { count: sessionsRemaining })
+                              : t("moduleMap.moreSessionsNeeded", { count: sessionsRemaining })}
                           </p>
                         )}
                       </div>
@@ -356,13 +350,13 @@ const ModuleMap = () => {
                           href="/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1"
                           className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                         >
-                          🎯 Treble Test
+                          {t("moduleMap.trebleTestGoal")}
                         </a>
                         <a
                           href="/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1"
                           className="flex-1 text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                         >
-                          🎯 Bass Test
+                          {t("moduleMap.bassTestGoal")}
                         </a>
                       </div>
                     </div>
@@ -371,11 +365,11 @@ const ModuleMap = () => {
                   {isRhythmModule && module.status !== "locked" && (
                     <div className="mt-3 space-y-2" onClick={e => e.stopPropagation()}>
                       {module.completedLessons === module.totalLessons && module.totalLessons > 0 && !srGate.rhythmQuizPassed && (
-                        <p className="text-xs text-amber-400 font-medium">🎯 Pass the Rhythm Quiz to complete this module</p>
+                        <p className="text-xs text-amber-400 font-medium">{t("moduleMap.rhythmQuizGoal")}</p>
                       )}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Rhythm Quiz best score</span>
+                          <span className="text-muted-foreground">{t("moduleMap.rhythmBestScore")}</span>
                           <span className={srGate.rhythmQuizPassed ? "text-green-400 font-semibold" : "font-semibold"}>
                             {srGate.rhythmBestAcc}%
                           </span>
@@ -386,7 +380,7 @@ const ModuleMap = () => {
                         href="/rhythm-quiz.html"
                         className="block text-center text-xs font-semibold py-1.5 rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors"
                       >
-                        🎵 {srGate.rhythmQuizPassed ? "✓ Rhythm Quiz Passed" : "Take Rhythm Quiz"}
+                        🎵 {srGate.rhythmQuizPassed ? t("moduleMap.rhythmQuizPassed") : t("moduleMap.takeRhythmQuiz")}
                       </a>
                     </div>
                   )}
@@ -399,7 +393,7 @@ const ModuleMap = () => {
                     onClick={e => e.stopPropagation()}
                     className="shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-pink-500/20 border border-pink-500/50 text-pink-400 hover:bg-pink-500/30 transition-colors whitespace-nowrap"
                   >
-                    Take Test →
+                    {t("moduleMap.trebleTest")} →
                   </a>
                 ) : module.status !== "locked" && !isSRAdventureModule ? (
                   <Button
@@ -408,7 +402,11 @@ const ModuleMap = () => {
                     className="shrink-0"
                     onClick={e => { e.stopPropagation(); navigate(`/dashboard/foundation/lesson-plan/${module.id}`); }}
                   >
-                    {module.status === "completed" ? "Review" : module.status === "in-progress" ? "Continue" : "Start"}
+                    {module.status === "completed"
+                      ? t("moduleMap.review")
+                      : module.status === "in-progress"
+                        ? t("moduleMap.continue")
+                        : t("moduleMap.start")}
                   </Button>
                 ) : null}
               </div>

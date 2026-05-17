@@ -23,7 +23,11 @@
     "db:push": "bash scripts/run_foundation_migration.sh",
     "dev": "vite",
     "tunnel": "ngrok http 8080",
-    "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run tunnel\"",
+    "cap:build": "npm run build && npx cap sync",
+    "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "cap:android": "npm run build && npx cap sync android && npx cap open android",
+    "cap:sync": "npx cap sync"
   },
   "migrationScripts": {
     "pgToMongo": "scripts/migrate_postgres_to_mongo.cjs"
@@ -31,6 +35,15 @@
   "dependencies": {
     "@11labs/client": "^0.2.0",
     "@11labs/react": "^0.2.0",
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
