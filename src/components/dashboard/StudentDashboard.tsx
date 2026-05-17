@@ -8,6 +8,7 @@ import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, P
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import DailyReviewModal from "./student/DailyReviewModal";
+import DailyReviewQuiz from "./student/DailyReviewQuiz";
 import BookLesson from "./student/BookLesson";
 import ModuleMap from "./student/ModuleMap";
 import FoundationLessonPlan from "./student/FoundationLessonPlan";
@@ -450,6 +451,7 @@ const StudentDashboard = () => {
         <Route path="/foundation" element={<ModuleMap />} />
         <Route path="/foundation/lesson-plan/:moduleId" element={<FoundationLessonPlan />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
+        <Route path="/review-quiz" element={<DailyReviewQuiz />} />
 
       </Routes>
     </DashboardLayout>

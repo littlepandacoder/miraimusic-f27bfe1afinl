@@ -153,15 +153,30 @@ const DailyReviewModal = () => {
     fetchData().catch(() => setLoading(false));
   }, [user]);
 
-  const dismiss = () => {
+  const dismiss = (navigateTo?: string, navState?: object) => {
     if (user) localStorage.setItem(todayKey(user.id), "1");
     setVisible(false);
+    if (navigateTo) navigate(navigateTo, { state: navState });
   };
 
-  const goToFoundation = () => {
-    dismiss();
-    navigate("foundation");
-  };
+  const goToFoundation = () => dismiss("foundation");
+
+  const goToQuiz = () =>
+    dismiss("review-quiz", {
+      foundationPct: data ? data.foundationPct : 0,
+      games: data
+        ? Object.fromEntries(
+            data.games.map((g) => [
+              g.label === "Piano Hero"    ? "piano_hero"    :
+              g.label === "Note Naming"   ? "note_naming"   :
+              g.label === "Rhythm Quiz"   ? "rhythm_quiz"   :
+                                            "sight_reading",
+              { sessions: g.sessions, bestAcc: g.bestAcc, avgAccuracy: g.bestAcc },
+            ])
+          )
+        : {},
+      name: data?.name ?? "",
+    });
 
   if (!visible) return null;
 
@@ -174,12 +189,13 @@ const DailyReviewModal = () => {
   return (
     <div
       className="fixed inset-0 z-[900] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-      onClick={dismiss}
+      onClick={() => dismiss()}
     >
       <div
         className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl"
         style={{ background: "linear-gradient(145deg, #151228 0%, #0f0d1a 100%)", border: "1px solid rgba(255,45,120,0.2)" }}
         onClick={(e) => e.stopPropagation()}
+
       >
         {/* Pink glow top strip */}
         <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #FF2D78, #A855F7, #00D4FF)" }} />
@@ -276,7 +292,7 @@ const DailyReviewModal = () => {
 
             {/* CTA */}
             <Button
-              onClick={dismiss}
+              onClick={goToQuiz}
               className="w-full text-base font-bold py-5"
               style={{
                 background: "linear-gradient(135deg, #FF2D78, #A855F7)",
