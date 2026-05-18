@@ -280,7 +280,7 @@ const ModuleMap = () => {
                     </div>
                   )}
 
-                  {(module.status === "in-progress" || module.status === "completed") && module.totalLessons > 0 && (
+                  {module.status !== "locked" && module.totalLessons > 0 && (
                     <div className="mt-2">
                       <div className="flex justify-between text-xs mb-1">
                         <span>{module.completedLessons}/{module.totalLessons} {t("moduleMap.lessons")}</span>
@@ -289,13 +289,17 @@ const ModuleMap = () => {
                           {module.xp_reward} XP
                         </span>
                       </div>
-                      <Progress value={(module.completedLessons / module.totalLessons) * 100} className="h-2" />
+                      <Progress
+                        value={module.status === "completed"
+                          ? 100
+                          : Math.min((module.completedLessons / module.totalLessons) * 100, 95)}
+                        className="h-2"
+                      />
                     </div>
                   )}
 
                   {module.status === "available" && (
                     <div className="mt-2 flex items-center gap-2 text-xs">
-                      {module.totalLessons > 0 && <span>{module.totalLessons} {t("moduleMap.lessons")}</span>}
                       <span className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-400" />
                         {module.xp_reward} XP
