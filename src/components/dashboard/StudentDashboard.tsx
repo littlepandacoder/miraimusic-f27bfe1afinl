@@ -66,9 +66,10 @@ const StudentHome = () => {
 
       const totalModules = (modulesRes.data || []).length;
 
-      // Count completed foundation modules and sum earned XP
+      // Count completed foundation modules/lessons and sum earned XP
       let completedModules = 0;
       let totalXp = 0;
+      let foundationProgress = 0;
       if (totalModules > 0) {
         const moduleIds = (modulesRes.data || []).map((m: any) => m.id);
         const { data: allLessons } = await (supabase as any)
@@ -96,6 +97,11 @@ const StudentHome = () => {
         totalXp = (modulesRes.data || [])
           .filter((m: any) => completedModuleIds.includes(m.id))
           .reduce((sum: number, m: any) => sum + (m.xp_reward || 0), 0);
+
+        // Progress based on individual lessons (not just full modules)
+        const totalLessons = (allLessons || []).length;
+        const completedLessonsCount = (allLessons || []).filter((l: any) => completedLessonIds.has(l.id)).length;
+        foundationProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
       }
 
       // Average quiz score
@@ -105,7 +111,6 @@ const StudentHome = () => {
         : null;
 
       const completedCount = completedRes.count || 0;
-      const foundationProgress = totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
 
       setStats({
         upcomingLessons: upcomingRes.count || 0,

@@ -20,6 +20,8 @@ interface ReviewData {
   name: string;
   foundationCompleted: number;
   foundationTotal: number;
+  lessonCompleted: number;
+  lessonTotal: number;
   nextModuleTitle: string | null;
   totalXp: number;
   games: GameRow[];
@@ -47,8 +49,8 @@ const DailyReviewModal = () => {
   };
 
   const motivationalLine = (d: ReviewData): string => {
-    const { foundationCompleted, foundationTotal, games } = d;
-    const pct = foundationTotal > 0 ? foundationCompleted / foundationTotal : 0;
+    const { lessonCompleted, lessonTotal, games } = d;
+    const pct = lessonTotal > 0 ? lessonCompleted / lessonTotal : 0;
     const totalSessions = games.reduce((s, g) => s + g.sessions, 0);
     if (pct === 1) return t("dailyReview.motivComplete");
     if (pct === 0 && totalSessions === 0) return t("dailyReview.motivWelcome");
@@ -114,6 +116,9 @@ const DailyReviewModal = () => {
         }
       });
 
+      const lessonTotal = allLessons.length;
+      const lessonCompleted = allLessons.filter((l) => completedSet.has(l.id)).length;
+
       const buildGame = (key: string): { sessions: number; bestAcc: number | null } => {
         const rows = gameRows.filter((r) => r.game === key);
         if (rows.length === 0) return { sessions: 0, bestAcc: null };
@@ -140,6 +145,8 @@ const DailyReviewModal = () => {
         name,
         foundationCompleted: completedModules,
         foundationTotal: rawModules.length,
+        lessonCompleted,
+        lessonTotal,
         nextModuleTitle,
         totalXp,
         games,
@@ -173,8 +180,8 @@ const DailyReviewModal = () => {
   if (!visible) return null;
 
   const foundationPct = data
-    ? data.foundationTotal > 0
-      ? Math.round((data.foundationCompleted / data.foundationTotal) * 100)
+    ? data.lessonTotal > 0
+      ? Math.round((data.lessonCompleted / data.lessonTotal) * 100)
       : 0
     : 0;
 
