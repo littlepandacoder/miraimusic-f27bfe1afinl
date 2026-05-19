@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy } from "lucide-react";
+import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn } from "lucide-react";
 import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
 import ManageSlots from "./admin/ManageSlots";
@@ -29,6 +29,30 @@ interface StudentStat {
   totalFoundationLessons: number;
   gameSessions: number;
   gameStats: GameStat[];
+  lastSignIn: string | null;
+  totalSeconds: number;
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
+}
+
+function formatLastSeen(iso: string | null): string {
+  if (!iso) return "Never";
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 const GAME_LABELS: Record<string, string> = {
@@ -58,12 +82,18 @@ const StudentStatsTable = () => {
       const totalFoundationLessons = (allLessonsRes.data || []).length;
       const foundationLessonIds = new Set((allLessonsRes.data || []).map((l: any) => l.id));
 
-      const [profilesRes, lessonsRes, progressRes, gameRes] = await Promise.all([
+      const [profilesRes, lessonsRes, progressRes, gameRes, activityRes] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, email").in("user_id", studentIds),
         supabase.from("lessons").select("student_id, status").in("student_id", studentIds),
         (supabase as any).from("student_lesson_progress").select("student_id, lesson_id, completed").in("student_id", studentIds),
         (supabase as any).from("game_scores").select("user_id, game, correct, total, best_streak").in("user_id", studentIds),
+        (supabase as any).rpc("admin_get_student_activity", { p_user_ids: studentIds }),
       ]);
+
+      const activityMap = new Map<string, { lastSignIn: string | null; totalSeconds: number }>();
+      (activityRes.data || []).forEach((a: any) => {
+        activityMap.set(a.user_id, { lastSignIn: a.last_sign_in_at, totalSeconds: Number(a.total_seconds) || 0 });
+      });
 
       const statsMap = new Map<string, { total: number; completed: number }>();
       (lessonsRes.data || []).forEach((l: any) => {
@@ -98,6 +128,7 @@ const StudentStatsTable = () => {
       setStudents((profilesRes.data || []).map((p: any) => {
         const completedFoundationLessons = foundationMap.get(p.user_id) || 0;
         const gameStats = gameMap.get(p.user_id) || [];
+        const activity = activityMap.get(p.user_id) ?? { lastSignIn: null, totalSeconds: 0 };
         return {
           id: p.user_id,
           full_name: p.full_name || "—",
@@ -111,6 +142,8 @@ const StudentStatsTable = () => {
           totalFoundationLessons,
           gameSessions: gameStats.reduce((s, g) => s + g.sessions, 0),
           gameStats,
+          lastSignIn: activity.lastSignIn,
+          totalSeconds: activity.totalSeconds,
         };
       }));
       setLoading(false);
@@ -137,7 +170,7 @@ const StudentStatsTable = () => {
             className="grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
             onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-x-4 gap-y-1 items-center min-w-0">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-x-4 gap-y-1 items-center min-w-0">
               <div className="min-w-0">
                 <p className="font-semibold truncate">{s.full_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{s.email}</p>
@@ -154,8 +187,16 @@ const StudentStatsTable = () => {
                 <p className="font-bold">{s.completed_lessons}<span className="text-muted-foreground font-normal">/{s.total_lessons}</span></p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">Game Sessions</p>
+                <p className="text-xs text-muted-foreground">Games</p>
                 <p className="font-bold">{s.gameSessions}</p>
+              </div>
+              <div className="text-center hidden sm:block">
+                <p className="text-xs text-muted-foreground">Last Login</p>
+                <p className="text-xs font-semibold whitespace-nowrap">{formatLastSeen(s.lastSignIn)}</p>
+              </div>
+              <div className="text-center hidden sm:block">
+                <p className="text-xs text-muted-foreground">Time Spent</p>
+                <p className="text-xs font-semibold whitespace-nowrap">{s.totalSeconds > 0 ? formatDuration(s.totalSeconds) : "—"}</p>
               </div>
             </div>
             {expandedId === s.id
@@ -164,7 +205,7 @@ const StudentStatsTable = () => {
           </div>
 
           {expandedId === s.id && (
-            <div className="border-t border-border bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="border-t border-border bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
                   <BookOpen className="w-3 h-3" /> Foundation
@@ -182,6 +223,22 @@ const StudentStatsTable = () => {
                 </p>
                 <div className="flex justify-between text-sm"><span>Completed</span><Badge className="bg-green-500/20 text-green-400 border-green-500/30">{s.completed_lessons}</Badge></div>
                 <div className="flex justify-between text-sm"><span>Total booked</span><span className="font-bold">{s.total_lessons}</span></div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                  <LogIn className="w-3 h-3" /> Activity
+                </p>
+                <div className="flex justify-between text-sm">
+                  <span>Last login</span>
+                  <span className="font-bold">{formatLastSeen(s.lastSignIn)}</span>
+                </div>
+                {s.lastSignIn && (
+                  <p className="text-xs text-muted-foreground">{new Date(s.lastSignIn).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Time spent</span>
+                  <span className="font-bold">{s.totalSeconds > 0 ? formatDuration(s.totalSeconds) : "—"}</span>
+                </div>
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
