@@ -46,11 +46,13 @@ const StudentStatsTable = () => {
   useEffect(() => {
     const fetch = async () => {
       const [rolesRes, allLessonsRes] = await Promise.all([
-        supabase.from("user_roles").select("user_id").eq("role", "student"),
+        (supabase as any).rpc("admin_get_all_user_roles"),
         (supabase as any).from("foundation_lessons").select("id"),
       ]);
 
-      const studentIds: string[] = (rolesRes.data || []).map((r: any) => r.user_id);
+      const studentIds: string[] = (rolesRes.data || [])
+        .filter((r: any) => r.role === "student")
+        .map((r: any) => r.user_id);
       if (studentIds.length === 0) { setLoading(false); return; }
 
       const totalFoundationLessons = (allLessonsRes.data || []).length;
