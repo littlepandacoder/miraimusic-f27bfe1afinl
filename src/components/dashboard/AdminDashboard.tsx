@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, BookOpen, UserPlus, Gamepad2 } from "lucide-react";
+import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy } from "lucide-react";
 import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
 import ManageSlots from "./admin/ManageSlots";
@@ -13,6 +15,197 @@ import ManageCourses from "./admin/ManageCourses";
 import ManagePianoHero from "./admin/ManagePianoHero";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
+
+interface GameStat { game: string; sessions: number; bestAcc: number | null; bestStreak: number; }
+
+interface StudentStat {
+  id: string;
+  full_name: string;
+  email: string;
+  total_lessons: number;
+  completed_lessons: number;
+  foundationPct: number;
+  completedFoundationLessons: number;
+  totalFoundationLessons: number;
+  gameSessions: number;
+  gameStats: GameStat[];
+}
+
+const GAME_LABELS: Record<string, string> = {
+  piano_hero: "Piano Hero",
+  note_naming: "Note Naming",
+  rhythm_quiz: "Rhythm Quiz",
+  sight_reading: "Sight Reading",
+};
+
+const StudentStatsTable = () => {
+  const [students, setStudents] = useState<StudentStat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const [rolesRes, allLessonsRes] = await Promise.all([
+        supabase.from("user_roles").select("user_id").eq("role", "student"),
+        (supabase as any).from("foundation_lessons").select("id"),
+      ]);
+
+      const studentIds: string[] = (rolesRes.data || []).map((r: any) => r.user_id);
+      if (studentIds.length === 0) { setLoading(false); return; }
+
+      const totalFoundationLessons = (allLessonsRes.data || []).length;
+      const foundationLessonIds = new Set((allLessonsRes.data || []).map((l: any) => l.id));
+
+      const [profilesRes, lessonsRes, progressRes, gameRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name, email").in("user_id", studentIds),
+        supabase.from("lessons").select("student_id, status").in("student_id", studentIds),
+        (supabase as any).from("student_lesson_progress").select("student_id, lesson_id, completed").in("student_id", studentIds),
+        (supabase as any).from("game_scores").select("user_id, game, correct, total, best_streak").in("user_id", studentIds),
+      ]);
+
+      const statsMap = new Map<string, { total: number; completed: number }>();
+      (lessonsRes.data || []).forEach((l: any) => {
+        const s = statsMap.get(l.student_id) || { total: 0, completed: 0 };
+        s.total++;
+        if (l.status === "completed") s.completed++;
+        statsMap.set(l.student_id, s);
+      });
+
+      const foundationMap = new Map<string, number>();
+      (progressRes.data || []).forEach((p: any) => {
+        if (p.completed && foundationLessonIds.has(p.lesson_id)) {
+          foundationMap.set(p.student_id, (foundationMap.get(p.student_id) || 0) + 1);
+        }
+      });
+
+      const gameMap = new Map<string, GameStat[]>();
+      (gameRes.data || []).forEach((g: any) => {
+        const list = gameMap.get(g.user_id) || [];
+        const existing = list.find(x => x.game === g.game);
+        const acc = g.total > 0 ? Math.round((g.correct / g.total) * 100) : null;
+        if (existing) {
+          existing.sessions++;
+          if (acc !== null && (existing.bestAcc === null || acc > existing.bestAcc)) existing.bestAcc = acc;
+          if (g.best_streak > existing.bestStreak) existing.bestStreak = g.best_streak;
+        } else {
+          list.push({ game: g.game, sessions: 1, bestAcc: acc, bestStreak: g.best_streak || 0 });
+        }
+        gameMap.set(g.user_id, list);
+      });
+
+      setStudents((profilesRes.data || []).map((p: any) => {
+        const completedFoundationLessons = foundationMap.get(p.user_id) || 0;
+        const gameStats = gameMap.get(p.user_id) || [];
+        return {
+          id: p.user_id,
+          full_name: p.full_name || "—",
+          email: p.email || "—",
+          total_lessons: statsMap.get(p.user_id)?.total || 0,
+          completed_lessons: statsMap.get(p.user_id)?.completed || 0,
+          foundationPct: totalFoundationLessons > 0
+            ? Math.round((completedFoundationLessons / totalFoundationLessons) * 100)
+            : 0,
+          completedFoundationLessons,
+          totalFoundationLessons,
+          gameSessions: gameStats.reduce((s, g) => s + g.sessions, 0),
+          gameStats,
+        };
+      }));
+      setLoading(false);
+    };
+
+    fetch();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+      <Loader2 className="w-4 h-4 animate-spin" /> Loading students…
+    </div>
+  );
+
+  if (students.length === 0) return (
+    <p className="text-muted-foreground text-center py-8">No students registered yet.</p>
+  );
+
+  return (
+    <div className="space-y-2">
+      {students.map((s) => (
+        <div key={s.id} className="rounded-xl border border-border overflow-hidden">
+          <div
+            className="grid grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+            onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto] gap-x-4 gap-y-1 items-center min-w-0">
+              <div className="min-w-0">
+                <p className="font-semibold truncate">{s.full_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{s.email}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground mb-1">Foundation</p>
+                <div className="flex items-center gap-2">
+                  <Progress value={s.foundationPct} className="h-1.5 flex-1" />
+                  <span className="text-xs font-semibold whitespace-nowrap">{s.foundationPct}%</span>
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Lessons</p>
+                <p className="font-bold">{s.completed_lessons}<span className="text-muted-foreground font-normal">/{s.total_lessons}</span></p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">Game Sessions</p>
+                <p className="font-bold">{s.gameSessions}</p>
+              </div>
+            </div>
+            {expandedId === s.id
+              ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+              : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
+          </div>
+
+          {expandedId === s.id && (
+            <div className="border-t border-border bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" /> Foundation
+                </p>
+                <div className="flex justify-between text-sm">
+                  <span>Lessons completed</span>
+                  <span className="font-bold">{s.completedFoundationLessons} / {s.totalFoundationLessons}</span>
+                </div>
+                <Progress value={s.foundationPct} className="h-2" />
+                <p className="text-xs text-muted-foreground">{s.foundationPct}% of foundation curriculum</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                  <Trophy className="w-3 h-3" /> Lessons
+                </p>
+                <div className="flex justify-between text-sm"><span>Completed</span><Badge className="bg-green-500/20 text-green-400 border-green-500/30">{s.completed_lessons}</Badge></div>
+                <div className="flex justify-between text-sm"><span>Total booked</span><span className="font-bold">{s.total_lessons}</span></div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                  <Gamepad2 className="w-3 h-3" /> Games
+                </p>
+                {s.gameStats.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No game activity yet</p>
+                ) : (
+                  s.gameStats.map(g => (
+                    <div key={g.game} className="flex justify-between text-xs items-center">
+                      <span className="text-muted-foreground">{GAME_LABELS[g.game] || g.game}</span>
+                      <div className="flex gap-2 items-center">
+                        <span>{g.sessions} sessions</span>
+                        {g.bestAcc !== null && <Badge className="bg-primary/20 text-primary border-primary/30 text-xs py-0">{g.bestAcc}% best</Badge>}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const AdminHome = () => {
   const [stats, setStats] = useState({
@@ -112,6 +305,17 @@ const AdminHome = () => {
               <p className="text-sm text-muted-foreground">Set available times</p>
             </div>
           </a>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" /> Student Stats
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StudentStatsTable />
         </CardContent>
       </Card>
     </div>
