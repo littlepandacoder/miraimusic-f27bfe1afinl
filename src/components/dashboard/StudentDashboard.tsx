@@ -460,11 +460,14 @@ const StudentDashboard = () => {
       localStorage.removeItem("musicable_rank_trigger");
       try {
         const data = JSON.parse(raw);
-        if (Date.now() - data.ts < 60_000) {
+        if (Date.now() - data.ts < 120_000) {
           setRankTrigger({ type: data.type, id: data.id, label: data.label });
         }
       } catch {}
     };
+
+    // Check immediately on mount (catches return from full-page game navigation)
+    check();
 
     const onFocus = () => check();
     const onVisible = () => { if (document.visibilityState === "visible") check(); };
