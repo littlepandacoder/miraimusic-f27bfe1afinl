@@ -814,6 +814,8 @@ function saveGameScore(game, score, correct, total, bestStreak) {
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ user_id: userId, game: game, score: score, correct: correct, total: total, best_streak: bestStreak })
+    }).then(function() {
+      if (typeof showRankingPopup === 'function') showRankingPopup('note_naming', 'Note Naming');
     }).catch(function() {});
   } catch(e) {}
 }

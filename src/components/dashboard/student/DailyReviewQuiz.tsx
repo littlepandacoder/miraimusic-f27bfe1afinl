@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Trophy, ArrowRight, RotateCcw, Flame, Star, Zap } from "lucide-react";
+import RankingModal from "./RankingModal";
 
 // ─── Voice announcer (Web Speech API) ────────────────────────────────────────
 function say(text: string, pitch = 1.15, rate = 1.05) {
@@ -316,6 +317,7 @@ const DailyReviewQuiz = () => {
   const [answers,  setAnswers]  = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState(false);
   const [done,     setDone]     = useState(false);
+  const [showRank, setShowRank] = useState(false);
   const [score,    setScore]    = useState(0);
   const [streak,   setStreak]   = useState(0);
   const [maxStreak,setMaxStreak]= useState(0);
@@ -395,6 +397,7 @@ const DailyReviewQuiz = () => {
           total:       questions.length,
           best_streak: maxStreak,
         });
+        setShowRank(true);
       }
     }
   };
@@ -406,6 +409,7 @@ const DailyReviewQuiz = () => {
   if (done) {
     return (
       <div className="min-h-full flex items-center justify-center p-6 relative">
+        {showRank && <RankingModal type="game" id="daily_review" label="Daily Review Quiz" onClose={() => setShowRank(false)} />}
         {/* Confetti overlay */}
         <canvas
           ref={confettiCanvas}
