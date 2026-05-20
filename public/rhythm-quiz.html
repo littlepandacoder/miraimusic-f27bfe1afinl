@@ -1473,6 +1473,7 @@ async function saveScore() {
         best_streak: S.bestStreak,
       }),
     });
+    localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'rhythm_quiz', label: 'Rhythm Quiz', ts: Date.now() }));
   } catch(e) { console.warn('score save failed', e); }
 }
 

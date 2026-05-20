@@ -1285,6 +1285,8 @@ function saveGameScore(game, score, correct, total, bestStreak) {
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ user_id: userId, game: game, score: score, correct: correct, total: total, best_streak: bestStreak })
+    }).then(function() {
+      localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'sight_reading', label: 'Sight Reading', ts: Date.now() }));
     }).catch(function() {});
   } catch(e) {}
 }

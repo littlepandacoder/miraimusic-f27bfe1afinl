@@ -6630,6 +6630,8 @@ function endGame(completed) {
           'Prefer': 'return=minimal'
         },
         body: JSON.stringify({ user_id: userId, game: 'piano_hero', score: game.score, correct: game.hitNotes, total: game.totalNotes, best_streak: game.maxCombo })
+      }).then(function() {
+        localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'piano_hero', label: 'Piano Hero', ts: Date.now() }));
       }).catch(function() {});
     } catch(e) {}
   })();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,11 @@ interface SightReadingGate {
 const SESSIONS_REQUIRED = 10;
 const RHYTHM_PASS_ACCURACY = 70;
 
-const ModuleMap = () => {
+interface ModuleMapProps {
+  onModuleComplete?: (moduleId: string, moduleTitle: string) => void;
+}
+
+const ModuleMap = ({ onModuleComplete }: ModuleMapProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -42,6 +46,7 @@ const ModuleMap = () => {
   const [loading, setLoading] = useState(true);
   const [totalXP, setTotalXP] = useState(0);
   const [srGate, setSrGate] = useState<SightReadingGate>({ trebleTestPassed: false, bassTestPassed: false, totalSessions: 0, rhythmQuizPassed: false, rhythmBestAcc: 0 });
+  const prevCompletedIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
@@ -129,6 +134,15 @@ const ModuleMap = () => {
 
       setModules(mapped);
       setTotalXP(mapped.filter(m => m.status === "completed").reduce((s, m) => s + m.xp_reward, 0));
+
+      // Detect newly completed modules (not on first load)
+      if (onModuleComplete && prevCompletedIds.current.size > 0) {
+        mapped
+          .filter(m => m.status === "completed" && !prevCompletedIds.current.has(m.id))
+          .forEach(m => onModuleComplete(m.id, m.title));
+      }
+      prevCompletedIds.current = new Set(mapped.filter(m => m.status === "completed").map(m => m.id));
+
       setLoading(false);
     };
 

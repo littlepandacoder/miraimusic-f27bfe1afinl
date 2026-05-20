@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import DailyReviewModal from "./student/DailyReviewModal";
 import DailyReviewQuiz from "./student/DailyReviewQuiz";
+import RankingModal from "./student/RankingModal";
 import BookLesson from "./student/BookLesson";
 import ModuleMap from "./student/ModuleMap";
 import FoundationLessonPlan from "./student/FoundationLessonPlan";
@@ -446,21 +447,56 @@ const StudentHome = () => {
   );
 };
 
+interface RankTrigger { type: "game" | "module"; id: string; label: string; }
+
 const StudentDashboard = () => {
   const { t } = useTranslation();
+  const [rankTrigger, setRankTrigger] = useState<RankTrigger | null>(null);
+
+  useEffect(() => {
+    const check = () => {
+      const raw = localStorage.getItem("musicable_rank_trigger");
+      if (!raw) return;
+      localStorage.removeItem("musicable_rank_trigger");
+      try {
+        const data = JSON.parse(raw);
+        if (Date.now() - data.ts < 60_000) {
+          setRankTrigger({ type: data.type, id: data.id, label: data.label });
+        }
+      } catch {}
+    };
+
+    const onFocus = () => check();
+    const onVisible = () => { if (document.visibilityState === "visible") check(); };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
   return (
     <DashboardLayout title={t("dashboard.title")} role="student">
       <DailyReviewModal />
+      {rankTrigger && (
+        <RankingModal
+          type={rankTrigger.type}
+          id={rankTrigger.id}
+          label={rankTrigger.label}
+          onClose={() => setRankTrigger(null)}
+        />
+      )}
       <Routes>
         <Route index element={<StudentHome />} />
         <Route path="/" element={<StudentHome />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/book" element={<BookLesson />} />
-        <Route path="/foundation" element={<ModuleMap />} />
+        <Route path="/foundation" element={<ModuleMap onModuleComplete={(id, label) => setRankTrigger({ type: "module", id, label })} />} />
         <Route path="/foundation/lesson-plan/:moduleId" element={<FoundationLessonPlan />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
         <Route path="/review-quiz" element={<DailyReviewQuiz />} />
-
       </Routes>
     </DashboardLayout>
   );
