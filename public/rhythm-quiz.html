@@ -377,6 +377,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   animation:tr-pop-up .95s ease-out forwards;text-shadow:0 0 18px currentColor}
 @keyframes tr-pop-up{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-55px)}}
 </style>
+<script src="/ranking-popup.js"></script>
 </head>
 <body>
 
@@ -1473,7 +1474,7 @@ async function saveScore() {
         best_streak: S.bestStreak,
       }),
     });
-    localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'rhythm_quiz', label: 'Rhythm Quiz', ts: Date.now() }));
+    if (typeof showRankingPopup === 'function') showRankingPopup('rhythm_quiz', 'Rhythm Quiz');
   } catch(e) { console.warn('score save failed', e); }
 }
 
@@ -2054,6 +2055,7 @@ async function trSaveScore(acc) {
         best_streak: TR.maxStreak,
       }),
     });
+    if (typeof showRankingPopup === 'function') showRankingPopup('tap_rhythm', 'Tap Rhythm');
   } catch(_) {}
 }
 

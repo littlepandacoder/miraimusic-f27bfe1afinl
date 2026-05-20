@@ -1335,7 +1335,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   text-shadow:0 0 20px rgba(255,45,120,.4);
 }
 </style>
-<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><script src="https://www.googletagmanager.com/gtag/js?l=dataLayer&amp;id=G-VKTN926TCJ" async=""></script></head>
+<style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><script src="https://www.googletagmanager.com/gtag/js?l=dataLayer&amp;id=G-VKTN926TCJ" async=""></script><script src="/ranking-popup.js"></script></head>
 <body>
 <script>
 // Auth guard — redirect to /login if no active Supabase session
@@ -6631,7 +6631,7 @@ function endGame(completed) {
         },
         body: JSON.stringify({ user_id: userId, game: 'piano_hero', score: game.score, correct: game.hitNotes, total: game.totalNotes, best_streak: game.maxCombo })
       }).then(function() {
-        localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'piano_hero', label: 'Piano Hero', ts: Date.now() }));
+        if (typeof showRankingPopup === 'function') showRankingPopup('piano_hero', 'Piano Hero');
       }).catch(function() {});
     } catch(e) {}
   })();

@@ -199,6 +199,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 /* ── RESPONSIVE ── */
 @media(max-width:680px){.note-btns{grid-template-columns:repeat(4,1fr)}.settings-grid{grid-template-columns:1fr}nav{padding:0 1rem}}
 </style>
+<script src="/ranking-popup.js"></script>
 </head>
 <body>
 <script>
@@ -1286,7 +1287,7 @@ function saveGameScore(game, score, correct, total, bestStreak) {
       },
       body: JSON.stringify({ user_id: userId, game: game, score: score, correct: correct, total: total, best_streak: bestStreak })
     }).then(function() {
-      localStorage.setItem('musicable_rank_trigger', JSON.stringify({ type: 'game', id: 'sight_reading', label: 'Sight Reading', ts: Date.now() }));
+      if (typeof showRankingPopup === 'function') showRankingPopup('sight_reading', 'Sight Reading');
     }).catch(function() {});
   } catch(e) {}
 }
