@@ -48,19 +48,15 @@ function _clean(raw: string | undefined, varName?: string): string {
 
 // Client IDs
 const CLIENT_ID_SANDBOX =
-  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX, "VITE_PAYPAL_CLIENT_ID_SANDBOX") ||
-  "AfnMfp3KJ3SSN2jJUuaRmqwFw5y1zcEprZeaJMD9tpxsx8sops-apbq0cYyoRNjyJbyS3W8Gham915X8";
+  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_SANDBOX, "VITE_PAYPAL_CLIENT_ID_SANDBOX");
 const CLIENT_ID_LIVE =
-  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE, "VITE_PAYPAL_CLIENT_ID_LIVE") ||
-  "AZUMX5DxfcX4D8ehTfPRz939Ap79dAuOobQojsbeSv6LKTfkCcS_xoxLGHUv0SZum7OfOA1wKI6BGerr";
+  _clean(import.meta.env.VITE_PAYPAL_CLIENT_ID_LIVE, "VITE_PAYPAL_CLIENT_ID_LIVE");
 
 // Student plan IDs
 const PLAN_ID_SANDBOX =
-  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX, "VITE_PAYPAL_PLAN_ID_SANDBOX") ||
-  "P-4L07924847135773VNIAMVRA";
+  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_SANDBOX, "VITE_PAYPAL_PLAN_ID_SANDBOX");
 const PLAN_ID_LIVE =
-  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE, "VITE_PAYPAL_PLAN_ID_LIVE") ||
-  "P-204241322W266371XNIAXACQ";
+  _clean(import.meta.env.VITE_PAYPAL_PLAN_ID_LIVE, "VITE_PAYPAL_PLAN_ID_LIVE");
 
 // Teacher plan IDs ($20/month, 10 student seats — create at developer.paypal.com)
 const TEACHER_PLAN_ID_SANDBOX = _clean(import.meta.env.VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX, "VITE_PAYPAL_TEACHER_PLAN_ID_SANDBOX") || "";

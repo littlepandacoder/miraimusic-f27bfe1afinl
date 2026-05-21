@@ -1,21 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow anyone to create new signup documents (public signup flow)
-    match /signups/{doc=**} {
-      // Allow unauthenticated users to CREATE new signups
-      allow create: if request.auth == null;
-      
-      // Allow authenticated users to read/update their own data
-      allow read, update: if request.auth != null;
-      
-      // Allow anyone to read (for email uniqueness check)
+
+    match /signups/{docId} {
+      // Pre-auth signup creation — validate that only safe fields are written
+      allow create: if request.auth == null
+        && request.resource.data.keys().hasAny(['email'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 255;
+
+      // Email uniqueness check needed by the signup flow (limit 1 query)
       allow list: if request.query.limit <= 1;
+
+      // Authenticated user can only access their own signup document
+      allow read, update: if request.auth != null
+        && resource.data.email == request.auth.token.email;
+
+      allow delete: if false;
     }
 
-    // Optional: Users collection for authentication
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
