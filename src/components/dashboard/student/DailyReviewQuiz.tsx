@@ -389,14 +389,16 @@ const DailyReviewQuiz = () => {
     } else {
       setDone(true);
       if (user) {
-        await (supabase as any).from("game_scores").insert({
-          user_id:     user.id,
-          game:        "daily_review",
-          score,
-          correct,
-          total:       questions.length,
-          best_streak: maxStreak,
-        });
+        try {
+          await (supabase as any).from("game_scores").insert({
+            user_id:     user.id,
+            game:        "daily_review",
+            score,
+            correct,
+            total:       questions.length,
+            best_streak: maxStreak,
+          });
+        } catch (_) {}
         const analysisText = (() => {
           let t = "";
           if (pct >= 95) t = `Outstanding — ${correct}/${questions.length} correct (${pct}%). Grade S mastery of all reviewed topics.`;
@@ -409,14 +411,14 @@ const DailyReviewQuiz = () => {
           else if (maxStreak >= 3) t += ` Good streak of ${maxStreak} — aim to extend it next time.`;
           return t;
         })();
-        await (supabase as any).from("student_session_analyses").insert({
+        (supabase as any).from("student_session_analyses").insert({
           user_id: user.id,
           game: "daily_review",
           analysis_text: analysisText,
           accuracy: pct,
           score,
           session_data: { correct, total: questions.length, grade, best_streak: maxStreak },
-        });
+        }).catch(() => {});
         setShowRank(true);
       }
     }
