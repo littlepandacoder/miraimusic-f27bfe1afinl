@@ -33,7 +33,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
 
-  const [teacherNote, setTeacherNote] = useState<{ note_text: string; teacher_name: string } | null>(null);
+  const [teacherNote, setTeacherNote] = useState<{ note_text: string; teacher_name: string; updated_at: string } | null>(null);
   const [noteExpanded, setNoteExpanded] = useState(false);
 
   useEffect(() => {
@@ -41,13 +41,13 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     const fetch = async () => {
       const { data } = await (supabase as any)
         .from("teacher_notes")
-        .select("note_text, teacher_id")
+        .select("note_text, teacher_id, updated_at")
         .eq("student_id", user.id)
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
       if (data?.note_text?.trim()) {
-        setTeacherNote({ note_text: data.note_text, teacher_name: "Your Teacher" });
+        setTeacherNote({ note_text: data.note_text, teacher_name: "Your Teacher", updated_at: data.updated_at });
       }
     };
     fetch();
@@ -203,9 +203,16 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                 <span className="ml-auto text-xs text-muted-foreground">{noteExpanded ? "▲" : "▼"}</span>
               </div>
               {noteExpanded && (
-                <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
-                  {teacherNote.note_text}
-                </p>
+                <>
+                  <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
+                    {teacherNote.note_text}
+                  </p>
+                  {teacherNote.updated_at && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(teacherNote.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  )}
+                </>
               )}
               {!noteExpanded && (
                 <p className="text-xs text-muted-foreground truncate">{teacherNote.note_text}</p>
@@ -323,9 +330,16 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                 <span className="ml-auto text-xs text-muted-foreground">{noteExpanded ? "▲" : "▼"}</span>
               </div>
               {noteExpanded && (
-                <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
-                  {teacherNote.note_text}
-                </p>
+                <>
+                  <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
+                    {teacherNote.note_text}
+                  </p>
+                  {teacherNote.updated_at && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(teacherNote.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  )}
+                </>
               )}
               {!noteExpanded && (
                 <p className="text-xs text-muted-foreground truncate">{teacherNote.note_text}</p>

@@ -57,6 +57,7 @@ const MyStudents = () => {
   const [buyError, setBuyError]   = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [noteDates, setNoteDates] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<string | null>(null);
   const [reportStudent, setReportStudent] = useState<{ id: string; name: string } | null>(null);
   const paypalRendered = useRef(false);
@@ -156,11 +157,16 @@ const MyStudents = () => {
     const fetchNotes = async () => {
       const { data } = await (supabase as any)
         .from("teacher_notes")
-        .select("student_id, note_text")
+        .select("student_id, note_text, updated_at")
         .eq("teacher_id", user.id);
-      const map: Record<string, string> = {};
-      (data || []).forEach((n: any) => { map[n.student_id] = n.note_text; });
-      setNotes(map);
+      const textMap: Record<string, string> = {};
+      const dateMap: Record<string, string> = {};
+      (data || []).forEach((n: any) => {
+        textMap[n.student_id] = n.note_text;
+        dateMap[n.student_id] = n.updated_at;
+      });
+      setNotes(textMap);
+      setNoteDates(dateMap);
     };
     fetchNotes();
   }, [user, students]);
@@ -173,8 +179,10 @@ const MyStudents = () => {
       { teacher_id: user.id, student_id: studentId, note_text: text, updated_at: new Date().toISOString() },
       { onConflict: "teacher_id,student_id" }
     );
+    const savedAt = new Date().toISOString();
     setSavingNote(null);
     setNotes(prev => ({ ...prev, [studentId]: "" }));
+    setNoteDates(prev => ({ ...prev, [studentId]: savedAt }));
     toast({ title: "Note saved", description: "Student can now see this note in their dashboard." });
   };
 
@@ -478,6 +486,11 @@ const MyStudents = () => {
                       >
                         {savingNote === s.id ? "Saving…" : "Save Note"}
                       </Button>
+                      {noteDates[s.id] && (
+                        <p className="text-xs text-muted-foreground mt-1.5 text-center">
+                          Last saved: {new Date(noteDates[s.id]).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      )}
                     </div>
                     </>
                   )}
