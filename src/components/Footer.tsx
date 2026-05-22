@@ -29,11 +29,12 @@ const Footer = () => {
             <h4 className="font-bold text-foreground mb-4">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-muted-foreground text-sm">
-                <Mail className="w-4 h-4 text-primary" />
+                <Mail className="w-4 h-4 text-primary shrink-0" />
                 musicableapp@proton.me
               </li>
-              <li className="flex items-center gap-3 text-muted-foreground text-sm">​<Phone className="w-4 h-4 text-primary" />
-                +971562102658​
+              <li className="flex items-center gap-3 text-muted-foreground text-sm">
+                <Phone className="w-4 h-4 text-primary shrink-0" />
+                +971562102658
               </li>
               <li className="flex items-start gap-3 text-muted-foreground text-sm">
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
