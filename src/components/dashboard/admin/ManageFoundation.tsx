@@ -85,6 +85,7 @@ interface SortableLessonProps {
   index: number;
   moduleId: string;
   quizCount: number;
+  readOnly?: boolean;
   onTogglePublish: (moduleId: string, lesson: Lesson) => void;
   onEdit: () => void;
   onPreview: () => void;
@@ -92,7 +93,7 @@ interface SortableLessonProps {
   onManageQuiz: () => void;
 }
 
-const SortableLesson = ({ lesson, index, moduleId, quizCount, onTogglePublish, onEdit, onPreview, onDelete, onManageQuiz }: SortableLessonProps) => {
+const SortableLesson = ({ lesson, index, moduleId, quizCount, readOnly, onTogglePublish, onEdit, onPreview, onDelete, onManageQuiz }: SortableLessonProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lesson.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -107,14 +108,16 @@ const SortableLesson = ({ lesson, index, moduleId, quizCount, onTogglePublish, o
     >
       <div className="flex items-center gap-3">
         {/* Drag handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground touch-none"
-          title="Drag to reorder"
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
+        {!readOnly && (
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground touch-none"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
         <span className="text-sm font-bold text-muted-foreground w-5 text-center">
           {index + 1}
         </span>
@@ -133,44 +136,52 @@ const SortableLesson = ({ lesson, index, moduleId, quizCount, onTogglePublish, o
         </div>
       </div>
       <div className="flex gap-2">
-        <Button size="sm" variant={lesson.status === "published" ? "outline" : "default"} onClick={() => onTogglePublish(moduleId, lesson)}>
-          {lesson.status === "published" ? "Unpublish" : "Publish"}
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onEdit}>
-          <Edit className="w-4 h-4" />
-        </Button>
+        {!readOnly && (
+          <Button size="sm" variant={lesson.status === "published" ? "outline" : "default"} onClick={() => onTogglePublish(moduleId, lesson)}>
+            {lesson.status === "published" ? "Unpublish" : "Publish"}
+          </Button>
+        )}
+        {!readOnly && (
+          <Button size="sm" variant="ghost" onClick={onEdit}>
+            <Edit className="w-4 h-4" />
+          </Button>
+        )}
         <Button size="sm" variant="outline" onClick={onPreview}>
           Preview
         </Button>
-        <Button size="sm" variant="outline" className="gap-1.5" onClick={onManageQuiz}>
-          <HelpCircle className="w-4 h-4 text-primary" />
-          Quiz{quizCount > 0 ? ` (${quizCount})` : ""}
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button size="sm" variant="ghost" className="text-destructive">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Lesson?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will delete "{lesson.title}". This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {!readOnly && (
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={onManageQuiz}>
+            <HelpCircle className="w-4 h-4 text-primary" />
+            Quiz{quizCount > 0 ? ` (${quizCount})` : ""}
+          </Button>
+        )}
+        {!readOnly && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Lesson?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete "{lesson.title}". This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   );
 };
 
-const ManageFoundation = () => {
+const ManageFoundation = ({ readOnly = false }: { readOnly?: boolean }) => {
   const navigate = useNavigate();
   const { user, roles } = useAuth();
   const [modules, setModules] = useState<Module[]>([]);
@@ -670,10 +681,16 @@ const ManageFoundation = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Manage Foundation Modules</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-3xl font-bold">Foundation Modules</h2>
+          {readOnly && (
+            <Badge variant="outline" className="text-xs text-muted-foreground">View Only</Badge>
+          )}
+        </div>
+        {!readOnly && (
         <Dialog open={isModuleDialogOpen} onOpenChange={setIsModuleDialogOpen}>
           <DialogTrigger asChild>
-            <Button 
+            <Button
               className="gap-2"
               onClick={() => {
                 setEditingModule(null);
@@ -731,6 +748,7 @@ const ManageFoundation = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Modules List */}
@@ -748,6 +766,7 @@ const ManageFoundation = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
                   {/* Module drag handle */}
+                  {!readOnly && (
                   <div
                     {...dragHandleProps}
                     onClick={(e) => e.stopPropagation()}
@@ -756,6 +775,7 @@ const ManageFoundation = () => {
                   >
                     <GripVertical className="w-5 h-5" />
                   </div>
+                  )}
                   <button className="p-0 hover:bg-muted rounded">
                     {expandedModuleId === module.id ? (
                       <ChevronUp className="w-6 h-6" />
@@ -786,6 +806,7 @@ const ManageFoundation = () => {
                   </div>
                 </div>
 
+                {!readOnly && (
                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     size="sm"
@@ -816,6 +837,7 @@ const ManageFoundation = () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
+                )}
               </div>
             </CardHeader>
 
@@ -824,17 +846,18 @@ const ManageFoundation = () => {
               <CardContent className="border-t">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-semibold">Lessons</h3>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      // Open lesson editor for creating a new lesson
-                      navigate(`/dashboard/foundation/lesson-editor/${module.id}/new`);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add Lesson
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigate(`/dashboard/foundation/lesson-editor/${module.id}/new`);
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Lesson
+                    </Button>
+                  )}
                 </div>
 
                 {module.lessons.length === 0 ? (
@@ -859,6 +882,7 @@ const ManageFoundation = () => {
                             index={index}
                             moduleId={module.id}
                             quizCount={quizCounts[lesson.id] || 0}
+                            readOnly={readOnly}
                             onTogglePublish={handleTogglePublish}
                             onEdit={() => openEditLesson(module, lesson)}
                             onPreview={() => navigate(`/dashboard/foundation/lesson-viewer/${module.id}/${lesson.id}?preview=1`)}

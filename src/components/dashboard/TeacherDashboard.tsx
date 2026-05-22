@@ -135,7 +135,7 @@ const TeacherDashboard = () => {
         <Route path="/lesson-plans" element={<LessonPlans />} />
         <Route path="/schedule" element={<TeacherSchedule />} />
         <Route path="/slots" element={<TeacherSlots />} />
-        <Route path="/foundation" element={<ManageFoundation />} />
+        <Route path="/foundation" element={<ManageFoundation readOnly />} />
 
         <Route path="/foundation/lesson-editor/:moduleId/:lessonId" element={<LessonEditor />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
