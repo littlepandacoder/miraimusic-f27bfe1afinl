@@ -322,6 +322,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear session-tracking keys so the next login always creates a new user_sessions row
+    sessionStorage.removeItem("musicable_sess_id");
+    sessionStorage.removeItem("musicable_sess_start");
+    sessionStorage.removeItem("musicable_sess_user");
     clearRolesCache();
     await supabase.auth.signOut();
     clearSupabaseStorage();

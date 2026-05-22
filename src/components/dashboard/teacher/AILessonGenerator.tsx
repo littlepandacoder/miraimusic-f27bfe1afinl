@@ -86,8 +86,8 @@ const AILessonGenerator = () => {
     } catch (e) {
       // continue to fallback
     }
-    // fallback: strip <script> tags and on* attributes as a minimal defense
-    return html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "").replace(/on\w+=\"[^\"]*\"/gi, "");
+    // fallback: DOMPurify unavailable — strip all HTML tags to be safe
+    return html.replace(/<[^>]*>/g, "");
   };
 
   return (

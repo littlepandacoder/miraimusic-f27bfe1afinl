@@ -307,7 +307,7 @@ const ModuleMap = ({ onModuleComplete }: ModuleMapProps) => {
                         value={module.status === "completed"
                           ? 100
                           : module.totalLessons > 0
-                            ? Math.round((module.completedLessons / module.totalLessons) * 100 * 0.9)
+                            ? Math.min(Math.round((module.completedLessons / module.totalLessons) * 100), 99)
                             : 0}
                         className="h-2"
                       />

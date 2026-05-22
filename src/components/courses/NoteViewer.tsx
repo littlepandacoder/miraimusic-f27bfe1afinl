@@ -6,6 +6,12 @@ interface NoteViewerProps {
   };
 }
 
+// Escape HTML special characters before injecting into innerHTML to prevent XSS.
+// Applied before the markdown regex so user content cannot introduce arbitrary tags.
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+   .replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+
 const NoteViewer = ({ note }: NoteViewerProps) => {
   // Simple markdown-like formatting for notes
   const renderContent = (text: string) => {
@@ -56,7 +62,7 @@ const NoteViewer = ({ note }: NoteViewerProps) => {
       }
       // Paragraphs
       else if (line.trim()) {
-        let content = line
+        let content = escapeHtml(line)
           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
           .replace(/\*(.*?)\*/g, "<em>$1</em>")
           .replace(/`(.*?)`/g, "<code>$1</code>");

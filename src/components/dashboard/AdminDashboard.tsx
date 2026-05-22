@@ -4,8 +4,10 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn } from "lucide-react";
+import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn, FileDown } from "lucide-react";
+import { exportAllStudentsReport, exportSingleStudentReport, type AdminStudentRow } from "@/lib/exportReport";
 import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
 import ManageSlots from "./admin/ManageSlots";
@@ -66,6 +68,20 @@ const StudentStatsTable = () => {
   const [students, setStudents] = useState<StudentStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [exportingAll, setExportingAll] = useState(false);
+  const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const handleExportAll = async () => {
+    setExportingAll(true);
+    try { await exportAllStudentsReport(students as AdminStudentRow[], supabase); }
+    finally { setExportingAll(false); }
+  };
+
+  const handleExportStudent = async (s: StudentStat) => {
+    setExportingId(s.id);
+    try { await exportSingleStudentReport(s as AdminStudentRow, supabase); }
+    finally { setExportingId(null); }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -164,6 +180,19 @@ const StudentStatsTable = () => {
 
   return (
     <div className="space-y-2">
+      <div className="flex justify-end pb-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportAll}
+          disabled={exportingAll}
+          className="flex items-center gap-2 border-border"
+        >
+          {exportingAll
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
+            : <><FileDown className="w-4 h-4" /> Export All Students</>}
+        </Button>
+      </div>
       {students.map((s) => (
         <div key={s.id} className="rounded-xl border border-border overflow-hidden">
           <div
@@ -257,6 +286,17 @@ const StudentStatsTable = () => {
                     </div>
                   ))
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); handleExportStudent(s); }}
+                  disabled={exportingId === s.id}
+                  className="w-full mt-2 flex items-center gap-2 border-border text-xs h-7"
+                >
+                  {exportingId === s.id
+                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>
+                    : <><FileDown className="w-3 h-3" /> Download Student Report</>}
+                </Button>
               </div>
             </div>
           )}

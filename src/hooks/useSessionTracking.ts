@@ -9,6 +9,7 @@ const SUPABASE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | 
 
 const SESSION_ID_KEY    = "musicable_sess_id";
 const SESSION_START_KEY = "musicable_sess_start";
+const SESSION_USER_KEY  = "musicable_sess_user";
 const HEARTBEAT_MS      = 60_000; // update DB every 60 s
 
 /**
@@ -32,14 +33,21 @@ export function useSessionTracking(user: User | null) {
       if (!session?.access_token || !mounted) return;
       accessTokenRef.current = session.access_token;
 
-      // Reuse existing tab-session if the page was refreshed
+      // Reuse existing tab-session only if it belongs to this user (handles page refresh).
+      // A different user ID or missing entry means a fresh login — create a new row.
       const existingId    = sessionStorage.getItem(SESSION_ID_KEY);
       const existingStart = sessionStorage.getItem(SESSION_START_KEY);
-      if (existingId && existingStart) {
+      const existingUser  = sessionStorage.getItem(SESSION_USER_KEY);
+      if (existingId && existingStart && existingUser === user.id) {
         sessionIdRef.current = existingId;
         startTimeRef.current = parseInt(existingStart, 10);
         return;
       }
+
+      // Clear any stale/cross-user session before creating a new one
+      sessionStorage.removeItem(SESSION_ID_KEY);
+      sessionStorage.removeItem(SESSION_START_KEY);
+      sessionStorage.removeItem(SESSION_USER_KEY);
 
       // New login — insert a session row
       startTimeRef.current = Date.now();
@@ -53,6 +61,7 @@ export function useSessionTracking(user: User | null) {
         sessionIdRef.current = data.id;
         sessionStorage.setItem(SESSION_ID_KEY,    data.id);
         sessionStorage.setItem(SESSION_START_KEY, startTimeRef.current.toString());
+        sessionStorage.setItem(SESSION_USER_KEY,  user.id);
       }
     };
 
