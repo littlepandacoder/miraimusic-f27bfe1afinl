@@ -391,6 +391,7 @@ const MyStudents = () => {
 
                   {/* Expanded stats */}
                   {expandedId === s.id && (
+                    <>
                     <div className="border-t border-border bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                       {/* Foundation */}
                       <div className="space-y-2">
@@ -464,6 +465,7 @@ const MyStudents = () => {
                         {savingNote === s.id ? "Saving…" : "Save Note"}
                       </Button>
                     </div>
+                    </>
                   )}
                 </div>
               ))}
