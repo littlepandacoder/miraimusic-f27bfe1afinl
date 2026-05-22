@@ -90,7 +90,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         { href: "/dashboard/slots",      icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
         { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
-        { href: "/dashboard/districts",  icon: Settings,      label: t("dashboard.nav.districts") },
+        { href: "/dashboard/districts",  icon: Settings,      label: "Assignments" },
         ...gameItems,
       ];
     }

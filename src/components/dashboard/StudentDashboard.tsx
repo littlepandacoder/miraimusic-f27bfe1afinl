@@ -219,7 +219,7 @@ const StudentHome = () => {
         <Button
           size="sm"
           onClick={() => setShowReport(true)}
-          className="flex items-center gap-2 bg-yellow-400 hover:bg-pink-500 text-white border-0 transition-colors"
+          className="flex items-center gap-2 bg-pink-500 hover:bg-pink-400 text-white border-0 transition-colors"
         >
           My Report
         </Button>

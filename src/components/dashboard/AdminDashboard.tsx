@@ -15,6 +15,7 @@ import ManageFoundation from "./admin/ManageFoundation";
 
 import ManageCourses from "./admin/ManageCourses";
 import ManagePianoHero from "./admin/ManagePianoHero";
+import ManageAssignments from "./admin/ManageAssignments";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
 
@@ -432,6 +433,7 @@ const AdminDashboard = () => {
 
         <Route path="/courses" element={<ManageCourses />} />
         <Route path="/piano-hero" element={<ManagePianoHero />} />
+        <Route path="/districts" element={<ManageAssignments />} />
         <Route path="/foundation/lesson-editor/:moduleId/:lessonId" element={<LessonEditor />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
       </Routes>
