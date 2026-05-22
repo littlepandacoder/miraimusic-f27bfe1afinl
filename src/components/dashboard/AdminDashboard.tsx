@@ -182,11 +182,10 @@ const StudentStatsTable = () => {
     <div className="space-y-2">
       <div className="flex justify-end pb-1">
         <Button
-          variant="outline"
           size="sm"
           onClick={handleExportAll}
           disabled={exportingAll}
-          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-yellow-400"
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0"
         >
           {exportingAll
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
@@ -287,11 +286,10 @@ const StudentStatsTable = () => {
                   ))
                 )}
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); handleExportStudent(s); }}
                   disabled={exportingId === s.id}
-                  className="w-full mt-2 flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-yellow-400 text-xs h-7"
+                  className="w-full mt-2 flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0 text-xs h-7"
                 >
                   {exportingId === s.id
                     ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>

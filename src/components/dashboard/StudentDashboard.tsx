@@ -228,11 +228,10 @@ const StudentHome = () => {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button
-          variant="outline"
           size="sm"
           onClick={handleExportReport}
           disabled={exportingReport}
-          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-yellow-400"
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0"
         >
           {exportingReport
             ? <><SpinnerIcon className="w-4 h-4 animate-spin" /> Generating…</>
