@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Users, ShoppingCart, Minus, Plus, ChevronDown, ChevronUp, Trophy, Gamepad2, BookOpen } from "lucide-react";
+import { UserPlus, Loader2, Users, ShoppingCart, Minus, Plus, ChevronDown, ChevronUp, Trophy, Gamepad2, BookOpen, BarChart2 } from "lucide-react";
 import { PAYPAL_ORDERS_SDK_URL, IS_SANDBOX } from "@/lib/paypal";
+import StudentReportModal from "../student/StudentReportModal";
 
 interface GameStat { game: string; sessions: number; bestAcc: number | null; bestStreak: number; }
 
@@ -57,6 +58,7 @@ const MyStudents = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<string | null>(null);
+  const [reportStudent, setReportStudent] = useState<{ id: string; name: string } | null>(null);
   const paypalRendered = useRef(false);
   const { toast } = useToast();
 
@@ -172,6 +174,7 @@ const MyStudents = () => {
       { onConflict: "teacher_id,student_id" }
     );
     setSavingNote(null);
+    setNotes(prev => ({ ...prev, [studentId]: "" }));
     toast({ title: "Note saved", description: "Student can now see this note in their dashboard." });
   };
 
@@ -392,7 +395,18 @@ const MyStudents = () => {
                   {/* Expanded stats */}
                   {expandedId === s.id && (
                     <>
-                    <div className="border-t border-border bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="border-t border-border bg-black/20 px-4 pt-3 pb-1 flex justify-end">
+                      <Button
+                        size="sm"
+                        className="gap-1.5 text-xs h-7 text-white border-0"
+                        style={{ background: "linear-gradient(135deg,#FF2D78,#A855F7)" }}
+                        onClick={() => setReportStudent({ id: s.id, name: s.full_name })}
+                      >
+                        <BarChart2 className="w-3.5 h-3.5" />
+                        View Full Report
+                      </Button>
+                    </div>
+                    <div className="bg-black/20 px-4 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                       {/* Foundation */}
                       <div className="space-y-2">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
@@ -473,6 +487,14 @@ const MyStudents = () => {
           )}
         </CardContent>
       </Card>
+
+      {reportStudent && (
+        <StudentReportModal
+          userId={reportStudent.id}
+          userName={reportStudent.name}
+          onClose={() => setReportStudent(null)}
+        />
+      )}
     </div>
   );
 };
