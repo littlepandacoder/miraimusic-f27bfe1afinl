@@ -12,7 +12,7 @@
   --purple:#A855F7;--red:#EF4444;--off-white:#E8ECF0;--muted:#6B7280;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;min-height:100%;background:var(--bg)}
+html,body{width:100%;min-height:100%;background:var(--bg);overflow-y:auto}
 body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 
 /* NAV */
@@ -1548,7 +1548,7 @@ TR = trReset();
 // ── Note SVG for cell (small, inline) ─────────────────────────
 // type: 'e'=quaver, 'q'=crotchet, 'h'=minim, 'dq'=dotted crotchet, 'r'=rest
 function trNoteSvg(type, hit=false) {
-  const col = hit ? '#39D98A' : (type === 'r' ? 'rgba(255,255,255,.22)' : '#FF2D78');
+  const col = hit ? '#39D98A' : (type === 'r' ? '#ffffff' : '#FF2D78');
   if (type === 'r') {
     return `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
       <path d="M13 5 Q18 10 10 15 Q18 19 9 23 Q15 25 13 30" stroke="${col}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
@@ -1871,6 +1871,7 @@ function trEndSession() {
   document.querySelector('#gameover .btn-primary').onclick = () => startTapGame(TR.diff);
   document.querySelector('#gameover .btn-ghost').onclick = goMenu;
   showScreen('gameover');
+  trSaveScore(Math.round(TR.cleared / Math.max(1, TR.idx + 1) * 100));
 }
 
 // ── Tap handler ────────────────────────────────────────────────
@@ -1965,7 +1966,6 @@ function trShowResult(acc, passed, hits, req) {
   }
 
   el.style.display = '';
-  trSaveScore(acc);
 }
 
 function trNext() {
@@ -1993,6 +1993,7 @@ function trGameOver() {
   document.querySelector('#gameover .btn-primary').onclick = () => startTapGame(TR.diff);
   document.querySelector('#gameover .btn-ghost').onclick = goMenu;
   showScreen('gameover');
+  trSaveScore(Math.round(TR.cleared / TR_PATTERNS[TR.diff].length * 100));
 }
 
 function trGameClear() {
