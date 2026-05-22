@@ -25,11 +25,26 @@ try {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Use Web Locks API when available so Supabase never hits the 5000ms
+// fallback-lock timeout warning. Falls back to immediate execution when
+// Web Locks isn't supported (rare, non-Chromium mobile browsers).
+const authLock = (
+  name: string,
+  _acquireTimeout: number,
+  fn: () => Promise<unknown>,
+): Promise<unknown> => {
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    return navigator.locks.request(name, fn as () => Promise<void>);
+  }
+  return fn();
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    lock: authLock,
   }
 });
 
