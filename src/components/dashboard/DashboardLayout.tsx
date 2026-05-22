@@ -1,8 +1,9 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LogOut,
   Home,
@@ -16,6 +17,7 @@ import {
   Music,
   Menu,
   X,
+  MessageSquare,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -30,6 +32,26 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
+
+  const [teacherNote, setTeacherNote] = useState<{ note_text: string; teacher_name: string } | null>(null);
+  const [noteExpanded, setNoteExpanded] = useState(false);
+
+  useEffect(() => {
+    if (role !== "student" || !user) return;
+    const fetch = async () => {
+      const { data } = await (supabase as any)
+        .from("teacher_notes")
+        .select("note_text, teacher_id")
+        .eq("student_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.note_text?.trim()) {
+        setTeacherNote({ note_text: data.note_text, teacher_name: "Your Teacher" });
+      }
+    };
+    fetch();
+  }, [role, user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -159,6 +181,39 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           )}
         </nav>
 
+        {role === "student" && teacherNote && (
+          <div className="px-3 pb-3">
+            <button
+              onClick={() => setNoteExpanded(e => !e)}
+              className="w-full rounded-xl p-3 text-left transition-all"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,45,120,0.12), rgba(168,85,247,0.12))",
+                border: "1px solid rgba(255,45,120,0.3)",
+                boxShadow: "0 0 16px rgba(255,45,120,0.15)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <MessageSquare className="w-3.5 h-3.5 shrink-0" style={{ color: "#FF2D78" }} />
+                <span
+                  className="text-xs font-black uppercase tracking-widest"
+                  style={{ fontFamily: "'DM Mono',monospace", color: "#FF2D78" }}
+                >
+                  Teacher's Note
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">{noteExpanded ? "▲" : "▼"}</span>
+              </div>
+              {noteExpanded && (
+                <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
+                  {teacherNote.note_text}
+                </p>
+              )}
+              {!noteExpanded && (
+                <p className="text-xs text-muted-foreground truncate">{teacherNote.note_text}</p>
+              )}
+            </button>
+          </div>
+        )}
+
         <div className="p-4 border-t border-border shrink-0">
           <div className="flex items-center gap-3 px-4 py-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
@@ -245,6 +300,39 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
             </div>
           )}
         </nav>
+
+        {role === "student" && teacherNote && (
+          <div className="px-3 pb-3">
+            <button
+              onClick={() => setNoteExpanded(e => !e)}
+              className="w-full rounded-xl p-3 text-left transition-all"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,45,120,0.12), rgba(168,85,247,0.12))",
+                border: "1px solid rgba(255,45,120,0.3)",
+                boxShadow: "0 0 16px rgba(255,45,120,0.15)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <MessageSquare className="w-3.5 h-3.5 shrink-0" style={{ color: "#FF2D78" }} />
+                <span
+                  className="text-xs font-black uppercase tracking-widest"
+                  style={{ fontFamily: "'DM Mono',monospace", color: "#FF2D78" }}
+                >
+                  Teacher's Note
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">{noteExpanded ? "▲" : "▼"}</span>
+              </div>
+              {noteExpanded && (
+                <p className="text-xs text-gray-300 leading-relaxed mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,45,120,0.2)" }}>
+                  {teacherNote.note_text}
+                </p>
+              )}
+              {!noteExpanded && (
+                <p className="text-xs text-muted-foreground truncate">{teacherNote.note_text}</p>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Drawer footer */}
         <div className="p-4 border-t border-border shrink-0">

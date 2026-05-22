@@ -122,7 +122,7 @@ export async function exportStudentReport(
   supabase: SupabaseClient
 ): Promise<void> {
   // Fetch raw data
-  const [scoresRes, quizRes, sessionsRes] = await Promise.all([
+  const [scoresRes, quizRes, sessionsRes, analysesRes] = await Promise.all([
     (supabase as any).from("game_scores")
       .select("game, score, correct, total, best_streak, created_at")
       .eq("user_id", userId)
@@ -135,11 +135,16 @@ export async function exportStudentReport(
       .select("started_at, ended_at, duration_seconds")
       .eq("user_id", userId)
       .order("started_at", { ascending: false }),
+    (supabase as any).from("student_session_analyses")
+      .select("game, analysis_text, accuracy, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }),
   ]);
 
   const scores: any[]   = scoresRes.data   || [];
   const quizzes: any[]  = quizRes.data      || [];
   const sessions: any[] = sessionsRes.data  || [];
+  const analyses: any[] = analysesRes.data  || [];
 
   // Fetch module names for quiz rows
   const moduleIds = [...new Set(quizzes.map((q: any) => q.module_id).filter(Boolean))];
@@ -339,6 +344,19 @@ export async function exportStudentReport(
     wb,
     XLSX.utils.json_to_sheet(activityRows.length ? activityRows : [{ Note: "No session data yet" }]),
     "Session Activity"
+  );
+
+  // ── Sheet 8: Session Notes (AI/rule-based per-session analyses) ─────────────
+  const notesRows = analyses.map((a: any) => ({
+    "Date / Time": fmtDate(a.created_at),
+    "Game":        GAME_LABELS[a.game] || a.game,
+    "Accuracy":    a.accuracy !== null ? `${a.accuracy}%` : "—",
+    "Session Note": a.analysis_text,
+  }));
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.json_to_sheet(notesRows.length ? notesRows : [{ Note: "No session analyses yet — complete a game to generate notes" }]),
+    "Session Notes"
   );
 
   const safeName = userName.replace(/[^a-z0-9]/gi, "_");

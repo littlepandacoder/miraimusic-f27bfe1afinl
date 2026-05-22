@@ -1768,6 +1768,32 @@ Be specific, warm, and practical. No bullet points.`;
     btn.innerHTML  = '✦ Re-analyse';
     btn.disabled   = false;
 
+    // Save AI analysis to DB
+    (function() {
+      try {
+        var _k = Object.keys(localStorage).find(function(kk) { return /^sb-.*-auth-token$/.test(kk); });
+        if (!_k) return;
+        var _sess = JSON.parse(localStorage.getItem(_k) || '{}');
+        var _tok = _sess.access_token; if (!_tok) return;
+        var _pay = JSON.parse(atob(_tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+        var _uid = _pay.sub; if (!_uid) return;
+        fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/student_session_analyses', {
+          method: 'POST',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+            'Authorization': 'Bearer ' + _tok,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: _uid, game: 'sight_reading', analysis_text: text,
+            accuracy: accuracy, score: 0,
+            session_data: { total: total, correct: correct, slow: slow, best_streak: state.bestStreak }
+          })
+        }).catch(function(){});
+      } catch(e) {}
+    })();
+
   } catch (err) {
     // Graceful local fallback
     body.innerHTML = `
@@ -1777,6 +1803,35 @@ Be specific, warm, and practical. No bullet points.`;
     `;
     btn.innerHTML = '✦ Try again';
     btn.disabled  = false;
+
+    // Save fallback analysis to DB
+    (function() {
+      try {
+        var _k = Object.keys(localStorage).find(function(kk) { return /^sb-.*-auth-token$/.test(kk); });
+        if (!_k) return;
+        var _sess = JSON.parse(localStorage.getItem(_k) || '{}');
+        var _tok = _sess.access_token; if (!_tok) return;
+        var _pay = JSON.parse(atob(_tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+        var _uid = _pay.sub; if (!_uid) return;
+        var _text = accuracy + '% accuracy over ' + total + ' questions. Avg response: ' + avgTime + 's. Best streak: ' + state.bestStreak + '.' +
+          (slow > 0 ? ' ' + slow + ' note' + (slow > 1 ? 's were' : ' was') + ' over 3 seconds — keep practising to build speed.' : '') +
+          (wrongNotes !== 'none' ? ' Notes to review: ' + wrongNotes + '.' : ' All notes answered correctly!');
+        fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/student_session_analyses', {
+          method: 'POST',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+            'Authorization': 'Bearer ' + _tok,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: _uid, game: 'sight_reading', analysis_text: _text,
+            accuracy: accuracy, score: 0,
+            session_data: { total: total, correct: correct, slow: slow, best_streak: state.bestStreak }
+          })
+        }).catch(function(){});
+      } catch(e) {}
+    })();
   }
 }
 

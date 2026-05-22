@@ -787,6 +787,32 @@ async function runAIAnalysis() {
     : '';
 
   body.innerHTML = `<p>${feedback}</p>${chipHTML}`;
+
+  // Save analysis to DB
+  (function() {
+    try {
+      var k = Object.keys(localStorage).find(function(k) { return /^sb-.*-auth-token$/.test(k); });
+      if (!k) return;
+      var sess = JSON.parse(localStorage.getItem(k) || '{}');
+      var tok = sess.access_token; if (!tok) return;
+      var payload = JSON.parse(atob(tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      var uid = payload.sub; if (!uid) return;
+      fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/student_session_analyses', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+          'Authorization': 'Bearer ' + tok,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: uid, game: 'note_naming', analysis_text: feedback,
+          accuracy: acc, score: state.score || 0,
+          session_data: { total: state.totalQ, correct: state.correct, best_streak: state.bestStreak, mode: state.mode }
+        })
+      }).catch(function(){});
+    } catch(e) {}
+  })();
 }
 
 /* ═══════════════════════════════════════════════════════

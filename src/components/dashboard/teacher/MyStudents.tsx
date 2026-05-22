@@ -55,6 +55,8 @@ const MyStudents = () => {
   const [paypalReady, setPaypalReady] = useState(false);
   const [buyError, setBuyError]   = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [savingNote, setSavingNote] = useState<string | null>(null);
   const paypalRendered = useRef(false);
   const { toast } = useToast();
 
@@ -146,6 +148,32 @@ const MyStudents = () => {
   };
 
   useEffect(() => { fetchData(); }, [user]);
+
+  useEffect(() => {
+    if (!user || students.length === 0) return;
+    const fetchNotes = async () => {
+      const { data } = await (supabase as any)
+        .from("teacher_notes")
+        .select("student_id, note_text")
+        .eq("teacher_id", user.id);
+      const map: Record<string, string> = {};
+      (data || []).forEach((n: any) => { map[n.student_id] = n.note_text; });
+      setNotes(map);
+    };
+    fetchNotes();
+  }, [user, students]);
+
+  const saveNote = async (studentId: string) => {
+    if (!user) return;
+    setSavingNote(studentId);
+    const text = notes[studentId] || "";
+    await (supabase as any).from("teacher_notes").upsert(
+      { teacher_id: user.id, student_id: studentId, note_text: text, updated_at: new Date().toISOString() },
+      { onConflict: "teacher_id,student_id" }
+    );
+    setSavingNote(null);
+    toast({ title: "Note saved", description: "Student can now see this note in their dashboard." });
+  };
 
   const handleAddStudent = async () => {
     if (!newStudent.email || !newStudent.full_name) {
@@ -413,6 +441,28 @@ const MyStudents = () => {
                           ))
                         )}
                       </div>
+                    </div>
+                    {/* Teacher's Note */}
+                    <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(255,45,120,0.06)", border: "1px solid rgba(255,45,120,0.2)" }}>
+                      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ fontFamily: "'DM Mono',monospace", color: "#FF2D78" }}>
+                        ✦ Teacher's Note
+                      </p>
+                      <textarea
+                        rows={3}
+                        className="w-full text-xs rounded-lg p-2 resize-none bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                        placeholder="Write what this student needs to work on…"
+                        value={notes[s.id] || ""}
+                        onChange={e => setNotes(prev => ({ ...prev, [s.id]: e.target.value }))}
+                      />
+                      <Button
+                        size="sm"
+                        className="mt-2 w-full text-xs h-7 text-white border-0"
+                        style={{ background: "linear-gradient(135deg,#FF2D78,#A855F7)" }}
+                        onClick={() => saveNote(s.id)}
+                        disabled={savingNote === s.id}
+                      >
+                        {savingNote === s.id ? "Saving…" : "Save Note"}
+                      </Button>
                     </div>
                   )}
                 </div>

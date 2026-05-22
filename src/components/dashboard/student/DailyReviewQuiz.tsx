@@ -397,6 +397,26 @@ const DailyReviewQuiz = () => {
           total:       questions.length,
           best_streak: maxStreak,
         });
+        const analysisText = (() => {
+          let t = "";
+          if (pct >= 95) t = `Outstanding — ${correct}/${questions.length} correct (${pct}%). Grade S mastery of all reviewed topics.`;
+          else if (pct >= 85) t = `Excellent — ${correct}/${questions.length} correct (${pct}%). Grade A performance shows strong understanding.`;
+          else if (pct >= 70) t = `Good effort — ${correct}/${questions.length} correct (${pct}%). Grade B. Focus on any missed questions to push into the A range.`;
+          else if (pct >= 55) t = `Solid attempt — ${correct}/${questions.length} correct (${pct}%). Grade C. Review missed questions before your next session.`;
+          else if (pct >= 40) t = `Keep practising — ${correct}/${questions.length} correct (${pct}%). Grade D. Revisit foundation lessons to strengthen weak areas.`;
+          else t = `Challenging session — ${correct}/${questions.length} correct (${pct}%). Revisit your foundation lessons and keep going!`;
+          if (maxStreak >= 5) t += ` Best streak of ${maxStreak} 🔥 shows real focus — keep building on it!`;
+          else if (maxStreak >= 3) t += ` Good streak of ${maxStreak} — aim to extend it next time.`;
+          return t;
+        })();
+        await (supabase as any).from("student_session_analyses").insert({
+          user_id: user.id,
+          game: "daily_review",
+          analysis_text: analysisText,
+          accuracy: pct,
+          score,
+          session_data: { correct, total: questions.length, grade, best_streak: maxStreak },
+        });
         setShowRank(true);
       }
     }

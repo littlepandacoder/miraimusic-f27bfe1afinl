@@ -185,7 +185,7 @@ const StudentStatsTable = () => {
           size="sm"
           onClick={handleExportAll}
           disabled={exportingAll}
-          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0"
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-pink-500 text-white border-0"
         >
           {exportingAll
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
@@ -289,7 +289,7 @@ const StudentStatsTable = () => {
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); handleExportStudent(s); }}
                   disabled={exportingId === s.id}
-                  className="w-full mt-2 flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0 text-xs h-7"
+                  className="w-full mt-2 flex items-center gap-2 bg-yellow-400 hover:bg-pink-500 text-white border-0 text-xs h-7"
                 >
                   {exportingId === s.id
                     ? <><Loader2 className="w-3 h-3 animate-spin" /> Generating…</>

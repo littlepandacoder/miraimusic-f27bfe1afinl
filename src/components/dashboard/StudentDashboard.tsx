@@ -5,9 +5,9 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn, FileDown, Loader2 as SpinnerIcon } from "lucide-react";
+import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { exportStudentReport } from "@/lib/exportReport";
+import StudentReportModal from "./student/StudentReportModal";
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import DailyReviewModal from "./student/DailyReviewModal";
@@ -31,18 +31,7 @@ interface GameScoreSummary {
 const StudentHome = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [exportingReport, setExportingReport] = useState(false);
-
-  const handleExportReport = async () => {
-    if (!user) return;
-    setExportingReport(true);
-    try {
-      const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Student";
-      await exportStudentReport(user.id, displayName, supabase);
-    } finally {
-      setExportingReport(false);
-    }
-  };
+  const [showReport, setShowReport] = useState(false);
 
   const [stats, setStats] = useState({
     upcomingLessons: 0,
@@ -229,15 +218,13 @@ const StudentHome = () => {
       <div className="flex justify-end">
         <Button
           size="sm"
-          onClick={handleExportReport}
-          disabled={exportingReport}
-          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-0"
+          onClick={() => setShowReport(true)}
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-pink-500 text-white border-0 transition-colors"
         >
-          {exportingReport
-            ? <><SpinnerIcon className="w-4 h-4 animate-spin" /> Generating…</>
-            : <><FileDown className="w-4 h-4" /> Download Report</>}
+          My Report
         </Button>
       </div>
+      {showReport && <StudentReportModal userId={user!.id} userName={user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Student"} onClose={() => setShowReport(false)} />}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
