@@ -232,7 +232,7 @@ const StudentHome = () => {
           size="sm"
           onClick={handleExportReport}
           disabled={exportingReport}
-          className="flex items-center gap-2 border-border"
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black border-yellow-400"
         >
           {exportingReport
             ? <><SpinnerIcon className="w-4 h-4 animate-spin" /> Generating…</>
