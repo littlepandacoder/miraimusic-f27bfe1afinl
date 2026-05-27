@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Note Quiz — Musicable</title>
+<title>Note Assessment — Musicable</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
@@ -17,110 +17,128 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--off-white);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;min-height:100vh}
-
 nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px;background:rgba(15,23,42,0.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
 .nav-logo{font-weight:800;font-size:1.05rem;color:var(--white);text-decoration:none;letter-spacing:-.03em}
 .nav-back{color:var(--muted);font-size:.8rem;text-decoration:none;display:flex;align-items:center;gap:.3rem;transition:color .2s}
 .nav-back:hover{color:var(--white)}
 .nav-tag{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2)}
-
-.screen{display:none;max-width:740px;margin:0 auto;padding:1.4rem 1.2rem 3rem}
+.screen{display:none;max-width:760px;margin:0 auto;padding:1.4rem 1.2rem 3rem}
 .screen.active{display:block}
 
 /* ── INTRO ── */
-.intro-hero{background:linear-gradient(135deg,rgba(255,45,120,.1),rgba(0,212,255,.06));border:1px solid rgba(255,45,120,.25);border-radius:20px;padding:2.2rem 2rem;text-align:center;margin-bottom:1.2rem}
-.intro-icon{font-size:3rem;margin-bottom:.5rem}
-.intro-title{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.3rem}
-.intro-sub{color:var(--muted);font-size:.87rem;margin-bottom:1.5rem;line-height:1.5}
-.phase-list{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.6rem;text-align:left}
-.phase-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.9rem}
-.phase-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.78rem;font-family:'DM Mono',monospace;flex-shrink:0}
-.phase-num.treble{background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);color:var(--sky)}
-.phase-num.bass{background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink)}
-.phase-info h4{font-weight:700;font-size:.88rem;color:var(--off-white);margin-bottom:.08rem}
-.phase-info p{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace}
-.start-btn{width:100%;padding:.9rem;background:var(--pink);color:#fff;font-weight:900;font-size:.92rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:opacity .2s,transform .15s}
+.intro-hero{background:linear-gradient(135deg,rgba(255,45,120,.1),rgba(0,212,255,.06));border:1px solid rgba(255,45,120,.25);border-radius:20px;padding:2rem 1.8rem;text-align:center;margin-bottom:1.2rem}
+.intro-icon{font-size:2.8rem;margin-bottom:.4rem}
+.intro-title{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.3rem}
+.intro-sub{color:var(--muted);font-size:.86rem;margin-bottom:1.4rem;line-height:1.5}
+.phase-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem;text-align:left}
+.phase-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;display:flex;align-items:center;gap:.8rem}
+.phase-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;font-family:'DM Mono',monospace;flex-shrink:0}
+.phase-num.c1{background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);color:var(--sky)}
+.phase-num.c2{background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink)}
+.phase-num.c3{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple)}
+.phase-num.c4{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.phase-num.c5{background:rgba(57,217,138,.15);border:1px solid rgba(57,217,138,.3);color:var(--green)}
+.phase-info h4{font-weight:700;font-size:.86rem;color:var(--off-white);margin-bottom:.06rem}
+.phase-info p{font-size:.73rem;color:var(--muted);font-family:'DM Mono',monospace}
+.start-btn{width:100%;padding:.9rem;background:var(--pink);color:#fff;font-weight:900;font-size:.9rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:opacity .2s,transform .15s}
 .start-btn:hover{opacity:.88;transform:scale(1.02)}
 
-/* ── QUIZ SCREEN ── */
-.phase-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.4rem}
-.phase-label{font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:.35rem;padding:.25rem .7rem;border-radius:100px}
-.phase-label.treble{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--sky)}
-.phase-label.bass{background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.25);color:var(--pink)}
-.q-counter{font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;color:var(--off-white)}
-
-.progress-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:1rem;overflow:hidden}
+/* ── QUIZ ── */
+.phase-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem}
+.phase-label{font-family:'DM Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:100px}
+.phase-label.c1{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--sky)}
+.phase-label.c2{background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.25);color:var(--pink)}
+.phase-label.c3{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);color:var(--purple)}
+.phase-label.c4{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+.phase-label.c5{background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.25);color:var(--green)}
+.q-counter{font-family:'DM Mono',monospace;font-size:.86rem;font-weight:600;color:var(--off-white)}
+.phase-dots{display:flex;gap:4px;align-items:center;margin-bottom:.5rem}
+.phase-dot{width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.1);transition:all .3s}
+.phase-dot.done{background:var(--green)}
+.phase-dot.active{background:var(--pink)}
+.progress-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:.9rem;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:2px;transition:width .4s ease;width:0%}
 
-.staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:center;min-height:160px}
+/* ── CONTENT AREAS ── */
+.content-area{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:.7rem;min-height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #staffCanvas{width:100%;height:auto;display:block;border-radius:6px}
+#pianoCanvas{width:100%;max-width:700px;height:auto;display:block;border-radius:6px}
+#valueCanvas{display:block;border-radius:6px;max-width:100%}
+.area-label{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.7rem;text-align:center}
+.text-question-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:2rem 1.5rem;text-align:center;width:100%;min-height:120px;display:flex;align-items:center;justify-content:center}
+.text-q-text{font-size:1.08rem;font-weight:700;color:var(--off-white);line-height:1.55;max-width:480px}
 
-.feedback-banner{border-radius:10px;padding:.7rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.7rem;font-weight:600;font-size:.87rem;min-height:46px;opacity:0;transform:translateY(-5px);transition:all .25s}
+/* ── FEEDBACK ── */
+.feedback-banner{border-radius:10px;padding:.68rem .9rem;margin-bottom:.7rem;display:flex;align-items:center;gap:.7rem;font-weight:600;font-size:.86rem;min-height:44px;opacity:0;transform:translateY(-5px);transition:all .25s}
 .feedback-banner.show{opacity:1;transform:translateY(0)}
 .feedback-banner.correct{background:rgba(57,217,138,.12);border:1px solid rgba(57,217,138,.3);color:var(--green)}
 .feedback-banner.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)}
 .feedback-banner.slow{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
 
-.answer-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem}
+/* ── ANSWER ROW ── */
+.answer-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.5rem}
 .note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;flex:1}
-.note-btn{padding:.7rem .25rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:1.05rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
+.note-btn{padding:.65rem .2rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:1rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center}
 .note-btn:hover:not(:disabled){border-color:var(--pink);color:var(--pink);background:var(--pink-dim)}
 .note-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green);animation:pulse-green .4s ease}
 .note-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);animation:shake .3s ease}
 .note-btn:disabled{opacity:.35;cursor:not-allowed}
-
-@keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;flex:1}
+.choice-btn{padding:.75rem .5rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:600;font-size:.88rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;line-height:1.3}
+.choice-btn:hover:not(:disabled){border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,.1)}
+.choice-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green);animation:pulse-green .4s ease}
+.choice-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);animation:shake .3s ease}
+.choice-btn:disabled{opacity:.35;cursor:not-allowed}
+@keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-
-.kbd-hint{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);text-align:center;letter-spacing:.04em}
+.kbd-hint{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);text-align:center;margin-top:.3rem}
 
 /* ── TRANSITION ── */
-.trans-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem 1.8rem;text-align:center;margin-bottom:1rem}
-.trans-eyebrow{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--sky);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem}
-.trans-title{font-size:1.5rem;font-weight:900;color:var(--white);margin-bottom:.3rem}
-.trans-sub{font-size:.84rem;color:var(--muted);margin-bottom:1.4rem}
-.trans-score-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.3rem 2.5rem;display:inline-block;margin-bottom:.2rem}
-.trans-pct{font-family:'DM Mono',monospace;font-size:3rem;font-weight:700;color:var(--sky);line-height:1}
-.trans-frac{font-size:.8rem;color:var(--muted);margin-top:.3rem}
-.next-card{background:linear-gradient(135deg,rgba(255,45,120,.07),rgba(168,85,247,.07));border:1px solid rgba(255,45,120,.18);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.2rem;text-align:left}
-.next-card h4{font-weight:700;color:var(--off-white);margin-bottom:.2rem;font-size:.9rem}
-.next-card p{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace}
+.trans-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:1.8rem 1.6rem;text-align:center;margin-bottom:1rem}
+.trans-eyebrow{font-family:'DM Mono',monospace;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem}
+.trans-title{font-size:1.4rem;font-weight:900;color:var(--white);margin-bottom:.25rem}
+.trans-sub{font-size:.83rem;color:var(--muted);margin-bottom:1.3rem}
+.trans-score-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem 2.5rem;display:inline-block;margin-bottom:1.1rem}
+.trans-pct{font-family:'DM Mono',monospace;font-size:2.8rem;font-weight:700;line-height:1}
+.trans-frac{font-size:.78rem;color:var(--muted);margin-top:.25rem}
+.next-card{background:linear-gradient(135deg,rgba(255,45,120,.06),rgba(167,139,250,.06));border:1px solid rgba(255,45,120,.18);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1.1rem;text-align:left}
+.next-card h4{font-weight:700;color:var(--off-white);margin-bottom:.15rem;font-size:.88rem}
+.next-card p{font-size:.73rem;color:var(--muted);font-family:'DM Mono',monospace}
 
 /* ── RESULTS ── */
-.results-top{text-align:center;margin-bottom:1.2rem}
-.results-grade{display:inline-block;padding:.28rem .9rem;border-radius:100px;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.6rem}
+.results-top{text-align:center;margin-bottom:1.1rem}
+.results-grade{display:inline-block;padding:.26rem .85rem;border-radius:100px;font-family:'DM Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.55rem}
 .grade-excellent{background:rgba(57,217,138,.15);border:1px solid rgba(57,217,138,.3);color:var(--green)}
 .grade-good{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25);color:var(--sky)}
 .grade-practice{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
 .grade-retry{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
-.results-title{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.25rem}
-
-.overall-card{background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(0,212,255,.06));border:1px solid rgba(168,85,247,.2);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:.8rem}
-.overall-pct{font-family:'DM Mono',monospace;font-size:3.4rem;font-weight:700;color:var(--purple);line-height:1;margin-bottom:.2rem}
-.overall-lbl{font-size:.78rem;color:var(--muted)}
-
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}
-.score-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;text-align:center}
-.score-card-lbl{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
-.score-card-pct{font-family:'DM Mono',monospace;font-size:2.4rem;font-weight:700;line-height:1;margin-bottom:.2rem}
-.score-card.treble .score-card-pct{color:var(--sky)}
-.score-card.bass .score-card-pct{color:var(--pink)}
-.score-card-frac{font-size:.76rem;color:var(--muted)}
-
-.results-actions{display:flex;flex-direction:column;gap:.55rem}
+.results-title{font-size:clamp(1.3rem,4vw,1.9rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.2rem}
+.overall-card{background:linear-gradient(135deg,rgba(167,139,250,.09),rgba(0,212,255,.06));border:1px solid rgba(167,139,250,.2);border-radius:16px;padding:1.2rem;text-align:center;margin-bottom:.8rem}
+.overall-pct{font-family:'DM Mono',monospace;font-size:3.2rem;font-weight:700;color:var(--purple);line-height:1;margin-bottom:.15rem}
+.overall-lbl{font-size:.76rem;color:var(--muted)}
+.score-grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin-bottom:.9rem}
+.score-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.85rem .6rem;text-align:center}
+.score-card-lbl{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem;line-height:1.3}
+.score-card-pct{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:700;line-height:1;margin-bottom:.15rem}
+.score-card-frac{font-size:.7rem;color:var(--muted)}
+.sc1 .score-card-pct{color:var(--sky)}.sc2 .score-card-pct{color:var(--pink)}
+.sc3 .score-card-pct{color:var(--purple)}.sc4 .score-card-pct{color:var(--amber)}.sc5 .score-card-pct{color:var(--green)}
+.results-actions{display:flex;flex-direction:column;gap:.5rem}
 .btn-primary{padding:.85rem;background:var(--pink);color:#fff;font-weight:800;font-size:.88rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:opacity .2s}
 .btn-primary:hover{opacity:.88}
+.btn-download{padding:.75rem;background:rgba(57,217,138,.12);color:var(--green);font-size:.85rem;font-weight:700;border:1px solid rgba(57,217,138,.3);border-radius:12px;cursor:pointer;transition:all .2s;text-align:center;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.btn-download:hover{background:rgba(57,217,138,.2)}
 .btn-outline{padding:.7rem;background:transparent;color:var(--muted);font-size:.83rem;border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-decoration:none;text-align:center;display:block}
 .btn-outline:hover{color:var(--off-white);border-color:rgba(255,255,255,.18)}
-
 #toast{position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--pink);color:#fff;border-radius:10px;padding:.55rem 1.1rem;font-size:.8rem;font-weight:600;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-@media(max-width:540px){
+@media(max-width:600px){
   .note-btns{grid-template-columns:repeat(4,1fr)}
-  .score-grid{grid-template-columns:1fr}
+  .score-grid-5{grid-template-columns:repeat(3,1fr)}
   .answer-row{flex-direction:column;align-items:stretch}
+  .choice-grid{grid-template-columns:1fr 1fr}
 }
+@media(max-width:380px){.score-grid-5{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -128,134 +146,151 @@ nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-con
 <nav>
   <a href="/dashboard" class="nav-back">← Dashboard</a>
   <a href="/" class="nav-logo">Musicable</a>
-  <span class="nav-tag">Note Quiz</span>
+  <span class="nav-tag">Assessment</span>
 </nav>
 
 <!-- ═══════════ INTRO ═══════════ -->
 <div id="introScreen" class="screen active">
   <div class="intro-hero">
     <div class="intro-icon">📋</div>
-    <h1 class="intro-title">Note Reading <span style="color:var(--pink)">Quiz</span></h1>
-    <p class="intro-sub">Two-phase assessment — treble clef first, then bass clef.<br>10 questions per clef · 5 seconds each · Natural notes only</p>
+    <h1 class="intro-title">Note Reading <span style="color:var(--pink)">Assessment</span></h1>
+    <p class="intro-sub">5-phase quiz covering staff reading, piano naming, note values, and 4/4 time.<br>Results are saved and downloadable at the end.</p>
     <div class="phase-list">
       <div class="phase-item">
-        <div class="phase-num treble">1</div>
-        <div class="phase-info">
-          <h4>Treble Clef — Phase 1</h4>
-          <p>Range: C4 to C6 · 10 questions</p>
-        </div>
+        <div class="phase-num c1">1</div>
+        <div class="phase-info"><h4>Treble Clef Reading</h4><p>Range: C4–C6 · 10 questions · 5 sec each</p></div>
       </div>
       <div class="phase-item">
-        <div class="phase-num bass">2</div>
-        <div class="phase-info">
-          <h4>Bass Clef — Phase 2</h4>
-          <p>Range: C3 to C4 · 10 questions</p>
-        </div>
+        <div class="phase-num c2">2</div>
+        <div class="phase-info"><h4>Bass Clef Reading</h4><p>Range: C3–C4 · 10 questions · 5 sec each</p></div>
+      </div>
+      <div class="phase-item">
+        <div class="phase-num c3">3</div>
+        <div class="phase-info"><h4>Note Naming (Piano)</h4><p>Identify highlighted piano keys · 8 questions · 8 sec each</p></div>
+      </div>
+      <div class="phase-item">
+        <div class="phase-num c4">4</div>
+        <div class="phase-info"><h4>Note Values</h4><p>Beat counts in 4/4 time · 8 questions · 10 sec each</p></div>
+      </div>
+      <div class="phase-item">
+        <div class="phase-num c5">5</div>
+        <div class="phase-info"><h4>Time Signature — 4/4</h4><p>Rules of 4/4 time · 8 questions · 12 sec each</p></div>
       </div>
     </div>
-    <button class="start-btn" onclick="startQuiz()">Start Quiz →</button>
+    <button class="start-btn" onclick="startQuiz()">Start Assessment →</button>
   </div>
 </div>
 
 <!-- ═══════════ QUIZ ═══════════ -->
 <div id="quizScreen" class="screen">
+  <div class="phase-dots" id="phaseDots"></div>
   <div class="phase-header">
-    <div class="phase-label treble" id="phaseLabel">
-      <span id="phaseIcon">𝄞</span>
-      <span id="phaseName">Phase 1 — Treble Clef</span>
-    </div>
+    <div class="phase-label c1" id="phaseLabel"><span id="phaseIcon">𝄞</span><span id="phaseName">Phase 1</span></div>
     <div class="q-counter">Q<span id="qNum">1</span>/<span id="qTotal">10</span></div>
   </div>
-
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
-  <div class="staff-area">
+  <!-- Staff area (phases 1-2) -->
+  <div class="content-area" id="staffArea">
     <canvas id="staffCanvas" width="900" height="270"></canvas>
   </div>
 
-  <div class="feedback-banner" id="feedbackBanner">
-    <span id="feedbackIcon" style="font-size:1.15rem;flex-shrink:0"></span>
-    <div>
-      <div id="feedbackMain"></div>
-      <div id="feedbackSub" style="font-size:.77rem;opacity:.72;margin-top:.06rem"></div>
+  <!-- Piano area (phase 3) -->
+  <div class="content-area" id="pianoArea" style="display:none">
+    <div class="area-label">🎹 What note name is highlighted?</div>
+    <canvas id="pianoCanvas" width="700" height="145"></canvas>
+    <div style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);margin-top:.5rem;text-align:center">C is marked as anchor · name letter only, no octave</div>
+  </div>
+
+  <!-- Note value area (phase 4) -->
+  <div class="content-area" id="valueArea" style="display:none">
+    <div class="area-label">♩ How many beats does this note get in 4/4 time?</div>
+    <canvas id="valueCanvas" width="560" height="180"></canvas>
+  </div>
+
+  <!-- Text question area (phase 5) -->
+  <div class="content-area" id="textArea" style="display:none">
+    <div class="text-question-card">
+      <div class="text-q-text" id="textQuestion"></div>
     </div>
+  </div>
+
+  <div class="feedback-banner" id="feedbackBanner">
+    <span id="feedbackIcon" style="font-size:1.1rem;flex-shrink:0"></span>
+    <div><div id="feedbackMain"></div><div id="feedbackSub" style="font-size:.75rem;opacity:.7;margin-top:.06rem"></div></div>
   </div>
 
   <div class="answer-row">
     <!-- Timer ring -->
-    <div style="position:relative;width:72px;height:72px;flex-shrink:0">
-      <svg style="position:absolute;inset:0;transform:rotate(-90deg)" width="72" height="72" viewBox="0 0 72 72">
-        <circle r="30" cx="36" cy="36" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
-        <circle r="30" cx="36" cy="36" id="timerRing" fill="none" stroke="#FF2D78" stroke-width="5"
-                stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="188"
+    <div style="position:relative;width:68px;height:68px;flex-shrink:0">
+      <svg style="position:absolute;inset:0;transform:rotate(-90deg)" width="68" height="68" viewBox="0 0 68 68">
+        <circle r="28" cx="34" cy="34" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+        <circle r="28" cx="34" cy="34" id="timerRing" fill="none" stroke="#FF2D78" stroke-width="5"
+                stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176"
                 style="transition:stroke-dashoffset .1s linear,stroke .5s"/>
       </svg>
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
-        <div id="timerText" style="font-family:'DM Mono',monospace;font-size:1.15rem;font-weight:500;color:var(--white);line-height:1">—</div>
-        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em">SEC</div>
+        <div id="timerText" style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;color:var(--white);line-height:1">—</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.48rem;color:var(--muted2);letter-spacing:.1em">SEC</div>
       </div>
     </div>
 
-    <!-- Note buttons -->
-    <div class="note-btns" id="noteBtns">
-      <button class="note-btn" data-note="C" onclick="answerNote('C')">C</button>
-      <button class="note-btn" data-note="D" onclick="answerNote('D')">D</button>
-      <button class="note-btn" data-note="E" onclick="answerNote('E')">E</button>
-      <button class="note-btn" data-note="F" onclick="answerNote('F')">F</button>
-      <button class="note-btn" data-note="G" onclick="answerNote('G')">G</button>
-      <button class="note-btn" data-note="A" onclick="answerNote('A')">A</button>
-      <button class="note-btn" data-note="B" onclick="answerNote('B')">B</button>
+    <!-- Letter buttons (phases 1-2-3) -->
+    <div class="note-btns" id="staffBtns">
+      <button class="note-btn" data-note="C" onclick="answer('C')">C</button>
+      <button class="note-btn" data-note="D" onclick="answer('D')">D</button>
+      <button class="note-btn" data-note="E" onclick="answer('E')">E</button>
+      <button class="note-btn" data-note="F" onclick="answer('F')">F</button>
+      <button class="note-btn" data-note="G" onclick="answer('G')">G</button>
+      <button class="note-btn" data-note="A" onclick="answer('A')">A</button>
+      <button class="note-btn" data-note="B" onclick="answer('B')">B</button>
     </div>
+
+    <!-- Choice buttons (phases 4-5) -->
+    <div class="choice-grid" id="choiceBtns" style="display:none"></div>
   </div>
 
-  <div class="kbd-hint">Keyboard shortcut: press C D E F G A B to answer</div>
+  <div class="kbd-hint" id="kbdHint">Keyboard: press C D E F G A B to answer</div>
 </div>
 
 <!-- ═══════════ TRANSITION ═══════════ -->
 <div id="transitionScreen" class="screen">
   <div class="trans-card">
-    <div class="trans-eyebrow">Phase 1 Complete</div>
-    <h2 class="trans-title">Treble Clef — Done!</h2>
-    <p class="trans-sub">Here's how you scored on Phase 1</p>
+    <div class="trans-eyebrow" id="transEyebrow" style="color:var(--sky)">Phase 1 Complete</div>
+    <h2 class="trans-title" id="transTitle">—</h2>
+    <p class="trans-sub" id="transSub">Here's how you scored</p>
     <div class="trans-score-box">
-      <div class="trans-pct" id="transPct">—</div>
+      <div class="trans-pct" id="transPct" style="color:var(--sky)">—</div>
       <div class="trans-frac" id="transFrac">—</div>
     </div>
   </div>
   <div class="next-card">
-    <h4>Next: Bass Clef Test (Phase 2)</h4>
-    <p>Range: C3 to C4 · 10 questions · 5 seconds each</p>
+    <h4 id="nextTitle">—</h4>
+    <p id="nextSub">—</p>
   </div>
-  <button class="start-btn" onclick="startPhase(1)">Continue to Bass Clef →</button>
+  <button class="start-btn" id="continueBtn" onclick="continueToNextPhase()">Continue →</button>
 </div>
 
 <!-- ═══════════ RESULTS ═══════════ -->
 <div id="resultsScreen" class="screen">
   <div class="results-top">
     <div id="resultsGrade" class="results-grade grade-good">—</div>
-    <h2 class="results-title">Quiz <span style="color:var(--purple)">Complete!</span></h2>
-    <p style="color:var(--muted);font-size:.86rem;margin-top:.2rem" id="resultsSub"></p>
+    <h2 class="results-title">Assessment <span style="color:var(--purple)">Complete!</span></h2>
+    <p style="color:var(--muted);font-size:.84rem;margin-top:.2rem" id="resultsSub"></p>
   </div>
-
   <div class="overall-card">
     <div class="overall-pct" id="overallPct">—</div>
-    <div class="overall-lbl">Overall Score</div>
+    <div class="overall-lbl" id="overallLbl">Overall Score</div>
   </div>
-
-  <div class="score-grid">
-    <div class="score-card treble">
-      <div class="score-card-lbl">𝄞 Treble Clef</div>
-      <div class="score-card-pct" id="treblePct">—</div>
-      <div class="score-card-frac" id="trebleFrac">—</div>
-    </div>
-    <div class="score-card bass">
-      <div class="score-card-lbl">𝄢 Bass Clef</div>
-      <div class="score-card-pct" id="bassPct">—</div>
-      <div class="score-card-frac" id="bassFrac">—</div>
-    </div>
+  <div class="score-grid-5">
+    <div class="score-card sc1"><div class="score-card-lbl">𝄞 Treble</div><div class="score-card-pct" id="p1Pct">—</div><div class="score-card-frac" id="p1Frac">—</div></div>
+    <div class="score-card sc2"><div class="score-card-lbl">𝄢 Bass</div><div class="score-card-pct" id="p2Pct">—</div><div class="score-card-frac" id="p2Frac">—</div></div>
+    <div class="score-card sc3"><div class="score-card-lbl">🎹 Naming</div><div class="score-card-pct" id="p3Pct">—</div><div class="score-card-frac" id="p3Frac">—</div></div>
+    <div class="score-card sc4"><div class="score-card-lbl">♩ Values</div><div class="score-card-pct" id="p4Pct">—</div><div class="score-card-frac" id="p4Frac">—</div></div>
+    <div class="score-card sc5"><div class="score-card-lbl">⏱ 4/4 Time</div><div class="score-card-pct" id="p5Pct">—</div><div class="score-card-frac" id="p5Frac">—</div></div>
   </div>
-
   <div class="results-actions">
+    <button class="btn-download" onclick="downloadResults()">⬇ Download Assessment Report</button>
     <button class="btn-primary" onclick="resetQuiz()">Try Again</button>
     <a href="/dashboard/foundation" class="btn-outline">Back to Foundation</a>
     <a href="/dashboard" class="btn-outline">Dashboard</a>
@@ -268,450 +303,583 @@ nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-con
 'use strict';
 
 /* ── AUDIO ── */
-const limiter = new Tone.Limiter(-3).toDestination();
-const pianoReverb = new Tone.Reverb({ decay: 1.2, wet: 0.18 });
-pianoReverb.connect(limiter);
-const pianoSynth = new Tone.PolySynth(Tone.Synth, {
-  oscillator: { type: 'triangle' },
-  envelope:   { attack: 0.005, decay: 0.3, sustain: 0.35, release: 1.0 },
-  volume: -10,
-});
-pianoReverb.ready.then(() => pianoSynth.connect(pianoReverb)).catch(() => pianoSynth.connect(limiter));
-const correctSynth = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.01,decay:.1,sustain:.3,release:.4}, volume:-14 }).connect(limiter);
-const wrongSynth   = new Tone.Synth({ oscillator:{type:'sawtooth'}, envelope:{attack:.01,decay:.15,sustain:0,release:.2}, volume:-18 }).connect(limiter);
-
-async function ensureAudio() { if (Tone.context.state !== 'running') await Tone.start(); }
-function playNote(hz, dur=0.8)  { if (!hz||isNaN(hz)) return; ensureAudio().then(() => pianoSynth.triggerAttackRelease(hz, dur, Tone.now())); }
-function playCorrect() {
-  ensureAudio().then(() => {
-    const t = Tone.now();
-    correctSynth.triggerAttackRelease('C5','8n',t);
-    correctSynth.triggerAttackRelease('E5','8n',t+0.12);
-  });
-}
-function playWrong() { ensureAudio().then(() => wrongSynth.triggerAttackRelease('A2','8n',Tone.now())); }
+const _lim = new Tone.Limiter(-3).toDestination();
+const _rev = new Tone.Reverb({decay:1.2,wet:.18}); _rev.connect(_lim);
+const _pno = new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:.005,decay:.3,sustain:.35,release:1},volume:-10});
+_rev.ready.then(()=>_pno.connect(_rev)).catch(()=>_pno.connect(_lim));
+const _ok  = new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.01,decay:.1,sustain:.3,release:.4},volume:-14}).connect(_lim);
+const _bad = new Tone.Synth({oscillator:{type:'sawtooth'},envelope:{attack:.01,decay:.15,sustain:0,release:.2},volume:-18}).connect(_lim);
+async function ensureAudio(){if(Tone.context.state!=='running')await Tone.start();}
+function playNote(hz,d=.8){if(!hz||isNaN(hz))return;ensureAudio().then(()=>_pno.triggerAttackRelease(hz,d,Tone.now()));}
+function playCorrect(){ensureAudio().then(()=>{const t=Tone.now();_ok.triggerAttackRelease('C5','8n',t);_ok.triggerAttackRelease('E5','8n',t+.12);});}
+function playWrong(){ensureAudio().then(()=>_bad.triggerAttackRelease('A2','8n',Tone.now()));}
 
 /* ── NOTE DATA ── */
-const NOTE_ORDER     = ['C','D','E','F','G','A','B'];
-const NOTE_CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE_ORDER=['C','D','E','F','G','A','B'];
+const NOTE_CHROM=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteHz(n,oct){const i=NOTE_CHROM.indexOf(n);return i<0?0:Math.round(440*Math.pow(2,((oct-4)*12+i-9)/12));}
+function dSteps(n,oct){const i=NOTE_ORDER.indexOf(n);return i<0?0:(oct-4)*7+i;}
 
-const PHASES = [
-  {
-    clef: 'treble', label: 'Treble Clef', icon: '𝄞', count: 10,
-    notes: [
-      {note:'C',octave:4},{note:'D',octave:4},{note:'E',octave:4},{note:'F',octave:4},{note:'G',octave:4},{note:'A',octave:4},{note:'B',octave:4},
-      {note:'C',octave:5},{note:'D',octave:5},{note:'E',octave:5},{note:'F',octave:5},{note:'G',octave:5},{note:'A',octave:5},{note:'B',octave:5},
-      {note:'C',octave:6},
-    ],
-  },
-  {
-    clef: 'bass', label: 'Bass Clef', icon: '𝄢', count: 10,
-    notes: [
-      {note:'C',octave:3},{note:'D',octave:3},{note:'E',octave:3},{note:'F',octave:3},
-      {note:'G',octave:3},{note:'A',octave:3},{note:'B',octave:3},{note:'C',octave:4},
-    ],
-  },
+/* ── PHASE DEFINITIONS ── */
+const PHASES=[
+  {id:'treble', type:'staff',   clef:'treble', label:'Treble Clef Reading', icon:'𝄞', cls:'c1', count:10, timeLimit:5,
+   notes:[
+     {note:'C',octave:4},{note:'D',octave:4},{note:'E',octave:4},{note:'F',octave:4},{note:'G',octave:4},{note:'A',octave:4},{note:'B',octave:4},
+     {note:'C',octave:5},{note:'D',octave:5},{note:'E',octave:5},{note:'F',octave:5},{note:'G',octave:5},{note:'A',octave:5},{note:'B',octave:5},
+     {note:'C',octave:6}]},
+  {id:'bass', type:'staff',   clef:'bass', label:'Bass Clef Reading', icon:'𝄢', cls:'c2', count:10, timeLimit:5,
+   notes:[
+     {note:'C',octave:3},{note:'D',octave:3},{note:'E',octave:3},{note:'F',octave:3},
+     {note:'G',octave:3},{note:'A',octave:3},{note:'B',octave:3},{note:'C',octave:4}]},
+  {id:'naming',  type:'piano',  label:'Note Naming',       icon:'🎹', cls:'c3', count:8,  timeLimit:8  },
+  {id:'values',  type:'value',  label:'Note Values (4/4)', icon:'♩',  cls:'c4', count:8,  timeLimit:10 },
+  {id:'timesig', type:'timesig',label:'Time Signature 4/4',icon:'⏱',  cls:'c5', count:8,  timeLimit:12 },
 ];
 
-function noteHz(note, octave) {
-  const chromIdx = NOTE_CHROMATIC.indexOf(note);
-  if (chromIdx < 0) return 0;
-  return Math.round(440 * Math.pow(2, ((octave - 4) * 12 + chromIdx - 9) / 12));
-}
-function diatonicStepsFromC4(note, octave) {
-  const idx = NOTE_ORDER.indexOf(note);
-  return idx < 0 ? 0 : (octave - 4) * 7 + idx;
-}
+/* ── NOTE VALUE POOL ── */
+const VALUE_POOL=[
+  {type:'whole',         label:'Whole Note',          answer:'4 beats'},
+  {type:'half',          label:'Half Note',           answer:'2 beats'},
+  {type:'quarter',       label:'Quarter Note',        answer:'1 beat'},
+  {type:'eighth',        label:'Eighth Note',         answer:'½ beat'},
+  {type:'dotted-half',   label:'Dotted Half Note',    answer:'3 beats'},
+  {type:'dotted-quarter',label:'Dotted Quarter Note', answer:'1½ beats'},
+  {type:'sixteenth',     label:'Sixteenth Note',      answer:'¼ beat'},
+];
+const ALL_VALUE_ANSWERS=['4 beats','3 beats','2 beats','1½ beats','1 beat','½ beat','¼ beat'];
+
+/* ── TIME SIG POOL ── */
+const TIMESIG_POOL=[
+  {q:'In 4/4 time, how many beats are in each measure?',          choices:['2','3','4','6'],                                                  correct:'4'},
+  {q:'In 4/4 time, which note receives exactly one beat?',        choices:['Whole note','Half note','Quarter note','Eighth note'],             correct:'Quarter note'},
+  {q:'In 4/4 time, how many half notes fill one measure?',        choices:['1','2','4','8'],                                                  correct:'2'},
+  {q:'In 4/4 time, how many quarter notes fill one measure?',     choices:['2','4','6','8'],                                                  correct:'4'},
+  {q:'In 4/4 time, how many eighth notes fill one measure?',      choices:['2','4','6','8'],                                                  correct:'8'},
+  {q:'In 4/4 time, how many whole notes fill one measure?',       choices:['1','2','4','8'],                                                  correct:'1'},
+  {q:'What does the top "4" in the time signature 4/4 mean?',     choices:['4 notes per bar','4 beats per measure','Tempo = 4 BPM','4 bars'], correct:'4 beats per measure'},
+  {q:'What does the bottom "4" in 4/4 mean?',                     choices:['4 bars total','Half note = 1 beat','Quarter note = 1 beat','Tempo = 4'], correct:'Quarter note = 1 beat'},
+  {q:'A dotted half note lasts how many beats in 4/4 time?',      choices:['1½','2','3','4'],                                                 correct:'3'},
+  {q:'Which combination fills exactly one 4/4 measure?',          choices:['3 quarter notes','2 half notes','1 whole + 1 quarter','5 eighth notes'], correct:'2 half notes'},
+];
 
 /* ── STATE ── */
-let quiz = {
-  phaseIdx: 0,
-  questionNum: 0,
-  correct: 0,
-  scores: [],
-  pool: [],
-  currentNote: null,
-  answered: false,
-  timerRAF: null,
-  questionStart: 0,
-};
+let quiz={phaseIdx:0,questionNum:0,correct:0,scores:[],pool:[],currentQ:null,answered:false,timerRAF:null,questionStart:0};
+const RING_CIRCUM=176; // 2*π*28
 
-const TIMER_LIMIT  = 5.0;
-const RING_CIRCUM  = 188; // 2*π*30 ≈ 188.5
-
-/* ── CANVAS DRAWING ── */
-const staffCanvas = document.getElementById('staffCanvas');
-const sCtx = staffCanvas.getContext('2d');
-const SW = 900, SH = 270;
-
-function drawStaff(noteObj, clef, revealed) {
-  sCtx.clearRect(0, 0, SW, SH);
-  sCtx.fillStyle = '#0D1117';
-  sCtx.fillRect(0, 0, SW, SH);
-  if (!noteObj) return;
-
-  const isTreble  = clef === 'treble';
-  const lineGap   = 22;
-  const staffTop  = isTreble ? 70 : 105;
-  const staffLeft = 90;
-  const staffW    = SW - 130;
-  const stepSize  = lineGap / 2;
-  const clefColor = isTreble ? '#00D4FF' : '#FF2D78';
-
-  // Staff lines
-  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-  sCtx.lineWidth   = 1.5;
-  for (let i = 0; i < 5; i++) {
-    sCtx.beginPath();
-    sCtx.moveTo(staffLeft, staffTop + i * lineGap);
-    sCtx.lineTo(staffLeft + staffW, staffTop + i * lineGap);
-    sCtx.stroke();
-  }
-
-  // Clef symbol
-  sCtx.font      = '92px serif';
-  sCtx.textAlign = 'left';
-  sCtx.fillStyle = clefColor;
-  if (isTreble) sCtx.fillText('𝄞', staffLeft - 66, staffTop + 4 * lineGap + 8);
-  else          sCtx.fillText('𝄢', staffLeft - 62, staffTop + 2 * lineGap + 8);
-
-  sCtx.font      = '11px "DM Mono",monospace';
-  sCtx.fillStyle = clefColor;
-  sCtx.fillText(isTreble ? 'TREBLE CLEF' : 'BASS CLEF', staffLeft + 5, staffTop - 14);
-  sCtx.fillText('Q' + quiz.questionNum, staffLeft + 5, staffTop - 3);
-
-  const middleCY = isTreble ? staffTop + 5 * lineGap : staffTop - lineGap;
-  const noteX    = SW / 2;
-  const noteY    = middleCY - diatonicStepsFromC4(noteObj.note, noteObj.octave) * stepSize;
-
-  // Ledger lines
-  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-  sCtx.lineWidth   = 2;
-  const staffBottom = staffTop + 4 * lineGap;
-  const ledgerSet   = new Set();
-  for (let ly = staffBottom + lineGap; ly <= noteY + stepSize / 2; ly += lineGap) ledgerSet.add(ly);
-  for (let ly = staffTop  - lineGap;  ly >= noteY - stepSize / 2; ly -= lineGap)  ledgerSet.add(ly);
-  ledgerSet.forEach(ly => {
-    sCtx.beginPath();
-    sCtx.moveTo(noteX - 28, ly);
-    sCtx.lineTo(noteX + 28, ly);
-    sCtx.stroke();
-  });
-
-  // Note head
-  const noteColor = revealed ? '#39D98A' : '#FF2D78';
-  sCtx.shadowColor = noteColor;
-  sCtx.shadowBlur  = 26;
-  sCtx.fillStyle   = noteColor;
-  sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
-  sCtx.fill();
-  sCtx.shadowBlur = 0;
-
-  sCtx.strokeStyle = noteColor;
-  sCtx.lineWidth   = 1.5;
-  sCtx.globalAlpha = 0.25;
-  sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 26, 18, -0.18, 0, Math.PI * 2);
-  sCtx.stroke();
-  sCtx.globalAlpha = 1;
-
-  // Label inside note
-  sCtx.fillStyle    = revealed ? '#0D1117' : '#fff';
-  sCtx.font         = 'bold 15px "DM Mono",monospace';
-  sCtx.textAlign    = 'center';
-  sCtx.textBaseline = 'middle';
-  sCtx.shadowColor  = noteColor;
-  sCtx.shadowBlur   = revealed ? 0 : 8;
-  sCtx.fillText(revealed ? noteObj.note : '?', noteX, noteY);
-  sCtx.shadowBlur   = 0;
-  sCtx.textBaseline = 'alphabetic';
-
-  // Closing double barline
-  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-  sCtx.lineWidth   = 2;
-  sCtx.beginPath();
-  sCtx.moveTo(staffLeft + staffW, staffTop - 2);
-  sCtx.lineTo(staffLeft + staffW, staffTop + 4 * lineGap + 2);
-  sCtx.stroke();
-  sCtx.lineWidth = 5;
-  sCtx.beginPath();
-  sCtx.moveTo(staffLeft + staffW + 5, staffTop - 2);
-  sCtx.lineTo(staffLeft + staffW + 5, staffTop + 4 * lineGap + 2);
-  sCtx.stroke();
+/* ─────────── CANVAS: STAFF ─────────── */
+const sCanvas=document.getElementById('staffCanvas'),sCtx=sCanvas.getContext('2d');
+const SW=900,SH=270;
+function drawStaff(noteObj,clef,revealed){
+  sCtx.clearRect(0,0,SW,SH);sCtx.fillStyle='#0D1117';sCtx.fillRect(0,0,SW,SH);
+  if(!noteObj)return;
+  const isTreble=clef==='treble',lineGap=22,staffTop=isTreble?70:105,staffLeft=90,staffW=SW-130,stepSize=lineGap/2;
+  const cc=isTreble?'#00D4FF':'#FF2D78';
+  sCtx.strokeStyle='rgba(255,255,255,0.45)';sCtx.lineWidth=1.5;
+  for(let i=0;i<5;i++){sCtx.beginPath();sCtx.moveTo(staffLeft,staffTop+i*lineGap);sCtx.lineTo(staffLeft+staffW,staffTop+i*lineGap);sCtx.stroke();}
+  sCtx.font='92px serif';sCtx.textAlign='left';sCtx.fillStyle=cc;
+  if(isTreble)sCtx.fillText('𝄞',staffLeft-66,staffTop+4*lineGap+8);
+  else sCtx.fillText('𝄢',staffLeft-62,staffTop+2*lineGap+8);
+  sCtx.font='11px "DM Mono",monospace';sCtx.fillStyle=cc;
+  sCtx.fillText(isTreble?'TREBLE CLEF':'BASS CLEF',staffLeft+5,staffTop-14);
+  sCtx.fillText('Q'+quiz.questionNum,staffLeft+5,staffTop-3);
+  const midCY=isTreble?staffTop+5*lineGap:staffTop-lineGap;
+  const noteX=SW/2,noteY=midCY-dSteps(noteObj.note,noteObj.octave)*stepSize;
+  const sBot=staffTop+4*lineGap,led=new Set();
+  sCtx.strokeStyle='rgba(255,255,255,0.45)';sCtx.lineWidth=2;
+  for(let ly=sBot+lineGap;ly<=noteY+stepSize/2;ly+=lineGap)led.add(ly);
+  for(let ly=staffTop-lineGap;ly>=noteY-stepSize/2;ly-=lineGap)led.add(ly);
+  led.forEach(ly=>{sCtx.beginPath();sCtx.moveTo(noteX-28,ly);sCtx.lineTo(noteX+28,ly);sCtx.stroke();});
+  const nc=revealed?'#39D98A':'#FF2D78';
+  sCtx.shadowColor=nc;sCtx.shadowBlur=26;sCtx.fillStyle=nc;
+  sCtx.beginPath();sCtx.ellipse(noteX,noteY,17,12,-0.18,0,Math.PI*2);sCtx.fill();
+  sCtx.shadowBlur=0;sCtx.strokeStyle=nc;sCtx.lineWidth=1.5;sCtx.globalAlpha=.25;
+  sCtx.beginPath();sCtx.ellipse(noteX,noteY,26,18,-0.18,0,Math.PI*2);sCtx.stroke();
+  sCtx.globalAlpha=1;
+  sCtx.fillStyle=revealed?'#0D1117':'#fff';sCtx.font='bold 15px "DM Mono",monospace';
+  sCtx.textAlign='center';sCtx.textBaseline='middle';sCtx.shadowColor=nc;sCtx.shadowBlur=revealed?0:8;
+  sCtx.fillText(revealed?noteObj.note:'?',noteX,noteY);
+  sCtx.shadowBlur=0;sCtx.textBaseline='alphabetic';
+  sCtx.strokeStyle='rgba(255,255,255,0.45)';sCtx.lineWidth=2;
+  sCtx.beginPath();sCtx.moveTo(staffLeft+staffW,staffTop-2);sCtx.lineTo(staffLeft+staffW,staffTop+4*lineGap+2);sCtx.stroke();
+  sCtx.lineWidth=5;sCtx.beginPath();sCtx.moveTo(staffLeft+staffW+5,staffTop-2);sCtx.lineTo(staffLeft+staffW+5,staffTop+4*lineGap+2);sCtx.stroke();
 }
 
-/* ── SCREEN ROUTING ── */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+/* ─────────── CANVAS: PIANO ─────────── */
+const pCanvas=document.getElementById('pianoCanvas'),pCtx=pCanvas.getContext('2d');
+const PW=700,PH=145;
+const P_NOTES=['C','D','E','F','G','A','B'];
+const P_HAS_BK=[true,true,false,true,true,true,false];
+const PKW=PW/7,BKW=PKW*.62,BKH=PH*.62;
+function drawPiano(hlNote,revealOk){
+  pCtx.clearRect(0,0,PW,PH);pCtx.fillStyle='#0a0810';pCtx.fillRect(0,0,PW,PH);
+  P_NOTES.forEach((n,i)=>{
+    const x=i*PKW,isHL=n===hlNote;
+    let fc=isHL?((revealOk===null)?'#FF2D78':(revealOk?'#39D98A':'#EF4444')):'#f0ece0';
+    const r=4;
+    if(isHL){pCtx.shadowColor=fc;pCtx.shadowBlur=18;}
+    pCtx.fillStyle=fc;pCtx.strokeStyle='#444';pCtx.lineWidth=.8;
+    pCtx.beginPath();
+    pCtx.moveTo(x+1,0);pCtx.lineTo(x+PKW-1,0);pCtx.lineTo(x+PKW-1,PH-r);
+    pCtx.arcTo(x+PKW-1,PH,x+PKW-1-r,PH,r);pCtx.lineTo(x+1+r,PH);
+    pCtx.arcTo(x+1,PH,x+1,PH-r,r);pCtx.lineTo(x+1,0);
+    pCtx.fill();pCtx.shadowBlur=0;pCtx.stroke();
+    if(n==='C'){
+      pCtx.fillStyle='rgba(255,255,255,.35)';pCtx.font='bold 11px "DM Mono",monospace';
+      pCtx.textAlign='center';pCtx.fillText('C',x+PKW/2,PH-7);
+    }
+    if(isHL&&revealOk!==null){
+      pCtx.fillStyle=revealOk?'#0D1117':'#fff';pCtx.font='bold 13px "DM Mono",monospace';
+      pCtx.textAlign='center';pCtx.fillText(n,x+PKW/2,PH-7);
+    }
+  });
+  P_NOTES.forEach((n,i)=>{
+    if(!P_HAS_BK[i])return;
+    const bx=(i+1)*PKW-BKW/2,r=2;
+    pCtx.fillStyle='#1a1428';pCtx.strokeStyle='rgba(0,0,0,.5)';pCtx.lineWidth=.5;
+    pCtx.beginPath();pCtx.moveTo(bx,0);pCtx.lineTo(bx+BKW,0);pCtx.lineTo(bx+BKW,BKH-r);
+    pCtx.arcTo(bx+BKW,BKH,bx+BKW-r,BKH,r);pCtx.lineTo(bx+r,BKH);
+    pCtx.arcTo(bx,BKH,bx,BKH-r,r);pCtx.lineTo(bx,0);
+    pCtx.fill();pCtx.stroke();
+  });
+}
+
+/* ─────────── CANVAS: NOTE VALUE ─────────── */
+const vCanvas=document.getElementById('valueCanvas'),vCtx=vCanvas.getContext('2d');
+const VW=560,VH=180;
+function drawNoteValue(type,revealed){
+  vCtx.clearRect(0,0,VW,VH);vCtx.fillStyle='#0D1117';vCtx.fillRect(0,0,VW,VH);
+  const cx=VW/2,lineGap=16,staffTop=VH/2-30;
+  // 5 staff lines
+  vCtx.strokeStyle='rgba(255,255,255,.3)';vCtx.lineWidth=1.2;
+  for(let i=0;i<5;i++){vCtx.beginPath();vCtx.moveTo(cx-130,staffTop+i*lineGap);vCtx.lineTo(cx+130,staffTop+i*lineGap);vCtx.stroke();}
+  const noteY=staffTop+2*lineGap; // 3rd line (middle)
+  const isDotted=type.startsWith('dotted-');
+  const base=isDotted?type.replace('dotted-',''):type;
+  const isOpen=(base==='whole'||base==='half');
+  const hasStem=(type!=='whole');
+  const flags=(type==='eighth'||type==='dotted-eighth')?1:type==='sixteenth'?2:0;
+  const nc=revealed?'#39D98A':'#FF2D78';
+  vCtx.shadowColor=nc;vCtx.shadowBlur=16;
+  if(isOpen){
+    vCtx.strokeStyle=nc;vCtx.lineWidth=2.5;
+    vCtx.beginPath();vCtx.ellipse(cx,noteY,12,8.5,-0.18,0,Math.PI*2);vCtx.stroke();
+    if(base==='whole'){vCtx.fillStyle='#0D1117';vCtx.shadowBlur=0;vCtx.beginPath();vCtx.ellipse(cx,noteY,7,4.5,-0.18,0,Math.PI*2);vCtx.fill();}
+  }else{
+    vCtx.fillStyle=nc;vCtx.beginPath();vCtx.ellipse(cx,noteY,12,8.5,-0.18,0,Math.PI*2);vCtx.fill();
+  }
+  vCtx.shadowBlur=0;
+  if(hasStem){
+    const sx=cx+11;vCtx.strokeStyle=nc;vCtx.lineWidth=2;
+    vCtx.beginPath();vCtx.moveTo(sx,noteY-7);vCtx.lineTo(sx,noteY-42);vCtx.stroke();
+    for(let f=0;f<flags;f++){
+      const fy=noteY-42+f*12;
+      vCtx.beginPath();vCtx.moveTo(sx,fy);vCtx.bezierCurveTo(sx+20,fy+6,sx+22,fy+18,sx+2,fy+22);
+      vCtx.strokeStyle=nc;vCtx.lineWidth=2;vCtx.stroke();
+    }
+  }
+  if(isDotted){vCtx.fillStyle=nc;vCtx.beginPath();vCtx.arc(cx+19,noteY-5,3.5,0,Math.PI*2);vCtx.fill();}
+  if(revealed){
+    const LABELS={'whole':'Whole Note','half':'Half Note','quarter':'Quarter Note','eighth':'Eighth Note',
+      'dotted-half':'Dotted Half Note','dotted-quarter':'Dotted Quarter Note','sixteenth':'Sixteenth Note'};
+    vCtx.fillStyle='#39D98A';vCtx.font='bold 13px "DM Mono",monospace';vCtx.textAlign='center';
+    vCtx.fillText(LABELS[type]||type,VW/2,VH-10);
+  }
+}
+
+/* ── POOL BUILDERS ── */
+function buildPianoPool(){
+  const notes=['C','D','E','F','G','A','B'];
+  const sh=[...notes].sort(()=>Math.random()-.5);
+  sh.push(notes[Math.floor(Math.random()*notes.length)]);
+  return sh;
+}
+function buildValuePool(){
+  const sh=[...VALUE_POOL].sort(()=>Math.random()-.5);
+  sh.push(VALUE_POOL[Math.floor(Math.random()*VALUE_POOL.length)]);
+  return sh;
+}
+function buildTimesigPool(){
+  return [...TIMESIG_POOL].sort(()=>Math.random()-.5).slice(0,8);
+}
+function getValueChoices(correctAns){
+  const others=ALL_VALUE_ANSWERS.filter(a=>a!==correctAns);
+  const distractors=others.sort(()=>Math.random()-.5).slice(0,3);
+  return [...distractors,correctAns].sort(()=>Math.random()-.5);
+}
+
+/* ── SCREEN ROUTER ── */
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showArea(id){['staffArea','pianoArea','valueArea','textArea'].forEach(a=>{document.getElementById(a).style.display=(a===id)?'flex':'none';});}
+
+/* ── PHASE DOTS ── */
+function renderDots(){
+  const c=document.getElementById('phaseDots');c.innerHTML='';
+  PHASES.forEach((_,i)=>{
+    const d=document.createElement('div');d.className='phase-dot';
+    if(i<quiz.phaseIdx)d.classList.add('done');
+    else if(i===quiz.phaseIdx)d.classList.add('active');
+    c.appendChild(d);
+  });
 }
 
 /* ── QUIZ FLOW ── */
-function startQuiz() {
-  ensureAudio();
-  quiz.scores = [];
+function startQuiz(){
+  ensureAudio();quiz.scores=[];
   startPhase(0);
 }
-
-function startPhase(idx) {
+function startPhase(idx){
   ensureAudio();
-  quiz.phaseIdx    = idx;
-  quiz.questionNum = 0;
-  quiz.correct     = 0;
-  quiz.answered    = false;
-  quiz.currentNote = null;
-
-  const phase = PHASES[idx];
-  quiz.pool   = [...phase.notes];
-
-  const pl = document.getElementById('phaseLabel');
-  pl.className = 'phase-label ' + (phase.clef === 'treble' ? 'treble' : 'bass');
-  document.getElementById('phaseIcon').textContent = phase.icon;
-  document.getElementById('phaseName').textContent = `Phase ${idx + 1} — ${phase.label}`;
-  document.getElementById('qTotal').textContent    = phase.count;
-  document.getElementById('progressFill').style.width = '0%';
-
+  quiz.phaseIdx=idx;quiz.questionNum=0;quiz.correct=0;quiz.answered=false;quiz.currentQ=null;
+  const ph=PHASES[idx];
+  if(ph.type==='staff')    quiz.pool=[...ph.notes];
+  else if(ph.type==='piano')   quiz.pool=buildPianoPool();
+  else if(ph.type==='value')   quiz.pool=buildValuePool();
+  else if(ph.type==='timesig') quiz.pool=buildTimesigPool();
+  const pl=document.getElementById('phaseLabel');
+  pl.className='phase-label '+ph.cls;
+  document.getElementById('phaseIcon').textContent=ph.icon;
+  document.getElementById('phaseName').textContent=`Phase ${idx+1} — ${ph.label}`;
+  document.getElementById('qTotal').textContent=ph.count;
+  document.getElementById('progressFill').style.width='0%';
+  renderDots();
   showScreen('quizScreen');
-  hideFeedback();
-  resetButtons();
-  setTimerDisplay(null);
+  hideFeedback();resetAllBtns();setTimerDisplay(null);
   nextQuestion();
 }
 
-function nextQuestion() {
-  const phase = PHASES[quiz.phaseIdx];
-  if (quiz.questionNum >= phase.count) {
-    phaseComplete();
-    return;
+function nextQuestion(){
+  const ph=PHASES[quiz.phaseIdx];
+  if(quiz.questionNum>=ph.count){phaseComplete();return;}
+  quiz.questionNum++;quiz.answered=false;
+  hideFeedback();resetAllBtns();
+  document.getElementById('qNum').textContent=quiz.questionNum;
+  document.getElementById('progressFill').style.width=((quiz.questionNum-1)/ph.count*100)+'%';
+  if(ph.type==='staff'){
+    showArea('staffArea');
+    document.getElementById('staffBtns').style.display='grid';
+    document.getElementById('choiceBtns').style.display='none';
+    document.getElementById('kbdHint').style.display='block';
+    const pick=ph.notes[Math.floor(Math.random()*ph.notes.length)];
+    quiz.currentQ={correctAnswer:pick.note,noteObj:pick};
+    drawStaff(pick,ph.clef,false);
+    playNote(noteHz(pick.note,pick.octave),.6);
+  } else if(ph.type==='piano'){
+    showArea('pianoArea');
+    document.getElementById('staffBtns').style.display='grid';
+    document.getElementById('choiceBtns').style.display='none';
+    document.getElementById('kbdHint').style.display='block';
+    const note=quiz.pool[quiz.questionNum-1];
+    quiz.currentQ={correctAnswer:note};
+    drawPiano(note,null);
+  } else if(ph.type==='value'){
+    showArea('valueArea');
+    document.getElementById('staffBtns').style.display='none';
+    document.getElementById('choiceBtns').style.display='grid';
+    document.getElementById('kbdHint').style.display='none';
+    const item=quiz.pool[quiz.questionNum-1];
+    quiz.currentQ={correctAnswer:item.answer,noteType:item.type,noteLabel:item.label};
+    drawNoteValue(item.type,false);
+    renderChoiceBtns(getValueChoices(item.answer));
+  } else if(ph.type==='timesig'){
+    showArea('textArea');
+    document.getElementById('staffBtns').style.display='none';
+    document.getElementById('choiceBtns').style.display='grid';
+    document.getElementById('kbdHint').style.display='none';
+    const item=quiz.pool[quiz.questionNum-1];
+    quiz.currentQ={correctAnswer:item.correct};
+    document.getElementById('textQuestion').textContent=item.q;
+    renderChoiceBtns([...item.choices].sort(()=>Math.random()-.5));
   }
-
-  quiz.questionNum++;
-  quiz.answered    = false;
-  quiz.currentNote = { ...quiz.pool[Math.floor(Math.random() * quiz.pool.length)] };
-
-  document.getElementById('qNum').textContent            = quiz.questionNum;
-  document.getElementById('progressFill').style.width    = ((quiz.questionNum - 1) / phase.count * 100) + '%';
-
-  drawStaff(quiz.currentNote, phase.clef, false);
-  playNote(noteHz(quiz.currentNote.note, quiz.currentNote.octave), 0.6);
-  hideFeedback();
-  resetButtons();
-  setButtonsDisabled(false);
-
-  quiz.questionStart = performance.now();
-  startTimer();
+  setAllDisabled(false);
+  quiz.questionStart=performance.now();
+  startTimer(ph.timeLimit);
 }
 
-function answerNote(guessNote) {
-  if (!quiz.currentNote || quiz.answered) return;
-  quiz.answered = true;
-  cancelAnimationFrame(quiz.timerRAF);
-
-  const elapsed    = (performance.now() - quiz.questionStart) / 1000;
-  const isCorrect  = guessNote === quiz.currentNote.note;
-  const tooSlow    = elapsed > TIMER_LIMIT;
-  const win        = isCorrect && !tooSlow;
-
-  drawStaff(quiz.currentNote, PHASES[quiz.phaseIdx].clef, true);
-
-  const correctBtn = document.querySelector(`.note-btn[data-note="${quiz.currentNote.note}"]`);
-  const guessBtn   = document.querySelector(`.note-btn[data-note="${guessNote}"]`);
-  if (correctBtn) correctBtn.classList.add('correct');
-  if (guessBtn && !isCorrect) guessBtn.classList.add('wrong');
-  setButtonsDisabled(true);
-
-  if (win) { quiz.correct++; playCorrect(); }
-  else     { playWrong(); }
-
-  const frac = elapsed / TIMER_LIMIT;
-  setTimerDisplay(elapsed, frac < 0.5 ? 'green' : frac < 0.85 ? 'amber' : 'red');
-
-  if (tooSlow && isCorrect) {
-    showFeedback('slow', '⏰', `Correct, but too slow!`, `${elapsed.toFixed(1)}s — answer within ${TIMER_LIMIT}s`);
-  } else if (win) {
-    showFeedback('correct', '✓', `That's ${quiz.currentNote.note}${quiz.currentNote.octave}!`, `${elapsed.toFixed(2)}s`);
-  } else {
-    showFeedback('wrong', '✗', `It was ${quiz.currentNote.note}${quiz.currentNote.octave}`, `You answered ${guessNote}`);
+/* ── UNIFIED ANSWER ── */
+function answer(response){
+  if(!quiz.currentQ||quiz.answered)return;
+  quiz.answered=true;cancelAnimationFrame(quiz.timerRAF);
+  const ph=PHASES[quiz.phaseIdx];
+  const elapsed=(performance.now()-quiz.questionStart)/1000;
+  const isCorrect=response===quiz.currentQ.correctAnswer;
+  const tooSlow=elapsed>ph.timeLimit;
+  const win=isCorrect&&!tooSlow;
+  if(win){quiz.correct++;playCorrect();}else{playWrong();}
+  // Visual reveal
+  if(ph.type==='staff'){
+    drawStaff(quiz.currentQ.noteObj,ph.clef,true);
+    document.querySelectorAll('.note-btn').forEach(b=>{
+      if(b.dataset.note===quiz.currentQ.correctAnswer)b.classList.add('correct');
+      else if(b.dataset.note===response&&!isCorrect)b.classList.add('wrong');
+    });
+  } else if(ph.type==='piano'){
+    drawPiano(quiz.currentQ.correctAnswer,isCorrect);
+    document.querySelectorAll('.note-btn').forEach(b=>{
+      if(b.dataset.note===quiz.currentQ.correctAnswer)b.classList.add('correct');
+      else if(b.dataset.note===response&&!isCorrect)b.classList.add('wrong');
+    });
+  } else if(ph.type==='value'){
+    drawNoteValue(quiz.currentQ.noteType,true);
+    colorChoiceBtns(response,quiz.currentQ.correctAnswer);
+  } else if(ph.type==='timesig'){
+    colorChoiceBtns(response,quiz.currentQ.correctAnswer);
   }
-
-  setTimeout(() => nextQuestion(), 1350);
+  setAllDisabled(true);
+  const frac=elapsed/ph.timeLimit;
+  setTimerDisplay(elapsed,frac<.5?'green':frac<.85?'amber':'red',ph.timeLimit);
+  if(tooSlow&&isCorrect){
+    showFeedback('slow','⏰','Correct, but too slow!',`${elapsed.toFixed(1)}s — answer within ${ph.timeLimit}s`);
+  }else if(win){
+    showFeedback('correct','✓',`Correct!`,`${elapsed.toFixed(2)}s`);
+  }else if(!isCorrect){
+    showFeedback('wrong','✗',`Not quite — answer: "${quiz.currentQ.correctAnswer}"`,'');
+  }else{
+    showFeedback('slow','⏰','Time\'s up!',`Answer: "${quiz.currentQ.correctAnswer}"`);
+  }
+  setTimeout(()=>nextQuestion(),1350);
 }
 
-function handleTimeout() {
-  if (quiz.answered) return;
-  quiz.answered = true;
-  drawStaff(quiz.currentNote, PHASES[quiz.phaseIdx].clef, true);
+function handleTimeout(){
+  if(quiz.answered)return;
+  quiz.answered=true;
+  const ph=PHASES[quiz.phaseIdx];
+  if(ph.type==='staff')drawStaff(quiz.currentQ.noteObj,ph.clef,true);
+  else if(ph.type==='piano')drawPiano(quiz.currentQ.correctAnswer,false);
+  else if(ph.type==='value')drawNoteValue(quiz.currentQ.noteType,true);
+  if(ph.type==='value'||ph.type==='timesig')colorChoiceBtns(null,quiz.currentQ.correctAnswer);
   playWrong();
-  showFeedback('slow', '⏰', 'Time\'s up!', `The note was ${quiz.currentNote.note}${quiz.currentNote.octave}`);
-  setButtonsDisabled(true);
-  setTimerDisplay(TIMER_LIMIT, 'red');
-  setTimeout(() => nextQuestion(), 1350);
+  showFeedback('slow','⏰','Time\'s up!',`Answer: "${quiz.currentQ.correctAnswer}"`);
+  setAllDisabled(true);
+  setTimerDisplay(PHASES[quiz.phaseIdx].timeLimit,'red',PHASES[quiz.phaseIdx].timeLimit);
+  setTimeout(()=>nextQuestion(),1350);
 }
 
-function phaseComplete() {
+/* ── PHASE COMPLETE ── */
+function phaseComplete(){
   cancelAnimationFrame(quiz.timerRAF);
-  const phase = PHASES[quiz.phaseIdx];
-  quiz.scores.push({ correct: quiz.correct, total: phase.count });
-  saveScore('note_quiz_' + (quiz.phaseIdx === 0 ? 'treble' : 'bass'), quiz.correct, phase.count);
-
-  if (quiz.phaseIdx === 0) {
-    showTransitionScreen();
-  } else {
-    showResultsScreen();
-  }
+  const ph=PHASES[quiz.phaseIdx];
+  quiz.scores.push({correct:quiz.correct,total:ph.count,label:ph.label,icon:ph.icon});
+  saveScore('note_quiz_'+ph.id,quiz.correct,ph.count);
+  if(quiz.phaseIdx<PHASES.length-1){showTransition();}
+  else{showResults();}
 }
 
-function showTransitionScreen() {
-  const sc  = quiz.scores[0];
-  const pct = Math.round(sc.correct / sc.total * 100);
-  document.getElementById('transPct').textContent  = pct + '%';
-  document.getElementById('transFrac').textContent = sc.correct + ' / ' + sc.total + ' correct';
+function showTransition(){
+  const sc=quiz.scores[quiz.scores.length-1];
+  const pct=Math.round(sc.correct/sc.total*100);
+  const ph=PHASES[quiz.phaseIdx],next=PHASES[quiz.phaseIdx+1];
+  const col={c1:'var(--sky)',c2:'var(--pink)',c3:'var(--purple)',c4:'var(--amber)',c5:'var(--green)'}[ph.cls];
+  document.getElementById('transEyebrow').textContent=`Phase ${quiz.phaseIdx+1} Complete`;
+  document.getElementById('transEyebrow').style.color=col;
+  document.getElementById('transTitle').textContent=`${ph.icon} ${ph.label}`;
+  document.getElementById('transPct').textContent=pct+'%';
+  document.getElementById('transPct').style.color=col;
+  document.getElementById('transFrac').textContent=sc.correct+' / '+sc.total+' correct';
+  const nextCol={c1:'var(--sky)',c2:'var(--pink)',c3:'var(--purple)',c4:'var(--amber)',c5:'var(--green)'}[next.cls];
+  document.getElementById('nextTitle').textContent=`Next: Phase ${quiz.phaseIdx+2} — ${next.label}`;
+  document.getElementById('nextSub').textContent=`${next.count} questions · ${next.timeLimit} sec each`;
   showScreen('transitionScreen');
-  showToast(`Phase 1 done — ${pct}%`);
+  showToast(`Phase ${quiz.phaseIdx+1} done — ${pct}%`);
 }
 
-function showResultsScreen() {
-  const t = quiz.scores[0] || { correct: 0, total: 10 };
-  const b = quiz.scores[1] || { correct: 0, total: 10 };
-  const totalCorrect = t.correct + b.correct;
-  const totalQ       = t.total + b.total;
-  const overall      = Math.round(totalCorrect / totalQ * 100);
-  const tPct         = Math.round(t.correct / t.total * 100);
-  const bPct         = Math.round(b.correct / b.total * 100);
+function continueToNextPhase(){startPhase(quiz.phaseIdx+1);}
 
-  document.getElementById('overallPct').textContent  = overall + '%';
-  document.getElementById('treblePct').textContent   = tPct + '%';
-  document.getElementById('trebleFrac').textContent  = t.correct + ' / ' + t.total + ' correct';
-  document.getElementById('bassPct').textContent     = bPct + '%';
-  document.getElementById('bassFrac').textContent    = b.correct + ' / ' + b.total + ' correct';
-
-  let grade, gradeClass, sub;
-  if (overall >= 90) {
-    grade = 'Excellent';     gradeClass = 'grade-excellent'; sub = 'Outstanding note reading skills!';
-  } else if (overall >= 70) {
-    grade = 'Good';          gradeClass = 'grade-good';      sub = 'Solid performance — keep practising!';
-  } else if (overall >= 50) {
-    grade = 'Needs Practice'; gradeClass = 'grade-practice'; sub = 'You\'re making progress — keep going!';
-  } else {
-    grade = 'Keep Practising'; gradeClass = 'grade-retry';   sub = 'Review the notes on the staff and try again!';
-  }
-
-  const gradeEl = document.getElementById('resultsGrade');
-  gradeEl.textContent = grade;
-  gradeEl.className   = 'results-grade ' + gradeClass;
-  document.getElementById('resultsSub').textContent = sub;
-
+function showResults(){
+  const totC=quiz.scores.reduce((s,p)=>s+p.correct,0);
+  const totQ=quiz.scores.reduce((s,p)=>s+p.total,0);
+  const overall=Math.round(totC/totQ*100);
+  document.getElementById('overallPct').textContent=overall+'%';
+  document.getElementById('overallLbl').textContent=`Overall Score  (${totC}/${totQ} correct)`;
+  quiz.scores.forEach((s,i)=>{
+    const p=Math.round(s.correct/s.total*100);
+    document.getElementById(`p${i+1}Pct`).textContent=p+'%';
+    document.getElementById(`p${i+1}Frac`).textContent=s.correct+'/'+s.total;
+  });
+  let grade,gradeClass,sub;
+  if(overall>=90){grade='Excellent';gradeClass='grade-excellent';sub='Outstanding performance across all areas!';}
+  else if(overall>=70){grade='Good';gradeClass='grade-good';sub='Solid performance — keep practising!';}
+  else if(overall>=50){grade='Needs Practice';gradeClass='grade-practice';sub='You\'re making progress — keep going!';}
+  else{grade='Keep Practising';gradeClass='grade-retry';sub='Review the notes and try again!';}
+  const g=document.getElementById('resultsGrade');
+  g.textContent=grade;g.className='results-grade '+gradeClass;
+  document.getElementById('resultsSub').textContent=sub;
   showScreen('resultsScreen');
-  showToast(`Quiz complete — ${overall}% overall!`);
+  saveFullAssessment(totC,totQ,overall);
+  showToast(`Assessment done — ${overall}% overall!`);
 }
 
-function resetQuiz() {
-  drawStaff(null, 'treble', false);
-  setTimerDisplay(null);
-  showScreen('introScreen');
-}
+function resetQuiz(){drawStaff(null,'treble',false);setTimerDisplay(null);showScreen('introScreen');}
 
 /* ── TIMER ── */
-function startTimer() {
+function startTimer(limit){
   cancelAnimationFrame(quiz.timerRAF);
-  const t0 = performance.now();
-  function tick() {
-    if (quiz.answered) return;
-    const elapsed  = (performance.now() - t0) / 1000;
-    const frac     = Math.min(elapsed / TIMER_LIMIT, 1);
-    const ring     = document.getElementById('timerRing');
-    const text     = document.getElementById('timerText');
-    ring.style.strokeDashoffset = RING_CIRCUM * (1 - frac);
-    ring.style.stroke = frac < 0.5 ? '#39D98A' : frac < 0.85 ? '#F59E0B' : '#EF4444';
-    text.textContent  = elapsed.toFixed(1);
-    text.style.color  = frac > 0.85 ? '#EF4444' : 'var(--white)';
-    if (elapsed >= TIMER_LIMIT) { handleTimeout(); return; }
-    quiz.timerRAF = requestAnimationFrame(tick);
+  const t0=performance.now();
+  function tick(){
+    if(quiz.answered)return;
+    const elapsed=(performance.now()-t0)/1000,frac=Math.min(elapsed/limit,1);
+    const ring=document.getElementById('timerRing'),text=document.getElementById('timerText');
+    ring.style.strokeDashoffset=RING_CIRCUM*(1-frac);
+    ring.style.stroke=frac<.5?'#39D98A':frac<.85?'#F59E0B':'#EF4444';
+    text.textContent=elapsed.toFixed(1);
+    text.style.color=frac>.85?'#EF4444':'var(--white)';
+    if(elapsed>=limit){handleTimeout();return;}
+    quiz.timerRAF=requestAnimationFrame(tick);
   }
-  quiz.timerRAF = requestAnimationFrame(tick);
+  quiz.timerRAF=requestAnimationFrame(tick);
 }
-
-function setTimerDisplay(val, color) {
-  const ring = document.getElementById('timerRing');
-  const text = document.getElementById('timerText');
-  if (val === null) {
-    ring.style.strokeDashoffset = RING_CIRCUM;
-    ring.style.stroke = '#FF2D78';
-    text.textContent = '—';
-    text.style.color = 'var(--white)';
-    return;
-  }
-  ring.style.strokeDashoffset = RING_CIRCUM * (1 - Math.min(val / TIMER_LIMIT, 1));
-  ring.style.stroke = color === 'green' ? '#39D98A' : color === 'amber' ? '#F59E0B' : '#EF4444';
-  text.textContent  = val.toFixed(2);
-  text.style.color  = color === 'red' ? '#EF4444' : 'var(--white)';
+function setTimerDisplay(val,color,limit=5){
+  const ring=document.getElementById('timerRing'),text=document.getElementById('timerText');
+  if(val===null){ring.style.strokeDashoffset=RING_CIRCUM;ring.style.stroke='#FF2D78';text.textContent='—';text.style.color='var(--white)';return;}
+  ring.style.strokeDashoffset=RING_CIRCUM*(1-Math.min(val/limit,1));
+  ring.style.stroke=color==='green'?'#39D98A':color==='amber'?'#F59E0B':'#EF4444';
+  text.textContent=val.toFixed(1);text.style.color=color==='red'?'#EF4444':'var(--white)';
 }
 
 /* ── FEEDBACK ── */
-function showFeedback(type, icon, main, sub) {
-  const b = document.getElementById('feedbackBanner');
-  b.className = 'feedback-banner ' + type + ' show';
-  document.getElementById('feedbackIcon').textContent = icon;
-  document.getElementById('feedbackMain').textContent = main;
-  document.getElementById('feedbackSub').textContent  = sub || '';
+function showFeedback(type,icon,main,sub){
+  const b=document.getElementById('feedbackBanner');b.className='feedback-banner '+type+' show';
+  document.getElementById('feedbackIcon').textContent=icon;
+  document.getElementById('feedbackMain').textContent=main;
+  document.getElementById('feedbackSub').textContent=sub||'';
 }
-function hideFeedback() { document.getElementById('feedbackBanner').className = 'feedback-banner'; }
+function hideFeedback(){document.getElementById('feedbackBanner').className='feedback-banner';}
 
 /* ── BUTTON HELPERS ── */
-function setButtonsDisabled(d) {
-  document.querySelectorAll('.note-btn').forEach(b => { b.disabled = d; });
+function setAllDisabled(d){
+  document.querySelectorAll('.note-btn,.choice-btn').forEach(b=>b.disabled=d);
 }
-function resetButtons() {
-  document.querySelectorAll('.note-btn').forEach(b => {
-    b.classList.remove('correct', 'wrong');
-    b.disabled = false;
+function resetAllBtns(){
+  document.querySelectorAll('.note-btn').forEach(b=>{b.classList.remove('correct','wrong');b.disabled=false;});
+  document.getElementById('choiceBtns').innerHTML='';
+}
+function renderChoiceBtns(choices){
+  const c=document.getElementById('choiceBtns');c.innerHTML='';
+  choices.forEach(ch=>{
+    const b=document.createElement('button');b.className='choice-btn';b.textContent=ch;
+    b.onclick=()=>answer(ch);c.appendChild(b);
+  });
+}
+function colorChoiceBtns(selected,correct){
+  document.querySelectorAll('.choice-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===correct)b.classList.add('correct');
+    else if(b.textContent===selected&&selected!==correct)b.classList.add('wrong');
   });
 }
 
 /* ── KEYBOARD SHORTCUTS ── */
-document.addEventListener('keydown', e => {
-  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-  if (document.getElementById('quizScreen').classList.contains('active')) {
-    const k = e.key.toUpperCase();
-    if ('CDEFGAB'.includes(k) && k.length === 1) answerNote(k);
+document.addEventListener('keydown',e=>{
+  if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(document.getElementById('quizScreen').classList.contains('active')){
+    const ph=PHASES[quiz.phaseIdx];
+    if(ph.type==='staff'||ph.type==='piano'){
+      const k=e.key.toUpperCase();
+      if('CDEFGAB'.includes(k)&&k.length===1)answer(k);
+    }
   }
 });
 
 /* ── TOAST ── */
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2600);
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
 }
 
 /* ── SCORE SAVING ── */
-function saveScore(game, correct, total) {
-  try {
-    const key = Object.keys(localStorage).find(k => /^sb-.*-auth-token$/.test(k));
-    if (!key) return;
-    const session = JSON.parse(localStorage.getItem(key) || '{}');
-    const token   = session.access_token;
-    if (!token) return;
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-    const userId  = payload.sub;
-    if (!userId) return;
-    fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/game_scores', {
-      method:  'POST',
-      headers: {
-        'apikey':       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
-        'Authorization': 'Bearer ' + token,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=minimal',
-      },
-      body: JSON.stringify({ user_id: userId, game, score: correct, correct, total, best_streak: 0 }),
-    }).catch(() => {});
-  } catch (e) {}
+const SUPA_URL='https://tychkyunjfbkksyxknhn.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw';
+function getToken(){
+  try{
+    const k=Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k));
+    if(!k)return null;
+    const s=JSON.parse(localStorage.getItem(k)||'{}');
+    return s.access_token||null;
+  }catch(e){return null;}
+}
+function getUserId(token){
+  try{return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))?.sub||null;}
+  catch(e){return null;}
+}
+function saveScore(game,correct,total){
+  const token=getToken();if(!token)return;
+  const userId=getUserId(token);if(!userId)return;
+  fetch(SUPA_URL+'/rest/v1/game_scores',{
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify({user_id:userId,game,score:correct,correct,total,best_streak:0})
+  }).catch(()=>{});
+}
+function saveFullAssessment(totalCorrect,totalQ,overallPct){
+  const token=getToken();if(!token)return;
+  const userId=getUserId(token);if(!userId)return;
+  const payload={
+    user_id:userId,game:'note_assessment_full',
+    score:overallPct,correct:totalCorrect,total:totalQ,best_streak:0
+  };
+  fetch(SUPA_URL+'/rest/v1/game_scores',{
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(payload)
+  }).catch(()=>{});
 }
 
-// Init canvas on load
-drawStaff(null, 'treble', false);
+/* ── DOWNLOAD RESULTS ── */
+function downloadResults(){
+  const scores=quiz.scores;
+  const totC=scores.reduce((s,p)=>s+p.correct,0);
+  const totQ=scores.reduce((s,p)=>s+p.total,0);
+  const overall=Math.round(totC/totQ*100);
+  const date=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const token=getToken();
+  let email='Student';
+  if(token){try{const p=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));email=p.email||'Student';}catch(e){}}
+  let grade='Keep Practising';
+  if(overall>=90)grade='Excellent';else if(overall>=70)grade='Good';else if(overall>=50)grade='Needs Practice';
+  const phaseRows=scores.map((s,i)=>`
+    <tr>
+      <td>${s.icon} ${s.label}</td>
+      <td>${s.correct} / ${s.total}</td>
+      <td style="font-weight:700;color:${Math.round(s.correct/s.total*100)>=70?'#15803d':'#b91c1c'}">${Math.round(s.correct/s.total*100)}%</td>
+    </tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<title>Note Assessment Report — Musicable</title>
+<style>
+  body{font-family:'Inter',system-ui,sans-serif;background:#fff;color:#1a1a2e;max-width:640px;margin:40px auto;padding:0 24px}
+  h1{font-size:1.6rem;font-weight:900;color:#ec4899;margin-bottom:.2rem}
+  .sub{color:#666;font-size:.9rem;margin-bottom:1.6rem}
+  .grade-badge{display:inline-block;padding:.3rem .9rem;border-radius:100px;font-weight:700;font-size:.8rem;
+    background:${overall>=90?'#dcfce7':overall>=70?'#dbeafe':overall>=50?'#fef9c3':'#fee2e2'};
+    color:${overall>=90?'#15803d':overall>=70?'#1d4ed8':overall>=50?'#854d0e':'#b91c1c'};margin-bottom:1rem}
+  .overall{font-size:3rem;font-weight:900;color:#7c3aed;line-height:1;margin:.5rem 0}
+  table{width:100%;border-collapse:collapse;margin:1.2rem 0}
+  th{background:#f3f4f6;padding:.6rem .8rem;text-align:left;font-size:.82rem;color:#374151;font-weight:700}
+  td{padding:.55rem .8rem;border-bottom:1px solid #e5e7eb;font-size:.9rem}
+  tr:last-child td{border-bottom:none}
+  .footer{margin-top:2rem;font-size:.75rem;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:1rem}
+</style></head><body>
+<h1>📋 Note Assessment Report</h1>
+<div class="sub">Generated by Musicable &nbsp;·&nbsp; ${date}</div>
+<div><strong>Student:</strong> ${email}</div>
+<div class="grade-badge">${grade}</div>
+<div class="overall">${overall}%</div>
+<div style="color:#666;margin-bottom:1.2rem">${totC} / ${totQ} correct across all phases</div>
+<table>
+  <thead><tr><th>Phase</th><th>Score</th><th>Percentage</th></tr></thead>
+  <tbody>${phaseRows}</tbody>
+</table>
+<div class="footer">Musicable Assessment · note_assessment_full · Saved to account</div>
+</body></html>`;
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=`Musicable_Assessment_${new Date().toISOString().slice(0,10)}.html`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Report downloaded!');
+}
+
+/* ── INIT ── */
+drawStaff(null,'treble',false);
 setTimerDisplay(null);
 </script>
 </body>
