@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Note Quiz — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<style>
+:root{
+  --bg:#0f172a;--bg2:#141e30;--card:#1a2540;--card2:#1e2d4a;
+  --border:rgba(255,255,255,0.08);
+  --pink:#ec4899;--pink-dim:rgba(236,72,153,0.15);
+  --sky:#00D4FF;--green:#39D98A;--purple:#A78BFA;--amber:#F59E0B;--red:#EF4444;
+  --white:#FFFFFF;--off-white:#E8ECF0;--muted:#8892A4;--muted2:#4A5568;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--off-white);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;min-height:100vh}
+
+nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px;background:rgba(15,23,42,0.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-weight:800;font-size:1.05rem;color:var(--white);text-decoration:none;letter-spacing:-.03em}
+.nav-back{color:var(--muted);font-size:.8rem;text-decoration:none;display:flex;align-items:center;gap:.3rem;transition:color .2s}
+.nav-back:hover{color:var(--white)}
+.nav-tag{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2)}
+
+.screen{display:none;max-width:740px;margin:0 auto;padding:1.4rem 1.2rem 3rem}
+.screen.active{display:block}
+
+/* ── INTRO ── */
+.intro-hero{background:linear-gradient(135deg,rgba(255,45,120,.1),rgba(0,212,255,.06));border:1px solid rgba(255,45,120,.25);border-radius:20px;padding:2.2rem 2rem;text-align:center;margin-bottom:1.2rem}
+.intro-icon{font-size:3rem;margin-bottom:.5rem}
+.intro-title{font-size:clamp(1.5rem,4vw,2.1rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.3rem}
+.intro-sub{color:var(--muted);font-size:.87rem;margin-bottom:1.5rem;line-height:1.5}
+.phase-list{display:flex;flex-direction:column;gap:.55rem;margin-bottom:1.6rem;text-align:left}
+.phase-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.9rem}
+.phase-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.78rem;font-family:'DM Mono',monospace;flex-shrink:0}
+.phase-num.treble{background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);color:var(--sky)}
+.phase-num.bass{background:rgba(255,45,120,.15);border:1px solid rgba(255,45,120,.3);color:var(--pink)}
+.phase-info h4{font-weight:700;font-size:.88rem;color:var(--off-white);margin-bottom:.08rem}
+.phase-info p{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace}
+.start-btn{width:100%;padding:.9rem;background:var(--pink);color:#fff;font-weight:900;font-size:.92rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:opacity .2s,transform .15s}
+.start-btn:hover{opacity:.88;transform:scale(1.02)}
+
+/* ── QUIZ SCREEN ── */
+.phase-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;flex-wrap:wrap;gap:.4rem}
+.phase-label{font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:.35rem;padding:.25rem .7rem;border-radius:100px}
+.phase-label.treble{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.25);color:var(--sky)}
+.phase-label.bass{background:rgba(255,45,120,.1);border:1px solid rgba(255,45,120,.25);color:var(--pink)}
+.q-counter{font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;color:var(--off-white)}
+
+.progress-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:1rem;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:2px;transition:width .4s ease;width:0%}
+
+.staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:.75rem;display:flex;align-items:center;justify-content:center;min-height:160px}
+#staffCanvas{width:100%;height:auto;display:block;border-radius:6px}
+
+.feedback-banner{border-radius:10px;padding:.7rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.7rem;font-weight:600;font-size:.87rem;min-height:46px;opacity:0;transform:translateY(-5px);transition:all .25s}
+.feedback-banner.show{opacity:1;transform:translateY(0)}
+.feedback-banner.correct{background:rgba(57,217,138,.12);border:1px solid rgba(57,217,138,.3);color:var(--green)}
+.feedback-banner.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+.feedback-banner.slow{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+
+.answer-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem}
+.note-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;flex:1}
+.note-btn{padding:.7rem .25rem;background:var(--card2);border:1px solid var(--border);color:var(--off-white);font-weight:700;font-size:1.05rem;border-radius:10px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
+.note-btn:hover:not(:disabled){border-color:var(--pink);color:var(--pink);background:var(--pink-dim)}
+.note-btn.correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green);animation:pulse-green .4s ease}
+.note-btn.wrong{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);animation:shake .3s ease}
+.note-btn:disabled{opacity:.35;cursor:not-allowed}
+
+@keyframes pulse-green{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.kbd-hint{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);text-align:center;letter-spacing:.04em}
+
+/* ── TRANSITION ── */
+.trans-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2rem 1.8rem;text-align:center;margin-bottom:1rem}
+.trans-eyebrow{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--sky);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem}
+.trans-title{font-size:1.5rem;font-weight:900;color:var(--white);margin-bottom:.3rem}
+.trans-sub{font-size:.84rem;color:var(--muted);margin-bottom:1.4rem}
+.trans-score-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.3rem 2.5rem;display:inline-block;margin-bottom:.2rem}
+.trans-pct{font-family:'DM Mono',monospace;font-size:3rem;font-weight:700;color:var(--sky);line-height:1}
+.trans-frac{font-size:.8rem;color:var(--muted);margin-top:.3rem}
+.next-card{background:linear-gradient(135deg,rgba(255,45,120,.07),rgba(168,85,247,.07));border:1px solid rgba(255,45,120,.18);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.2rem;text-align:left}
+.next-card h4{font-weight:700;color:var(--off-white);margin-bottom:.2rem;font-size:.9rem}
+.next-card p{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* ── RESULTS ── */
+.results-top{text-align:center;margin-bottom:1.2rem}
+.results-grade{display:inline-block;padding:.28rem .9rem;border-radius:100px;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.6rem}
+.grade-excellent{background:rgba(57,217,138,.15);border:1px solid rgba(57,217,138,.3);color:var(--green)}
+.grade-good{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25);color:var(--sky)}
+.grade-practice{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
+.grade-retry{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--red)}
+.results-title{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;color:var(--white);letter-spacing:-.03em;margin-bottom:.25rem}
+
+.overall-card{background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(0,212,255,.06));border:1px solid rgba(168,85,247,.2);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:.8rem}
+.overall-pct{font-family:'DM Mono',monospace;font-size:3.4rem;font-weight:700;color:var(--purple);line-height:1;margin-bottom:.2rem}
+.overall-lbl{font-size:.78rem;color:var(--muted)}
+
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem}
+.score-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;text-align:center}
+.score-card-lbl{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
+.score-card-pct{font-family:'DM Mono',monospace;font-size:2.4rem;font-weight:700;line-height:1;margin-bottom:.2rem}
+.score-card.treble .score-card-pct{color:var(--sky)}
+.score-card.bass .score-card-pct{color:var(--pink)}
+.score-card-frac{font-size:.76rem;color:var(--muted)}
+
+.results-actions{display:flex;flex-direction:column;gap:.55rem}
+.btn-primary{padding:.85rem;background:var(--pink);color:#fff;font-weight:800;font-size:.88rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:opacity .2s}
+.btn-primary:hover{opacity:.88}
+.btn-outline{padding:.7rem;background:transparent;color:var(--muted);font-size:.83rem;border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-decoration:none;text-align:center;display:block}
+.btn-outline:hover{color:var(--off-white);border-color:rgba(255,255,255,.18)}
+
+#toast{position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--pink);color:#fff;border-radius:10px;padding:.55rem 1.1rem;font-size:.8rem;font-weight:600;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:540px){
+  .note-btns{grid-template-columns:repeat(4,1fr)}
+  .score-grid{grid-template-columns:1fr}
+  .answer-row{flex-direction:column;align-items:stretch}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/dashboard" class="nav-back">← Dashboard</a>
+  <a href="/" class="nav-logo">Musicable</a>
+  <span class="nav-tag">Note Quiz</span>
+</nav>
+
+<!-- ═══════════ INTRO ═══════════ -->
+<div id="introScreen" class="screen active">
+  <div class="intro-hero">
+    <div class="intro-icon">📋</div>
+    <h1 class="intro-title">Note Reading <span style="color:var(--pink)">Quiz</span></h1>
+    <p class="intro-sub">Two-phase assessment — treble clef first, then bass clef.<br>10 questions per clef · 5 seconds each · Natural notes only</p>
+    <div class="phase-list">
+      <div class="phase-item">
+        <div class="phase-num treble">1</div>
+        <div class="phase-info">
+          <h4>Treble Clef — Phase 1</h4>
+          <p>Range: C4 to C6 · 10 questions</p>
+        </div>
+      </div>
+      <div class="phase-item">
+        <div class="phase-num bass">2</div>
+        <div class="phase-info">
+          <h4>Bass Clef — Phase 2</h4>
+          <p>Range: C3 to C4 · 10 questions</p>
+        </div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">Start Quiz →</button>
+  </div>
+</div>
+
+<!-- ═══════════ QUIZ ═══════════ -->
+<div id="quizScreen" class="screen">
+  <div class="phase-header">
+    <div class="phase-label treble" id="phaseLabel">
+      <span id="phaseIcon">𝄞</span>
+      <span id="phaseName">Phase 1 — Treble Clef</span>
+    </div>
+    <div class="q-counter">Q<span id="qNum">1</span>/<span id="qTotal">10</span></div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="staff-area">
+    <canvas id="staffCanvas" width="900" height="270"></canvas>
+  </div>
+
+  <div class="feedback-banner" id="feedbackBanner">
+    <span id="feedbackIcon" style="font-size:1.15rem;flex-shrink:0"></span>
+    <div>
+      <div id="feedbackMain"></div>
+      <div id="feedbackSub" style="font-size:.77rem;opacity:.72;margin-top:.06rem"></div>
+    </div>
+  </div>
+
+  <div class="answer-row">
+    <!-- Timer ring -->
+    <div style="position:relative;width:72px;height:72px;flex-shrink:0">
+      <svg style="position:absolute;inset:0;transform:rotate(-90deg)" width="72" height="72" viewBox="0 0 72 72">
+        <circle r="30" cx="36" cy="36" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+        <circle r="30" cx="36" cy="36" id="timerRing" fill="none" stroke="#FF2D78" stroke-width="5"
+                stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="188"
+                style="transition:stroke-dashoffset .1s linear,stroke .5s"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+        <div id="timerText" style="font-family:'DM Mono',monospace;font-size:1.15rem;font-weight:500;color:var(--white);line-height:1">—</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--muted2);letter-spacing:.1em">SEC</div>
+      </div>
+    </div>
+
+    <!-- Note buttons -->
+    <div class="note-btns" id="noteBtns">
+      <button class="note-btn" data-note="C" onclick="answerNote('C')">C</button>
+      <button class="note-btn" data-note="D" onclick="answerNote('D')">D</button>
+      <button class="note-btn" data-note="E" onclick="answerNote('E')">E</button>
+      <button class="note-btn" data-note="F" onclick="answerNote('F')">F</button>
+      <button class="note-btn" data-note="G" onclick="answerNote('G')">G</button>
+      <button class="note-btn" data-note="A" onclick="answerNote('A')">A</button>
+      <button class="note-btn" data-note="B" onclick="answerNote('B')">B</button>
+    </div>
+  </div>
+
+  <div class="kbd-hint">Keyboard shortcut: press C D E F G A B to answer</div>
+</div>
+
+<!-- ═══════════ TRANSITION ═══════════ -->
+<div id="transitionScreen" class="screen">
+  <div class="trans-card">
+    <div class="trans-eyebrow">Phase 1 Complete</div>
+    <h2 class="trans-title">Treble Clef — Done!</h2>
+    <p class="trans-sub">Here's how you scored on Phase 1</p>
+    <div class="trans-score-box">
+      <div class="trans-pct" id="transPct">—</div>
+      <div class="trans-frac" id="transFrac">—</div>
+    </div>
+  </div>
+  <div class="next-card">
+    <h4>Next: Bass Clef Test (Phase 2)</h4>
+    <p>Range: C3 to C4 · 10 questions · 5 seconds each</p>
+  </div>
+  <button class="start-btn" onclick="startPhase(1)">Continue to Bass Clef →</button>
+</div>
+
+<!-- ═══════════ RESULTS ═══════════ -->
+<div id="resultsScreen" class="screen">
+  <div class="results-top">
+    <div id="resultsGrade" class="results-grade grade-good">—</div>
+    <h2 class="results-title">Quiz <span style="color:var(--purple)">Complete!</span></h2>
+    <p style="color:var(--muted);font-size:.86rem;margin-top:.2rem" id="resultsSub"></p>
+  </div>
+
+  <div class="overall-card">
+    <div class="overall-pct" id="overallPct">—</div>
+    <div class="overall-lbl">Overall Score</div>
+  </div>
+
+  <div class="score-grid">
+    <div class="score-card treble">
+      <div class="score-card-lbl">𝄞 Treble Clef</div>
+      <div class="score-card-pct" id="treblePct">—</div>
+      <div class="score-card-frac" id="trebleFrac">—</div>
+    </div>
+    <div class="score-card bass">
+      <div class="score-card-lbl">𝄢 Bass Clef</div>
+      <div class="score-card-pct" id="bassPct">—</div>
+      <div class="score-card-frac" id="bassFrac">—</div>
+    </div>
+  </div>
+
+  <div class="results-actions">
+    <button class="btn-primary" onclick="resetQuiz()">Try Again</button>
+    <a href="/dashboard/foundation" class="btn-outline">Back to Foundation</a>
+    <a href="/dashboard" class="btn-outline">Dashboard</a>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ── AUDIO ── */
+const limiter = new Tone.Limiter(-3).toDestination();
+const pianoReverb = new Tone.Reverb({ decay: 1.2, wet: 0.18 });
+pianoReverb.connect(limiter);
+const pianoSynth = new Tone.PolySynth(Tone.Synth, {
+  oscillator: { type: 'triangle' },
+  envelope:   { attack: 0.005, decay: 0.3, sustain: 0.35, release: 1.0 },
+  volume: -10,
+});
+pianoReverb.ready.then(() => pianoSynth.connect(pianoReverb)).catch(() => pianoSynth.connect(limiter));
+const correctSynth = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.01,decay:.1,sustain:.3,release:.4}, volume:-14 }).connect(limiter);
+const wrongSynth   = new Tone.Synth({ oscillator:{type:'sawtooth'}, envelope:{attack:.01,decay:.15,sustain:0,release:.2}, volume:-18 }).connect(limiter);
+
+async function ensureAudio() { if (Tone.context.state !== 'running') await Tone.start(); }
+function playNote(hz, dur=0.8)  { if (!hz||isNaN(hz)) return; ensureAudio().then(() => pianoSynth.triggerAttackRelease(hz, dur, Tone.now())); }
+function playCorrect() {
+  ensureAudio().then(() => {
+    const t = Tone.now();
+    correctSynth.triggerAttackRelease('C5','8n',t);
+    correctSynth.triggerAttackRelease('E5','8n',t+0.12);
+  });
+}
+function playWrong() { ensureAudio().then(() => wrongSynth.triggerAttackRelease('A2','8n',Tone.now())); }
+
+/* ── NOTE DATA ── */
+const NOTE_ORDER     = ['C','D','E','F','G','A','B'];
+const NOTE_CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const PHASES = [
+  {
+    clef: 'treble', label: 'Treble Clef', icon: '𝄞', count: 10,
+    notes: [
+      {note:'C',octave:4},{note:'D',octave:4},{note:'E',octave:4},{note:'F',octave:4},{note:'G',octave:4},{note:'A',octave:4},{note:'B',octave:4},
+      {note:'C',octave:5},{note:'D',octave:5},{note:'E',octave:5},{note:'F',octave:5},{note:'G',octave:5},{note:'A',octave:5},{note:'B',octave:5},
+      {note:'C',octave:6},
+    ],
+  },
+  {
+    clef: 'bass', label: 'Bass Clef', icon: '𝄢', count: 10,
+    notes: [
+      {note:'C',octave:3},{note:'D',octave:3},{note:'E',octave:3},{note:'F',octave:3},
+      {note:'G',octave:3},{note:'A',octave:3},{note:'B',octave:3},{note:'C',octave:4},
+    ],
+  },
+];
+
+function noteHz(note, octave) {
+  const chromIdx = NOTE_CHROMATIC.indexOf(note);
+  if (chromIdx < 0) return 0;
+  return Math.round(440 * Math.pow(2, ((octave - 4) * 12 + chromIdx - 9) / 12));
+}
+function diatonicStepsFromC4(note, octave) {
+  const idx = NOTE_ORDER.indexOf(note);
+  return idx < 0 ? 0 : (octave - 4) * 7 + idx;
+}
+
+/* ── STATE ── */
+let quiz = {
+  phaseIdx: 0,
+  questionNum: 0,
+  correct: 0,
+  scores: [],
+  pool: [],
+  currentNote: null,
+  answered: false,
+  timerRAF: null,
+  questionStart: 0,
+};
+
+const TIMER_LIMIT  = 5.0;
+const RING_CIRCUM  = 188; // 2*π*30 ≈ 188.5
+
+/* ── CANVAS DRAWING ── */
+const staffCanvas = document.getElementById('staffCanvas');
+const sCtx = staffCanvas.getContext('2d');
+const SW = 900, SH = 270;
+
+function drawStaff(noteObj, clef, revealed) {
+  sCtx.clearRect(0, 0, SW, SH);
+  sCtx.fillStyle = '#0D1117';
+  sCtx.fillRect(0, 0, SW, SH);
+  if (!noteObj) return;
+
+  const isTreble  = clef === 'treble';
+  const lineGap   = 22;
+  const staffTop  = isTreble ? 70 : 105;
+  const staffLeft = 90;
+  const staffW    = SW - 130;
+  const stepSize  = lineGap / 2;
+  const clefColor = isTreble ? '#00D4FF' : '#FF2D78';
+
+  // Staff lines
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth   = 1.5;
+  for (let i = 0; i < 5; i++) {
+    sCtx.beginPath();
+    sCtx.moveTo(staffLeft, staffTop + i * lineGap);
+    sCtx.lineTo(staffLeft + staffW, staffTop + i * lineGap);
+    sCtx.stroke();
+  }
+
+  // Clef symbol
+  sCtx.font      = '92px serif';
+  sCtx.textAlign = 'left';
+  sCtx.fillStyle = clefColor;
+  if (isTreble) sCtx.fillText('𝄞', staffLeft - 66, staffTop + 4 * lineGap + 8);
+  else          sCtx.fillText('𝄢', staffLeft - 62, staffTop + 2 * lineGap + 8);
+
+  sCtx.font      = '11px "DM Mono",monospace';
+  sCtx.fillStyle = clefColor;
+  sCtx.fillText(isTreble ? 'TREBLE CLEF' : 'BASS CLEF', staffLeft + 5, staffTop - 14);
+  sCtx.fillText('Q' + quiz.questionNum, staffLeft + 5, staffTop - 3);
+
+  const middleCY = isTreble ? staffTop + 5 * lineGap : staffTop - lineGap;
+  const noteX    = SW / 2;
+  const noteY    = middleCY - diatonicStepsFromC4(noteObj.note, noteObj.octave) * stepSize;
+
+  // Ledger lines
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth   = 2;
+  const staffBottom = staffTop + 4 * lineGap;
+  const ledgerSet   = new Set();
+  for (let ly = staffBottom + lineGap; ly <= noteY + stepSize / 2; ly += lineGap) ledgerSet.add(ly);
+  for (let ly = staffTop  - lineGap;  ly >= noteY - stepSize / 2; ly -= lineGap)  ledgerSet.add(ly);
+  ledgerSet.forEach(ly => {
+    sCtx.beginPath();
+    sCtx.moveTo(noteX - 28, ly);
+    sCtx.lineTo(noteX + 28, ly);
+    sCtx.stroke();
+  });
+
+  // Note head
+  const noteColor = revealed ? '#39D98A' : '#FF2D78';
+  sCtx.shadowColor = noteColor;
+  sCtx.shadowBlur  = 26;
+  sCtx.fillStyle   = noteColor;
+  sCtx.beginPath();
+  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
+  sCtx.fill();
+  sCtx.shadowBlur = 0;
+
+  sCtx.strokeStyle = noteColor;
+  sCtx.lineWidth   = 1.5;
+  sCtx.globalAlpha = 0.25;
+  sCtx.beginPath();
+  sCtx.ellipse(noteX, noteY, 26, 18, -0.18, 0, Math.PI * 2);
+  sCtx.stroke();
+  sCtx.globalAlpha = 1;
+
+  // Label inside note
+  sCtx.fillStyle    = revealed ? '#0D1117' : '#fff';
+  sCtx.font         = 'bold 15px "DM Mono",monospace';
+  sCtx.textAlign    = 'center';
+  sCtx.textBaseline = 'middle';
+  sCtx.shadowColor  = noteColor;
+  sCtx.shadowBlur   = revealed ? 0 : 8;
+  sCtx.fillText(revealed ? noteObj.note : '?', noteX, noteY);
+  sCtx.shadowBlur   = 0;
+  sCtx.textBaseline = 'alphabetic';
+
+  // Closing double barline
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth   = 2;
+  sCtx.beginPath();
+  sCtx.moveTo(staffLeft + staffW, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW, staffTop + 4 * lineGap + 2);
+  sCtx.stroke();
+  sCtx.lineWidth = 5;
+  sCtx.beginPath();
+  sCtx.moveTo(staffLeft + staffW + 5, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW + 5, staffTop + 4 * lineGap + 2);
+  sCtx.stroke();
+}
+
+/* ── SCREEN ROUTING ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── QUIZ FLOW ── */
+function startQuiz() {
+  ensureAudio();
+  quiz.scores = [];
+  startPhase(0);
+}
+
+function startPhase(idx) {
+  ensureAudio();
+  quiz.phaseIdx    = idx;
+  quiz.questionNum = 0;
+  quiz.correct     = 0;
+  quiz.answered    = false;
+  quiz.currentNote = null;
+
+  const phase = PHASES[idx];
+  quiz.pool   = [...phase.notes];
+
+  const pl = document.getElementById('phaseLabel');
+  pl.className = 'phase-label ' + (phase.clef === 'treble' ? 'treble' : 'bass');
+  document.getElementById('phaseIcon').textContent = phase.icon;
+  document.getElementById('phaseName').textContent = `Phase ${idx + 1} — ${phase.label}`;
+  document.getElementById('qTotal').textContent    = phase.count;
+  document.getElementById('progressFill').style.width = '0%';
+
+  showScreen('quizScreen');
+  hideFeedback();
+  resetButtons();
+  setTimerDisplay(null);
+  nextQuestion();
+}
+
+function nextQuestion() {
+  const phase = PHASES[quiz.phaseIdx];
+  if (quiz.questionNum >= phase.count) {
+    phaseComplete();
+    return;
+  }
+
+  quiz.questionNum++;
+  quiz.answered    = false;
+  quiz.currentNote = { ...quiz.pool[Math.floor(Math.random() * quiz.pool.length)] };
+
+  document.getElementById('qNum').textContent            = quiz.questionNum;
+  document.getElementById('progressFill').style.width    = ((quiz.questionNum - 1) / phase.count * 100) + '%';
+
+  drawStaff(quiz.currentNote, phase.clef, false);
+  playNote(noteHz(quiz.currentNote.note, quiz.currentNote.octave), 0.6);
+  hideFeedback();
+  resetButtons();
+  setButtonsDisabled(false);
+
+  quiz.questionStart = performance.now();
+  startTimer();
+}
+
+function answerNote(guessNote) {
+  if (!quiz.currentNote || quiz.answered) return;
+  quiz.answered = true;
+  cancelAnimationFrame(quiz.timerRAF);
+
+  const elapsed    = (performance.now() - quiz.questionStart) / 1000;
+  const isCorrect  = guessNote === quiz.currentNote.note;
+  const tooSlow    = elapsed > TIMER_LIMIT;
+  const win        = isCorrect && !tooSlow;
+
+  drawStaff(quiz.currentNote, PHASES[quiz.phaseIdx].clef, true);
+
+  const correctBtn = document.querySelector(`.note-btn[data-note="${quiz.currentNote.note}"]`);
+  const guessBtn   = document.querySelector(`.note-btn[data-note="${guessNote}"]`);
+  if (correctBtn) correctBtn.classList.add('correct');
+  if (guessBtn && !isCorrect) guessBtn.classList.add('wrong');
+  setButtonsDisabled(true);
+
+  if (win) { quiz.correct++; playCorrect(); }
+  else     { playWrong(); }
+
+  const frac = elapsed / TIMER_LIMIT;
+  setTimerDisplay(elapsed, frac < 0.5 ? 'green' : frac < 0.85 ? 'amber' : 'red');
+
+  if (tooSlow && isCorrect) {
+    showFeedback('slow', '⏰', `Correct, but too slow!`, `${elapsed.toFixed(1)}s — answer within ${TIMER_LIMIT}s`);
+  } else if (win) {
+    showFeedback('correct', '✓', `That's ${quiz.currentNote.note}${quiz.currentNote.octave}!`, `${elapsed.toFixed(2)}s`);
+  } else {
+    showFeedback('wrong', '✗', `It was ${quiz.currentNote.note}${quiz.currentNote.octave}`, `You answered ${guessNote}`);
+  }
+
+  setTimeout(() => nextQuestion(), 1350);
+}
+
+function handleTimeout() {
+  if (quiz.answered) return;
+  quiz.answered = true;
+  drawStaff(quiz.currentNote, PHASES[quiz.phaseIdx].clef, true);
+  playWrong();
+  showFeedback('slow', '⏰', 'Time\'s up!', `The note was ${quiz.currentNote.note}${quiz.currentNote.octave}`);
+  setButtonsDisabled(true);
+  setTimerDisplay(TIMER_LIMIT, 'red');
+  setTimeout(() => nextQuestion(), 1350);
+}
+
+function phaseComplete() {
+  cancelAnimationFrame(quiz.timerRAF);
+  const phase = PHASES[quiz.phaseIdx];
+  quiz.scores.push({ correct: quiz.correct, total: phase.count });
+  saveScore('note_quiz_' + (quiz.phaseIdx === 0 ? 'treble' : 'bass'), quiz.correct, phase.count);
+
+  if (quiz.phaseIdx === 0) {
+    showTransitionScreen();
+  } else {
+    showResultsScreen();
+  }
+}
+
+function showTransitionScreen() {
+  const sc  = quiz.scores[0];
+  const pct = Math.round(sc.correct / sc.total * 100);
+  document.getElementById('transPct').textContent  = pct + '%';
+  document.getElementById('transFrac').textContent = sc.correct + ' / ' + sc.total + ' correct';
+  showScreen('transitionScreen');
+  showToast(`Phase 1 done — ${pct}%`);
+}
+
+function showResultsScreen() {
+  const t = quiz.scores[0] || { correct: 0, total: 10 };
+  const b = quiz.scores[1] || { correct: 0, total: 10 };
+  const totalCorrect = t.correct + b.correct;
+  const totalQ       = t.total + b.total;
+  const overall      = Math.round(totalCorrect / totalQ * 100);
+  const tPct         = Math.round(t.correct / t.total * 100);
+  const bPct         = Math.round(b.correct / b.total * 100);
+
+  document.getElementById('overallPct').textContent  = overall + '%';
+  document.getElementById('treblePct').textContent   = tPct + '%';
+  document.getElementById('trebleFrac').textContent  = t.correct + ' / ' + t.total + ' correct';
+  document.getElementById('bassPct').textContent     = bPct + '%';
+  document.getElementById('bassFrac').textContent    = b.correct + ' / ' + b.total + ' correct';
+
+  let grade, gradeClass, sub;
+  if (overall >= 90) {
+    grade = 'Excellent';     gradeClass = 'grade-excellent'; sub = 'Outstanding note reading skills!';
+  } else if (overall >= 70) {
+    grade = 'Good';          gradeClass = 'grade-good';      sub = 'Solid performance — keep practising!';
+  } else if (overall >= 50) {
+    grade = 'Needs Practice'; gradeClass = 'grade-practice'; sub = 'You\'re making progress — keep going!';
+  } else {
+    grade = 'Keep Practising'; gradeClass = 'grade-retry';   sub = 'Review the notes on the staff and try again!';
+  }
+
+  const gradeEl = document.getElementById('resultsGrade');
+  gradeEl.textContent = grade;
+  gradeEl.className   = 'results-grade ' + gradeClass;
+  document.getElementById('resultsSub').textContent = sub;
+
+  showScreen('resultsScreen');
+  showToast(`Quiz complete — ${overall}% overall!`);
+}
+
+function resetQuiz() {
+  drawStaff(null, 'treble', false);
+  setTimerDisplay(null);
+  showScreen('introScreen');
+}
+
+/* ── TIMER ── */
+function startTimer() {
+  cancelAnimationFrame(quiz.timerRAF);
+  const t0 = performance.now();
+  function tick() {
+    if (quiz.answered) return;
+    const elapsed  = (performance.now() - t0) / 1000;
+    const frac     = Math.min(elapsed / TIMER_LIMIT, 1);
+    const ring     = document.getElementById('timerRing');
+    const text     = document.getElementById('timerText');
+    ring.style.strokeDashoffset = RING_CIRCUM * (1 - frac);
+    ring.style.stroke = frac < 0.5 ? '#39D98A' : frac < 0.85 ? '#F59E0B' : '#EF4444';
+    text.textContent  = elapsed.toFixed(1);
+    text.style.color  = frac > 0.85 ? '#EF4444' : 'var(--white)';
+    if (elapsed >= TIMER_LIMIT) { handleTimeout(); return; }
+    quiz.timerRAF = requestAnimationFrame(tick);
+  }
+  quiz.timerRAF = requestAnimationFrame(tick);
+}
+
+function setTimerDisplay(val, color) {
+  const ring = document.getElementById('timerRing');
+  const text = document.getElementById('timerText');
+  if (val === null) {
+    ring.style.strokeDashoffset = RING_CIRCUM;
+    ring.style.stroke = '#FF2D78';
+    text.textContent = '—';
+    text.style.color = 'var(--white)';
+    return;
+  }
+  ring.style.strokeDashoffset = RING_CIRCUM * (1 - Math.min(val / TIMER_LIMIT, 1));
+  ring.style.stroke = color === 'green' ? '#39D98A' : color === 'amber' ? '#F59E0B' : '#EF4444';
+  text.textContent  = val.toFixed(2);
+  text.style.color  = color === 'red' ? '#EF4444' : 'var(--white)';
+}
+
+/* ── FEEDBACK ── */
+function showFeedback(type, icon, main, sub) {
+  const b = document.getElementById('feedbackBanner');
+  b.className = 'feedback-banner ' + type + ' show';
+  document.getElementById('feedbackIcon').textContent = icon;
+  document.getElementById('feedbackMain').textContent = main;
+  document.getElementById('feedbackSub').textContent  = sub || '';
+}
+function hideFeedback() { document.getElementById('feedbackBanner').className = 'feedback-banner'; }
+
+/* ── BUTTON HELPERS ── */
+function setButtonsDisabled(d) {
+  document.querySelectorAll('.note-btn').forEach(b => { b.disabled = d; });
+}
+function resetButtons() {
+  document.querySelectorAll('.note-btn').forEach(b => {
+    b.classList.remove('correct', 'wrong');
+    b.disabled = false;
+  });
+}
+
+/* ── KEYBOARD SHORTCUTS ── */
+document.addEventListener('keydown', e => {
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.getElementById('quizScreen').classList.contains('active')) {
+    const k = e.key.toUpperCase();
+    if ('CDEFGAB'.includes(k) && k.length === 1) answerNote(k);
+  }
+});
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ── SCORE SAVING ── */
+function saveScore(game, correct, total) {
+  try {
+    const key = Object.keys(localStorage).find(k => /^sb-.*-auth-token$/.test(k));
+    if (!key) return;
+    const session = JSON.parse(localStorage.getItem(key) || '{}');
+    const token   = session.access_token;
+    if (!token) return;
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    const userId  = payload.sub;
+    if (!userId) return;
+    fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/game_scores', {
+      method:  'POST',
+      headers: {
+        'apikey':       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+        'Authorization': 'Bearer ' + token,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal',
+      },
+      body: JSON.stringify({ user_id: userId, game, score: correct, correct, total, best_streak: 0 }),
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+// Init canvas on load
+drawStaff(null, 'treble', false);
+setTimerDisplay(null);
+</script>
+</body>
+</html>
