@@ -75,7 +75,6 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)"  },
     { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
-    { href: "/note-quiz.html",      img: "/game-icons/note_quiz.svg",     labelKey: "dashboard.nav.noteQuiz",     shadow: "0 0 14px 4px rgba(57,217,138,0.55)"  },
   ];
 
   const getNavItems = () => {

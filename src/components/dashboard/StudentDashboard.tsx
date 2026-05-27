@@ -215,7 +215,15 @@ const StudentHome = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <a href="/note-quiz.html">
+          <Button
+            size="sm"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-colors"
+          >
+            Take Assessment
+          </Button>
+        </a>
         <Button
           size="sm"
           onClick={() => setShowReport(true)}
