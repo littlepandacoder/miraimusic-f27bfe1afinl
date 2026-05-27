@@ -28,10 +28,9 @@ interface GameScoreSummary {
   sessions: number;
 }
 
-const StudentHome = () => {
+const StudentHome = ({ onOpenReport }: { onOpenReport: () => void }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [showReport, setShowReport] = useState(false);
 
   const [stats, setStats] = useState({
     upcomingLessons: 0,
@@ -215,24 +214,6 @@ const StudentHome = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end gap-2">
-        <a href="/note-quiz.html">
-          <Button
-            size="sm"
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-colors"
-          >
-            Take Assessment
-          </Button>
-        </a>
-        <Button
-          size="sm"
-          onClick={() => setShowReport(true)}
-          className="flex items-center gap-2 bg-pink-500 hover:bg-pink-400 text-white border-0 transition-colors"
-        >
-          My Report
-        </Button>
-      </div>
-      {showReport && <StudentReportModal userId={user!.id} userName={user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Student"} onClose={() => setShowReport(false)} />}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -473,7 +454,9 @@ interface RankTrigger { type: "game" | "module"; id: string; label: string; }
 
 const StudentDashboard = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [rankTrigger, setRankTrigger] = useState<RankTrigger | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     const check = () => {
@@ -502,8 +485,28 @@ const StudentDashboard = () => {
     };
   }, []);
 
+  const headerActions = (
+    <>
+      <a href="/note-quiz.html">
+        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 transition-colors">
+          Take Assessment
+        </Button>
+      </a>
+      <Button size="sm" onClick={() => setShowReport(true)} className="bg-pink-500 hover:bg-pink-400 text-white border-0 transition-colors">
+        My Report
+      </Button>
+    </>
+  );
+
   return (
-    <DashboardLayout title={t("dashboard.title")} role="student">
+    <DashboardLayout title={t("dashboard.title")} role="student" headerActions={headerActions}>
+      {showReport && user && (
+        <StudentReportModal
+          userId={user.id}
+          userName={user.user_metadata?.full_name || user.email?.split("@")[0] || "Student"}
+          onClose={() => setShowReport(false)}
+        />
+      )}
       <DailyReviewModal />
       {rankTrigger && (
         <RankingModal
@@ -514,8 +517,8 @@ const StudentDashboard = () => {
         />
       )}
       <Routes>
-        <Route index element={<StudentHome />} />
-        <Route path="/" element={<StudentHome />} />
+        <Route index element={<StudentHome onOpenReport={() => setShowReport(true)} />} />
+        <Route path="/" element={<StudentHome onOpenReport={() => setShowReport(true)} />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/book" element={<BookLesson />} />
         <Route path="/foundation" element={<ModuleMap onModuleComplete={(id, label) => setRankTrigger({ type: "module", id, label })} />} />

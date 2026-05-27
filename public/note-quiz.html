@@ -154,7 +154,7 @@ nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-con
   <div class="intro-hero">
     <div class="intro-icon">📋</div>
     <h1 class="intro-title"><span style="color:var(--pink)">Assessment</span></h1>
-    <p class="intro-sub">5-phase quiz covering staff reading, piano naming, note values, and 4/4 time.<br>Results are saved and downloadable at the end.</p>
+    <p class="intro-sub">5-phase quiz covering staff reading, piano naming, note values, and 4/4 time.<br>Uses British music terminology. Results are saved and downloadable at the end.</p>
     <div class="phase-list">
       <div class="phase-item">
         <div class="phase-num c1">1</div>
@@ -170,7 +170,7 @@ nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-con
       </div>
       <div class="phase-item">
         <div class="phase-num c4">4</div>
-        <div class="phase-info"><h4>Note Values</h4><p>Beat counts in 4/4 time · 8 questions · 10 sec each</p></div>
+        <div class="phase-info"><h4>Note Values</h4><p>Crotchet beats in 4/4 time · 8 questions · 10 sec each</p></div>
       </div>
       <div class="phase-item">
         <div class="phase-num c5">5</div>
@@ -204,7 +204,7 @@ nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-con
 
   <!-- Note value area (phase 4) -->
   <div class="content-area" id="valueArea" style="display:none">
-    <div class="area-label">♩ How many beats does this note get in 4/4 time?</div>
+    <div class="area-label">♩ How many crotchet beats does this note get in 4/4 time?</div>
     <canvas id="valueCanvas" width="560" height="180"></canvas>
   </div>
 
@@ -338,28 +338,28 @@ const PHASES=[
 
 /* ── NOTE VALUE POOL ── */
 const VALUE_POOL=[
-  {type:'whole',         label:'Whole Note',          answer:'4 beats'},
-  {type:'half',          label:'Half Note',           answer:'2 beats'},
-  {type:'quarter',       label:'Quarter Note',        answer:'1 beat'},
-  {type:'eighth',        label:'Eighth Note',         answer:'½ beat'},
-  {type:'dotted-half',   label:'Dotted Half Note',    answer:'3 beats'},
-  {type:'dotted-quarter',label:'Dotted Quarter Note', answer:'1½ beats'},
-  {type:'sixteenth',     label:'Sixteenth Note',      answer:'¼ beat'},
+  {type:'whole',         label:'Semibreve',         answer:'4 beats'},
+  {type:'half',          label:'Minim',             answer:'2 beats'},
+  {type:'quarter',       label:'Crotchet',          answer:'1 beat'},
+  {type:'eighth',        label:'Quaver',            answer:'½ beat'},
+  {type:'dotted-half',   label:'Dotted Minim',      answer:'3 beats'},
+  {type:'dotted-quarter',label:'Dotted Crotchet',   answer:'1½ beats'},
+  {type:'sixteenth',     label:'Semiquaver',        answer:'¼ beat'},
 ];
 const ALL_VALUE_ANSWERS=['4 beats','3 beats','2 beats','1½ beats','1 beat','½ beat','¼ beat'];
 
 /* ── TIME SIG POOL ── */
 const TIMESIG_POOL=[
-  {q:'In 4/4 time, how many beats are in each measure?',          choices:['2','3','4','6'],                                                  correct:'4'},
-  {q:'In 4/4 time, which note receives exactly one beat?',        choices:['Whole note','Half note','Quarter note','Eighth note'],             correct:'Quarter note'},
-  {q:'In 4/4 time, how many half notes fill one measure?',        choices:['1','2','4','8'],                                                  correct:'2'},
-  {q:'In 4/4 time, how many quarter notes fill one measure?',     choices:['2','4','6','8'],                                                  correct:'4'},
-  {q:'In 4/4 time, how many eighth notes fill one measure?',      choices:['2','4','6','8'],                                                  correct:'8'},
-  {q:'In 4/4 time, how many whole notes fill one measure?',       choices:['1','2','4','8'],                                                  correct:'1'},
-  {q:'What does the top "4" in the time signature 4/4 mean?',     choices:['4 notes per bar','4 beats per measure','Tempo = 4 BPM','4 bars'], correct:'4 beats per measure'},
-  {q:'What does the bottom "4" in 4/4 mean?',                     choices:['4 bars total','Half note = 1 beat','Quarter note = 1 beat','Tempo = 4'], correct:'Quarter note = 1 beat'},
-  {q:'A dotted half note lasts how many beats in 4/4 time?',      choices:['1½','2','3','4'],                                                 correct:'3'},
-  {q:'Which combination fills exactly one 4/4 measure?',          choices:['3 quarter notes','2 half notes','1 whole + 1 quarter','5 eighth notes'], correct:'2 half notes'},
+  {q:'In 4/4 time, how many beats are in each bar?',              choices:['2','3','4','6'],                                                       correct:'4'},
+  {q:'In 4/4 time, which note receives exactly one beat?',        choices:['Semibreve','Minim','Crotchet','Quaver'],                               correct:'Crotchet'},
+  {q:'In 4/4 time, how many minims fill one bar?',                choices:['1','2','4','8'],                                                       correct:'2'},
+  {q:'In 4/4 time, how many crotchets fill one bar?',             choices:['2','4','6','8'],                                                       correct:'4'},
+  {q:'In 4/4 time, how many quavers fill one bar?',               choices:['2','4','6','8'],                                                       correct:'8'},
+  {q:'In 4/4 time, how many semibreves fill one bar?',            choices:['1','2','4','8'],                                                       correct:'1'},
+  {q:'What does the top "4" in the time signature 4/4 mean?',     choices:['4 notes per bar','4 crotchet beats per bar','Tempo = 4 BPM','4 bars'], correct:'4 crotchet beats per bar'},
+  {q:'What does the bottom "4" in 4/4 mean?',                     choices:['4 bars total','Minim = 1 beat','Crotchet = 1 beat','Tempo = 4'],       correct:'Crotchet = 1 beat'},
+  {q:'A dotted minim lasts how many beats in 4/4 time?',          choices:['1½','2','3','4'],                                                      correct:'3'},
+  {q:'Which combination fills exactly one 4/4 bar?',              choices:['3 crotchets','2 minims','1 semibreve + 1 crotchet','5 quavers'],       correct:'2 minims'},
 ];
 
 /* ── STATE ── */
@@ -479,8 +479,8 @@ function drawNoteValue(type,revealed){
   }
   if(isDotted){vCtx.fillStyle=nc;vCtx.beginPath();vCtx.arc(cx+19,noteY-5,3.5,0,Math.PI*2);vCtx.fill();}
   if(revealed){
-    const LABELS={'whole':'Whole Note','half':'Half Note','quarter':'Quarter Note','eighth':'Eighth Note',
-      'dotted-half':'Dotted Half Note','dotted-quarter':'Dotted Quarter Note','sixteenth':'Sixteenth Note'};
+    const LABELS={'whole':'Semibreve','half':'Minim','quarter':'Crotchet','eighth':'Quaver',
+      'dotted-half':'Dotted Minim','dotted-quarter':'Dotted Crotchet','sixteenth':'Semiquaver'};
     vCtx.fillStyle='#39D98A';vCtx.font='bold 13px "DM Mono",monospace';vCtx.textAlign='center';
     vCtx.fillText(LABELS[type]||type,VW/2,VH-10);
   }

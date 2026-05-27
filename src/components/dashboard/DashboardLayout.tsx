@@ -24,9 +24,10 @@ interface DashboardLayoutProps {
   children: ReactNode;
   title: string;
   role: "admin" | "teacher" | "student";
+  headerActions?: ReactNode;
 }
 
-const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -376,16 +377,19 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       {/* ── Main content ─────────────────────────────────────── */}
       <main className="flex-1 min-w-0 h-screen overflow-y-auto">
         <header className="bg-card border-b border-border px-4 py-3 md:px-8 md:py-5 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            {/* Hamburger — mobile only */}
-            <button
-              className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              onClick={() => setMobileOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <h1 className="text-base md:text-2xl font-bold truncate">{title}</h1>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Hamburger — mobile only */}
+              <button
+                className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="text-base md:text-2xl font-bold truncate">{title}</h1>
+            </div>
+            {headerActions && <div className="flex items-center gap-2 shrink-0">{headerActions}</div>}
           </div>
         </header>
 
