@@ -316,17 +316,22 @@ const AdminHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       const [studentsRes, teachersRes, lessonsRes, upcomingRes] = await Promise.all([
-        supabase.from("user_roles").select("*", { count: "exact" }).eq("role", "student"),
-        supabase.from("user_roles").select("*", { count: "exact" }).eq("role", "teacher"),
-        supabase.from("lessons").select("*", { count: "exact" }),
-        supabase.from("lessons").select("*", { count: "exact" }).eq("status", "scheduled").gte("scheduled_date", new Date().toISOString().split("T")[0]),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "student"),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
+        supabase.from("lessons").select("*", { count: "exact", head: true }),
+        supabase.from("lessons").select("*", { count: "exact", head: true }).eq("status", "scheduled").gte("scheduled_date", new Date().toISOString().split("T")[0]),
       ]);
 
+      if (studentsRes.error) console.error("fetchStats students:", studentsRes.error.message);
+      if (teachersRes.error) console.error("fetchStats teachers:", teachersRes.error.message);
+      if (lessonsRes.error)  console.error("fetchStats lessons:",  lessonsRes.error.message);
+      if (upcomingRes.error) console.error("fetchStats upcoming:", upcomingRes.error.message);
+
       setStats({
-        totalStudents: studentsRes.count || 0,
-        totalTeachers: teachersRes.count || 0,
-        totalLessons: lessonsRes.count || 0,
-        upcomingLessons: upcomingRes.count || 0,
+        totalStudents: studentsRes.count ?? 0,
+        totalTeachers: teachersRes.count ?? 0,
+        totalLessons:  lessonsRes.count  ?? 0,
+        upcomingLessons: upcomingRes.count ?? 0,
       });
     };
 
