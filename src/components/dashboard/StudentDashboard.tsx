@@ -5,9 +5,10 @@ import DashboardLayout from "./DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn } from "lucide-react";
+import { Calendar, BookOpen, Map, TrendingUp, Target, Trophy, Gamepad2, Music, Piano, Eye, Drum, Clock, LogIn, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StudentReportModal from "./student/StudentReportModal";
+import { RESET_TIME_EVENT } from "@/hooks/useSessionTracking";
 import { Progress } from "@/components/ui/progress";
 import Resources from "./student/Resources";
 import DailyReviewModal from "./student/DailyReviewModal";
@@ -51,6 +52,7 @@ const StudentHome = ({ onOpenReport }: { onOpenReport: () => void }) => {
     avgSeconds: 0,
     lastLogin: null as string | null,
   });
+  const [resettingTime, setResettingTime] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -185,6 +187,21 @@ const StudentHome = ({ onOpenReport }: { onOpenReport: () => void }) => {
     fetchSessionStats();
   }, [user]);
 
+  const handleResetTime = async () => {
+    if (!user || resettingTime) return;
+    setResettingTime(true);
+    try {
+      await (supabase as any)
+        .from("user_sessions")
+        .update({ duration_seconds: 0 })
+        .eq("user_id", user.id);
+      window.dispatchEvent(new Event(RESET_TIME_EVENT));
+      setSessionStats(prev => ({ ...prev, totalSeconds: 0, avgSeconds: 0 }));
+    } finally {
+      setResettingTime(false);
+    }
+  };
+
   const fmtDuration = (secs: number) => {
     if (secs < 60)  return `${secs}s`;
     if (secs < 3600) return `${Math.floor(secs / 60)}m`;
@@ -279,7 +296,19 @@ const StudentHome = ({ onOpenReport }: { onOpenReport: () => void }) => {
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("student.timeSpent")}</CardTitle>
-            <Clock className="w-4 h-4 text-purple-400" />
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleResetTime}
+                disabled={resettingTime}
+                title="Reset time spent"
+                className="text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+              >
+                {resettingTime
+                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                  : <RotateCcw className="w-3 h-3" />}
+              </button>
+              <Clock className="w-4 h-4 text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-purple-400">

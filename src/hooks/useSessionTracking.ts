@@ -12,14 +12,17 @@ const SESSION_START_KEY    = "musicable_sess_start";
 const SESSION_USER_KEY     = "musicable_sess_user";
 const SESSION_ACTIVE_KEY   = "musicable_sess_active_secs";
 const HEARTBEAT_MS         = 60_000;
-const IDLE_THRESHOLD_MS    = 5 * 60 * 1000; // 5 minutes
+const IDLE_THRESHOLD_MS    = 60 * 1000; // 1 minute
+
+export const RESET_TIME_EVENT = "musicable:reset-time";
 
 const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"] as const;
 
 /**
  * Records a user_sessions row on every login and updates duration_seconds on a
- * 60-second heartbeat. Idle time (no activity for >5 min) is excluded from the
+ * 60-second heartbeat. Idle time (no activity for >1 min) is excluded from the
  * recorded duration. Uses sessionStorage so a tab refresh continues the same row.
+ * Dispatch a "musicable:reset-time" event to zero the in-memory counter.
  */
 export function useSessionTracking(user: User | null) {
   const sessionIdRef     = useRef<string | null>(null);
@@ -35,6 +38,12 @@ export function useSessionTracking(user: User | null) {
 
     const onActivity = () => { lastActiveRef.current = Date.now(); };
     ACTIVITY_EVENTS.forEach(e => window.addEventListener(e, onActivity, { passive: true }));
+
+    const onResetTime = () => {
+      activeSecondsRef.current = 0;
+      sessionStorage.setItem(SESSION_ACTIVE_KEY, "0");
+    };
+    window.addEventListener(RESET_TIME_EVENT, onResetTime);
 
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -139,6 +148,7 @@ export function useSessionTracking(user: User | null) {
       mounted = false;
       clearInterval(heartbeat);
       ACTIVITY_EVENTS.forEach(e => window.removeEventListener(e, onActivity));
+      window.removeEventListener(RESET_TIME_EVENT, onResetTime);
       window.removeEventListener("beforeunload", onUnload);
     };
   }, [user?.id]);

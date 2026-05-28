@@ -472,6 +472,48 @@ footer{
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{opacity:0;animation:fadeUp .6s ease forwards;}
 @media(max-width:680px){nav{padding:0 1rem;}.nav-links{display:none;}}
+
+/* ── KEY SIGNATURE QUIZ ── */
+.ks-layout{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;}
+.ks-game-col{flex:1;min-width:280px;}
+.ks-cof5-col{flex:0 0 274px;display:flex;flex-direction:column;align-items:center;}
+.ks-range-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1.25rem;}
+.ks-range-title{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:.65rem;}
+.ks-range-grid{display:flex;gap:1.5rem;flex-wrap:wrap;}
+.ks-group{flex:1;min-width:110px;}
+.ks-group-label{font-size:.68rem;font-weight:700;color:var(--sky);font-family:'DM Mono',monospace;letter-spacing:.1em;margin-bottom:.35rem;}
+.ks-check{display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer;padding:.1rem 0;color:var(--off-white);}
+.ks-check input{accent-color:var(--pink);width:13px;height:13px;cursor:pointer;}
+.ks-staff-wrap{background:#1a2535;border-radius:10px;padding:.6rem .4rem;margin-bottom:1rem;display:flex;justify-content:center;border:1px solid var(--border);}
+.ks-staff-wrap canvas{display:block;}
+.ks-score-row{display:flex;gap:.6rem;margin-bottom:1rem;}
+.ks-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.45rem .5rem;text-align:center;font-size:.8rem;font-family:'DM Mono',monospace;color:var(--off-white);}
+.ks-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.85rem;}
+.ks-choice-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:.7rem .75rem;font-size:.88rem;color:var(--off-white);cursor:pointer;transition:background .15s,border-color .15s;font-family:'Inter',sans-serif;width:100%;}
+.ks-choice-btn:hover:not(:disabled){background:var(--card2);border-color:rgba(255,255,255,0.22);}
+.ks-choice-btn.ks-correct{background:rgba(57,217,138,0.15);border-color:#39D98A;color:#39D98A;font-weight:700;}
+.ks-choice-btn.ks-wrong{background:rgba(255,107,157,0.12);border-color:#ff6b9d;color:#ff6b9d;}
+.ks-feedback{min-height:1.6rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.4rem;transition:color .2s;}
+.ks-cof5-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;font-family:'DM Mono',monospace;}
+.ks-cof5-hint{font-size:.72rem;color:var(--muted);text-align:center;margin-top:.6rem;}
+
+/* ── SCALE BUILDER ── */
+.sb-controls{display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.5rem;}
+.sb-selector{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.sb-selector label{font-size:.88rem;color:var(--muted);white-space:nowrap;}
+.sb-selector select{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--off-white);font-size:.88rem;padding:.5rem .75rem;cursor:pointer;outline:none;}
+.sb-selector select:focus{border-color:var(--pink);}
+.sb-hint-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.55rem 1rem;font-size:.83rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;color:var(--off-white);}
+.sb-hint-key{color:var(--muted);font-family:'DM Mono',monospace;font-size:.72rem;}
+.sb-staff-wrap{margin-bottom:1.25rem;}
+.sb-btn-row{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:.9rem;}
+.sb-feedback{min-height:2rem;margin-bottom:.5rem;font-size:.95rem;}
+.sb-interval-row{display:flex;gap:.4rem;justify-content:center;margin-top:.5rem;flex-wrap:wrap;}
+.sb-interval{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:.82rem;font-weight:700;font-family:'DM Mono',monospace;border:1px solid var(--border);color:var(--off-white);background:var(--card);}
+.sb-interval.ok{background:rgba(57,217,138,.15);border-color:#39D98A;color:#39D98A;}
+.sb-interval.err{background:rgba(255,107,157,.14);border-color:#ff6b9d;color:#ff6b9d;}
+.sb-interval-labels{display:flex;gap:.4rem;justify-content:center;margin-top:.3rem;flex-wrap:wrap;}
+.sb-interval-lbl{width:34px;text-align:center;font-size:.62rem;color:var(--muted);font-family:'DM Mono',monospace;}
 </style>
 </head>
 <body>
@@ -508,6 +550,8 @@ footer{
     <li><a href="#key-staff">88 Keys</a></li>
     <li><a href="#rhythm">Rhythm</a></li>
     <li><a href="#metronome">Metronome</a></li>
+    <li><a href="#key-sig-game">Key Sigs</a></li>
+    <li><a href="#scale-builder">Scales</a></li>
   </ul>
   <a href="/dashboard" class="nav-book">← Dashboard</a>
 </nav>
@@ -833,7 +877,94 @@ footer{
   </div>
 </section>
 
-<!-- ══ S9: TAKEAWAYS ══ -->
+<!-- ══ S9: KEY SIGNATURE QUIZ ══ -->
+<section id="key-sig-game">
+  <div class="section-label">09 — Interactive Game</div>
+  <h2 class="section-h2">Guess the <em>Key Signature</em></h2>
+  <div class="prose"><p>A key signature tells you which notes are always sharp or flat throughout a piece. Can you identify each one? Select the keys you want to practise, then read the staff and pick the correct major key.</p></div>
+
+  <div class="ks-layout" style="margin-top:2rem">
+    <!-- ── Left: game ── -->
+    <div class="ks-game-col">
+      <div class="ks-range-card">
+        <div class="ks-range-title">Keys to practise</div>
+        <div id="ks-range-grid" class="ks-range-grid"></div>
+      </div>
+
+      <div class="ks-staff-wrap">
+        <canvas id="ks-staff" width="280" height="118"></canvas>
+      </div>
+
+      <div class="ks-score-row">
+        <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;correct</div>
+        <div class="ks-score-box"><span id="ks-score-pct">—</span>&nbsp;accuracy</div>
+        <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span>&nbsp;streak</div>
+      </div>
+
+      <div id="ks-choices" class="ks-choices"></div>
+      <div id="ks-feedback" class="ks-feedback"></div>
+    </div>
+
+    <!-- ── Right: Circle of 5ths ── -->
+    <div class="ks-cof5-col">
+      <div class="ks-cof5-label">Circle of 5ths</div>
+      <div id="ks-cof5"></div>
+      <p class="ks-cof5-hint">Active question highlighted in pink</p>
+      <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;font-size:.78rem;color:var(--muted);line-height:1.7;max-width:260px">
+        <strong style="color:var(--off-white);display:block;margin-bottom:.3rem">How to read it</strong>
+        Clockwise → add a ♯ each step.<br>
+        Counter-clockwise → add a ♭.<br>
+        Outer ring = <span style="color:var(--off-white)">Major</span> keys.<br>
+        Inner ring = <span style="color:var(--muted)">relative minor</span>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ S10: CREATE THE SCALE ══ -->
+<section id="scale-builder">
+  <div class="section-label">10 — Interactive Game</div>
+  <h2 class="section-h2">Create the <em>Scale</em></h2>
+  <div class="prose"><p>Build a major scale by adding the correct sharps (♯) or flats (♭) to the natural notes. <strong>Click any note head</strong> to cycle between ♮ natural → ♯ sharp → ♭ flat. When you're done, hit <em>Check Scale</em> — the interval row below shows W (whole step) and H (half step) so you can see where you went wrong.</p></div>
+
+  <div class="sb-controls" style="margin-top:1.75rem">
+    <div class="sb-selector">
+      <label>Choose a scale:</label>
+      <select id="sb-scale-select" onchange="sbLoadScale()">
+        <option value="0">C Major — no accidentals (easiest)</option>
+        <option value="1">G Major — 1 sharp (F♯)</option>
+        <option value="2">D Major — 2 sharps (F♯ C♯)</option>
+        <option value="3">A Major — 3 sharps (F♯ C♯ G♯)</option>
+        <option value="4">E Major — 4 sharps (F♯ C♯ G♯ D♯)</option>
+        <option value="5">F Major — 1 flat (B♭)</option>
+      </select>
+    </div>
+    <div class="sb-hint-box">
+      <span>Major scale pattern: <strong>W W H W W W H</strong></span>
+      <span class="sb-hint-key">W = whole step (2 semitones) · H = half step (1 semitone)</span>
+    </div>
+  </div>
+
+  <div class="sb-staff-wrap">
+    <svg id="sb-staff" viewBox="0 0 490 200" width="100%" style="max-width:540px;display:block;margin:0 auto;background:#1a2535;border-radius:12px;border:1px solid var(--border)"></svg>
+  </div>
+
+  <div class="sb-btn-row">
+    <button class="btn-pink" onclick="sbCheck()">✓ Check Scale</button>
+    <button class="btn-outline" onclick="sbReset()">↺ Reset</button>
+    <button class="btn-outline" onclick="sbReveal()">👁 Reveal Answer</button>
+  </div>
+
+  <div id="sb-feedback" class="sb-feedback"></div>
+  <div id="sb-intervals" class="sb-interval-row"></div>
+  <div id="sb-interval-labels" class="sb-interval-labels"></div>
+
+  <div class="callout" style="margin-top:1.5rem">
+    <strong>Tips:</strong> Every major scale follows <em>W W H W W W H</em>. The half steps always land between notes 3→4 and 7→8. Start by working out which notes need sharps or flats so those half steps land in the right place.
+  </div>
+</section>
+
+<!-- ══ S11: TAKEAWAYS ══ -->
 <section id="takeaways">
   <div class="section-label">Summary</div>
   <h2 class="section-h2">Key <em>Takeaways</em></h2>
@@ -1888,6 +2019,349 @@ for(let o=0;o<=8;o++){
 }
 
 // ══════════════════════════════════════════════════════════
+// KEY SIGNATURE QUIZ
+// ══════════════════════════════════════════════════════════
+const KS_ALL=[
+  {id:'C',  name:'C major',  sharps:0,flats:0, cofPos:0 },
+  {id:'G',  name:'G major',  sharps:1,flats:0, cofPos:1 },
+  {id:'D',  name:'D major',  sharps:2,flats:0, cofPos:2 },
+  {id:'A',  name:'A major',  sharps:3,flats:0, cofPos:3 },
+  {id:'E',  name:'E major',  sharps:4,flats:0, cofPos:4 },
+  {id:'B',  name:'B major',  sharps:5,flats:0, cofPos:5 },
+  {id:'Fs', name:'F♯ major', sharps:6,flats:0, cofPos:6 },
+  {id:'F',  name:'F major',  sharps:0,flats:1, cofPos:11},
+  {id:'Bb', name:'B♭ major', sharps:0,flats:2, cofPos:10},
+  {id:'Eb', name:'E♭ major', sharps:0,flats:3, cofPos:9 },
+  {id:'Ab', name:'A♭ major', sharps:0,flats:4, cofPos:8 },
+  {id:'Db', name:'D♭ major', sharps:0,flats:5, cofPos:7 },
+];
+
+const COF5_KEYS=[
+  {major:'C',  minor:'a',  id:'C' },
+  {major:'G',  minor:'e',  id:'G' },
+  {major:'D',  minor:'b',  id:'D' },
+  {major:'A',  minor:'f♯', id:'A' },
+  {major:'E',  minor:'c♯', id:'E' },
+  {major:'B',  minor:'g♯', id:'B' },
+  {major:'F♯', minor:'d♯', id:'Fs'},
+  {major:'D♭', minor:'b♭', id:'Db'},
+  {major:'A♭', minor:'f',  id:'Ab'},
+  {major:'E♭', minor:'c',  id:'Eb'},
+  {major:'B♭', minor:'g',  id:'Bb'},
+  {major:'F',  minor:'d',  id:'F' },
+];
+const COF5_ACC=[0,1,2,3,4,5,6,5,4,3,2,1]; // accidental count per position
+const COF5_TYPE=['','♯','♯','♯','♯','♯','♯','♭','♭','♭','♭','♭'];
+
+let ksEnabled=new Set(['C','G','D','F','Bb']);
+let ksCurrent=null;
+let ksScore={correct:0,total:0,streak:0};
+let ksAnswered=false;
+
+function ksShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function ksInit(){
+  const grid=document.getElementById('ks-range-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+
+  const sg=document.createElement('div');sg.className='ks-group';
+  sg.innerHTML='<div class="ks-group-label">♯ Sharps</div>';
+  const fg=document.createElement('div');fg.className='ks-group';
+  fg.innerHTML='<div class="ks-group-label">♭ Flats</div>';
+
+  KS_ALL.forEach(ks=>{
+    const lbl=document.createElement('label');
+    lbl.className='ks-check';
+    lbl.innerHTML=`<input type="checkbox" value="${ks.id}"${ksEnabled.has(ks.id)?' checked':''}> ${ks.name}`;
+    lbl.querySelector('input').addEventListener('change',function(){
+      if(this.checked)ksEnabled.add(this.value);
+      else{
+        if(ksEnabled.size<=2){this.checked=true;return;}
+        ksEnabled.delete(this.value);
+      }
+    });
+    (ks.flats>0?fg:sg).appendChild(lbl);
+  });
+
+  grid.appendChild(sg);grid.appendChild(fg);
+  ksNextQuestion();
+}
+
+function ksNextQuestion(){
+  const pool=KS_ALL.filter(k=>ksEnabled.has(k.id));
+  if(pool.length<2)return;
+  ksCurrent=pool[Math.floor(Math.random()*pool.length)];
+  ksAnswered=false;
+
+  ksDrawStaff();
+  ksDraw5ths();
+
+  const wrong=ksShuffle(pool.filter(k=>k.id!==ksCurrent.id));
+  const choices=ksShuffle([ksCurrent,...wrong.slice(0,3)]);
+
+  const btns=document.getElementById('ks-choices');
+  btns.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='ks-choice-btn';
+    btn.textContent=c.name;
+    btn.onclick=()=>ksGuess(c,btn);
+    btns.appendChild(btn);
+  });
+  document.getElementById('ks-feedback').textContent='';
+}
+
+function ksGuess(choice,clickedBtn){
+  if(ksAnswered)return;
+  ksAnswered=true;
+  const correct=choice.id===ksCurrent.id;
+  ksScore.total++;
+  if(correct){
+    ksScore.correct++;ksScore.streak++;
+    clickedBtn.classList.add('ks-correct');
+    const fb=document.getElementById('ks-feedback');
+    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+  }else{
+    ksScore.streak=0;
+    clickedBtn.classList.add('ks-wrong');
+    document.querySelectorAll('.ks-choice-btn').forEach(b=>{if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');});
+    const fb=document.getElementById('ks-feedback');
+    fb.textContent=`✗ That's ${ksCurrent.name}`;fb.style.color='#ff6b9d';
+  }
+  document.getElementById('ks-score-correct').textContent=ksScore.correct;
+  document.getElementById('ks-score-total').textContent=ksScore.total;
+  document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
+  document.getElementById('ks-score-streak').textContent=ksScore.streak;
+  document.querySelectorAll('.ks-choice-btn').forEach(b=>b.disabled=true);
+  setTimeout(ksNextQuestion,1800);
+}
+
+function ksDrawStaff(){
+  const canvas=document.getElementById('ks-staff');
+  if(!canvas||!ksCurrent)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const lg=14,topLine=26,bottomLine=topLine+4*lg,halfStep=lg/2;
+  const noteY=s=>bottomLine-s*halfStep;
+
+  // background
+  ctx.fillStyle='#1a2535';ctx.fillRect(0,0,W,H);
+
+  // staff lines
+  ctx.strokeStyle='rgba(232,236,240,0.45)';ctx.lineWidth=1;
+  for(let i=0;i<5;i++){const y=topLine+i*lg;ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(W-8,y);ctx.stroke();}
+
+  // treble clef
+  ctx.font='58px serif';ctx.fillStyle='#00D4FF';ctx.textBaseline='alphabetic';
+  ctx.fillText('𝄞',4,bottomLine+9);
+
+  // sharp steps (F5,C5,G5,D5,A4,E5,B4) from E4=step0
+  const sharpSteps=[8,5,9,6,3,7,4];
+  // flat steps (B4,E5,A4,D5,G4,C5,F4)
+  const flatSteps=[4,7,3,6,2,5,1];
+
+  const accX=62,accSpacing=13;
+  ctx.textBaseline='middle';
+
+  if(ksCurrent.sharps>0){
+    ctx.font='16px serif';ctx.fillStyle='#E8ECF0';
+    for(let i=0;i<ksCurrent.sharps;i++)ctx.fillText('♯',accX+i*accSpacing,noteY(sharpSteps[i]));
+  }else if(ksCurrent.flats>0){
+    ctx.font='18px serif';ctx.fillStyle='#E8ECF0';
+    for(let i=0;i<ksCurrent.flats;i++)ctx.fillText('♭',accX+i*accSpacing,noteY(flatSteps[i]));
+  }else{
+    ctx.font='12px "DM Mono",monospace';ctx.fillStyle='rgba(136,146,164,0.65)';
+    ctx.textAlign='center';ctx.fillText('(no accidentals)',W/2+8,topLine+2*lg);
+    ctx.textAlign='left';
+  }
+}
+
+function ksDraw5ths(){
+  const el=document.getElementById('ks-cof5');if(!el)return;
+  const outerR=88,midR=56,innerR=30;
+  let svg=`<svg viewBox="-108 -108 216 216" width="268" height="268" style="display:block;margin:0 auto">`;
+
+  for(let i=0;i<12;i++){
+    const a1=(i*30-90-15)*Math.PI/180,a2=(i*30-90+15)*Math.PI/180,ta=(i*30-90)*Math.PI/180;
+    const k=COF5_KEYS[i];
+    const isAct=ksCurrent&&k.id===ksCurrent.id;
+    const c1=Math.cos(a1),s1=Math.sin(a1),c2=Math.cos(a2),s2=Math.sin(a2);
+
+    // outer sector
+    const op=`M${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} L${(c1*outerR).toFixed(1)},${(s1*outerR).toFixed(1)} A${outerR},${outerR},0,0,1,${(c2*outerR).toFixed(1)},${(s2*outerR).toFixed(1)} L${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} A${midR},${midR},0,0,0,${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} Z`;
+    const oFill=isAct?'#e6317a':i<=6?'#13243d':'#1a102e';
+    svg+=`<path d="${op}" fill="${oFill}" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/>`;
+
+    const mtx=(Math.cos(ta)*(outerR+midR)/2).toFixed(1),mty=(Math.sin(ta)*(outerR+midR)/2).toFixed(1);
+    const fs=k.major.length>2?'6.2':'8';
+    svg+=`<text x="${mtx}" y="${mty}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#fff':'#E8ECF0'}" font-size="${fs}" font-weight="${isAct?'700':'500'}" font-family="Inter,sans-serif">${k.major}</text>`;
+
+    // inner sector
+    const ip=`M${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} L${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} A${midR},${midR},0,0,1,${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} L${(c2*innerR).toFixed(1)},${(s2*innerR).toFixed(1)} A${innerR},${innerR},0,0,0,${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} Z`;
+    const iFill=isAct?'#8d1450':i<=6?'#0e1b2d':'#120c22';
+    svg+=`<path d="${ip}" fill="${iFill}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+
+    const itx=(Math.cos(ta)*(midR+innerR)/2).toFixed(1),ity=(Math.sin(ta)*(midR+innerR)/2).toFixed(1);
+    svg+=`<text x="${itx}" y="${ity}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#ffb3d1':'#8892A4'}" font-size="5" font-family="Inter,sans-serif">${k.minor}</text>`;
+
+    // accidental count label (outside ring)
+    if(COF5_ACC[i]>0){
+      const lr=outerR+13,lx=(Math.cos(ta)*lr).toFixed(1),ly=(Math.sin(ta)*lr).toFixed(1);
+      svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="rgba(136,146,164,0.6)" font-size="5" font-family="Inter,sans-serif">${COF5_ACC[i]}${COF5_TYPE[i]}</text>`;
+    }
+  }
+
+  svg+=`<circle cx="0" cy="0" r="${innerR}" fill="#0f172a" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+  svg+=`<text x="0" y="-4.5" text-anchor="middle" dominant-baseline="middle" fill="#8892A4" font-size="5.2" font-family="DM Mono,monospace">Circle of</text>`;
+  svg+=`<text x="0" y="4.5" text-anchor="middle" dominant-baseline="middle" fill="#8892A4" font-size="5.2" font-family="DM Mono,monospace">5ths</text>`;
+  svg+=`</svg>`;
+  el.innerHTML=svg;
+}
+
+// ══════════════════════════════════════════════════════════
+// CREATE THE SCALE BUILDER
+// ══════════════════════════════════════════════════════════
+const SCALE_DEFS=[
+  {label:'C Major',notes:[
+    {l:'C',step:-2,a:'n'},{l:'D',step:-1,a:'n'},{l:'E',step:0,a:'n'},{l:'F',step:1,a:'n'},
+    {l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'n'}]},
+  {label:'G Major',notes:[
+    {l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'n'},
+    {l:'D',step:6,a:'n'},{l:'E',step:7,a:'n'},{l:'F',step:8,a:'s'},{l:'G',step:9,a:'n'}]},
+  {label:'D Major',notes:[
+    {l:'D',step:-1,a:'n'},{l:'E',step:0,a:'n'},{l:'F',step:1,a:'s'},{l:'G',step:2,a:'n'},
+    {l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'n'}]},
+  {label:'A Major',notes:[
+    {l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'n'},
+    {l:'E',step:7,a:'n'},{l:'F',step:8,a:'s'},{l:'G',step:9,a:'s'},{l:'A',step:10,a:'n'}]},
+  {label:'E Major',notes:[
+    {l:'E',step:0,a:'n'},{l:'F',step:1,a:'s'},{l:'G',step:2,a:'s'},{l:'A',step:3,a:'n'},
+    {l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'s'},{l:'E',step:7,a:'n'}]},
+  {label:'F Major',notes:[
+    {l:'F',step:1,a:'n'},{l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'f'},
+    {l:'C',step:5,a:'n'},{l:'D',step:6,a:'n'},{l:'E',step:7,a:'n'},{l:'F',step:8,a:'n'}]},
+];
+
+let sbScale=SCALE_DEFS[0];
+let sbState=[];
+
+function sbLoadScale(){
+  const v=parseInt(document.getElementById('sb-scale-select').value)||0;
+  sbScale=SCALE_DEFS[v];
+  sbState=sbScale.notes.map(()=>'n');
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbReset(){
+  sbState=sbScale.notes.map(()=>'n');
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbReveal(){
+  sbState=sbScale.notes.map(n=>n.a);
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='<p style="color:var(--sky);text-align:center;font-weight:600">Answer revealed — study the correct accidentals.</p>';
+  sbShowIntervals(true);
+}
+
+function sbCheck(){
+  let correct=0;
+  const res=sbScale.notes.map((n,i)=>{const ok=n.a===sbState[i];if(ok)correct++;return ok;});
+  sbDrawStaff(res);
+  const pct=Math.round(correct/8*100);
+  if(correct===8){
+    document.getElementById('sb-feedback').innerHTML='<p style="color:var(--green);text-align:center;font-size:1.1rem;font-weight:700">🎉 Perfect! All 8 notes correct!</p>';
+  }else{
+    document.getElementById('sb-feedback').innerHTML=`<p style="color:var(--amber);text-align:center">${correct}/8 correct (${pct}%) — red notes need a different accidental.</p>`;
+  }
+  sbShowIntervals(false);
+}
+
+const SB_SEMITONES={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function sbNoteToSemi(letter,acc){
+  return SB_SEMITONES[letter]+(acc==='s'?1:acc==='f'?-1:0);
+}
+
+function sbShowIntervals(useAnswer){
+  const src=sbScale.notes;
+  const state=useAnswer?src.map(n=>n.a):sbState;
+  let row='',labels='';
+  for(let i=0;i<7;i++){
+    const got=((sbNoteToSemi(src[i+1].l,state[i+1])-sbNoteToSemi(src[i].l,state[i]))+12)%12;
+    const want=((sbNoteToSemi(src[i+1].l,src[i+1].a)-sbNoteToSemi(src[i].l,src[i].a))+12)%12;
+    const lbl=got===2?'W':got===1?'H':got+'?';
+    const ok=got===want;
+    row+=`<div class="sb-interval ${ok?'ok':'err'}">${lbl}</div>`;
+    labels+=`<div class="sb-interval-lbl">${src[i].l}→${src[i+1].l}</div>`;
+  }
+  document.getElementById('sb-intervals').innerHTML=row;
+  document.getElementById('sb-interval-labels').innerHTML=labels;
+}
+
+function sbToggleNote(idx){
+  const cycle={n:'s',s:'f',f:'n'};
+  sbState[idx]=cycle[sbState[idx]];
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbDrawStaff(checkResults){
+  const svg=document.getElementById('sb-staff');if(!svg)return;
+  const W=490,H=200;
+  const lg=14,halfStep=7;
+  const staffTop=50,bottomLine=staffTop+4*lg; // bottomLine=106=E4=step0
+  const noteY=s=>bottomLine-s*halfStep;
+  const noteXs=[85,135,185,235,285,335,385,435];
+
+  let s='';
+  // staff lines
+  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="12" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.4)" stroke-width="1"/>`;}
+
+  // treble clef
+  s+=`<text x="6" y="${bottomLine+10}" font-family="serif" font-size="62" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+
+  // notes
+  sbScale.notes.forEach((note,i)=>{
+    const x=noteXs[i],y=noteY(note.step);
+    const acc=sbState[i];
+    let col='#E8ECF0';
+    if(checkResults)col=checkResults[i]?'#39D98A':'#ff6b9d';
+
+    // ledger lines
+    if(note.step<=-2){const ly=noteY(-2);s+=`<line x1="${x-12}" y1="${ly}" x2="${x+12}" y2="${ly}" stroke="rgba(232,236,240,0.55)" stroke-width="1"/>`;}
+    if(note.step>=10){const ly=noteY(10);s+=`<line x1="${x-12}" y1="${ly}" x2="${x+12}" y2="${ly}" stroke="rgba(232,236,240,0.55)" stroke-width="1"/>`;}
+
+    // whole note head (hollow oval)
+    s+=`<ellipse cx="${x}" cy="${y}" rx="9.5" ry="6.5" fill="#1a2535" stroke="${col}" stroke-width="2"/>`;
+    // inner cutout effect (rotated ellipse for open note feel)
+    s+=`<ellipse cx="${x+1}" cy="${y}" rx="4.5" ry="3" fill="#1a2535" stroke="none" transform="rotate(-15,${x},${y})"/>`;
+
+    // accidental to left of note
+    if(acc==='s')s+=`<text x="${x-14}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="16" fill="${col}">♯</text>`;
+    else if(acc==='f')s+=`<text x="${x-14}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="18" fill="${col}">♭</text>`;
+
+    // note letter below staff
+    s+=`<text x="${x}" y="${bottomLine+22}" text-anchor="middle" dominant-baseline="middle" font-family="Inter,sans-serif" font-size="11" fill="rgba(136,146,164,0.75)">${note.l}</text>`;
+
+    // invisible click target
+    s+=`<ellipse cx="${x}" cy="${y}" rx="18" ry="14" fill="transparent" style="cursor:pointer" onclick="sbToggleNote(${i})"/>`;
+  });
+
+  svg.innerHTML=s;
+}
+
+// ══════════════════════════════════════════════════════════
 // FADE-IN OBSERVER
 // ══════════════════════════════════════════════════════════
 const observer=new IntersectionObserver(entries=>{
@@ -1897,6 +2371,10 @@ document.querySelectorAll('section').forEach(s=>{
   s.style.opacity='0';s.style.transform='translateY(14px)';
   s.style.transition='opacity .6s ease,transform .6s ease';observer.observe(s);
 });
+
+// Init games
+ksInit();
+sbLoadScale();
 </script>
 </body>
 </html>

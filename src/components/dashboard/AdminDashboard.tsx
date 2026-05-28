@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn, FileDown } from "lucide-react";
+import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn, FileDown, RotateCcw } from "lucide-react";
 import { exportAllStudentsReport, exportSingleStudentReport, type AdminStudentRow } from "@/lib/exportReport";
 import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
@@ -71,6 +71,7 @@ const StudentStatsTable = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exportingAll, setExportingAll] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
+  const [resettingTimeId, setResettingTimeId] = useState<string | null>(null);
 
   const handleExportAll = async () => {
     setExportingAll(true);
@@ -82,6 +83,18 @@ const StudentStatsTable = () => {
     setExportingId(s.id);
     try { await exportSingleStudentReport(s as AdminStudentRow, supabase); }
     finally { setExportingId(null); }
+  };
+
+  const handleResetTime = async (userId: string) => {
+    setResettingTimeId(userId);
+    try {
+      await (supabase as any).rpc("admin_reset_student_time", { p_user_id: userId });
+      setStudents(prev => prev.map(s => s.id === userId ? { ...s, totalSeconds: 0 } : s));
+    } catch (e: any) {
+      console.error("Reset time failed:", e.message);
+    } finally {
+      setResettingTimeId(null);
+    }
   };
 
   useEffect(() => {
@@ -264,9 +277,23 @@ const StudentStatsTable = () => {
                 {s.lastSignIn && (
                   <p className="text-xs text-muted-foreground">{new Date(s.lastSignIn).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                 )}
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm items-center">
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Time spent</span>
-                  <span className="font-bold">{s.totalSeconds > 0 ? formatDuration(s.totalSeconds) : "—"}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">{s.totalSeconds > 0 ? formatDuration(s.totalSeconds) : "—"}</span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      title="Reset time spent"
+                      disabled={resettingTimeId === s.id}
+                      onClick={(e) => { e.stopPropagation(); handleResetTime(s.id); }}
+                    >
+                      {resettingTimeId === s.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <RotateCcw className="w-3 h-3" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
