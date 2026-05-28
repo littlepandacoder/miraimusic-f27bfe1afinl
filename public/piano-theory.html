@@ -176,6 +176,82 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   line-height:1.7;margin-top:1.4rem}
 .callout strong{color:var(--off-white)}
 .callout em{color:var(--sky);font-style:normal}
+
+/* ── SESSION PANELS ── */
+.gs-panel{display:none}
+.gs-panel.active{display:block}
+
+/* session length / difficulty pills */
+.ks-session-config,.sb-diff-card{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem}
+.ks-session-config-title,.sb-diff-title{font-size:.67rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.12em;font-family:'DM Mono',monospace;margin-bottom:.65rem}
+.ks-qlen-pills,.sb-diff-pills{display:flex;gap:.5rem;flex-wrap:wrap}
+.ks-qlen-pill{flex:1;padding:.55rem;text-align:center;font-size:.9rem;font-weight:700;
+  font-family:'DM Mono',monospace;background:rgba(255,255,255,.04);
+  border:1.5px solid rgba(255,255,255,.1);border-radius:10px;cursor:pointer;
+  transition:all .18s;color:var(--muted)}
+.ks-qlen-pill.sel,.sb-diff-pill.sel{background:rgba(255,45,120,.15);border-color:var(--pink);
+  color:var(--pink);box-shadow:0 0 10px rgba(255,45,120,.18)}
+.ks-qlen-pill:hover:not(.sel){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:var(--off-white)}
+.sb-diff-pill{padding:.5rem .9rem;font-size:.82rem;font-weight:600;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:9px;cursor:pointer;transition:all .18s;color:var(--muted);font-family:'Inter',sans-serif}
+.sb-diff-pill.sel{background:rgba(0,212,255,.13);border-color:var(--sky);color:var(--sky);box-shadow:0 0 10px rgba(0,212,255,.18)}
+.sb-diff-pill:hover:not(.sel){background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:var(--off-white)}
+
+/* start buttons */
+.btn-start-ks{width:100%;padding:.9rem;font-size:1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;border:none;
+  border-radius:12px;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:.5rem;font-family:'Inter',sans-serif}
+.btn-start-ks:hover{opacity:.88;transform:scale(1.02)}
+.btn-start-sb{width:100%;padding:.9rem;font-size:1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--sky),var(--green));color:#0a0812;border:none;
+  border-radius:12px;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:.5rem;font-family:'Inter',sans-serif}
+.btn-start-sb:hover{opacity:.9;transform:scale(1.02)}
+
+/* progress bar */
+.ks-progress-row{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+.ks-progress-bar{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden}
+.ks-progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));
+  border-radius:100px;transition:width .4s ease;width:0%}
+.sb-progress-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--green));
+  border-radius:100px;transition:width .4s ease;width:0%}
+.ks-progress-label{font-size:.75rem;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap}
+
+/* end-early */
+.gs-end-early{background:none;border:none;color:rgba(107,114,128,.55);font-size:.72rem;
+  cursor:pointer;padding:.35rem .65rem;border-radius:8px;font-family:'DM Mono',monospace;
+  transition:color .2s;letter-spacing:.04em;display:block;margin:.85rem auto 0}
+.gs-end-early:hover{color:var(--pink)}
+
+/* end results card */
+.gs-end-card{background:var(--card);border:1px solid var(--border);border-radius:22px;
+  padding:2.5rem 2rem;text-align:center;max-width:460px;margin:2rem auto 0}
+.gs-end-emoji{font-size:3.5rem;margin-bottom:.65rem;display:block;
+  animation:gs-pop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes gs-pop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+.gs-end-grade{font-family:'Orbitron',monospace;font-size:4.5rem;font-weight:900;line-height:1;margin-bottom:.2rem}
+.gs-end-msg{font-size:.95rem;color:var(--muted);margin-bottom:1.75rem}
+.gs-end-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1.75rem}
+.gs-end-stat{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:.8rem .4rem}
+.gs-end-stat-val{font-size:1.5rem;font-weight:800;font-family:'DM Mono',monospace;line-height:1;margin-bottom:.2rem}
+.gs-end-stat-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace}
+.gs-end-btns{display:flex;gap:.65rem;justify-content:center;flex-wrap:wrap}
+
+/* scale builder play header */
+.sb-play-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem}
+.sb-play-scale-name{font-size:1.15rem;font-weight:800;font-family:'Orbitron',monospace;color:var(--sky)}
+.sb-play-progress{font-size:.72rem;font-family:'DM Mono',monospace;color:var(--muted)}
+.sb-play-progress span{color:var(--off-white);font-weight:700}
+
+/* next scale button */
+.sb-next-btn{width:100%;padding:.72rem;font-size:.9rem;font-weight:700;
+  background:rgba(57,217,138,.14);border:1.5px solid var(--green);color:var(--green);
+  border-radius:10px;cursor:pointer;transition:all .2s;margin-top:.75rem;
+  font-family:'Inter',sans-serif;display:none}
+.sb-next-btn.vis{display:block}
+.sb-next-btn:hover{background:rgba(57,217,138,.26)}
 </style>
 </head>
 <body>
@@ -212,46 +288,88 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 <div class="screen" id="key-sig-screen">
   <div class="game-wrap">
     <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
-    <div class="game-title" style="background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Key Signature Quiz</div>
-    <p class="game-sub">Read the treble clef key signature and name the major key.<br>Select which keys you want to practise using the checkboxes.</p>
 
-    <div class="ks-layout">
-      <!-- game col -->
-      <div class="ks-game-col">
-        <div class="ks-key-picker">
-          <div class="ks-picker-header">
-            <div class="ks-picker-title">Keys to practise</div>
-            <button class="ks-picker-reset" onclick="ksResetPicker()">↺ defaults</button>
+    <!-- ── START ── -->
+    <div class="gs-panel active" id="ks-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Key Signature Quiz</div>
+      <p class="game-sub">Read the treble clef key signature and name the major key.</p>
+      <div class="ks-layout">
+        <div class="ks-game-col">
+          <div class="ks-key-picker">
+            <div class="ks-picker-header">
+              <div class="ks-picker-title">Keys to practise</div>
+              <button class="ks-picker-reset" onclick="ksResetPicker()">↺ defaults</button>
+            </div>
+            <div id="ks-range-grid"></div>
+            <div class="ks-min-note">min. 2 keys required</div>
           </div>
-          <div id="ks-range-grid"></div>
-          <div class="ks-min-note">min. 2 keys required</div>
+          <div class="ks-session-config">
+            <div class="ks-session-config-title">Questions per session</div>
+            <div class="ks-qlen-pills">
+              <div class="ks-qlen-pill" onclick="ksSetQLen(5,this)">5</div>
+              <div class="ks-qlen-pill sel" onclick="ksSetQLen(10,this)">10</div>
+              <div class="ks-qlen-pill" onclick="ksSetQLen(15,this)">15</div>
+            </div>
+          </div>
+          <button class="btn-start-ks" onclick="ksBeginSession()">▶ Start Session</button>
         </div>
-        <div class="ks-staff-wrap">
-          <canvas id="ks-staff" width="360" height="140"></canvas>
-        </div>
-        <div class="ks-score-row">
-          <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;correct</div>
-          <div class="ks-score-box"><span id="ks-score-pct">—</span>&nbsp;accuracy</div>
-          <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span>&nbsp;streak</div>
-          <div class="ks-score-box" style="background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.25)">
-            ⏱&nbsp;<span id="ks-timer" style="font-weight:700;transition:transform .12s,color .2s">3</span>s
+        <div class="ks-cof5-col">
+          <div class="ks-cof5-label">Circle of 5ths</div>
+          <div id="ks-cof5-static"></div>
+          <div class="ks-cof5-info" style="margin-top:.9rem">
+            <strong style="color:var(--off-white);display:block;margin-bottom:.3rem">How to read it</strong>
+            Clockwise → add a ♯ each step.<br>
+            Counter-clockwise → add a ♭.<br>
+            Outer ring = <span style="color:var(--off-white)">Major</span> · Inner = relative minor.
           </div>
         </div>
-        <div id="ks-choices" class="ks-choices"></div>
-        <div id="ks-feedback" class="ks-feedback"></div>
       </div>
+    </div>
 
-      <!-- circle of 5ths col -->
-      <div class="ks-cof5-col">
-        <div class="ks-cof5-label">Circle of 5ths</div>
-        <div id="ks-cof5"></div>
-        <p class="ks-cof5-hint">Pink = current question</p>
-        <div class="ks-cof5-info">
-          <strong style="color:var(--off-white);display:block;margin-bottom:.3rem">How to read it</strong>
-          Clockwise → add a ♯ each step.<br>
-          Counter-clockwise → add a ♭.<br>
-          Outer ring = <span style="color:var(--off-white)">Major</span> keys.<br>
-          Inner ring = <span style="color:var(--muted)">relative minor</span>.
+    <!-- ── PLAY ── -->
+    <div class="gs-panel" id="ks-play">
+      <div class="ks-layout">
+        <div class="ks-game-col">
+          <div class="ks-progress-row">
+            <div class="ks-progress-bar"><div id="ks-progress-fill" class="ks-progress-fill"></div></div>
+            <div class="ks-progress-label">Q&nbsp;<span id="ks-q-num">1</span>&nbsp;/&nbsp;<span id="ks-q-total">10</span></div>
+          </div>
+          <div class="ks-staff-wrap">
+            <canvas id="ks-staff" width="360" height="140"></canvas>
+          </div>
+          <div class="ks-score-row">
+            <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;✓</div>
+            <div class="ks-score-box"><span id="ks-score-pct">—</span></div>
+            <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span></div>
+            <div class="ks-score-box" style="background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.25)">⏱&nbsp;<span id="ks-timer" style="font-weight:700;transition:transform .12s,color .2s">3</span>s</div>
+          </div>
+          <div id="ks-choices" class="ks-choices"></div>
+          <div id="ks-feedback" class="ks-feedback"></div>
+          <button class="gs-end-early" onclick="ksEndSession()">✕ End Session Early</button>
+        </div>
+        <div class="ks-cof5-col">
+          <div class="ks-cof5-label">Circle of 5ths</div>
+          <div id="ks-cof5"></div>
+          <p class="ks-cof5-hint">Pink = current question</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── END ── -->
+    <div class="gs-panel" id="ks-end">
+      <div class="gs-end-card">
+        <span id="ks-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="ks-end-grade" class="gs-end-grade">A</div>
+        <div id="ks-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="ks-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="ks-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="ks-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div id="ks-end-ai" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:1rem;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.5rem;min-height:60px"></div>
+        <div class="gs-end-btns">
+          <button class="btn-start-ks" style="flex:1;margin-top:0" onclick="ksPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
         </div>
       </div>
     </div>
@@ -262,50 +380,119 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 <div class="screen" id="scale-screen">
   <div class="game-wrap">
     <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
-    <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Create the Scale</div>
-    <p class="game-sub">Click any note head to cycle ♮ → ♯ → ♭ and build the correct major scale.<br>Hit <strong style="color:var(--off-white)">Check Scale</strong> to see which notes are right.</p>
 
-    <div class="sb-controls">
-      <div class="sb-selector">
-        <label>Choose a scale:</label>
-        <select id="sb-scale-select" onchange="sbLoadScale()">
-          <option value="0">C Major — no accidentals (easiest)</option>
-          <option value="1">G Major — 1 sharp (F♯)</option>
-          <option value="2">D Major — 2 sharps (F♯ C♯)</option>
-          <option value="3">A Major — 3 sharps (F♯ C♯ G♯)</option>
-          <option value="4">E Major — 4 sharps (F♯ C♯ G♯ D♯)</option>
-          <option value="5">F Major — 1 flat (B♭)</option>
-        </select>
+    <!-- ── START ── -->
+    <div class="gs-panel active" id="sb-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Create the Scale</div>
+      <p class="game-sub">Add the correct ♯ and ♭ to each note to build major scales.</p>
+      <div class="sb-diff-card">
+        <div class="sb-diff-title">Scales to include</div>
+        <div class="sb-diff-pills">
+          <div class="sb-diff-pill sel" onclick="sbSetDiff('easy',this)">🟢 Easy — C · G · F</div>
+          <div class="sb-diff-pill" onclick="sbSetDiff('medium',this)">🟡 Medium — D · A · B♭</div>
+          <div class="sb-diff-pill" onclick="sbSetDiff('all',this)">🔴 All 6 scales</div>
+        </div>
       </div>
-      <div class="sb-hint-box">
+      <div class="sb-hint-box" style="margin-bottom:.75rem">
         <span>Major scale pattern: <strong>W W H W W W H</strong></span>
-        <span class="sb-hint-key">W = whole step (2 semitones) · H = half step (1 semitone)</span>
+        <span class="sb-hint-key">W = whole step · H = half step</span>
+      </div>
+      <button class="btn-start-sb" onclick="sbBeginSession()">▶ Start Session</button>
+      <div class="callout">
+        <strong>How it works:</strong> Click note heads to cycle ♮ → ♯ → ♭. Hit <em>Check Scale</em> when ready, then advance to the next scale.
       </div>
     </div>
 
-    <div class="sb-staff-wrap">
-      <svg id="sb-staff" viewBox="0 0 490 200" width="100%" style="max-width:560px;display:block;margin:0 auto;background:#0f0d1a;border-radius:12px;border:1px solid var(--border)"></svg>
+    <!-- ── PLAY ── -->
+    <div class="gs-panel" id="sb-play">
+      <div class="sb-play-header">
+        <div>
+          <div class="sb-play-scale-name" id="sb-play-scale-name">C Major</div>
+          <div class="sb-play-progress">Scale <span id="sb-scale-num">1</span> of <span id="sb-scale-total">3</span></div>
+        </div>
+        <button class="gs-end-early" style="margin:0" onclick="sbEndSession()">✕ End Session</button>
+      </div>
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="sb-progress-fill" class="sb-progress-fill"></div></div>
+      </div>
+      <div class="sb-staff-wrap">
+        <svg id="sb-staff" viewBox="0 0 490 200" width="100%" style="max-width:560px;display:block;margin:0 auto;background:#0f0d1a;border-radius:12px;border:1px solid var(--border)"></svg>
+      </div>
+      <div class="sb-btn-row">
+        <button class="btn-primary" id="sb-check-btn" onclick="sbCheck()">✓ Check Scale</button>
+        <button class="btn-ghost" onclick="sbReset()">↺ Reset</button>
+        <button class="btn-ghost" onclick="sbReveal()">👁 Reveal</button>
+      </div>
+      <div id="sb-feedback" class="sb-feedback"></div>
+      <div id="sb-intervals" class="sb-interval-row"></div>
+      <div id="sb-interval-labels" class="sb-interval-labels"></div>
+      <button class="sb-next-btn" id="sb-next-btn" onclick="sbNextScale()">Next Scale →</button>
     </div>
 
-    <div class="sb-btn-row">
-      <button class="btn-primary" onclick="sbCheck()">✓ Check Scale</button>
-      <button class="btn-ghost" onclick="sbReset()">↺ Reset</button>
-      <button class="btn-ghost" onclick="sbReveal()">👁 Reveal Answer</button>
-    </div>
-
-    <div id="sb-feedback" class="sb-feedback"></div>
-    <div id="sb-intervals" class="sb-interval-row"></div>
-    <div id="sb-interval-labels" class="sb-interval-labels"></div>
-
-    <div class="callout">
-      <strong>Tips:</strong> Every major scale follows <em>W W H W W W H</em>.
-      Half steps always fall between degrees 3→4 and 7→8.
-      Work out which notes need accidentals so those half steps land in the right place.
+    <!-- ── END ── -->
+    <div class="gs-panel" id="sb-end">
+      <div class="gs-end-card">
+        <span id="sb-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="sb-end-grade" class="gs-end-grade">A</div>
+        <div id="sb-end-msg" class="gs-end-msg">Session complete!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="sb-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Correct</div></div>
+          <div class="gs-end-stat"><div id="sb-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="sb-end-total" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Scales</div></div>
+        </div>
+        <div id="sb-end-ai" style="background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);border-radius:12px;padding:1rem;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.5rem;min-height:60px"></div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="sbPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+// ── Supabase creds (same pattern as other games) ──────────
+const _SUPA_URL=(()=>{const k=Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k));if(!k)return'';try{const u=JSON.parse(localStorage.getItem(k)||'{}');return u.token_type?window.__SUPA_URL||'':''}catch{return''};})();
+const _PT_URL='https://tychkyunjfbkksyxknhn.supabase.co';
+const _PT_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw';
+
+function ptAuth(){
+  const k=Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k));
+  if(!k)return null;
+  try{const s=JSON.parse(localStorage.getItem(k)||'{}');return{token:s.access_token,uid:s.user?.id};}
+  catch{return null;}
+}
+
+async function ptSaveScore(game,score,correct,total,bestStreak){
+  const auth=ptAuth();if(!auth?.token)return;
+  try{
+    await fetch(`${_PT_URL}/rest/v1/game_scores`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':_PT_KEY,'Authorization':`Bearer ${auth.token}`,'Prefer':'return=minimal'},
+      body:JSON.stringify({user_id:auth.uid,game,score,correct,total,best_streak:bestStreak})
+    });
+    if(typeof showRankingPopup==='function')showRankingPopup(game,game==='key_sig_quiz'?'Key Signature Quiz':'Scale Builder');
+  }catch(_){}
+}
+
+async function ptAiAnalysis(game,correct,total,weakKeys){
+  const auth=ptAuth();if(!auth?.token)return'';
+  const pct=total>0?Math.round(correct/total*100):0;
+  const prompt=game==='key_sig_quiz'
+    ?`A student scored ${correct}/${total} (${pct}%) on the Key Signature Quiz. ${weakKeys.length?'They struggled with: '+weakKeys.join(', ')+'.':''} Give 2 short encouraging sentences with one specific tip to improve key signature recognition.`
+    :`A student completed ${correct}/${total} scales correctly (${pct}%) in the Scale Builder. ${weakKeys.length?'They found these scales hard: '+weakKeys.join(', ')+'.':''} Give 2 short encouraging sentences with one specific tip to improve building major scales.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':'','anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:120,messages:[{role:'user',content:prompt}]})
+    });
+    if(!res.ok)return'';
+    const d=await res.json();
+    return d.content?.[0]?.text||'';
+  }catch{return'';}
+}
+
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
   ['mode-select','key-sig-screen','scale-screen'].forEach(s=>{
@@ -314,9 +501,14 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
+function gsPanel(group,id){
+  group.forEach(p=>{const el=document.getElementById(p);if(el){el.classList.remove('active');}});
+  const el=document.getElementById(id);if(el)el.classList.add('active');
+  window.scrollTo(0,0);
+}
 function goMenu(){ ksStopTimer(); showScreen('mode-select'); }
-function startKeyQuiz(){ ksInit(); showScreen('key-sig-screen'); }
-function startScaleBuilder(){ sbLoadScale(); showScreen('scale-screen'); }
+function startKeyQuiz(){ showScreen('key-sig-screen'); ksInit(); }
+function startScaleBuilder(){ showScreen('scale-screen'); gsPanel(['sb-start','sb-play','sb-end'],'sb-start'); }
 
 // ══════════════════════════════════════════════════════════
 // KEY SIGNATURE QUIZ
@@ -355,11 +547,14 @@ const COF5_TYPE=['','♯','♯','♯','♯','♯','♯','♭','♭','♭','♭',
 const KS_DEFAULTS=new Set(['C','G','D','F','Bb']);
 let ksEnabled=new Set(KS_DEFAULTS);
 let ksCurrent=null;
-let ksScore={correct:0,total:0,streak:0};
+let ksScore={correct:0,total:0,streak:0,bestStreak:0};
 let ksAnswered=false;
 let ksBuilt=false;
 let ksTimerInterval=null;
 let ksTimeLeft=3;
+let ksSessionLen=10;
+let ksQuestionNum=0;
+let ksWrongKeys=[];
 
 // ── Audio context ──────────────────────────────────────────
 let ksAC=null;
@@ -455,28 +650,58 @@ function ksResetPicker(){
 }
 
 // ── Game logic ─────────────────────────────────────────────
+function ksSetQLen(n,el){
+  ksSessionLen=n;
+  document.querySelectorAll('.ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
 function ksInit(){
-  if(!ksBuilt){ksBuilt=true;ksBuildPicker();}
+  if(!ksBuilt){ksBuilt=true;ksBuildPicker();ksDraw5thsStatic();}
+  gsPanel(['ks-start','ks-play','ks-end'],'ks-start');
+}
+
+function ksBeginSession(){
+  ksScore={correct:0,total:0,streak:0,bestStreak:0};
+  ksQuestionNum=0;ksWrongKeys=[];
+  gsPanel(['ks-start','ks-play','ks-end'],'ks-play');
   ksNextQuestion();
 }
+
+function ksEndSession(){
+  ksStopTimer();
+  const pct=ksScore.total>0?Math.round(ksScore.correct/ksScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  const msg=pct>=95?'Outstanding!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep practising!';
+  document.getElementById('ks-end-emoji').textContent=emoji;
+  document.getElementById('ks-end-grade').textContent=grade;
+  document.getElementById('ks-end-grade').style.color=gradeCols[grade];
+  document.getElementById('ks-end-msg').textContent=msg;
+  document.getElementById('ks-end-score').textContent=`${ksScore.correct}/${ksScore.total}`;
+  document.getElementById('ks-end-pct').textContent=pct+'%';
+  document.getElementById('ks-end-streak').textContent=ksScore.bestStreak;
+  document.getElementById('ks-end-ai').textContent='✨ Generating feedback…';
+  gsPanel(['ks-start','ks-play','ks-end'],'ks-end');
+  ptSaveScore('key_sig_quiz',ksScore.correct*100,ksScore.correct,ksScore.total,ksScore.bestStreak);
+  ptAiAnalysis('key_sig_quiz',ksScore.correct,ksScore.total,[...new Set(ksWrongKeys)].slice(0,5)).then(txt=>{
+    const el=document.getElementById('ks-end-ai');
+    el.textContent=txt||'Keep practising key signatures — consistency is the key!';
+  });
+}
+
+function ksPlayAgain(){ gsPanel(['ks-start','ks-play','ks-end'],'ks-start'); }
 
 function ksStopTimer(){clearInterval(ksTimerInterval);ksTimerInterval=null;}
 
 function ksStartTimer(){
-  ksStopTimer();
-  ksTimeLeft=3;
-  ksUpdateTimerUI();
+  ksStopTimer();ksTimeLeft=3;ksUpdateTimerUI();
   ksTimerInterval=setInterval(()=>{
-    ksTimeLeft--;
-    ksUpdateTimerUI();
-    if(ksTimeLeft<=0){
-      ksStopTimer();
-      if(!ksAnswered)ksTimeout();
-    }else if(ksTimeLeft===1){
-      ksSndUrgent();
-    }else{
-      ksSndTick();
-    }
+    ksTimeLeft--;ksUpdateTimerUI();
+    if(ksTimeLeft<=0){ksStopTimer();if(!ksAnswered)ksTimeout();}
+    else if(ksTimeLeft===1)ksSndUrgent();
+    else ksSndTick();
   },1000);
 }
 
@@ -489,78 +714,72 @@ function ksUpdateTimerUI(){
 }
 
 function ksTimeout(){
-  ksAnswered=true;
-  ksScore.total++;ksScore.streak=0;
-  ksSndTimeout();
-  ksDraw5ths(true); // reveal answer on COF5
-  document.querySelectorAll('.ks-choice-btn').forEach(b=>{
-    if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');
-    b.disabled=true;
-  });
+  ksAnswered=true;ksScore.total++;ksScore.streak=0;
+  if(ksCurrent)ksWrongKeys.push(ksCurrent.name);
+  ksSndTimeout();ksDraw5ths(true);
+  document.querySelectorAll('.ks-choice-btn').forEach(b=>{if(b.textContent===ksCurrent?.name)b.classList.add('ks-correct');b.disabled=true;});
   const fb=document.getElementById('ks-feedback');
-  fb.textContent=`⏱ Time's up! It was ${ksCurrent.name}`;fb.style.color='var(--amber)';
+  fb.textContent=`⏱ Time's up! It was ${ksCurrent?.name}`;fb.style.color='var(--amber)';
+  ksUpdateScoreUI();
+  if(ksScore.total>=ksSessionLen){setTimeout(ksEndSession,2000);}else{setTimeout(ksNextQuestion,2000);}
+}
+
+function ksUpdateScoreUI(){
   document.getElementById('ks-score-correct').textContent=ksScore.correct;
   document.getElementById('ks-score-total').textContent=ksScore.total;
-  document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
+  document.getElementById('ks-score-pct').textContent=ksScore.total>0?Math.round(ksScore.correct/ksScore.total*100)+'%':'—';
   document.getElementById('ks-score-streak').textContent=ksScore.streak;
-  setTimeout(ksNextQuestion,2000);
+  const fill=Math.round((ksQuestionNum/ksSessionLen)*100);
+  const el=document.getElementById('ks-progress-fill');if(el)el.style.width=fill+'%';
 }
 
 function ksNextQuestion(){
   ksStopTimer();
+  if(ksScore.total>=ksSessionLen){ksEndSession();return;}
+  ksQuestionNum++;
+  document.getElementById('ks-q-num').textContent=ksQuestionNum;
+  document.getElementById('ks-q-total').textContent=ksSessionLen;
   const pool=KS_ALL.filter(k=>ksEnabled.has(k.id));
   if(pool.length<2)return;
   ksCurrent=pool[Math.floor(Math.random()*pool.length)];
   ksAnswered=false;
-  ksDrawStaff();
-  ksDraw5ths(false); // show ?s while guessing
+  ksDrawStaff();ksDraw5ths(false);
   const wrong=ksShuffle(pool.filter(k=>k.id!==ksCurrent.id));
   const choices=ksShuffle([ksCurrent,...wrong.slice(0,3)]);
-  const btns=document.getElementById('ks-choices');
-  btns.innerHTML='';
+  const btns=document.getElementById('ks-choices');btns.innerHTML='';
   choices.forEach(c=>{
-    const btn=document.createElement('button');
-    btn.className='ks-choice-btn';
-    btn.textContent=c.name;
-    btn.onclick=()=>ksGuess(c,btn);
-    btns.appendChild(btn);
+    const btn=document.createElement('button');btn.className='ks-choice-btn';btn.textContent=c.name;
+    btn.onclick=()=>ksGuess(c,btn);btns.appendChild(btn);
   });
   document.getElementById('ks-feedback').textContent='';
   ksStartTimer();
 }
 
 function ksGuess(choice,clickedBtn){
-  if(ksAnswered)return;
-  ksStopTimer();
-  ksAnswered=true;
+  if(ksAnswered)return;ksStopTimer();ksAnswered=true;
   const correct=choice.id===ksCurrent.id;
   ksScore.total++;
   if(correct){
-    ksScore.correct++;ksScore.streak++;
-    ksSndCorrect();
-    clickedBtn.classList.add('ks-correct');
-    const fb=document.getElementById('ks-feedback');
-    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
-    ksDraw5ths(true); // reveal on correct
+    ksScore.correct++;ksScore.streak++;ksScore.bestStreak=Math.max(ksScore.bestStreak,ksScore.streak);
+    ksSndCorrect();clickedBtn.classList.add('ks-correct');
+    const fb=document.getElementById('ks-feedback');fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+    ksDraw5ths(true);
   }else{
-    ksScore.streak=0;
-    ksSndWrong();
+    ksScore.streak=0;ksWrongKeys.push(ksCurrent.name);ksSndWrong();
     clickedBtn.classList.add('ks-wrong');
-    document.querySelectorAll('.ks-choice-btn').forEach(b=>{
-      if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');
-    });
-    const fb=document.getElementById('ks-feedback');
-    fb.textContent=`✗ That's ${ksCurrent.name}`;fb.style.color='var(--pink)';
-    ksDraw5ths(true); // reveal on wrong too
+    document.querySelectorAll('.ks-choice-btn').forEach(b=>{if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');});
+    const fb=document.getElementById('ks-feedback');fb.textContent=`✗ That's ${ksCurrent.name}`;fb.style.color='var(--pink)';
+    ksDraw5ths(true);
   }
-  document.getElementById('ks-score-correct').textContent=ksScore.correct;
-  document.getElementById('ks-score-total').textContent=ksScore.total;
-  document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
-  document.getElementById('ks-score-streak').textContent=ksScore.streak;
   document.querySelectorAll('.ks-choice-btn').forEach(b=>b.disabled=true);
-  setTimeout(ksNextQuestion,2000);
+  ksUpdateScoreUI();
+  if(ksScore.total>=ksSessionLen){setTimeout(ksEndSession,2000);}else{setTimeout(ksNextQuestion,2000);}
 }
 
+function ksDraw5thsStatic(){
+  const el=document.getElementById('ks-cof5-static');if(!el)return;
+  const tmp=ksCurrent;ksCurrent=null;ksDraw5ths(true,el);ksCurrent=tmp;
+}
 function ksDrawStaff(){
   const canvas=document.getElementById('ks-staff');
   if(!canvas||!ksCurrent)return;
@@ -596,8 +815,8 @@ function ksDrawStaff(){
   }
 }
 
-function ksDraw5ths(reveal=false){
-  const el=document.getElementById('ks-cof5');if(!el)return;
+function ksDraw5ths(reveal=false,targetEl=null){
+  const el=targetEl||document.getElementById('ks-cof5');if(!el)return;
   const outerR=94,midR=60,innerR=32;
   let svg=`<svg viewBox="-115 -115 230 230" width="290" height="290" style="display:block;margin:0 auto">`;
   for(let i=0;i<12;i++){
@@ -638,8 +857,87 @@ function ksDraw5ths(reveal=false){
 }
 
 // ══════════════════════════════════════════════════════════
-// SCALE BUILDER
+// SCALE BUILDER — session management
 // ══════════════════════════════════════════════════════════
+const SB_DIFF_MAP={
+  easy:[0,1,5],    // C, G, F
+  medium:[2,3,4],  // D, A, E  (index into SCALE_DEFS — B♭ not in list, so map to closest: index 5=F, reuse easy)
+  all:[0,1,2,3,4,5]
+};
+// index 5 = F (1 flat), but let me verify — we have C,G,D,A,E,F at 0-5
+// medium: D=2, A=3, E=4 — good
+
+let sbDifficulty='easy';
+let sbSessionIndices=[];
+let sbScaleIdx=0;
+let sbSessionCorrect=0;
+let sbScaleChecked=false;
+let sbWrongScales=[];
+
+function sbSetDiff(diff,el){
+  sbDifficulty=diff;
+  document.querySelectorAll('.sb-diff-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function sbBeginSession(){
+  const pool=[...SB_DIFF_MAP[sbDifficulty]];
+  // shuffle
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  sbSessionIndices=pool;
+  sbScaleIdx=0;sbSessionCorrect=0;sbWrongScales=[];
+  gsPanel(['sb-start','sb-play','sb-end'],'sb-play');
+  sbLoadSessionScale();
+}
+
+function sbLoadSessionScale(){
+  sbScale=SCALE_DEFS[sbSessionIndices[sbScaleIdx]];
+  sbState=sbScale.notes.map(()=>'n');
+  sbScaleChecked=false;
+  document.getElementById('sb-play-scale-name').textContent=sbScale.label;
+  document.getElementById('sb-scale-num').textContent=sbScaleIdx+1;
+  document.getElementById('sb-scale-total').textContent=sbSessionIndices.length;
+  const fill=Math.round((sbScaleIdx/sbSessionIndices.length)*100);
+  const pf=document.getElementById('sb-progress-fill');if(pf)pf.style.width=fill+'%';
+  const nb=document.getElementById('sb-next-btn');if(nb){nb.classList.remove('vis');nb.textContent='Next Scale →';}
+  const cb=document.getElementById('sb-check-btn');if(cb)cb.disabled=false;
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+  sbDrawStaff();
+}
+
+function sbNextScale(){
+  sbScaleIdx++;
+  if(sbScaleIdx>=sbSessionIndices.length){sbEndSession();}
+  else{sbLoadSessionScale();}
+}
+
+function sbEndSession(){
+  const total=sbSessionIndices.length;
+  const pct=total>0?Math.round(sbSessionCorrect/total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  const msg=pct===100?'Perfect session!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep practising!';
+  document.getElementById('sb-end-emoji').textContent=emoji;
+  document.getElementById('sb-end-grade').textContent=grade;
+  document.getElementById('sb-end-grade').style.color=gradeCols[grade];
+  document.getElementById('sb-end-msg').textContent=msg;
+  document.getElementById('sb-end-score').textContent=`${sbSessionCorrect}/${total}`;
+  document.getElementById('sb-end-pct').textContent=pct+'%';
+  document.getElementById('sb-end-total').textContent=total;
+  document.getElementById('sb-end-ai').textContent='✨ Generating feedback…';
+  gsPanel(['sb-start','sb-play','sb-end'],'sb-end');
+  ptSaveScore('scale_builder',sbSessionCorrect*100,sbSessionCorrect,total,0);
+  ptAiAnalysis('scale_builder',sbSessionCorrect,total,[...new Set(sbWrongScales)]).then(txt=>{
+    const el=document.getElementById('sb-end-ai');
+    el.textContent=txt||'Keep practising scales — you\'ll get faster with repetition!';
+  });
+}
+
+function sbPlayAgain(){ gsPanel(['sb-start','sb-play','sb-end'],'sb-start'); }
+
 const SCALE_DEFS=[
   {label:'C Major',notes:[
     {l:'C',step:-2,a:'n'},{l:'D',step:-1,a:'n'},{l:'E',step:0,a:'n'},{l:'F',step:1,a:'n'},
@@ -664,16 +962,6 @@ const SCALE_DEFS=[
 let sbScale=SCALE_DEFS[0];
 let sbState=[];
 
-function sbLoadScale(){
-  const v=parseInt(document.getElementById('sb-scale-select').value)||0;
-  sbScale=SCALE_DEFS[v];
-  sbState=sbScale.notes.map(()=>'n');
-  sbDrawStaff();
-  document.getElementById('sb-feedback').innerHTML='';
-  document.getElementById('sb-intervals').innerHTML='';
-  document.getElementById('sb-interval-labels').innerHTML='';
-}
-
 function sbReset(){
   sbState=sbScale.notes.map(()=>'n');
   sbDrawStaff();
@@ -694,12 +982,22 @@ function sbCheck(){
   const res=sbScale.notes.map((n,i)=>{const ok=n.a===sbState[i];if(ok)correct++;return ok;});
   sbDrawStaff(res);
   const pct=Math.round(correct/8*100);
-  if(correct===8){
-    document.getElementById('sb-feedback').innerHTML='<p style="color:var(--green);text-align:center;font-size:1.05rem;font-weight:700">🎉 Perfect! All 8 notes correct!</p>';
+  const perfect=correct===8;
+  if(perfect){
+    document.getElementById('sb-feedback').innerHTML='<p style="color:var(--green);text-align:center;font-size:1.05rem;font-weight:700">🎉 Perfect scale!</p>';
+    if(!sbScaleChecked)sbSessionCorrect++;
   }else{
-    document.getElementById('sb-feedback').innerHTML=`<p style="color:var(--amber);text-align:center">${correct}/8 correct (${pct}%) — red notes need a different accidental.</p>`;
+    document.getElementById('sb-feedback').innerHTML=`<p style="color:var(--amber);text-align:center">${correct}/8 correct — red notes need a different accidental.</p>`;
+    if(!sbScaleChecked)sbWrongScales.push(sbScale.label);
   }
+  sbScaleChecked=true;
   sbShowIntervals(false);
+  const nb=document.getElementById('sb-next-btn');
+  if(nb){
+    nb.classList.add('vis');
+    const isLast=sbScaleIdx===sbSessionIndices.length-1;
+    nb.textContent=isLast?(perfect?'✓ Finish Session':'Finish Session'):'Next Scale →';
+  }
 }
 
 const SB_SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
