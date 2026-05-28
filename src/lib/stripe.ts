@@ -1,11 +1,7 @@
 /**
- * Stripe client-side helpers.
- *
- * Subscriptions use server-side Checkout Sessions (created by edge functions),
- * so no Stripe.js is loaded on the frontend — we just redirect to session.url.
- *
- * Required env vars (Vite):
- *   VITE_STRIPE_PUBLISHABLE_KEY  – pk_live_… or pk_test_…  (optional, for future elements)
+ * Stripe client-side config.
+ * The publishable key is safe to expose — it can only create checkout sessions.
+ * The SECRET key lives only in Supabase Edge Function secrets (never here).
  */
 export const STRIPE_PUBLISHABLE_KEY =
   (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined)?.trim() ?? "";

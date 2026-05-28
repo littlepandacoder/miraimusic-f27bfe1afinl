@@ -30,8 +30,10 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const priceId = Deno.env.get("STRIPE_TEACHER_PRICE_ID");
-    if (!priceId) throw new Error("STRIPE_TEACHER_PRICE_ID is not configured");
+    // Teacher monthly plan — $20/mo (price_1TcBGVB8UWyR18ZVXt2CZABa)
+    // Override via STRIPE_TEACHER_PRICE_ID secret for live-mode swap
+    const priceId =
+      Deno.env.get("STRIPE_TEACHER_PRICE_ID") ?? "price_1TcBGVB8UWyR18ZVXt2CZABa";
 
     const origin = req.headers.get("origin") ?? "https://musicableapp.com";
 
