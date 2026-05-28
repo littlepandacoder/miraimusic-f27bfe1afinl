@@ -107,14 +107,15 @@ const Dashboard = () => {
       }
     }, 10_000);
 
-    const checkPayPalSubscription = async () => {
+    const checkStripeSubscription = async () => {
       try {
         log("[dashboard] querying user_subscriptions for user:", user.id);
         const { data, error } = await (supabase as any)
           .from("user_subscriptions")
           .select("id, status")
           .eq("user_id", user.id)
-          .eq("status", "active")
+          // Accept both active subscriptions and active trials
+          .in("status", ["active", "trialing"])
           .limit(1)
           .maybeSingle();
 
@@ -134,7 +135,6 @@ const Dashboard = () => {
       } catch (err) {
         if (!cancelled) {
           warn("[dashboard] subscription check threw:", err);
-          // Don't cache failures — let the next mount retry
           clearSubCache(user.id);
           setSubscribed(false);
         }
@@ -147,7 +147,7 @@ const Dashboard = () => {
       }
     };
 
-    checkPayPalSubscription();
+    checkStripeSubscription();
 
     return () => {
       cancelled = true;

@@ -94,7 +94,7 @@ const Pricing = () => {
                   {user && roles.length > 0 ? "Go to Dashboard" : "Start Free Trial"}
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="w-3 h-3 text-primary" /> Secure via PayPal
+                  <ShieldCheck className="w-3 h-3 text-primary" /> Secure via Stripe
                 </div>
               </CardContent>
             </Card>
@@ -136,7 +136,7 @@ const Pricing = () => {
                   {user && roles.includes("teacher") ? "Go to Dashboard" : "Get Teacher Plan"}
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="w-3 h-3 text-blue-400" /> Secure via PayPal · Cancel anytime
+                  <ShieldCheck className="w-3 h-3 text-blue-400" /> Secure via Stripe · Cancel anytime
                 </div>
               </CardContent>
             </Card>
@@ -147,10 +147,10 @@ const Pricing = () => {
           <div className="max-w-2xl mx-auto mt-20 space-y-6">
             <h2 className="text-2xl font-black text-center mb-8">Common Questions</h2>
             {[
-              { q: "What happens after the student free trial?", a: "After 7 days your PayPal subscription activates at $17/month. You'll receive a reminder before you're charged." },
+              { q: "What happens after the student free trial?", a: "After 7 days your Stripe subscription activates at $17/month. You'll receive a reminder before you're charged." },
               { q: "How does the teacher plan work?", a: "You get 10 student seat slots. You can onboard students directly from your dashboard. Need more? Add seats for $1 each." },
               { q: "Can I add more than 10 students as a teacher?", a: "Yes — buy additional seats from your My Students dashboard at $1/seat. Each seat unlocks one more student slot." },
-              { q: "How do I cancel?", a: "Log in to PayPal and cancel your subscription at any time. You keep access until the end of your billing period." },
+              { q: "How do I cancel?", a: "Cancel from the Stripe Customer Portal your subscription at any time. You keep access until the end of your billing period." },
             ].map(({ q, a }) => (
               <div key={q} className="border-b border-border/40 pb-6">
                 <h3 className="font-bold mb-2">{q}</h3>

@@ -1,194 +1,108 @@
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, CreditCard, ShieldCheck } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
-import { PAYPAL_SDK_URL, PAYPAL_PLAN_ID, IS_SANDBOX } from "@/lib/paypal";
-
-declare global {
-  interface Window {
-    paypal: any;
-  }
-}
-
-interface OnboardingData {
-  email: string;
-  goals: string[];
-  skillLevel: string;
-  topics: string[];
-  genres: string[];
-}
 
 interface TrialBillingProps {
   email: string;
   docId: string;
-  onboardingData: OnboardingData;
+  onboardingData: unknown;
   onComplete: () => void;
 }
 
-const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplete }: TrialBillingProps) => {
+const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [paypalReady, setPaypalReady] = useState(false);
-  const [processingPaypal, setProcessingPaypal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const buttonRendered = useRef(false);
-  const passwordRef = useRef(password);
-  const confirmPasswordRef = useRef(confirmPassword);
+  const handleStartTrial = async () => {
+    setError("");
 
-  useEffect(() => { passwordRef.current = password; }, [password]);
-  useEffect(() => { confirmPasswordRef.current = confirmPassword; }, [confirmPassword]);
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-  useEffect(() => {
-    let isMounted = true;
-    const scriptId = "paypal-sdk-script";
+    setLoading(true);
 
-    const loadButtons = () => {
-      if (window.paypal && isMounted) {
-        setPaypalReady(true);
-        setTimeout(() => renderPayPalButton(), 100);
+    try {
+      // 1 ── Create or sign in to Supabase account
+      let userId: string | undefined;
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signUpError) {
+        if (
+          signUpError.message.includes("already registered") ||
+          signUpError.message.includes("already exists")
+        ) {
+          // Account exists — try signing in with the supplied password
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) {
+            setError("An account already exists for this email. Please log in at /login.");
+            setLoading(false);
+            return;
+          }
+          userId = signInData.user?.id;
+        } else {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
+        }
+      } else {
+        userId = signUpData.user?.id;
       }
-    };
 
-    // Remove any previously loaded script if the SDK URL changed (e.g. sandbox ↔ live switch)
-    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
-    if (existing && existing.src !== PAYPAL_SDK_URL) {
-      existing.remove();
+      // Fallback: get from active session
+      if (!userId) {
+        userId = (await supabase.auth.getUser()).data.user?.id;
+      }
+
+      if (!userId) {
+        setError("Could not create account. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // 2 ── Create Stripe Checkout Session (7-day trial, card required)
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "create-subscription-checkout",
+        { body: { userId, email } }
+      );
+
+      if (fnError || !data?.url) {
+        setError("Could not start checkout. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // 3 ── Save pending state to Firestore (non-blocking backup)
+      try {
+        await saveSubscriptionInfo(docId, "stripe_pending", "trial");
+      } catch {
+        // Non-fatal — Supabase + Stripe webhook is the source of truth
+      }
+
+      // 4 ── Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err: any) {
+      console.error("[TrialBilling]", err);
+      setError(err?.message ?? "Something went wrong. Please try again.");
+      setLoading(false);
     }
-
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = PAYPAL_SDK_URL;
-      script.async = true;
-      document.body.appendChild(script);
-      script.onload = loadButtons;
-    } else {
-      loadButtons();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const renderPayPalButton = () => {
-    if (!window.paypal || buttonRendered.current) return;
-
-    const container = document.getElementById("paypal-button-container-trial");
-    if (!container) return;
-
-    buttonRendered.current = true;
-    container.innerHTML = "";
-
-    window.paypal
-      .Buttons({
-        style: { shape: "rect", color: "gold", layout: "vertical", label: "subscribe" },
-        onClick: (_data: any, actions: any) => {
-          const pw = passwordRef.current;
-          const cpw = confirmPasswordRef.current;
-          if (!pw || pw.length < 6) {
-            setError("Please enter a password (minimum 6 characters) before paying.");
-            return actions.reject();
-          }
-          if (pw !== cpw) {
-            setError("Passwords do not match.");
-            return actions.reject();
-          }
-          setError("");
-          return actions.resolve();
-        },
-        createSubscription: (_data: any, actions: any) => {
-          if (!PAYPAL_PLAN_ID) {
-            console.error("[paypal] No plan ID configured. Set VITE_PAYPAL_PLAN_ID_SANDBOX or VITE_PAYPAL_PLAN_ID_LIVE in .env.local");
-            setError("Payment configuration error. Please contact support.");
-            return actions.reject();
-          }
-          return actions.subscription.create({ plan_id: PAYPAL_PLAN_ID });
-        },
-        onApprove: async (data: any) => {
-          setProcessingPaypal(true);
-          try {
-            const subscriptionId = data.subscriptionID;
-            const pw = passwordRef.current;
-
-            // 1. Create or sign in to Supabase account
-            let userId: string | undefined;
-
-            const { data: authData, error: signUpError } = await supabase.auth.signUp({
-              email,
-              password: pw,
-            });
-
-            if (signUpError) {
-              if (
-                signUpError.message.includes("already registered") ||
-                signUpError.message.includes("already exists")
-              ) {
-                const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                  email,
-                  password: pw,
-                });
-                if (signInError) {
-                  setError("Account already exists. Please log in at /login.");
-                  setProcessingPaypal(false);
-                  return;
-                }
-                userId = signInData?.user?.id;
-              } else {
-                setError(signUpError.message);
-                setProcessingPaypal(false);
-                return;
-              }
-            } else {
-              userId = authData?.user?.id;
-            }
-
-            // Fallback: get user id from current session
-            if (!userId) {
-              userId = (await supabase.auth.getUser()).data.user?.id;
-            }
-
-            if (userId) {
-              // 2. Record subscription + assign student role via SECURITY DEFINER RPC
-              //    (bypasses RLS — safe because the function validates user_id internally)
-              const { error: rpcError } = await (supabase as any).rpc("record_paypal_subscription", {
-                p_user_id: userId,
-                p_sub_id: subscriptionId,
-                p_plan_id: PAYPAL_PLAN_ID || "",
-              });
-              if (rpcError) {
-                console.error("[paypal] record_paypal_subscription RPC error:", rpcError);
-                // Non-fatal: subscription was paid; Dashboard will detect it next time user logs in
-              }
-            }
-
-            // 4. Save to Firestore as backup
-            try {
-              await saveSubscriptionInfo(docId, subscriptionId, "trial");
-            } catch (fsErr) {
-              // Non-blocking — Supabase is the source of truth
-              console.warn("[paypal] Firestore backup failed (non-blocking):", fsErr);
-            }
-
-            setTimeout(() => onComplete(), 500);
-          } catch (err: any) {
-            console.error("Signup error:", err);
-            setError(err?.message || "Signup failed. Please try again.");
-            setProcessingPaypal(false);
-          }
-        },
-        onError: (err: any) => {
-          console.error("PayPal error:", err);
-          setError("Payment error. Please try again.");
-          buttonRendered.current = false;
-          setProcessingPaypal(false);
-        },
-      })
-      .render("#paypal-button-container-trial");
   };
 
   return (
@@ -198,16 +112,16 @@ const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplet
           <ArrowLeft size={20} /> Back
         </Button>
 
-        {IS_SANDBOX && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2 text-yellow-600 dark:text-yellow-400 text-sm font-medium">
-            🧪 Sandbox mode — use PayPal test credentials, no real charges will be made.
-          </div>
-        )}
-
         <div className="grid md:grid-cols-2 gap-8">
+          {/* Left — account setup */}
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Create Your Account</h1>
-            <p className="text-muted-foreground">Set your password, then click the PayPal button to complete signup.</p>
+            <div>
+              <h1 className="text-3xl font-bold">Create Your Account</h1>
+              <p className="text-muted-foreground mt-1">
+                Set your password, then start your free trial.
+              </p>
+            </div>
+
             <Card className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Email</label>
@@ -238,17 +152,18 @@ const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplet
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
+
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
-              <div className="pt-2 space-y-2">
+              <div className="space-y-2 pt-1">
                 {[
-                  "7-day free trial included",
+                  "7-day free trial — no charge today",
+                  "Card required to start (billed after trial)",
                   "Access all piano course modules",
-                  "Track your progress",
-                  "Cancel anytime via PayPal",
+                  "Cancel anytime from Stripe Customer Portal",
                 ].map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check size={14} className="text-green-500 flex-shrink-0" />
+                    <Check size={14} className="text-green-500 shrink-0" />
                     {f}
                   </div>
                 ))}
@@ -256,18 +171,35 @@ const TrialBilling = ({ email, docId, onboardingData: _onboardingData, onComplet
             </Card>
           </div>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-2">7-Day Free Trial</h2>
-            <p className="text-sm text-muted-foreground mb-4">Then $17/month, cancel anytime.</p>
-            <div id="paypal-button-container-trial" className="min-h-[150px]">
-              {!paypalReady && <Loader2 className="animate-spin mx-auto" />}
+          {/* Right — pricing + CTA */}
+          <Card className="p-6 flex flex-col justify-center gap-6">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-1">7-Day Free Trial</h2>
+              <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+              <p className="text-sm text-muted-foreground mt-1">After your free trial — cancel anytime</p>
             </div>
-            {processingPaypal && (
-              <div className="flex items-center justify-center gap-2 text-sm mt-4 text-muted-foreground">
-                <Loader2 size={16} className="animate-spin" />
-                Creating your account...
-              </div>
-            )}
+
+            <Button
+              onClick={handleStartTrial}
+              disabled={loading}
+              className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90"
+            >
+              {loading ? (
+                <><Loader2 size={18} className="animate-spin mr-2" /> Setting up…</>
+              ) : (
+                <><CreditCard size={18} className="mr-2" /> Start Free Trial</>
+              )}
+            </Button>
+
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck size={13} className="text-green-500" />
+              Secure payment powered by Stripe
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              You will be redirected to Stripe's secure checkout to enter your card details.
+              Nothing is charged during the 7-day trial.
+            </p>
           </Card>
         </div>
       </div>

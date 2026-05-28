@@ -10,8 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Users, ShoppingCart, Minus, Plus, ChevronDown, ChevronUp, Trophy, Gamepad2, BookOpen, BarChart2 } from "lucide-react";
-import { PAYPAL_ORDERS_SDK_URL, IS_SANDBOX } from "@/lib/paypal";
+import { UserPlus, Loader2, Users, ShoppingCart, Minus, Plus, ChevronDown, ChevronUp, Trophy, Gamepad2, BookOpen, BarChart2, CreditCard } from "lucide-react";
 import StudentReportModal from "../student/StudentReportModal";
 
 interface GameStat { game: string; sessions: number; bestAcc: number | null; bestStreak: number; }
@@ -53,14 +52,12 @@ const MyStudents = () => {
   const [isAdding, setIsAdding]   = useState(false);
   const [extraSeats, setExtraSeats] = useState(1);
   const [buyProcessing, setBuyProcessing] = useState(false);
-  const [paypalReady, setPaypalReady] = useState(false);
   const [buyError, setBuyError]   = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteDates, setNoteDates] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<string | null>(null);
   const [reportStudent, setReportStudent] = useState<{ id: string; name: string } | null>(null);
-  const paypalRendered = useRef(false);
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -207,63 +204,22 @@ const MyStudents = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isBuyOpen) return;
-    paypalRendered.current = false;
-    setPaypalReady(false);
+  const handleBuySeats = async () => {
+    if (!user) return;
+    setBuyProcessing(true);
     setBuyError("");
-
-    const scriptId = "paypal-orders-sdk";
-    const render = () => {
-      if (!(window as any).paypal || paypalRendered.current) return;
-      const container = document.getElementById("paypal-seat-btn");
-      if (!container) return;
-      paypalRendered.current = true;
-      container.innerHTML = "";
-
-      (window as any).paypal.Buttons({
-        style: { shape: "pill", color: "gold", layout: "vertical" },
-        createOrder: (_: any, actions: any) =>
-          actions.order.create({
-            purchase_units: [{
-              amount: { value: (extraSeats * SEAT_PRICE).toFixed(2), currency_code: "USD" },
-              description: `${extraSeats} extra student seat${extraSeats > 1 ? "s" : ""}`,
-            }],
-          }),
-        onApprove: async (_: any, actions: any) => {
-          setBuyProcessing(true);
-          try {
-            await actions.order.capture();
-            const { error } = await (supabase as any).rpc("teacher_add_seats", {
-              p_teacher_id: user!.id,
-              p_seats: extraSeats,
-            });
-            if (error) throw error;
-            toast({ title: "Seats added!", description: `${extraSeats} new student seat${extraSeats > 1 ? "s" : ""} added.` });
-            setIsBuyOpen(false);
-            fetchData();
-          } catch (e: any) {
-            setBuyError("Payment succeeded but seat update failed. Contact support.");
-          } finally {
-            setBuyProcessing(false);
-          }
-        },
-        onError: (e: any) => {
-          console.error("[paypal-seats]", e);
-          setBuyError("Payment failed. Please try again.");
-          paypalRendered.current = false;
-        },
-      }).render("#paypal-seat-btn");
-      setPaypalReady(true);
-    };
-
-    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
-    if (existing) { render(); return; }
-    const s = document.createElement("script");
-    s.id = scriptId; s.src = PAYPAL_ORDERS_SDK_URL; s.async = true;
-    s.onload = render;
-    document.body.appendChild(s);
-  }, [isBuyOpen, extraSeats]);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "create-seat-checkout",
+        { body: { userId: user.id, email: user.email, seats: extraSeats } }
+      );
+      if (fnError || !data?.url) throw new Error(fnError?.message ?? "Failed to start checkout");
+      window.location.href = data.url;
+    } catch (e: any) {
+      setBuyError(e.message ?? "Payment failed. Please try again.");
+      setBuyProcessing(false);
+    }
+  };
 
   const usedPct = seatInfo ? (seatInfo.used_seats / Math.max(seatInfo.total_seats, 1)) * 100 : 0;
   const atLimit = seatInfo ? seatInfo.available_seats <= 0 : false;
@@ -293,12 +249,12 @@ const MyStudents = () => {
                       <Button size="icon" variant="outline" onClick={() => setExtraSeats(s => Math.min(50, s + 1))}><Plus className="w-4 h-4" /></Button>
                     </div>
                     <p className="text-center text-sm font-semibold">Total: <span className="text-primary">${(extraSeats * SEAT_PRICE).toFixed(2)}</span></p>
-                    <div id="paypal-seat-btn" className="min-h-[80px]">
-                      {!paypalReady && !buyProcessing && <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-                    </div>
+                    <Button onClick={handleBuySeats} disabled={buyProcessing} className="w-full">
+                      {buyProcessing
+                        ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Redirecting…</>
+                        : <><CreditCard className="w-4 h-4 mr-2" /> Pay with Stripe</>}
+                    </Button>
                     {buyError && <p className="text-red-500 text-sm text-center">{buyError}</p>}
-                    {buyProcessing && <div className="flex items-center justify-center gap-2 text-primary"><Loader2 className="w-4 h-4 animate-spin" /> Processing…</div>}
-                    {IS_SANDBOX && <p className="text-xs text-center text-muted-foreground">🧪 Sandbox — test mode</p>}
                   </div>
                 </DialogContent>
               </Dialog>

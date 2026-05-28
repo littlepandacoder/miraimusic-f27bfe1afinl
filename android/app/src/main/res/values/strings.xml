@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Musicable</string>
+    <string name="title_activity_main">Musicable</string>
+    <string name="package_name">com.musicable.app</string>
+    <string name="custom_url_scheme">com.musicable.app</string>
+</resources>
