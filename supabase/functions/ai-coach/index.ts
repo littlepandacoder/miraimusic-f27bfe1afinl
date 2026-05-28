@@ -1,11 +1,11 @@
 /**
- * ai-coach — Musicable's Claude-powered practice coach
+ * ai-coach — Musicable's ChatGPT-powered practice coach (Melody)
  *
  * Accepts a conversation history + user context and returns
- * a streaming Claude response.
+ * a ChatGPT response via OpenAI API.
  *
  * Required Supabase secrets:
- *   ANTHROPIC_API_KEY  — your Anthropic API key (sk-ant-…)
+ *   OPENAI_API_KEY  — your OpenAI API key (sk-proj-…)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -56,8 +56,8 @@ serve(async (req) => {
 
     if (!messages?.length) throw new Error("messages array is required");
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
     // Build context-aware system prompt
     let systemPrompt = SYSTEM_PROMPT;
@@ -70,15 +70,14 @@ serve(async (req) => {
       if (userContext.currentPage) systemPrompt += `• Currently on: ${userContext.currentPage}\n`;
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "gpt-4o-mini",
         max_tokens: 256,
         system: systemPrompt,
         messages,
@@ -87,11 +86,11 @@ serve(async (req) => {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Anthropic API error: ${err}`);
+      throw new Error(`OpenAI API error: ${err}`);
     }
 
     const data = await response.json();
-    const reply = data.content?.[0]?.text ?? "";
+    const reply = data.choices?.[0]?.message?.content ?? "";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
