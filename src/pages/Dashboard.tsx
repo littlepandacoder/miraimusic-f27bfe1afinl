@@ -198,7 +198,6 @@ const Dashboard = () => {
   return (
     <>
       {showOnboarding && <OnboardingWizard onComplete={handleOnboardingComplete} />}
-      {showOnboarding && isStudent && <AICoachWidget />}
       {hasRole("admin")
         ? <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>
         : hasRole("teacher")
