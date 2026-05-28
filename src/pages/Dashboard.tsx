@@ -158,11 +158,29 @@ const Dashboard = () => {
     };
   }, [loading, user, roles]);
 
-  // Check if onboarding is needed (students only, after subscription confirmed)
+  const [inTrialPeriod, setInTrialPeriod] = useState(false);
+
+  // Check if onboarding is needed + if user is in trial period
   useEffect(() => {
     if (!user || !subscribed || hasRole("admin") || hasRole("teacher")) return;
+
     const key = `musicable_onboarded_${user.id}`;
     if (localStorage.getItem(key)) return; // fast-path: already done
+
+    (supabase as any)
+      .from("user_subscriptions")
+      .select("trial_end")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data: subData }: any) => {
+        // Check if still in trial period ($8 first month)
+        if (subData?.trial_end) {
+          const trialEnd = new Date(subData.trial_end);
+          const now = new Date();
+          setInTrialPeriod(now < trialEnd);
+        }
+      });
+
     (supabase as any)
       .from("user_onboarding")
       .select("user_id")
@@ -198,6 +216,7 @@ const Dashboard = () => {
   return (
     <>
       {showOnboarding && <OnboardingWizard onComplete={handleOnboardingComplete} />}
+      {!showOnboarding && inTrialPeriod && isStudent && <AICoachWidget />}
       {hasRole("admin")
         ? <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>
         : hasRole("teacher")
