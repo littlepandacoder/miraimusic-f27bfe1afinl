@@ -66,16 +66,60 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .ks-layout{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap}
 .ks-game-col{flex:1;min-width:280px}
 .ks-cof5-col{display:flex;flex-direction:column;align-items:center}
-.ks-range-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:.9rem 1.1rem;margin-bottom:1.1rem}
-.ks-range-title{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.12em;font-family:'DM Mono',monospace;margin-bottom:.6rem}
-.ks-range-grid{display:flex;gap:1.5rem;flex-wrap:wrap}
-.ks-group{flex:1;min-width:110px}
-.ks-group-label{font-size:.64rem;font-weight:700;color:var(--sky);
-  font-family:'DM Mono',monospace;letter-spacing:.12em;margin-bottom:.3rem}
-.ks-check{display:flex;align-items:center;gap:.4rem;font-size:.79rem;cursor:pointer;padding:.1rem 0}
-.ks-check input{accent-color:var(--pink);width:13px;height:13px;cursor:pointer}
+
+/* ── KEY PILL PICKER ── */
+.ks-key-picker{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1rem 1.1rem;margin-bottom:1.1rem}
+.ks-picker-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.ks-picker-title{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.12em;font-family:'DM Mono',monospace}
+.ks-picker-reset{font-size:.65rem;color:var(--muted);background:none;border:1px solid var(--border);
+  border-radius:6px;padding:.2rem .55rem;cursor:pointer;font-family:'DM Mono',monospace;
+  transition:color .15s,border-color .15s}
+.ks-picker-reset:hover{color:var(--off-white);border-color:rgba(255,255,255,.25)}
+.ks-picker-section{margin-bottom:.75rem}
+.ks-picker-section:last-child{margin-bottom:0}
+.ks-section-row{display:flex;align-items:center;gap:.55rem;margin-bottom:.45rem}
+.ks-section-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  font-family:'DM Mono',monospace;white-space:nowrap}
+.ks-section-line{flex:1;height:1px;background:var(--border)}
+.ks-section-acts{display:flex;gap:.3rem}
+.ks-section-act{font-size:.58rem;color:var(--muted);background:none;border:1px solid var(--border);
+  border-radius:5px;padding:.15rem .45rem;cursor:pointer;font-family:'DM Mono',monospace;
+  transition:color .15s,border-color .15s}
+.ks-section-act:hover{color:var(--off-white);border-color:rgba(255,255,255,.22)}
+.ks-pills{display:flex;flex-wrap:wrap;gap:.4rem}
+.ks-pill{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-width:46px;height:50px;padding:0 .65rem;
+  background:rgba(255,255,255,.03);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:12px;cursor:pointer;user-select:none;
+  transition:background .18s,border-color .18s,box-shadow .18s,transform .15s;
+}
+.ks-pill:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);transform:translateY(-2px)}
+.ks-pill-name{font-size:.9rem;font-weight:700;line-height:1;color:var(--muted);
+  transition:color .15s;font-family:'Inter',sans-serif}
+.ks-pill-count{font-size:.55rem;font-family:'DM Mono',monospace;margin-top:.2rem;
+  color:rgba(107,114,128,.6);transition:color .15s}
+/* active states */
+.ks-pill.on-sharp{background:rgba(0,212,255,.13);border-color:rgba(0,212,255,.7);
+  box-shadow:0 0 14px rgba(0,212,255,.22),inset 0 0 10px rgba(0,212,255,.06)}
+.ks-pill.on-sharp .ks-pill-name{color:var(--sky)}
+.ks-pill.on-sharp .ks-pill-count{color:rgba(0,212,255,.75)}
+.ks-pill.on-flat{background:rgba(168,85,247,.13);border-color:rgba(168,85,247,.7);
+  box-shadow:0 0 14px rgba(168,85,247,.22),inset 0 0 10px rgba(168,85,247,.06)}
+.ks-pill.on-flat .ks-pill-name{color:var(--purple)}
+.ks-pill.on-flat .ks-pill-count{color:rgba(168,85,247,.75)}
+.ks-pill.on-natural{background:rgba(57,217,138,.12);border-color:rgba(57,217,138,.65);
+  box-shadow:0 0 14px rgba(57,217,138,.2),inset 0 0 10px rgba(57,217,138,.05)}
+.ks-pill.on-natural .ks-pill-name{color:var(--green)}
+.ks-pill.on-natural .ks-pill-count{color:rgba(57,217,138,.7)}
+/* shake animation for min-2 enforcement */
+@keyframes ks-shake{0%{transform:translateX(0)}20%{transform:translateX(-4px)}
+  40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}100%{transform:translateX(0)}}
+.ks-pill.shake{animation:ks-shake .32s ease}
+.ks-min-note{font-size:.62rem;color:rgba(107,114,128,.5);text-align:center;
+  margin-top:.55rem;font-family:'DM Mono',monospace;letter-spacing:.04em}
 .ks-staff-wrap{background:#0f0d1a;border-radius:11px;padding:.55rem .35rem;
   margin-bottom:.9rem;display:flex;justify-content:center;border:1px solid var(--border)}
 .ks-score-row{display:flex;gap:.55rem;margin-bottom:.9rem}
@@ -174,17 +218,24 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
     <div class="ks-layout">
       <!-- game col -->
       <div class="ks-game-col">
-        <div class="ks-range-card">
-          <div class="ks-range-title">Keys to practise</div>
-          <div id="ks-range-grid" class="ks-range-grid"></div>
+        <div class="ks-key-picker">
+          <div class="ks-picker-header">
+            <div class="ks-picker-title">Keys to practise</div>
+            <button class="ks-picker-reset" onclick="ksResetPicker()">↺ defaults</button>
+          </div>
+          <div id="ks-range-grid"></div>
+          <div class="ks-min-note">min. 2 keys required</div>
         </div>
         <div class="ks-staff-wrap">
-          <canvas id="ks-staff" width="290" height="118"></canvas>
+          <canvas id="ks-staff" width="360" height="140"></canvas>
         </div>
         <div class="ks-score-row">
           <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;correct</div>
           <div class="ks-score-box"><span id="ks-score-pct">—</span>&nbsp;accuracy</div>
           <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span>&nbsp;streak</div>
+          <div class="ks-score-box" style="background:rgba(0,212,255,.07);border-color:rgba(0,212,255,.25)">
+            ⏱&nbsp;<span id="ks-timer" style="font-weight:700;transition:transform .12s,color .2s">3</span>s
+          </div>
         </div>
         <div id="ks-choices" class="ks-choices"></div>
         <div id="ks-feedback" class="ks-feedback"></div>
@@ -263,7 +314,7 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
-function goMenu(){ showScreen('mode-select'); }
+function goMenu(){ ksStopTimer(); showScreen('mode-select'); }
 function startKeyQuiz(){ ksInit(); showScreen('key-sig-screen'); }
 function startScaleBuilder(){ sbLoadScale(); showScreen('scale-screen'); }
 
@@ -301,44 +352,168 @@ const COF5_KEYS=[
 const COF5_ACC=[0,1,2,3,4,5,6,5,4,3,2,1];
 const COF5_TYPE=['','♯','♯','♯','♯','♯','♯','♭','♭','♭','♭','♭'];
 
-let ksEnabled=new Set(['C','G','D','F','Bb']);
+const KS_DEFAULTS=new Set(['C','G','D','F','Bb']);
+let ksEnabled=new Set(KS_DEFAULTS);
 let ksCurrent=null;
 let ksScore={correct:0,total:0,streak:0};
 let ksAnswered=false;
 let ksBuilt=false;
+let ksTimerInterval=null;
+let ksTimeLeft=3;
 
+// ── Audio context ──────────────────────────────────────────
+let ksAC=null;
+function ksAc(){if(!ksAC)ksAC=new(window.AudioContext||window.webkitAudioContext)();return ksAC;}
+function ksBeep(freq,dur,type='sine',vol=0.22,delay=0){
+  try{
+    const ac=ksAc(),o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+dur);
+  }catch(_){}
+}
+function ksSndTick(){ksBeep(880,0.06,'square',0.12);}
+function ksSndUrgent(){ksBeep(1047,0.08,'square',0.18);}
+function ksSndCorrect(){
+  ksBeep(523,.12,'sine',.25);ksBeep(659,.12,'sine',.22,.12);ksBeep(784,.22,'sine',.28,.24);
+}
+function ksSndWrong(){
+  ksBeep(220,.15,'sawtooth',.2);ksBeep(180,.2,'sawtooth',.15,.1);
+}
+function ksSndTimeout(){
+  ksBeep(330,.1,'square',.15);ksBeep(220,.25,'sawtooth',.2,.08);
+}
+
+// ── Pill picker ────────────────────────────────────────────
 function ksShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-function ksInit(){
-  if(!ksBuilt){
-    ksBuilt=true;
-    const grid=document.getElementById('ks-range-grid');
-    grid.innerHTML='';
-    const sg=document.createElement('div');sg.className='ks-group';
-    sg.innerHTML='<div class="ks-group-label">♯ Sharps</div>';
-    const fg=document.createElement('div');fg.className='ks-group';
-    fg.innerHTML='<div class="ks-group-label">♭ Flats</div>';
-    KS_ALL.forEach(ks=>{
-      const lbl=document.createElement('label');lbl.className='ks-check';
-      lbl.innerHTML=`<input type="checkbox" value="${ks.id}"${ksEnabled.has(ks.id)?' checked':''}> ${ks.name}`;
-      lbl.querySelector('input').addEventListener('change',function(){
-        if(this.checked){ksEnabled.add(this.value);}
-        else{if(ksEnabled.size<=2){this.checked=true;return;}ksEnabled.delete(this.value);}
-      });
-      (ks.flats>0?fg:sg).appendChild(lbl);
+function ksActiveCls(ks){return ks.sharps>0?'on-sharp':ks.flats>0?'on-flat':'on-natural';}
+
+function ksBuildPicker(){
+  const grid=document.getElementById('ks-range-grid');
+  grid.innerHTML='';
+  const sharps=KS_ALL.filter(k=>k.flats===0);
+  const flats=KS_ALL.filter(k=>k.flats>0);
+  [[sharps,'♯ Sharps','var(--sky)'],[flats,'♭ Flats','var(--purple)']].forEach(([group,label,col])=>{
+    const sec=document.createElement('div');sec.className='ks-picker-section';
+    const row=document.createElement('div');row.className='ks-section-row';
+    row.innerHTML=`<span class="ks-section-label" style="color:${col}">${label}</span><span class="ks-section-line"></span>`;
+    const acts=document.createElement('div');acts.className='ks-section-acts';
+    const allBtn=document.createElement('button');allBtn.className='ks-section-act';allBtn.textContent='all';
+    allBtn.onclick=()=>{ group.forEach(k=>{ksEnabled.add(k.id);ksRefreshPill(k);});};
+    const noneBtn=document.createElement('button');noneBtn.className='ks-section-act';noneBtn.textContent='none';
+    noneBtn.onclick=()=>{
+      const remaining=KS_ALL.filter(k=>ksEnabled.has(k.id)&&!group.includes(k));
+      if(remaining.length<2){
+        // keep at least 2 from OTHER group, clear all but 2 from this group
+        const keep=group.filter(k=>ksEnabled.has(k.id)).slice(0,Math.max(0,2-remaining.length));
+        group.forEach(k=>{if(!keep.includes(k)){ksEnabled.delete(k.id);}ksRefreshPill(k);});
+      }else{
+        group.forEach(k=>{ksEnabled.delete(k.id);ksRefreshPill(k);});
+      }
+    };
+    acts.appendChild(allBtn);acts.appendChild(noneBtn);row.appendChild(acts);
+    const pills=document.createElement('div');pills.className='ks-pills';
+    group.forEach(ks=>{
+      const d=document.createElement('div');
+      d.className='ks-pill'+(ksEnabled.has(ks.id)?' '+ksActiveCls(ks):'');
+      d.id='ks-pill-'+ks.id;
+      const name=ks.name.replace(' major','');
+      const count=ks.sharps>0?ks.sharps+'♯':ks.flats>0?ks.flats+'♭':'natural';
+      d.innerHTML=`<span class="ks-pill-name">${name}</span><span class="ks-pill-count">${count}</span>`;
+      d.addEventListener('click',()=>ksTogglePill(ks,d));
+      pills.appendChild(d);
     });
-    grid.appendChild(sg);grid.appendChild(fg);
+    sec.appendChild(row);sec.appendChild(pills);grid.appendChild(sec);
+  });
+}
+
+function ksRefreshPill(ks){
+  const d=document.getElementById('ks-pill-'+ks.id);if(!d)return;
+  d.classList.remove('on-sharp','on-flat','on-natural');
+  if(ksEnabled.has(ks.id))d.classList.add(ksActiveCls(ks));
+}
+
+function ksTogglePill(ks,d){
+  if(ksEnabled.has(ks.id)){
+    if(ksEnabled.size<=2){
+      d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake');
+      setTimeout(()=>d.classList.remove('shake'),350);
+      return;
+    }
+    ksEnabled.delete(ks.id);
+    d.classList.remove('on-sharp','on-flat','on-natural');
+  }else{
+    ksEnabled.add(ks.id);
+    d.classList.add(ksActiveCls(ks));
   }
+}
+
+function ksResetPicker(){
+  ksEnabled=new Set(KS_DEFAULTS);
+  KS_ALL.forEach(ks=>ksRefreshPill(ks));
+}
+
+// ── Game logic ─────────────────────────────────────────────
+function ksInit(){
+  if(!ksBuilt){ksBuilt=true;ksBuildPicker();}
   ksNextQuestion();
 }
 
+function ksStopTimer(){clearInterval(ksTimerInterval);ksTimerInterval=null;}
+
+function ksStartTimer(){
+  ksStopTimer();
+  ksTimeLeft=3;
+  ksUpdateTimerUI();
+  ksTimerInterval=setInterval(()=>{
+    ksTimeLeft--;
+    ksUpdateTimerUI();
+    if(ksTimeLeft<=0){
+      ksStopTimer();
+      if(!ksAnswered)ksTimeout();
+    }else if(ksTimeLeft===1){
+      ksSndUrgent();
+    }else{
+      ksSndTick();
+    }
+  },1000);
+}
+
+function ksUpdateTimerUI(){
+  const el=document.getElementById('ks-timer');if(!el)return;
+  el.textContent=ksTimeLeft;
+  el.style.color=ksTimeLeft<=1?'var(--pink)':ksTimeLeft<=2?'var(--amber)':'var(--sky)';
+  el.style.transform='scale(1.25)';
+  setTimeout(()=>{if(el)el.style.transform='scale(1)';},120);
+}
+
+function ksTimeout(){
+  ksAnswered=true;
+  ksScore.total++;ksScore.streak=0;
+  ksSndTimeout();
+  ksDraw5ths(true); // reveal answer on COF5
+  document.querySelectorAll('.ks-choice-btn').forEach(b=>{
+    if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');
+    b.disabled=true;
+  });
+  const fb=document.getElementById('ks-feedback');
+  fb.textContent=`⏱ Time's up! It was ${ksCurrent.name}`;fb.style.color='var(--amber)';
+  document.getElementById('ks-score-correct').textContent=ksScore.correct;
+  document.getElementById('ks-score-total').textContent=ksScore.total;
+  document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
+  document.getElementById('ks-score-streak').textContent=ksScore.streak;
+  setTimeout(ksNextQuestion,2000);
+}
+
 function ksNextQuestion(){
+  ksStopTimer();
   const pool=KS_ALL.filter(k=>ksEnabled.has(k.id));
   if(pool.length<2)return;
   ksCurrent=pool[Math.floor(Math.random()*pool.length)];
   ksAnswered=false;
   ksDrawStaff();
-  ksDraw5ths();
+  ksDraw5ths(false); // show ?s while guessing
   const wrong=ksShuffle(pool.filter(k=>k.id!==ksCurrent.id));
   const choices=ksShuffle([ksCurrent,...wrong.slice(0,3)]);
   const btns=document.getElementById('ks-choices');
@@ -351,33 +526,39 @@ function ksNextQuestion(){
     btns.appendChild(btn);
   });
   document.getElementById('ks-feedback').textContent='';
+  ksStartTimer();
 }
 
 function ksGuess(choice,clickedBtn){
   if(ksAnswered)return;
+  ksStopTimer();
   ksAnswered=true;
   const correct=choice.id===ksCurrent.id;
   ksScore.total++;
   if(correct){
     ksScore.correct++;ksScore.streak++;
+    ksSndCorrect();
     clickedBtn.classList.add('ks-correct');
     const fb=document.getElementById('ks-feedback');
     fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+    ksDraw5ths(true); // reveal on correct
   }else{
     ksScore.streak=0;
+    ksSndWrong();
     clickedBtn.classList.add('ks-wrong');
     document.querySelectorAll('.ks-choice-btn').forEach(b=>{
       if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');
     });
     const fb=document.getElementById('ks-feedback');
     fb.textContent=`✗ That's ${ksCurrent.name}`;fb.style.color='var(--pink)';
+    ksDraw5ths(true); // reveal on wrong too
   }
   document.getElementById('ks-score-correct').textContent=ksScore.correct;
   document.getElementById('ks-score-total').textContent=ksScore.total;
   document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
   document.getElementById('ks-score-streak').textContent=ksScore.streak;
   document.querySelectorAll('.ks-choice-btn').forEach(b=>b.disabled=true);
-  setTimeout(ksNextQuestion,1800);
+  setTimeout(ksNextQuestion,2000);
 }
 
 function ksDrawStaff(){
@@ -386,61 +567,72 @@ function ksDrawStaff(){
   const ctx=canvas.getContext('2d');
   const W=canvas.width,H=canvas.height;
   ctx.clearRect(0,0,W,H);
-  const lg=14,topLine=26,bottomLine=topLine+4*lg,halfStep=lg/2;
+  const lg=18,topLine=30,bottomLine=topLine+4*lg,halfStep=lg/2;
   const noteY=s=>bottomLine-s*halfStep;
   ctx.fillStyle='#0f0d1a';ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(232,236,240,0.4)';ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(232,236,240,0.45)';ctx.lineWidth=1.2;
   for(let i=0;i<5;i++){
     const y=topLine+i*lg;
-    ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(W-8,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(14,y);ctx.lineTo(W-10,y);ctx.stroke();
   }
-  ctx.font='58px serif';ctx.fillStyle='#00D4FF';
-  ctx.textBaseline='alphabetic';ctx.fillText('𝄞',4,bottomLine+9);
-  // sharp positions (step from E4=0): F5=8 C5=5 G5=9 D5=6 A4=3 E5=7 B4=4
+  ctx.font='74px serif';ctx.fillStyle='#00D4FF';
+  ctx.textBaseline='alphabetic';ctx.fillText('𝄞',5,bottomLine+11);
   const sharpSteps=[8,5,9,6,3,7,4];
-  // flat positions: B4=4 E5=7 A4=3 D5=6 G4=2 C5=5 F4=1
   const flatSteps=[4,7,3,6,2,5,1];
-  const accX=64,accSpacing=13;
+  const accX=82,accSpacing=17;
   ctx.textBaseline='middle';
   if(ksCurrent.sharps>0){
-    ctx.font='16px serif';ctx.fillStyle='#E8ECF0';
+    ctx.font='20px serif';ctx.fillStyle='#E8ECF0';
     for(let i=0;i<ksCurrent.sharps;i++)
       ctx.fillText('♯',accX+i*accSpacing,noteY(sharpSteps[i]));
   }else if(ksCurrent.flats>0){
-    ctx.font='18px serif';ctx.fillStyle='#E8ECF0';
+    ctx.font='22px serif';ctx.fillStyle='#E8ECF0';
     for(let i=0;i<ksCurrent.flats;i++)
       ctx.fillText('♭',accX+i*accSpacing,noteY(flatSteps[i]));
   }else{
-    ctx.font='12px "DM Mono",monospace';ctx.fillStyle='rgba(107,114,128,0.7)';
-    ctx.textAlign='center';ctx.fillText('(no accidentals)',W/2+10,topLine+2*lg);
+    ctx.font='13px "DM Mono",monospace';ctx.fillStyle='rgba(107,114,128,0.65)';
+    ctx.textAlign='center';ctx.fillText('(no accidentals)',W/2+20,topLine+2*lg);
     ctx.textAlign='left';
   }
 }
 
-function ksDraw5ths(){
+function ksDraw5ths(reveal=false){
   const el=document.getElementById('ks-cof5');if(!el)return;
-  const outerR=88,midR=56,innerR=30;
-  let svg=`<svg viewBox="-108 -108 216 216" width="260" height="260" style="display:block;margin:0 auto">`;
+  const outerR=94,midR=60,innerR=32;
+  let svg=`<svg viewBox="-115 -115 230 230" width="290" height="290" style="display:block;margin:0 auto">`;
   for(let i=0;i<12;i++){
     const a1=(i*30-90-15)*Math.PI/180,a2=(i*30-90+15)*Math.PI/180,ta=(i*30-90)*Math.PI/180;
-    const k=COF5_KEYS[i];const isAct=ksCurrent&&k.id===ksCurrent.id;
+    const k=COF5_KEYS[i];
+    const isAct=ksCurrent&&k.id===ksCurrent.id;
     const c1=Math.cos(a1),s1=Math.sin(a1),c2=Math.cos(a2),s2=Math.sin(a2);
+
+    const outerFill=isAct&&reveal?'#FF2D78':isAct?'rgba(255,45,120,0.25)':i<=6?'#13243d':'#1a102e';
+    const outerStroke=isAct?`rgba(255,45,120,${reveal?1:.5})`:'rgba(255,255,255,0.1)';
     const op=`M${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} L${(c1*outerR).toFixed(1)},${(s1*outerR).toFixed(1)} A${outerR},${outerR},0,0,1,${(c2*outerR).toFixed(1)},${(s2*outerR).toFixed(1)} L${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} A${midR},${midR},0,0,0,${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} Z`;
-    svg+=`<path d="${op}" fill="${isAct?'#FF2D78':i<=6?'#13243d':'#1a102e'}" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/>`;
+    svg+=`<path d="${op}" fill="${outerFill}" stroke="${outerStroke}" stroke-width="${isAct?1.8:1.2}"/>`;
+
     const mtx=(Math.cos(ta)*(outerR+midR)/2).toFixed(1),mty=(Math.sin(ta)*(outerR+midR)/2).toFixed(1);
-    svg+=`<text x="${mtx}" y="${mty}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#fff':'#E8ECF0'}" font-size="${k.major.length>2?'6.2':'8'}" font-weight="${isAct?'700':'500'}" font-family="Inter,sans-serif">${k.major}</text>`;
+    const majLabel=(!reveal&&isAct)?'?':k.major;
+    const majCol=isAct&&reveal?'#fff':isAct?'rgba(255,45,120,0.9)':'#E8ECF0';
+    const fs=majLabel==='?'?'10':k.major.length>2?'6.5':'8.5';
+    svg+=`<text x="${mtx}" y="${mty}" text-anchor="middle" dominant-baseline="middle" fill="${majCol}" font-size="${fs}" font-weight="${isAct?'800':'500'}" font-family="Inter,sans-serif">${majLabel}</text>`;
+
+    const innerFill=isAct&&reveal?'#8d1450':isAct?'rgba(141,20,80,0.3)':i<=6?'#0e1b2d':'#120c22';
     const ip=`M${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} L${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} A${midR},${midR},0,0,1,${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} L${(c2*innerR).toFixed(1)},${(s2*innerR).toFixed(1)} A${innerR},${innerR},0,0,0,${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} Z`;
-    svg+=`<path d="${ip}" fill="${isAct?'#8d1450':i<=6?'#0e1b2d':'#120c22'}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    svg+=`<path d="${ip}" fill="${innerFill}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+
     const itx=(Math.cos(ta)*(midR+innerR)/2).toFixed(1),ity=(Math.sin(ta)*(midR+innerR)/2).toFixed(1);
-    svg+=`<text x="${itx}" y="${ity}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#ffb3d1':'#6B7280'}" font-size="5" font-family="Inter,sans-serif">${k.minor}</text>`;
+    const minLabel=(!reveal&&isAct)?'?':k.minor;
+    svg+=`<text x="${itx}" y="${ity}" text-anchor="middle" dominant-baseline="middle" fill="${isAct&&reveal?'#ffb3d1':isAct?'rgba(255,179,209,0.6)':'#6B7280'}" font-size="${minLabel==='?'?'7':'5.5'}" font-family="Inter,sans-serif">${minLabel}</text>`;
+
     if(COF5_ACC[i]>0){
-      const lr=outerR+13,lx=(Math.cos(ta)*lr).toFixed(1),ly=(Math.sin(ta)*lr).toFixed(1);
-      svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="rgba(107,114,128,0.65)" font-size="5" font-family="Inter,sans-serif">${COF5_ACC[i]}${COF5_TYPE[i]}</text>`;
+      const lr=outerR+14,lx=(Math.cos(ta)*lr).toFixed(1),ly=(Math.sin(ta)*lr).toFixed(1);
+      svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="rgba(107,114,128,0.55)" font-size="5.5" font-family="Inter,sans-serif">${COF5_ACC[i]}${COF5_TYPE[i]}</text>`;
     }
   }
   svg+=`<circle cx="0" cy="0" r="${innerR}" fill="#0a0812" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
-  svg+=`<text x="0" y="-4.5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.2" font-family="DM Mono,monospace">Circle of</text>`;
-  svg+=`<text x="0" y="4.5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.2" font-family="DM Mono,monospace">5ths</text>`;
+  svg+=`<text x="0" y="-5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.5" font-family="DM Mono,monospace">Circle of</text>`;
+  svg+=`<text x="0" y="5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.5" font-family="DM Mono,monospace">5ths</text>`;
   svg+=`</svg>`;
   el.innerHTML=svg;
 }
