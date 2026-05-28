@@ -473,47 +473,6 @@ footer{
 .fade-up{opacity:0;animation:fadeUp .6s ease forwards;}
 @media(max-width:680px){nav{padding:0 1rem;}.nav-links{display:none;}}
 
-/* ── KEY SIGNATURE QUIZ ── */
-.ks-layout{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;}
-.ks-game-col{flex:1;min-width:280px;}
-.ks-cof5-col{flex:0 0 274px;display:flex;flex-direction:column;align-items:center;}
-.ks-range-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1.25rem;}
-.ks-range-title{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:.65rem;}
-.ks-range-grid{display:flex;gap:1.5rem;flex-wrap:wrap;}
-.ks-group{flex:1;min-width:110px;}
-.ks-group-label{font-size:.68rem;font-weight:700;color:var(--sky);font-family:'DM Mono',monospace;letter-spacing:.1em;margin-bottom:.35rem;}
-.ks-check{display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer;padding:.1rem 0;color:var(--off-white);}
-.ks-check input{accent-color:var(--pink);width:13px;height:13px;cursor:pointer;}
-.ks-staff-wrap{background:#1a2535;border-radius:10px;padding:.6rem .4rem;margin-bottom:1rem;display:flex;justify-content:center;border:1px solid var(--border);}
-.ks-staff-wrap canvas{display:block;}
-.ks-score-row{display:flex;gap:.6rem;margin-bottom:1rem;}
-.ks-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.45rem .5rem;text-align:center;font-size:.8rem;font-family:'DM Mono',monospace;color:var(--off-white);}
-.ks-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.85rem;}
-.ks-choice-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:.7rem .75rem;font-size:.88rem;color:var(--off-white);cursor:pointer;transition:background .15s,border-color .15s;font-family:'Inter',sans-serif;width:100%;}
-.ks-choice-btn:hover:not(:disabled){background:var(--card2);border-color:rgba(255,255,255,0.22);}
-.ks-choice-btn.ks-correct{background:rgba(57,217,138,0.15);border-color:#39D98A;color:#39D98A;font-weight:700;}
-.ks-choice-btn.ks-wrong{background:rgba(255,107,157,0.12);border-color:#ff6b9d;color:#ff6b9d;}
-.ks-feedback{min-height:1.6rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.4rem;transition:color .2s;}
-.ks-cof5-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;font-family:'DM Mono',monospace;}
-.ks-cof5-hint{font-size:.72rem;color:var(--muted);text-align:center;margin-top:.6rem;}
-
-/* ── SCALE BUILDER ── */
-.sb-controls{display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.5rem;}
-.sb-selector{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
-.sb-selector label{font-size:.88rem;color:var(--muted);white-space:nowrap;}
-.sb-selector select{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--off-white);font-size:.88rem;padding:.5rem .75rem;cursor:pointer;outline:none;}
-.sb-selector select:focus{border-color:var(--pink);}
-.sb-hint-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.55rem 1rem;font-size:.83rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;color:var(--off-white);}
-.sb-hint-key{color:var(--muted);font-family:'DM Mono',monospace;font-size:.72rem;}
-.sb-staff-wrap{margin-bottom:1.25rem;}
-.sb-btn-row{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:.9rem;}
-.sb-feedback{min-height:2rem;margin-bottom:.5rem;font-size:.95rem;}
-.sb-interval-row{display:flex;gap:.4rem;justify-content:center;margin-top:.5rem;flex-wrap:wrap;}
-.sb-interval{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:.82rem;font-weight:700;font-family:'DM Mono',monospace;border:1px solid var(--border);color:var(--off-white);background:var(--card);}
-.sb-interval.ok{background:rgba(57,217,138,.15);border-color:#39D98A;color:#39D98A;}
-.sb-interval.err{background:rgba(255,107,157,.14);border-color:#ff6b9d;color:#ff6b9d;}
-.sb-interval-labels{display:flex;gap:.4rem;justify-content:center;margin-top:.3rem;flex-wrap:wrap;}
-.sb-interval-lbl{width:34px;text-align:center;font-size:.62rem;color:var(--muted);font-family:'DM Mono',monospace;}
 </style>
 </head>
 <body>
@@ -550,8 +509,6 @@ footer{
     <li><a href="#key-staff">88 Keys</a></li>
     <li><a href="#rhythm">Rhythm</a></li>
     <li><a href="#metronome">Metronome</a></li>
-    <li><a href="#key-sig-game">Key Sigs</a></li>
-    <li><a href="#scale-builder">Scales</a></li>
   </ul>
   <a href="/dashboard" class="nav-book">← Dashboard</a>
 </nav>
@@ -877,94 +834,7 @@ footer{
   </div>
 </section>
 
-<!-- ══ S9: KEY SIGNATURE QUIZ ══ -->
-<section id="key-sig-game">
-  <div class="section-label">09 — Interactive Game</div>
-  <h2 class="section-h2">Guess the <em>Key Signature</em></h2>
-  <div class="prose"><p>A key signature tells you which notes are always sharp or flat throughout a piece. Can you identify each one? Select the keys you want to practise, then read the staff and pick the correct major key.</p></div>
-
-  <div class="ks-layout" style="margin-top:2rem">
-    <!-- ── Left: game ── -->
-    <div class="ks-game-col">
-      <div class="ks-range-card">
-        <div class="ks-range-title">Keys to practise</div>
-        <div id="ks-range-grid" class="ks-range-grid"></div>
-      </div>
-
-      <div class="ks-staff-wrap">
-        <canvas id="ks-staff" width="280" height="118"></canvas>
-      </div>
-
-      <div class="ks-score-row">
-        <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;correct</div>
-        <div class="ks-score-box"><span id="ks-score-pct">—</span>&nbsp;accuracy</div>
-        <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span>&nbsp;streak</div>
-      </div>
-
-      <div id="ks-choices" class="ks-choices"></div>
-      <div id="ks-feedback" class="ks-feedback"></div>
-    </div>
-
-    <!-- ── Right: Circle of 5ths ── -->
-    <div class="ks-cof5-col">
-      <div class="ks-cof5-label">Circle of 5ths</div>
-      <div id="ks-cof5"></div>
-      <p class="ks-cof5-hint">Active question highlighted in pink</p>
-      <div style="margin-top:1rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;font-size:.78rem;color:var(--muted);line-height:1.7;max-width:260px">
-        <strong style="color:var(--off-white);display:block;margin-bottom:.3rem">How to read it</strong>
-        Clockwise → add a ♯ each step.<br>
-        Counter-clockwise → add a ♭.<br>
-        Outer ring = <span style="color:var(--off-white)">Major</span> keys.<br>
-        Inner ring = <span style="color:var(--muted)">relative minor</span>.
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ S10: CREATE THE SCALE ══ -->
-<section id="scale-builder">
-  <div class="section-label">10 — Interactive Game</div>
-  <h2 class="section-h2">Create the <em>Scale</em></h2>
-  <div class="prose"><p>Build a major scale by adding the correct sharps (♯) or flats (♭) to the natural notes. <strong>Click any note head</strong> to cycle between ♮ natural → ♯ sharp → ♭ flat. When you're done, hit <em>Check Scale</em> — the interval row below shows W (whole step) and H (half step) so you can see where you went wrong.</p></div>
-
-  <div class="sb-controls" style="margin-top:1.75rem">
-    <div class="sb-selector">
-      <label>Choose a scale:</label>
-      <select id="sb-scale-select" onchange="sbLoadScale()">
-        <option value="0">C Major — no accidentals (easiest)</option>
-        <option value="1">G Major — 1 sharp (F♯)</option>
-        <option value="2">D Major — 2 sharps (F♯ C♯)</option>
-        <option value="3">A Major — 3 sharps (F♯ C♯ G♯)</option>
-        <option value="4">E Major — 4 sharps (F♯ C♯ G♯ D♯)</option>
-        <option value="5">F Major — 1 flat (B♭)</option>
-      </select>
-    </div>
-    <div class="sb-hint-box">
-      <span>Major scale pattern: <strong>W W H W W W H</strong></span>
-      <span class="sb-hint-key">W = whole step (2 semitones) · H = half step (1 semitone)</span>
-    </div>
-  </div>
-
-  <div class="sb-staff-wrap">
-    <svg id="sb-staff" viewBox="0 0 490 200" width="100%" style="max-width:540px;display:block;margin:0 auto;background:#1a2535;border-radius:12px;border:1px solid var(--border)"></svg>
-  </div>
-
-  <div class="sb-btn-row">
-    <button class="btn-pink" onclick="sbCheck()">✓ Check Scale</button>
-    <button class="btn-outline" onclick="sbReset()">↺ Reset</button>
-    <button class="btn-outline" onclick="sbReveal()">👁 Reveal Answer</button>
-  </div>
-
-  <div id="sb-feedback" class="sb-feedback"></div>
-  <div id="sb-intervals" class="sb-interval-row"></div>
-  <div id="sb-interval-labels" class="sb-interval-labels"></div>
-
-  <div class="callout" style="margin-top:1.5rem">
-    <strong>Tips:</strong> Every major scale follows <em>W W H W W W H</em>. The half steps always land between notes 3→4 and 7→8. Start by working out which notes need sharps or flats so those half steps land in the right place.
-  </div>
-</section>
-
-<!-- ══ S11: TAKEAWAYS ══ -->
+<!-- ══ S9: TAKEAWAYS ══ -->
 <section id="takeaways">
   <div class="section-label">Summary</div>
   <h2 class="section-h2">Key <em>Takeaways</em></h2>
@@ -2019,8 +1889,9 @@ for(let o=0;o<=8;o++){
 }
 
 // ══════════════════════════════════════════════════════════
-// KEY SIGNATURE QUIZ
+// (games moved to /key-sig-quiz.html and /scale-builder.html)
 // ══════════════════════════════════════════════════════════
+if(false){
 const KS_ALL=[
   {id:'C',  name:'C major',  sharps:0,flats:0, cofPos:0 },
   {id:'G',  name:'G major',  sharps:1,flats:0, cofPos:1 },
@@ -2372,9 +2243,7 @@ document.querySelectorAll('section').forEach(s=>{
   s.style.transition='opacity .6s ease,transform .6s ease';observer.observe(s);
 });
 
-// Init games
-ksInit();
-sbLoadScale();
+
 </script>
 </body>
 </html>

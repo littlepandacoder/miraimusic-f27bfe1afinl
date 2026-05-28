@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Key Signature Quiz — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0812;--card:#151228;--card2:#1c1935;
+  --border:rgba(255,255,255,0.08);
+  --pink:#FF2D78;--sky:#00D4FF;--green:#39D98A;
+  --amber:#F59E0B;--off-white:#E8ECF0;--muted:#6B7280;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-family:'Inter',sans-serif;overflow-x:hidden}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:200;height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;
+  background:rgba(10,8,18,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;
+  color:var(--pink);letter-spacing:.08em;text-decoration:none;text-shadow:0 0 20px rgba(255,45,120,.5)}
+.nav-back{font-size:.78rem;color:var(--muted);text-decoration:none;
+  display:flex;align-items:center;gap:.4rem;transition:color .2s}
+.nav-back:hover{color:var(--pink)}
+
+/* PAGE */
+.page{max-width:960px;margin:0 auto;padding:72px 1.5rem 4rem}
+.page-title{font-family:'Orbitron',monospace;font-weight:900;font-size:2rem;
+  text-align:center;background:linear-gradient(135deg,var(--pink),#a855f7);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem}
+.page-sub{text-align:center;color:var(--muted);margin-bottom:2.5rem;font-size:.95rem;line-height:1.6}
+
+/* LAYOUT */
+.ks-layout{display:flex;gap:2rem;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.ks-game-col{flex:1;min-width:280px;max-width:480px}
+.ks-cof5-col{display:flex;flex-direction:column;align-items:center}
+
+/* RANGE PICKER */
+.ks-range-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.25rem}
+.ks-range-title{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.12em;font-family:'DM Mono',monospace;margin-bottom:.65rem}
+.ks-range-grid{display:flex;gap:1.5rem;flex-wrap:wrap}
+.ks-group{flex:1;min-width:110px}
+.ks-group-label{font-size:.65rem;font-weight:700;color:var(--sky);
+  font-family:'DM Mono',monospace;letter-spacing:.12em;margin-bottom:.35rem}
+.ks-check{display:flex;align-items:center;gap:.4rem;font-size:.8rem;cursor:pointer;padding:.1rem 0}
+.ks-check input{accent-color:var(--pink);width:13px;height:13px;cursor:pointer}
+
+/* STAFF */
+.ks-staff-wrap{background:#0f0d1a;border-radius:12px;padding:.6rem .4rem;margin-bottom:1rem;
+  display:flex;justify-content:center;border:1px solid var(--border)}
+
+/* SCORE */
+.ks-score-row{display:flex;gap:.6rem;margin-bottom:1rem}
+.ks-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.5rem .5rem;text-align:center;font-size:.78rem;font-family:'DM Mono',monospace}
+
+/* CHOICES */
+.ks-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.85rem}
+.ks-choice-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;
+  padding:.7rem .75rem;font-size:.88rem;color:var(--off-white);cursor:pointer;
+  transition:background .15s,border-color .15s;width:100%;font-family:'Inter',sans-serif}
+.ks-choice-btn:hover:not(:disabled){background:var(--card2);border-color:rgba(255,255,255,.2)}
+.ks-choice-btn.ks-correct{background:rgba(57,217,138,.15);border-color:var(--green);color:var(--green);font-weight:700}
+.ks-choice-btn.ks-wrong{background:rgba(255,45,120,.1);border-color:var(--pink);color:var(--pink)}
+.ks-choice-btn:disabled{cursor:default}
+
+.ks-feedback{min-height:1.8rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.4rem}
+
+/* COF5 */
+.ks-cof5-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.12em;margin-bottom:.65rem;font-family:'DM Mono',monospace}
+.ks-cof5-hint{font-size:.7rem;color:var(--muted);text-align:center;margin-top:.6rem}
+.ks-cof5-info{margin-top:1rem;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:.9rem 1rem;font-size:.76rem;color:var(--muted);
+  line-height:1.75;max-width:260px}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="/dashboard">Musicable</a>
+  <a class="nav-back" href="/dashboard">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Dashboard
+  </a>
+</nav>
+
+<div class="page">
+  <div class="page-title">Key Signature Quiz</div>
+  <p class="page-sub">Read the treble clef key signature and name the major key.<br>Select which keys you want to practise, then pick the correct answer.</p>
+
+  <div class="ks-layout">
+
+    <!-- ── Left: game ── -->
+    <div class="ks-game-col">
+      <div class="ks-range-card">
+        <div class="ks-range-title">Keys to practise</div>
+        <div id="ks-range-grid" class="ks-range-grid"></div>
+      </div>
+
+      <div class="ks-staff-wrap">
+        <canvas id="ks-staff" width="290" height="118"></canvas>
+      </div>
+
+      <div class="ks-score-row">
+        <div class="ks-score-box"><span id="ks-score-correct">0</span>/<span id="ks-score-total">0</span>&nbsp;correct</div>
+        <div class="ks-score-box"><span id="ks-score-pct">—</span>&nbsp;accuracy</div>
+        <div class="ks-score-box">🔥&nbsp;<span id="ks-score-streak">0</span>&nbsp;streak</div>
+      </div>
+
+      <div id="ks-choices" class="ks-choices"></div>
+      <div id="ks-feedback" class="ks-feedback"></div>
+    </div>
+
+    <!-- ── Right: Circle of 5ths ── -->
+    <div class="ks-cof5-col">
+      <div class="ks-cof5-label">Circle of 5ths</div>
+      <div id="ks-cof5"></div>
+      <p class="ks-cof5-hint">Pink = current question</p>
+      <div class="ks-cof5-info">
+        <strong style="color:var(--off-white);display:block;margin-bottom:.3rem">How to read it</strong>
+        Clockwise → add a ♯ each step.<br>
+        Counter-clockwise → add a ♭.<br>
+        Outer ring = <span style="color:var(--off-white)">Major</span> keys.<br>
+        Inner ring = <span style="color:var(--muted)">relative minor</span>.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const KS_ALL=[
+  {id:'C',  name:'C major',  sharps:0,flats:0},
+  {id:'G',  name:'G major',  sharps:1,flats:0},
+  {id:'D',  name:'D major',  sharps:2,flats:0},
+  {id:'A',  name:'A major',  sharps:3,flats:0},
+  {id:'E',  name:'E major',  sharps:4,flats:0},
+  {id:'B',  name:'B major',  sharps:5,flats:0},
+  {id:'Fs', name:'F♯ major', sharps:6,flats:0},
+  {id:'F',  name:'F major',  sharps:0,flats:1},
+  {id:'Bb', name:'B♭ major', sharps:0,flats:2},
+  {id:'Eb', name:'E♭ major', sharps:0,flats:3},
+  {id:'Ab', name:'A♭ major', sharps:0,flats:4},
+  {id:'Db', name:'D♭ major', sharps:0,flats:5},
+];
+const COF5_KEYS=[
+  {major:'C',  minor:'a',  id:'C' },
+  {major:'G',  minor:'e',  id:'G' },
+  {major:'D',  minor:'b',  id:'D' },
+  {major:'A',  minor:'f♯', id:'A' },
+  {major:'E',  minor:'c♯', id:'E' },
+  {major:'B',  minor:'g♯', id:'B' },
+  {major:'F♯', minor:'d♯', id:'Fs'},
+  {major:'D♭', minor:'b♭', id:'Db'},
+  {major:'A♭', minor:'f',  id:'Ab'},
+  {major:'E♭', minor:'c',  id:'Eb'},
+  {major:'B♭', minor:'g',  id:'Bb'},
+  {major:'F',  minor:'d',  id:'F' },
+];
+const COF5_ACC=[0,1,2,3,4,5,6,5,4,3,2,1];
+const COF5_TYPE=['','♯','♯','♯','♯','♯','♯','♭','♭','♭','♭','♭'];
+
+let ksEnabled=new Set(['C','G','D','F','Bb']);
+let ksCurrent=null;
+let ksScore={correct:0,total:0,streak:0};
+let ksAnswered=false;
+
+function ksShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function ksInit(){
+  const grid=document.getElementById('ks-range-grid');
+  grid.innerHTML='';
+  const sg=document.createElement('div');sg.className='ks-group';
+  sg.innerHTML='<div class="ks-group-label">♯ Sharps</div>';
+  const fg=document.createElement('div');fg.className='ks-group';
+  fg.innerHTML='<div class="ks-group-label">♭ Flats</div>';
+  KS_ALL.forEach(ks=>{
+    const lbl=document.createElement('label');lbl.className='ks-check';
+    lbl.innerHTML=`<input type="checkbox" value="${ks.id}"${ksEnabled.has(ks.id)?' checked':''}> ${ks.name}`;
+    lbl.querySelector('input').addEventListener('change',function(){
+      if(this.checked){ksEnabled.add(this.value);}
+      else{if(ksEnabled.size<=2){this.checked=true;return;}ksEnabled.delete(this.value);}
+    });
+    (ks.flats>0?fg:sg).appendChild(lbl);
+  });
+  grid.appendChild(sg);grid.appendChild(fg);
+  ksNextQuestion();
+}
+
+function ksNextQuestion(){
+  const pool=KS_ALL.filter(k=>ksEnabled.has(k.id));
+  if(pool.length<2)return;
+  ksCurrent=pool[Math.floor(Math.random()*pool.length)];
+  ksAnswered=false;
+  ksDrawStaff();
+  ksDraw5ths();
+  const wrong=ksShuffle(pool.filter(k=>k.id!==ksCurrent.id));
+  const choices=ksShuffle([ksCurrent,...wrong.slice(0,3)]);
+  const btns=document.getElementById('ks-choices');
+  btns.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='ks-choice-btn';
+    btn.textContent=c.name;
+    btn.onclick=()=>ksGuess(c,btn);
+    btns.appendChild(btn);
+  });
+  document.getElementById('ks-feedback').textContent='';
+}
+
+function ksGuess(choice,clickedBtn){
+  if(ksAnswered)return;
+  ksAnswered=true;
+  const correct=choice.id===ksCurrent.id;
+  ksScore.total++;
+  if(correct){
+    ksScore.correct++;ksScore.streak++;
+    clickedBtn.classList.add('ks-correct');
+    const fb=document.getElementById('ks-feedback');
+    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+  }else{
+    ksScore.streak=0;
+    clickedBtn.classList.add('ks-wrong');
+    document.querySelectorAll('.ks-choice-btn').forEach(b=>{
+      if(b.textContent===ksCurrent.name)b.classList.add('ks-correct');
+    });
+    const fb=document.getElementById('ks-feedback');
+    fb.textContent=`✗ That's ${ksCurrent.name}`;fb.style.color='var(--pink)';
+  }
+  document.getElementById('ks-score-correct').textContent=ksScore.correct;
+  document.getElementById('ks-score-total').textContent=ksScore.total;
+  document.getElementById('ks-score-pct').textContent=Math.round(ksScore.correct/ksScore.total*100)+'%';
+  document.getElementById('ks-score-streak').textContent=ksScore.streak;
+  document.querySelectorAll('.ks-choice-btn').forEach(b=>b.disabled=true);
+  setTimeout(ksNextQuestion,1800);
+}
+
+function ksDrawStaff(){
+  const canvas=document.getElementById('ks-staff');
+  if(!canvas||!ksCurrent)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const lg=14,topLine=26,bottomLine=topLine+4*lg,halfStep=lg/2;
+  const noteY=s=>bottomLine-s*halfStep;
+  ctx.fillStyle='#0f0d1a';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(232,236,240,0.4)';ctx.lineWidth=1;
+  for(let i=0;i<5;i++){
+    const y=topLine+i*lg;
+    ctx.beginPath();ctx.moveTo(12,y);ctx.lineTo(W-8,y);ctx.stroke();
+  }
+  ctx.font='58px serif';ctx.fillStyle='#00D4FF';
+  ctx.textBaseline='alphabetic';ctx.fillText('𝄞',4,bottomLine+9);
+  // sharp: F5=8, C5=5, G5=9, D5=6, A4=3, E5=7, B4=4
+  const sharpSteps=[8,5,9,6,3,7,4];
+  // flat:  B4=4, E5=7, A4=3, D5=6, G4=2, C5=5, F4=1
+  const flatSteps=[4,7,3,6,2,5,1];
+  const accX=64,accSpacing=13;
+  ctx.textBaseline='middle';
+  if(ksCurrent.sharps>0){
+    ctx.font='16px serif';ctx.fillStyle='#E8ECF0';
+    for(let i=0;i<ksCurrent.sharps;i++)
+      ctx.fillText('♯',accX+i*accSpacing,noteY(sharpSteps[i]));
+  }else if(ksCurrent.flats>0){
+    ctx.font='18px serif';ctx.fillStyle='#E8ECF0';
+    for(let i=0;i<ksCurrent.flats;i++)
+      ctx.fillText('♭',accX+i*accSpacing,noteY(flatSteps[i]));
+  }else{
+    ctx.font='12px "DM Mono",monospace';ctx.fillStyle='rgba(107,114,128,0.7)';
+    ctx.textAlign='center';ctx.fillText('(no accidentals)',W/2+10,topLine+2*lg);
+    ctx.textAlign='left';
+  }
+}
+
+function ksDraw5ths(){
+  const el=document.getElementById('ks-cof5');if(!el)return;
+  const outerR=88,midR=56,innerR=30;
+  let svg=`<svg viewBox="-108 -108 216 216" width="268" height="268" style="display:block;margin:0 auto">`;
+  for(let i=0;i<12;i++){
+    const a1=(i*30-90-15)*Math.PI/180,a2=(i*30-90+15)*Math.PI/180,ta=(i*30-90)*Math.PI/180;
+    const k=COF5_KEYS[i];const isAct=ksCurrent&&k.id===ksCurrent.id;
+    const c1=Math.cos(a1),s1=Math.sin(a1),c2=Math.cos(a2),s2=Math.sin(a2);
+    // outer segment
+    const op=`M${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} L${(c1*outerR).toFixed(1)},${(s1*outerR).toFixed(1)} A${outerR},${outerR},0,0,1,${(c2*outerR).toFixed(1)},${(s2*outerR).toFixed(1)} L${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} A${midR},${midR},0,0,0,${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} Z`;
+    svg+=`<path d="${op}" fill="${isAct?'#FF2D78':i<=6?'#13243d':'#1a102e'}" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/>`;
+    const mtx=(Math.cos(ta)*(outerR+midR)/2).toFixed(1),mty=(Math.sin(ta)*(outerR+midR)/2).toFixed(1);
+    const fs=k.major.length>2?'6.2':'8';
+    svg+=`<text x="${mtx}" y="${mty}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#fff':'#E8ECF0'}" font-size="${fs}" font-weight="${isAct?'700':'500'}" font-family="Inter,sans-serif">${k.major}</text>`;
+    // inner segment (minor)
+    const ip=`M${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} L${(c1*midR).toFixed(1)},${(s1*midR).toFixed(1)} A${midR},${midR},0,0,1,${(c2*midR).toFixed(1)},${(s2*midR).toFixed(1)} L${(c2*innerR).toFixed(1)},${(s2*innerR).toFixed(1)} A${innerR},${innerR},0,0,0,${(c1*innerR).toFixed(1)},${(s1*innerR).toFixed(1)} Z`;
+    svg+=`<path d="${ip}" fill="${isAct?'#8d1450':i<=6?'#0e1b2d':'#120c22'}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+    const itx=(Math.cos(ta)*(midR+innerR)/2).toFixed(1),ity=(Math.sin(ta)*(midR+innerR)/2).toFixed(1);
+    svg+=`<text x="${itx}" y="${ity}" text-anchor="middle" dominant-baseline="middle" fill="${isAct?'#ffb3d1':'#6B7280'}" font-size="5" font-family="Inter,sans-serif">${k.minor}</text>`;
+    // accidental count
+    if(COF5_ACC[i]>0){
+      const lr=outerR+13,lx=(Math.cos(ta)*lr).toFixed(1),ly=(Math.sin(ta)*lr).toFixed(1);
+      svg+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="rgba(107,114,128,0.65)" font-size="5" font-family="Inter,sans-serif">${COF5_ACC[i]}${COF5_TYPE[i]}</text>`;
+    }
+  }
+  svg+=`<circle cx="0" cy="0" r="${innerR}" fill="#0a0812" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+  svg+=`<text x="0" y="-4.5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.2" font-family="DM Mono,monospace">Circle of</text>`;
+  svg+=`<text x="0" y="4.5" text-anchor="middle" dominant-baseline="middle" fill="#6B7280" font-size="5.2" font-family="DM Mono,monospace">5ths</text>`;
+  svg+=`</svg>`;
+  el.innerHTML=svg;
+}
+
+ksInit();
+</script>
+</body>
+</html>

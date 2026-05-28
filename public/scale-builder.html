@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Builder — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0812;--card:#151228;--card2:#1c1935;
+  --border:rgba(255,255,255,0.08);
+  --pink:#FF2D78;--sky:#00D4FF;--green:#39D98A;
+  --amber:#F59E0B;--off-white:#E8ECF0;--muted:#6B7280;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-family:'Inter',sans-serif;overflow-x:hidden}
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:200;height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;
+  background:rgba(10,8,18,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;
+  color:var(--pink);letter-spacing:.08em;text-decoration:none;text-shadow:0 0 20px rgba(255,45,120,.5)}
+.nav-back{font-size:.78rem;color:var(--muted);text-decoration:none;
+  display:flex;align-items:center;gap:.4rem;transition:color .2s}
+.nav-back:hover{color:var(--pink)}
+
+/* PAGE */
+.page{max-width:680px;margin:0 auto;padding:72px 1.5rem 4rem}
+.page-title{font-family:'Orbitron',monospace;font-weight:900;font-size:2rem;
+  text-align:center;background:linear-gradient(135deg,var(--sky),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem}
+.page-sub{text-align:center;color:var(--muted);margin-bottom:2.5rem;font-size:.95rem;line-height:1.6}
+
+/* CONTROLS */
+.sb-controls{display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.5rem}
+.sb-selector{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.sb-selector label{font-size:.88rem;color:var(--muted);white-space:nowrap}
+.sb-selector select{flex:1;min-width:200px;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;color:var(--off-white);font-size:.88rem;padding:.5rem .75rem;
+  cursor:pointer;outline:none;font-family:'Inter',sans-serif}
+.sb-selector select:focus{border-color:var(--pink)}
+
+.sb-hint-box{background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.6rem 1rem;font-size:.83rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.sb-hint-key{color:var(--muted);font-family:'DM Mono',monospace;font-size:.72rem}
+
+/* STAFF */
+.sb-staff-wrap{margin-bottom:1.25rem;overflow-x:auto}
+.sb-staff-wrap svg{display:block;margin:0 auto}
+
+/* BUTTONS */
+.sb-btn-row{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:.9rem}
+.btn-primary{background:var(--pink);color:#fff;border:none;border-radius:10px;
+  padding:.65rem 1.4rem;font-size:.88rem;font-weight:700;cursor:pointer;
+  transition:opacity .2s,transform .15s;font-family:'Inter',sans-serif}
+.btn-primary:hover{opacity:.88;transform:scale(1.03)}
+.btn-ghost{background:transparent;color:var(--off-white);border:2px solid var(--border);
+  border-radius:10px;padding:.63rem 1.2rem;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:border-color .2s,color .2s;font-family:'Inter',sans-serif}
+.btn-ghost:hover{border-color:rgba(255,255,255,.25);color:#fff}
+
+/* FEEDBACK */
+.sb-feedback{min-height:2rem;margin-bottom:.5rem;font-size:.95rem}
+
+/* INTERVALS */
+.sb-interval-row{display:flex;gap:.45rem;justify-content:center;margin-top:.5rem;flex-wrap:wrap}
+.sb-interval{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  border-radius:7px;font-size:.82rem;font-weight:700;font-family:'DM Mono',monospace;
+  border:1px solid var(--border);background:var(--card)}
+.sb-interval.ok{background:rgba(57,217,138,.15);border-color:var(--green);color:var(--green)}
+.sb-interval.err{background:rgba(255,45,120,.12);border-color:var(--pink);color:var(--pink)}
+.sb-interval-labels{display:flex;gap:.45rem;justify-content:center;margin-top:.3rem;flex-wrap:wrap}
+.sb-interval-lbl{width:36px;text-align:center;font-size:.6rem;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* CALLOUT */
+.callout{background:rgba(255,255,255,.04);border-left:3px solid var(--border);
+  border-radius:0 8px 8px 0;padding:.9rem 1.1rem;font-size:.88rem;color:var(--muted);
+  line-height:1.7;margin-top:1.5rem}
+.callout strong{color:var(--off-white)}
+.callout em{color:var(--sky);font-style:normal}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="/dashboard">Musicable</a>
+  <a class="nav-back" href="/dashboard">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Dashboard
+  </a>
+</nav>
+
+<div class="page">
+  <div class="page-title">Create the Scale</div>
+  <p class="page-sub">Click note heads to cycle ♮ → ♯ → ♭ and build the correct major scale.<br>Hit <strong>Check Scale</strong> to see which notes are right.</p>
+
+  <div class="sb-controls">
+    <div class="sb-selector">
+      <label>Choose a scale:</label>
+      <select id="sb-scale-select" onchange="sbLoadScale()">
+        <option value="0">C Major — no accidentals (easiest)</option>
+        <option value="1">G Major — 1 sharp (F♯)</option>
+        <option value="2">D Major — 2 sharps (F♯ C♯)</option>
+        <option value="3">A Major — 3 sharps (F♯ C♯ G♯)</option>
+        <option value="4">E Major — 4 sharps (F♯ C♯ G♯ D♯)</option>
+        <option value="5">F Major — 1 flat (B♭)</option>
+      </select>
+    </div>
+    <div class="sb-hint-box">
+      <span>Major scale pattern: <strong>W W H W W W H</strong></span>
+      <span class="sb-hint-key">W = whole step (2 semitones) · H = half step (1 semitone)</span>
+    </div>
+  </div>
+
+  <div class="sb-staff-wrap">
+    <svg id="sb-staff" viewBox="0 0 490 200" width="100%" style="max-width:560px;background:#0f0d1a;border-radius:12px;border:1px solid rgba(255,255,255,0.08)"></svg>
+  </div>
+
+  <div class="sb-btn-row">
+    <button class="btn-primary" onclick="sbCheck()">✓ Check Scale</button>
+    <button class="btn-ghost" onclick="sbReset()">↺ Reset</button>
+    <button class="btn-ghost" onclick="sbReveal()">👁 Reveal Answer</button>
+  </div>
+
+  <div id="sb-feedback" class="sb-feedback"></div>
+  <div id="sb-intervals" class="sb-interval-row"></div>
+  <div id="sb-interval-labels" class="sb-interval-labels"></div>
+
+  <div class="callout">
+    <strong>Tips:</strong> Every major scale follows <em>W W H W W W H</em>.
+    The half steps always fall between degrees 3→4 and 7→8.
+    Work out which notes need accidentals so those half steps land in the right place.
+  </div>
+</div>
+
+<script>
+const SCALE_DEFS=[
+  {label:'C Major',notes:[
+    {l:'C',step:-2,a:'n'},{l:'D',step:-1,a:'n'},{l:'E',step:0,a:'n'},{l:'F',step:1,a:'n'},
+    {l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'n'}]},
+  {label:'G Major',notes:[
+    {l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'n'},
+    {l:'D',step:6,a:'n'},{l:'E',step:7,a:'n'},{l:'F',step:8,a:'s'},{l:'G',step:9,a:'n'}]},
+  {label:'D Major',notes:[
+    {l:'D',step:-1,a:'n'},{l:'E',step:0,a:'n'},{l:'F',step:1,a:'s'},{l:'G',step:2,a:'n'},
+    {l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'n'}]},
+  {label:'A Major',notes:[
+    {l:'A',step:3,a:'n'},{l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'n'},
+    {l:'E',step:7,a:'n'},{l:'F',step:8,a:'s'},{l:'G',step:9,a:'s'},{l:'A',step:10,a:'n'}]},
+  {label:'E Major',notes:[
+    {l:'E',step:0,a:'n'},{l:'F',step:1,a:'s'},{l:'G',step:2,a:'s'},{l:'A',step:3,a:'n'},
+    {l:'B',step:4,a:'n'},{l:'C',step:5,a:'s'},{l:'D',step:6,a:'s'},{l:'E',step:7,a:'n'}]},
+  {label:'F Major',notes:[
+    {l:'F',step:1,a:'n'},{l:'G',step:2,a:'n'},{l:'A',step:3,a:'n'},{l:'B',step:4,a:'f'},
+    {l:'C',step:5,a:'n'},{l:'D',step:6,a:'n'},{l:'E',step:7,a:'n'},{l:'F',step:8,a:'n'}]},
+];
+
+let sbScale=SCALE_DEFS[0];
+let sbState=[];
+
+function sbLoadScale(){
+  const v=parseInt(document.getElementById('sb-scale-select').value)||0;
+  sbScale=SCALE_DEFS[v];
+  sbState=sbScale.notes.map(()=>'n');
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbReset(){
+  sbState=sbScale.notes.map(()=>'n');
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbReveal(){
+  sbState=sbScale.notes.map(n=>n.a);
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='<p style="color:var(--sky);text-align:center;font-weight:600">Answer revealed — study the accidentals above.</p>';
+  sbShowIntervals(true);
+}
+
+function sbCheck(){
+  let correct=0;
+  const res=sbScale.notes.map((n,i)=>{const ok=n.a===sbState[i];if(ok)correct++;return ok;});
+  sbDrawStaff(res);
+  const pct=Math.round(correct/8*100);
+  if(correct===8){
+    document.getElementById('sb-feedback').innerHTML='<p style="color:var(--green);text-align:center;font-size:1.05rem;font-weight:700">🎉 Perfect! All 8 notes correct!</p>';
+  }else{
+    document.getElementById('sb-feedback').innerHTML=`<p style="color:var(--amber);text-align:center">${correct}/8 correct (${pct}%) — red notes need a different accidental.</p>`;
+  }
+  sbShowIntervals(false);
+}
+
+const SB_SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+function sbNoteToSemi(l,a){return SB_SEMI[l]+(a==='s'?1:a==='f'?-1:0);}
+
+function sbShowIntervals(useAnswer){
+  const src=sbScale.notes;
+  const st=useAnswer?src.map(n=>n.a):sbState;
+  let row='',labels='';
+  for(let i=0;i<7;i++){
+    const got=((sbNoteToSemi(src[i+1].l,st[i+1])-sbNoteToSemi(src[i].l,st[i]))+12)%12;
+    const want=((sbNoteToSemi(src[i+1].l,src[i+1].a)-sbNoteToSemi(src[i].l,src[i].a))+12)%12;
+    const lbl=got===2?'W':got===1?'H':got+'?';
+    const ok=got===want;
+    row+=`<div class="sb-interval ${ok?'ok':'err'}">${lbl}</div>`;
+    labels+=`<div class="sb-interval-lbl">${src[i].l}→${src[i+1].l}</div>`;
+  }
+  document.getElementById('sb-intervals').innerHTML=row;
+  document.getElementById('sb-interval-labels').innerHTML=labels;
+}
+
+function sbToggleNote(idx){
+  const cycle={n:'s',s:'f',f:'n'};
+  sbState[idx]=cycle[sbState[idx]];
+  sbDrawStaff();
+  document.getElementById('sb-feedback').innerHTML='';
+  document.getElementById('sb-intervals').innerHTML='';
+  document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function sbDrawStaff(checkResults){
+  const svg=document.getElementById('sb-staff');if(!svg)return;
+  const W=490,H=200;
+  const lg=14,halfStep=7;
+  const staffTop=50,bottomLine=staffTop+4*lg; // 106 = E4 = step 0
+  const noteY=s=>bottomLine-s*halfStep;
+  const noteXs=[82,132,182,232,282,332,382,432];
+  let s='';
+
+  // staff lines
+  for(let i=0;i<5;i++){
+    const y=staffTop+i*lg;
+    s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1"/>`;
+  }
+
+  // treble clef
+  s+=`<text x="4" y="${bottomLine+10}" font-family="serif" font-size="62" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+
+  // notes
+  sbScale.notes.forEach((note,i)=>{
+    const x=noteXs[i],y=noteY(note.step);
+    const acc=sbState[i];
+    let col='#E8ECF0';
+    if(checkResults)col=checkResults[i]?'#39D98A':'#FF2D78';
+
+    // ledger lines
+    if(note.step<=-2){
+      const ly=noteY(-2);
+      s+=`<line x1="${x-12}" y1="${ly}" x2="${x+12}" y2="${ly}" stroke="rgba(232,236,240,0.5)" stroke-width="1"/>`;
+    }
+    if(note.step>=10){
+      const ly=noteY(10);
+      s+=`<line x1="${x-12}" y1="${ly}" x2="${x+12}" y2="${ly}" stroke="rgba(232,236,240,0.5)" stroke-width="1"/>`;
+    }
+
+    // whole note head
+    s+=`<ellipse cx="${x}" cy="${y}" rx="9.5" ry="6.5" fill="#0f0d1a" stroke="${col}" stroke-width="2"/>`;
+    s+=`<ellipse cx="${x+1}" cy="${y}" rx="4.5" ry="3" fill="#0f0d1a" stroke="none" transform="rotate(-15,${x},${y})"/>`;
+
+    // accidental symbol
+    if(acc==='s')
+      s+=`<text x="${x-14}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="16" fill="${col}">♯</text>`;
+    else if(acc==='f')
+      s+=`<text x="${x-14}" y="${y+1}" text-anchor="middle" dominant-baseline="middle" font-family="serif" font-size="18" fill="${col}">♭</text>`;
+
+    // note letter below staff
+    s+=`<text x="${x}" y="${bottomLine+22}" text-anchor="middle" dominant-baseline="middle" font-family="Inter,sans-serif" font-size="11" fill="rgba(107,114,128,0.8)">${note.l}</text>`;
+
+    // click target
+    s+=`<ellipse cx="${x}" cy="${y}" rx="18" ry="15" fill="transparent" style="cursor:pointer" onclick="sbToggleNote(${i})"/>`;
+  });
+
+  svg.innerHTML=s;
+}
+
+sbLoadScale();
+</script>
+</body>
+</html>
