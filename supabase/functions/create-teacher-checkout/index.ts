@@ -1,13 +1,19 @@
 /**
  * create-teacher-checkout
  *
- * Creates a Stripe Checkout Session for the teacher monthly plan ($20/mo).
- * Includes a 7-day trial. On success the webhook assigns the teacher role
- * and provisions 10 default student seats.
+ * Creates a Stripe Checkout Session for the teacher monthly plan.
+ * No free trial — charged $8 on first month via FIRST_MONTH coupon,
+ * then $20/month ongoing. On success the webhook assigns the teacher
+ * role and provisions 10 default student seats.
+ *
+ * Stripe products:
+ *   Student monthly  — prod_UbPBeGKGZAMFr1  price_1TcBF2B8UWyR18ZVVnNultKl  $17/mo
+ *   Teacher monthly  — prod_UbPBeoV4GEqB2l  price_1TcBGVB8UWyR18ZVXt2CZABa  $20/mo
  *
  * Required Supabase secrets:
- *   STRIPE_SECRET_KEY         – sk_live_… or sk_test_…
- *   STRIPE_TEACHER_PRICE_ID   – price_… (monthly recurring price for the teacher plan)
+ *   STRIPE_SECRET_KEY          – sk_live_… or sk_test_…
+ *   STRIPE_TEACHER_PRICE_ID    – override price ID for live-mode swap (optional)
+ *   STRIPE_FIRST_MONTH_COUPON  – coupon ID for $8 first month (default: FIRST_MONTH)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -30,10 +36,17 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Teacher monthly plan — $20/mo (price_1TcBGVB8UWyR18ZVXt2CZABa)
-    // Override via STRIPE_TEACHER_PRICE_ID secret for live-mode swap
+    // Teacher monthly plan — prod_UbPBeoV4GEqB2l — $20/mo
     const priceId =
       Deno.env.get("STRIPE_TEACHER_PRICE_ID") ?? "price_1TcBGVB8UWyR18ZVXt2CZABa";
+
+    // $8 first month — create coupon 'FIRST_MONTH' in Stripe Dashboard:
+    //   Amount off: $12  |  Duration: once  (for teacher plan: $20 - $12 = $8)
+    //   Or reuse the same FIRST_MONTH coupon if it's set as a fixed % discount
+    const firstMonthCoupon =
+      Deno.env.get("STRIPE_TEACHER_FIRST_MONTH_COUPON") ??
+      Deno.env.get("STRIPE_FIRST_MONTH_COUPON") ??
+      "FIRST_MONTH";
 
     const origin = req.headers.get("origin") ?? "https://musicableapp.com";
 
@@ -45,8 +58,8 @@ serve(async (req) => {
       mode: "subscription",
       payment_method_collection: "always",
       line_items: [{ price: priceId, quantity: 1 }],
+      discounts: [{ coupon: firstMonthCoupon }],
       subscription_data: {
-        trial_period_days: 7,
         metadata: { userId, planType: "teacher" },
       },
       metadata: { userId, planType: "teacher" },

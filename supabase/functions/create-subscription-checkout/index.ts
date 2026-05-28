@@ -6,9 +6,14 @@
  * to /dashboard?checkout=success and the stripe-subscription-webhook records the
  * subscription in our database.
  *
- * Required Supabase secrets (set via `supabase secrets set`):
- *   STRIPE_SECRET_KEY         – sk_live_… or sk_test_…
- *   STRIPE_STUDENT_PRICE_ID   – price_… (monthly recurring price for the student plan)
+ * Stripe products:
+ *   Student monthly  — prod_UbPBeGKGZAMFr1  price_1TcBF2B8UWyR18ZVVnNultKl  $17/mo
+ *   Teacher monthly  — prod_UbPBeoV4GEqB2l  price_1TcBGVB8UWyR18ZVXt2CZABa  $20/mo
+ *
+ * Required Supabase secrets:
+ *   STRIPE_SECRET_KEY          – sk_live_… or sk_test_…
+ *   STRIPE_STUDENT_PRICE_ID    – override for live-mode (optional)
+ *   STRIPE_FIRST_MONTH_COUPON  – coupon ID for $8 first month (default: FIRST_MONTH)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
