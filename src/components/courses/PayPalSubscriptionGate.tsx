@@ -128,8 +128,8 @@ const StripeSubscriptionGate = () => {
                 <p className="text-muted-foreground text-sm">Yes — cancel from the Stripe Customer Portal at any time. You keep access until the end of your billing period.</p>
               </div>
               <div>
-                <h3 className="font-bold mb-2">What happens after the trial?</h3>
-                <p className="text-muted-foreground text-sm">After 7 days your card is charged $17/month from month 2 onwards.</p>
+                <h3 className="font-bold mb-2">What happens after the first month?</h3>
+                <p className="text-muted-foreground text-sm">After your first month at $8, you'll be charged $17/month going forward.</p>
               </div>
               <div>
                 <h3 className="font-bold mb-2">Is my payment secure?</h3>

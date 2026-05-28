@@ -317,7 +317,7 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                   You're All Set!
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-                  Great! We've got a personalized learning path ready for you. Now let's get you started with your 7-day free trial.
+                  Great! We've got a personalized learning path ready for you. Now let's get you started — only $8 for your first month.
                 </p>
               </div>
 
@@ -325,10 +325,10 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
               <div className="bg-card/50 border border-pink/30 rounded-2xl p-8 space-y-6">
                 <div>
                   <h3 className="text-3xl font-black text-pink mb-2">
-                    Your First 7 Days are FREE
+                    Only $8 This Month
                   </h3>
                   <p className="text-foreground font-semibold">
-                    Start your 7-day free trial, then $17/month. Cancel anytime.
+                    $8 now, then $17/month after. Cancel anytime.
                   </p>
                 </div>
 
@@ -368,7 +368,7 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                 </div>
 
                 <div className="text-sm text-muted-foreground border-t border-border/30 pt-4">
-                  Try free for 7 days. If you cancel before your trial ends, you won't be charged.
+                  $8 charged today. Next billing on month 2 at $17/month. Cancel anytime from your account.
                 </div>
               </div>
 

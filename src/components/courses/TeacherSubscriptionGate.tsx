@@ -73,7 +73,7 @@ const TeacherSubscriptionGate = () => {
                 <span className="text-5xl font-black">$20</span>
                 <span className="text-muted-foreground">/mo</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">7-day free trial — cancel anytime</p>
+              <p className="text-xs text-muted-foreground mt-1">$20/month — cancel anytime</p>
             </div>
 
             <Button

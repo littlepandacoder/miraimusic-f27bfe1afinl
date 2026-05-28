@@ -158,7 +158,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
               <div className="space-y-2 pt-1">
                 {[
                   "$8 for your first month — less than a coffee",
-                  "Card required to start (billed after trial)",
+                  "Billed $8 today, then $17/month on day 30",
                   "Access all piano course modules",
                   "Cancel anytime from Stripe Customer Portal",
                 ].map((f) => (
