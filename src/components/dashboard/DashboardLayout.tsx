@@ -66,8 +66,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
     { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true },
-    { href: "/key-sig-quiz.html",    icon: Gamepad2,      label: "Key Sig Quiz",  external: true },
-    { href: "/scale-builder.html",   icon: Gamepad2,      label: "Scale Builder", external: true },
     { href: "/note-quiz.html",       icon: Gamepad2,      label: "Note Quiz",     external: true },
   ];
 
