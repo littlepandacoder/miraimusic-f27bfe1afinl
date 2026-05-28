@@ -86,17 +86,18 @@ serve(async (req) => {
           ? "record_stripe_teacher_subscription"
           : "record_stripe_subscription";
 
+        const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
+        const periodEnd = (sub as any).current_period_end
+          ? new Date((sub as any).current_period_end * 1000).toISOString()
+          : null;
+
         const { error } = await supabase.rpc(rpc, {
           p_user_id:                userId,
           p_stripe_customer_id:     stripeCustId,
           p_stripe_subscription_id: stripeSubId,
-          p_status:                 sub.status,  // 'trialing' | 'active'
-          p_trial_end:              sub.trial_end
-            ? new Date(sub.trial_end * 1000).toISOString()
-            : null,
-          p_current_period_end: new Date(
-            (sub as any).current_period_end * 1000
-          ).toISOString(),
+          p_status:                 sub.status,
+          p_trial_end:              trialEnd,
+          p_current_period_end:     periodEnd,
         });
 
         if (error) console.error(`[stripe-webhook] ${rpc} error:`, error);
