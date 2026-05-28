@@ -45,29 +45,26 @@ serve(async (req) => {
     const existing = await stripe.customers.list({ email, limit: 1 });
     const customerId = existing.data[0]?.id;
 
-    const session = await stripe.checkout.sessions.create({
-      // Customer linkage
+    // Apply $8 first-month coupon if configured in Stripe Dashboard.
+    // Create it at: Stripe Dashboard → Coupons → "FIRST_MONTH" ($9 off, applies once)
+    const firstMonthCoupon = Deno.env.get("STRIPE_FIRST_MONTH_COUPON") ?? "FIRST_MONTH";
+
+    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       ...(customerId ? { customer: customerId } : { customer_email: email }),
-
       mode: "subscription",
-
-      // Always collect card details even during the free trial
       payment_method_collection: "always",
-
       line_items: [{ price: priceId, quantity: 1 }],
-
+      // $8 first month coupon (applied once — after that $17/mo runs normally)
+      discounts: [{ coupon: firstMonthCoupon }],
       subscription_data: {
-        trial_period_days: 7,
-        // Embed userId so the webhook can map Stripe → Supabase
         metadata: { userId, planType: "student" },
       },
-
-      // Passed to checkout.session.completed webhook
       metadata: { userId, planType: "student" },
-
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/signup`,
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

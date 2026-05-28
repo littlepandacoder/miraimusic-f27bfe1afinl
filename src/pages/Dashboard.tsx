@@ -12,6 +12,8 @@ import { DashboardErrorBoundary } from "@/components/DashboardErrorBoundary";
 import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSessionTracking } from "@/hooks/useSessionTracking";
+import OnboardingWizard from "@/components/OnboardingWizard";
+import AICoachWidget from "@/components/AICoachWidget";
 
 const SubscriptionGate = () => {
   const { t } = useTranslation();
@@ -65,6 +67,7 @@ const Dashboard = () => {
   const [checkingSubscription, setCheckingSubscription] = useState(() =>
     user?.id ? readSubCache(user.id) === null : true
   );
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     log("[dashboard] auth state — loading:", loading, "user:", user?.email ?? "null");
@@ -155,10 +158,30 @@ const Dashboard = () => {
     };
   }, [loading, user, roles]);
 
+  // Check if onboarding is needed (students only, after subscription confirmed)
+  useEffect(() => {
+    if (!user || !subscribed || hasRole("admin") || hasRole("teacher")) return;
+    const key = `musicable_onboarded_${user.id}`;
+    if (localStorage.getItem(key)) return; // fast-path: already done
+    (supabase as any)
+      .from("user_onboarding")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        if (!data) setShowOnboarding(true);
+        else localStorage.setItem(key, "1");
+      });
+  }, [user, subscribed, roles]);
+
+  const handleOnboardingComplete = () => {
+    if (user) localStorage.setItem(`musicable_onboarded_${user.id}`, "1");
+    setShowOnboarding(false);
+  };
+
   log("[dashboard] RENDER — loading:", loading, "checkingSubscription:", checkingSubscription, "subscribed:", subscribed, "roles:", roles, "user:", user?.email ?? "null");
 
   if (loading || checkingSubscription) {
-    log("[dashboard] → showing spinner (loading:", loading, "checkingSubscription:", checkingSubscription, ")");
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -166,20 +189,23 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) {
-    log("[dashboard] → returning null (no user)");
-    return null;
-  }
+  if (!user) return null;
 
-  if (!subscribed) {
-    log("[dashboard] → showing SubscriptionGate (not subscribed)");
-    return <SubscriptionGate />;
-  }
+  if (!subscribed) return <SubscriptionGate />;
 
-  log("[dashboard] → rendering dashboard for role:", hasRole("admin") ? "admin" : hasRole("teacher") ? "teacher" : "student");
-  if (hasRole("admin")) return <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>;
-  if (hasRole("teacher")) return <DashboardErrorBoundary><TeacherDashboard /></DashboardErrorBoundary>;
-  return <DashboardErrorBoundary><StudentDashboard /></DashboardErrorBoundary>;
+  const isStudent = !hasRole("admin") && !hasRole("teacher");
+
+  return (
+    <>
+      {showOnboarding && <OnboardingWizard onComplete={handleOnboardingComplete} />}
+      {!showOnboarding && isStudent && <AICoachWidget />}
+      {hasRole("admin")
+        ? <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>
+        : hasRole("teacher")
+          ? <DashboardErrorBoundary><TeacherDashboard /></DashboardErrorBoundary>
+          : <DashboardErrorBoundary><StudentDashboard /></DashboardErrorBoundary>}
+    </>
+  );
 };
 
 export default Dashboard;

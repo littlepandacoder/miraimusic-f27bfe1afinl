@@ -1,7 +1,7 @@
 /**
  * StripeSubscriptionGate
  * Shown when a logged-in user has no active subscription and tries to access /courses.
- * Redirects them to Stripe Checkout to start a 7-day free trial.
+ * Redirects them to Stripe Checkout to start their first month for $8.
  */
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,7 +92,7 @@ const StripeSubscriptionGate = () => {
                   <div className="inline-flex w-16 h-16 rounded-full bg-pink/20 items-center justify-center mb-3">
                     <Lock className="w-8 h-8 text-pink" />
                   </div>
-                  <h3 className="text-2xl font-bold">7-Day Free Trial</h3>
+                  <h3 className="text-2xl font-bold">First Month $8</h3>
                   <p className="text-3xl font-black mt-1">$17<span className="text-base font-normal text-muted-foreground">/month after</span></p>
                   <p className="text-sm text-muted-foreground">Cancel anytime — no long-term commitment</p>
                 </div>
@@ -104,7 +104,7 @@ const StripeSubscriptionGate = () => {
                 >
                   {loading
                     ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Redirecting…</>
-                    : <><CreditCard className="w-4 h-4 mr-2" /> Start Free Trial</>}
+                    : <><CreditCard className="w-4 h-4 mr-2" /> Start for $8</>}
                 </Button>
 
                 {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -129,7 +129,7 @@ const StripeSubscriptionGate = () => {
               </div>
               <div>
                 <h3 className="font-bold mb-2">What happens after the trial?</h3>
-                <p className="text-muted-foreground text-sm">After 7 days your card is charged $17/month automatically. You'll receive an email reminder before the first charge.</p>
+                <p className="text-muted-foreground text-sm">After 7 days your card is charged $17/month from month 2 onwards.</p>
               </div>
               <div>
                 <h3 className="font-bold mb-2">Is my payment secure?</h3>

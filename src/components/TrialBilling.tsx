@@ -77,7 +77,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
         return;
       }
 
-      // 2 ── Create Stripe Checkout Session (7-day trial, card required)
+      // 2 ── Create Stripe Checkout Session 
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
         { body: { userId, email } }
@@ -118,7 +118,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
             <div>
               <h1 className="text-3xl font-bold">Create Your Account</h1>
               <p className="text-muted-foreground mt-1">
-                Set your password, then start your free trial.
+                Set your password, then start your first month for $8.
               </p>
             </div>
 
@@ -157,7 +157,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
               <div className="space-y-2 pt-1">
                 {[
-                  "7-day free trial — no charge today",
+                  "$8 for your first month — less than a coffee",
                   "Card required to start (billed after trial)",
                   "Access all piano course modules",
                   "Cancel anytime from Stripe Customer Portal",
@@ -174,9 +174,9 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
           {/* Right — pricing + CTA */}
           <Card className="p-6 flex flex-col justify-center gap-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-1">7-Day Free Trial</h2>
+              <h2 className="text-2xl font-bold mb-1">Start for $8</h2>
               <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
-              <p className="text-sm text-muted-foreground mt-1">After your free trial — cancel anytime</p>
+              <p className="text-sm text-muted-foreground mt-1">Then $17/month — cancel anytime</p>
             </div>
 
             <Button
@@ -187,7 +187,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
               {loading ? (
                 <><Loader2 size={18} className="animate-spin mr-2" /> Setting up…</>
               ) : (
-                <><CreditCard size={18} className="mr-2" /> Start Free Trial</>
+                <><CreditCard size={18} className="mr-2" /> Start for $8</>
               )}
             </Button>
 
@@ -198,7 +198,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
             <p className="text-xs text-center text-muted-foreground">
               You will be redirected to Stripe's secure checkout to enter your card details.
-              Nothing is charged during the 7-day trial.
+              Your card is charged $8 today, then $17/month after that.
             </p>
           </Card>
         </div>
