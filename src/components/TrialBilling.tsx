@@ -1,16 +1,9 @@
 import { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Loader2, CreditCard, ShieldCheck, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, Loader2, CreditCard, ShieldCheck } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
-import { StripePaymentModal } from "@/components/StripePaymentModal";
-
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_51TcBBxB8UWyR18ZVpHjMePTDXUev5pD3i6GGDyktMziNtysUlIzrT1ZmTmd21zR1wAC9MUSkZdZPf2zfc9Gaqxpa00x8ZXAJbq"
-);
 
 interface TrialBillingProps {
   email: string;
@@ -24,8 +17,6 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const handleStartTrial = async () => {
     setError("");
@@ -43,7 +34,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
     try {
       // 1 ── Create or sign in to Supabase account
-      let newUserId: string | undefined;
+      let userId: string | undefined;
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -55,7 +46,6 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
           signUpError.message.includes("already registered") ||
           signUpError.message.includes("already exists")
         ) {
-          // Account exists — try signing in with the supplied password
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -65,37 +55,47 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
             setLoading(false);
             return;
           }
-          newUserId = signInData.user?.id;
+          userId = signInData.user?.id;
         } else {
           setError(signUpError.message);
           setLoading(false);
           return;
         }
       } else {
-        newUserId = signUpData.user?.id;
+        userId = signUpData.user?.id;
       }
 
-      // Fallback: get from active session
-      if (!newUserId) {
-        newUserId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        userId = (await supabase.auth.getUser()).data.user?.id;
       }
 
-      if (!newUserId) {
+      if (!userId) {
         setError("Could not create account. Please try again.");
         setLoading(false);
         return;
       }
 
-      // 2 ── Save pending state to Firestore
+      // 2 ── Create Stripe Checkout Session and redirect
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "create-subscription-checkout",
+        { body: { userId, email } }
+      );
+
+      if (fnError || !data?.url) {
+        setError("Could not start checkout. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // 3 ── Save pending state to Firestore (non-blocking)
       try {
         await saveSubscriptionInfo(docId, "stripe_pending", "trial");
       } catch {
         // Non-fatal
       }
 
-      // 3 ── Show payment modal
-      setUserId(newUserId);
-      setShowPaymentModal(true);
+      // 4 ── Redirect to Stripe Checkout
+      window.location.href = data.url;
     } catch (err: any) {
       console.error("[TrialBilling]", err);
       setError(err?.message ?? "Something went wrong. Please try again.");
@@ -104,8 +104,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
   };
 
   return (
-    <Elements stripe={stripePromise}>
-      <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <Button variant="ghost" onClick={() => window.history.back()} className="gap-2">
           <ArrowLeft size={20} /> Back
@@ -196,26 +195,13 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
             </div>
 
             <p className="text-xs text-center text-muted-foreground">
+              You'll be redirected to Stripe's secure checkout to enter your card details.
               Your card is charged $8 today, then $17/month after that.
-              Cancel anytime from your account settings.
             </p>
           </Card>
         </div>
       </div>
-
-      {userId && (
-        <StripePaymentModal
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-          userId={userId}
-          email={email}
-          onSuccess={() => {
-            window.location.href = "/dashboard?checkout=success";
-          }}
-        />
-      )}
     </div>
-    </Elements>
   );
 };
 
