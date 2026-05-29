@@ -33,7 +33,10 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
     setLoading(true);
 
     try {
-      // 1 ── Create or sign in to Supabase account
+      // 1 ── Clear any stale/expired session to avoid refresh token errors
+      await supabase.auth.signOut({ scope: "local" });
+
+      // 2 ── Create or sign in to Supabase account
       let userId: string | undefined;
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
