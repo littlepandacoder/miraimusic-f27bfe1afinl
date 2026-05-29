@@ -14,7 +14,7 @@ import { StripePaymentModal } from "@/components/StripePaymentModal";
 import { Lock, Music, Users, Zap, CreditCard, ShieldCheck } from "lucide-react";
 
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_51TcBBxB8UWyR18ZVpHjMePTDXUev5pD3i6GGDyktMziNtysUlIzrT1ZmTmd21zR1wAC9MUSkZdZPf2zfc9Gaqxpa00x8ZXAJbq"
 );
 
 const StripeSubscriptionGate = () => {

@@ -3,13 +3,13 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Loader2, CreditCard, ShieldCheck } from "lucide-react";
+import { Check, Loader2, CreditCard, ShieldCheck, ArrowLeft } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
 import { StripePaymentModal } from "@/components/StripePaymentModal";
 
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_51TcBBxB8UWyR18ZVpHjMePTDXUev5pD3i6GGDyktMziNtysUlIzrT1ZmTmd21zR1wAC9MUSkZdZPf2zfc9Gaqxpa00x8ZXAJbq"
 );
 
 interface TrialBillingProps {
