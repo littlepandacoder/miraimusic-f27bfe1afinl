@@ -225,7 +225,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
           // lesson_progress has no last_watched_at column — omit it
           (supabase as any).from('lesson_progress').upsert(
             [{ lesson_id: lesson.id, student_id: user.id, completed: false, watched_seconds: 0 }],
-            { onConflict: 'lesson_id,student_id', ignoreDuplicates: true }
+            { onConflict: 'lesson_id,student_id', ignoreDuplicates: true, returning: 'minimal' }
           ),
         ]);
 
@@ -406,7 +406,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
           // lesson_progress has no last_watched_at — omit it
           (supabase as any).from('lesson_progress').upsert(
             [{ lesson_id: lesson.id, student_id: user.id, completed: true, watched_seconds: (lesson.videos?.[selectedVideoIndex]?.duration || 0) }],
-            { onConflict: 'lesson_id,student_id' }
+            { onConflict: 'lesson_id,student_id', returning: 'minimal' }
           ),
         ]);
         if (r1.error) console.error('student_lesson_progress upsert failed:', r1.error.message);

@@ -42,16 +42,26 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
       });
 
       if (signUpError) {
-        if (
-          signUpError.message.includes("already registered") ||
-          signUpError.message.includes("already exists")
-        ) {
+        const msg = signUpError.message.toLowerCase();
+        const shouldTrySignIn =
+          msg.includes("already registered") ||
+          msg.includes("already exists") ||
+          msg.includes("rate limit") ||
+          msg.includes("too many") ||
+          signUpError.status === 429;
+
+        if (shouldTrySignIn) {
+          // Account exists or rate limited — try signing in
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
           if (signInError) {
-            setError("An account already exists for this email. Please log in at /login.");
+            if (msg.includes("rate limit") || signUpError.status === 429) {
+              setError("Too many attempts. Please wait a minute and try again.");
+            } else {
+              setError("An account already exists for this email. Please log in at /login.");
+            }
             setLoading(false);
             return;
           }
