@@ -4,42 +4,31 @@
  * Redirects them to Stripe Checkout to start their first month for $8.
  */
 import { useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, Music, Users, Zap, Loader2, CreditCard, ShieldCheck } from "lucide-react";
+import { StripePaymentModal } from "@/components/StripePaymentModal";
+import { Lock, Music, Users, Zap, CreditCard, ShieldCheck } from "lucide-react";
+
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+);
 
 const StripeSubscriptionGate = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const handleSubscribe = async () => {
-    if (!user) return;
-    setLoading(true);
-    setError("");
-
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "create-subscription-checkout",
-        { body: { userId: user.id, email: user.email } }
-      );
-
-      if (fnError || !data?.url) {
-        throw new Error(fnError?.message ?? "Failed to start checkout");
-      }
-
-      window.location.href = data.url;
-    } catch (err: any) {
-      console.error("[StripeSubscriptionGate]", err);
-      setError(err.message ?? "Something went wrong. Please try again.");
-      setLoading(false);
-    }
+  const handlePaymentSuccess = () => {
+    // Redirect to dashboard after successful payment
+    window.location.href = "/dashboard?checkout=success";
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <Elements stripe={stripePromise}>
+      <div className="min-h-screen bg-background">
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/30">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -98,16 +87,11 @@ const StripeSubscriptionGate = () => {
                 </div>
 
                 <Button
-                  onClick={handleSubscribe}
-                  disabled={loading}
+                  onClick={() => setShowPaymentModal(true)}
                   className="w-full h-12 text-base font-bold bg-pink hover:bg-pink/90 text-white border-0"
                 >
-                  {loading
-                    ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Redirecting…</>
-                    : <><CreditCard className="w-4 h-4 mr-2" /> Start for $8</>}
+                  <CreditCard className="w-4 h-4 mr-2" /> Start for $8
                 </Button>
-
-                {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
                 <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                   <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
@@ -143,7 +127,18 @@ const StripeSubscriptionGate = () => {
           </div>
         </section>
       </main>
+
+      {user && (
+        <StripePaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          userId={user.id}
+          email={user.email || ""}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
+    </Elements>
   );
 };
 
