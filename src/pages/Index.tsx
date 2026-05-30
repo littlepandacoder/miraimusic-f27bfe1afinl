@@ -47,9 +47,9 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
+        <TestimonialsSection />
         <FeaturesSection />
         <WhyPerfectSection />
-        <TestimonialsSection />
         <AssessmentSection />
       </main>
       <Footer />
