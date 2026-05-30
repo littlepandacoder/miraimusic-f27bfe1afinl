@@ -7,6 +7,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import WhyPerfectSection from "@/components/WhyPerfectSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import AssessmentSection from "@/components/AssessmentSection";
+import MarqueeBanner from "@/components/MarqueeBanner";
 import Footer from "@/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -47,8 +48,10 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
-        <TestimonialsSection />
+        <MarqueeBanner />
         <FeaturesSection />
+        <TestimonialsSection />
+        <MarqueeBanner variant="compact" />
         <WhyPerfectSection />
         <AssessmentSection />
       </main>

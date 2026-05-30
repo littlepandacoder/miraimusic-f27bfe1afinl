@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 const COLORS = [
   "#ff69b4", "#ffd700", "#ff1493", "#c084fc",
@@ -6,8 +7,24 @@ const COLORS = [
 ];
 const SHAPES = ["✦", "✧", "⋆", "✺", "✩", "★", "·", "✶"];
 
+// Trail configuration — each index is one dot behind the cursor
+const TRAIL_COUNT = 14;
+const TRAIL_COLORS = [
+  "#ec4899", "#d946ef", "#a855f7", "#8b5cf6",
+  "#6366f1", "#818cf8", "#22d3ee", "#60a5fa",
+  "#818cf8", "#6366f1", "#8b5cf6", "#a855f7",
+  "#d946ef", "#ec4899",
+];
+const TRAIL_SIZES = Array.from({ length: TRAIL_COUNT }, (_, i) =>
+  Math.max(Math.round(10 - (i / (TRAIL_COUNT - 1)) * 8), 2)
+);
+const TRAIL_OPACITIES = Array.from({ length: TRAIL_COUNT }, (_, i) =>
+  +(0.85 - (i / (TRAIL_COUNT - 1)) * 0.8).toFixed(2)
+);
+
 const MusicCursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
+  const trailRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pos = useRef({ x: -100, y: -100 });
   const last = useRef({ x: -100, y: -100 });
   const raf = useRef<number>();
@@ -16,12 +33,23 @@ const MusicCursor = () => {
     const cursor = cursorRef.current;
     if (!cursor) return;
 
-    // Smooth cursor follow via rAF
+    // Main cursor — smooth rAF follow
     const tick = () => {
       cursor.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px)`;
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
+
+    // GSAP quickTo for trail dots — each has more lag than the previous
+    const dots = trailRefs.current.filter(Boolean) as HTMLDivElement[];
+    dots.forEach((dot) => gsap.set(dot, { x: -300, y: -300 }));
+
+    const quickXArr = dots.map((dot, i) =>
+      gsap.quickTo(dot, "x", { duration: 0.25 + i * 0.04, ease: "power3" })
+    );
+    const quickYArr = dots.map((dot, i) =>
+      gsap.quickTo(dot, "y", { duration: 0.25 + i * 0.04, ease: "power3" })
+    );
 
     const spawnSparkle = (x: number, y: number) => {
       const el = document.createElement("span");
@@ -40,7 +68,7 @@ const MusicCursor = () => {
         left: "0",
         top: "0",
         pointerEvents: "none",
-        zIndex: "9997",
+        zIndex: "9996",
         fontSize: `${size}px`,
         color,
         textShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
@@ -66,6 +94,11 @@ const MusicCursor = () => {
     const onMove = (e: MouseEvent) => {
       pos.current = { x: e.clientX, y: e.clientY };
 
+      // Feed cursor position into each trail dot (offset by half its size to center it)
+      quickXArr.forEach((qx, i) => qx(e.clientX - TRAIL_SIZES[i] / 2));
+      quickYArr.forEach((qy, i) => qy(e.clientY - TRAIL_SIZES[i] / 2));
+
+      // Sparkle burst on movement
       const dx = e.clientX - last.current.x;
       const dy = e.clientY - last.current.y;
       if (Math.hypot(dx, dy) > 7) {
@@ -83,25 +116,51 @@ const MusicCursor = () => {
   }, []);
 
   return (
-    <div
-      ref={cursorRef}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        pointerEvents: "none",
-        zIndex: 9999,
-        fontSize: "28px",
-        lineHeight: 1,
-        userSelect: "none",
-        filter: "drop-shadow(0 0 6px #ff69b4) drop-shadow(0 0 12px #c084fc)",
-        marginLeft: "-4px",
-        marginTop: "-28px",
-      }}
-      aria-hidden="true"
-    >
-      ♪
-    </div>
+    <>
+      {/* GSAP-powered glowing cursor trail */}
+      {Array.from({ length: TRAIL_COUNT }).map((_, i) => (
+        <div
+          key={i}
+          ref={(el) => { trailRefs.current[i] = el; }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: TRAIL_SIZES[i],
+            height: TRAIL_SIZES[i],
+            borderRadius: "50%",
+            background: TRAIL_COLORS[i],
+            opacity: TRAIL_OPACITIES[i],
+            pointerEvents: "none",
+            zIndex: 9998,
+            boxShadow: `0 0 ${TRAIL_SIZES[i] * 2}px ${TRAIL_COLORS[i]}`,
+            willChange: "transform",
+          }}
+          aria-hidden="true"
+        />
+      ))}
+
+      {/* Main ♪ cursor */}
+      <div
+        ref={cursorRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          pointerEvents: "none",
+          zIndex: 9999,
+          fontSize: "28px",
+          lineHeight: 1,
+          userSelect: "none",
+          filter: "drop-shadow(0 0 6px #ff69b4) drop-shadow(0 0 12px #c084fc)",
+          marginLeft: "-4px",
+          marginTop: "-28px",
+        }}
+        aria-hidden="true"
+      >
+        ♪
+      </div>
+    </>
   );
 };
 

@@ -59,7 +59,7 @@ const Navbar = () => {
             <LogIn className="w-4 h-4" /> {t("nav.login")}
           </Link>
 
-          <Link to="/signup" className="btn-primary text-sm px-6 py-3">{t("nav.start")}</Link>
+          <Link to="/signup" className="btn-primary animate-pulse-glow text-sm px-6 py-3">{t("nav.start")}</Link>
 
           <LangSwitcher />
         </div>
@@ -92,7 +92,7 @@ const Navbar = () => {
               <LogIn className="w-4 h-4" /> {t("nav.login")}
             </Link>
 
-            <Link to="/signup" className="btn-primary text-sm text-center" onClick={() => setIsOpen(false)}>
+            <Link to="/signup" className="btn-primary animate-pulse-glow text-sm text-center" onClick={() => setIsOpen(false)}>
               {t("nav.start")}
             </Link>
           </div>

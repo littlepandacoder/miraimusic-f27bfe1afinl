@@ -1,4 +1,9 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const sightReadingBullets = [
   { bold: "STRUGGLE", rest: " TO READ NOTES?" },
@@ -56,7 +61,91 @@ const RobotIcon = () => (
 );
 
 const WhyPerfectSection = () => {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const iconRef1  = useRef<HTMLDivElement>(null);
+  const iconRef2  = useRef<HTMLDivElement>(null);
+  const titleRef  = useRef<HTMLHeadingElement>(null);
+  const badgeRef  = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const icons = [iconRef1.current, iconRef2.current];
+    const floatTweens: gsap.core.Tween[] = [];
+    const sts: ScrollTrigger[] = [];
+
+    // ── Title slides in from left ───────────────────────────────────
+    if (titleRef.current) {
+      gsap.fromTo(
+        titleRef.current,
+        { x: -50, opacity: 0 },
+        {
+          x: 0, opacity: 1, duration: 0.7, ease: "power3.out",
+          scrollTrigger: { trigger: titleRef.current, start: "top 85%", once: true },
+        }
+      );
+    }
+
+    // ── "PERFECT FOR YOU" badge springs in then glows continuously ──
+    if (badgeRef.current) {
+      const badge = badgeRef.current;
+      gsap.fromTo(
+        badge,
+        { scale: 0.4, opacity: 0, y: 20 },
+        {
+          scale: 1, opacity: 1, y: 0, duration: 0.85, ease: "back.out(2.2)", delay: 0.3,
+          scrollTrigger: { trigger: titleRef.current, start: "top 85%", once: true },
+          onComplete: () => {
+            // Persistent glow pulse after reveal
+            gsap.to(badge, {
+              boxShadow: "0 0 32px hsl(330 85% 55% / 0.85), 0 0 64px hsl(330 85% 55% / 0.4)",
+              scale: 1.04,
+              duration: 1.6,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+            });
+          },
+        }
+      );
+    }
+
+    // ── Icon bounce-in + float ──────────────────────────────────────
+    icons.forEach((el, i) => {
+      if (!el) return;
+      gsap.set(el, { scale: 0, opacity: 0, rotation: i === 0 ? -18 : 18 });
+
+      const st = ScrollTrigger.create({
+        trigger: el,
+        start: "top 82%",
+        once: true,
+        onEnter: () => {
+          gsap.to(el, {
+            scale: 1,
+            opacity: 1,
+            rotation: 0,
+            duration: 0.75,
+            ease: "back.out(1.7)",
+            onComplete: () => {
+              const t = gsap.to(el, {
+                y: -12,
+                duration: 2.4 + i * 0.6,
+                ease: "sine.inOut",
+                repeat: -1,
+                yoyo: true,
+              });
+              floatTweens.push(t);
+            },
+          });
+        },
+      });
+      sts.push(st);
+    });
+
+    return () => {
+      floatTweens.forEach((t) => t.kill());
+      sts.forEach((st) => st.kill());
+      if (badgeRef.current) gsap.killTweensOf(badgeRef.current);
+    };
+  }, []);
 
   return (
     <section
@@ -66,11 +155,15 @@ const WhyPerfectSection = () => {
       <div className="container mx-auto px-4 sm:px-6 max-w-5xl">
 
         {/* Title */}
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase mb-12 sm:mb-16 text-foreground">
+        <h2
+          ref={titleRef}
+          className="text-2xl sm:text-3xl md:text-4xl font-black uppercase mb-12 sm:mb-16 text-foreground"
+        >
           WHY IT'S{" "}
           <span
-            className="px-2 sm:px-3 py-1 rounded text-white"
-            style={{ background: "hsl(var(--pink))" }}
+            ref={badgeRef}
+            className="inline-block px-2 sm:px-3 py-1 rounded text-white"
+            style={{ background: "hsl(var(--pink))", display: "inline-block" }}
           >
             PERFECT FOR YOU
           </span>
@@ -78,7 +171,7 @@ const WhyPerfectSection = () => {
 
         {/* Row 1 — Sight Reading */}
         <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-12 sm:mb-16">
-          <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 shrink-0">
+          <div ref={iconRef1} className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 shrink-0">
             <ClipboardIcon />
           </div>
 
@@ -101,7 +194,7 @@ const WhyPerfectSection = () => {
 
         {/* Row 2 — Gamified */}
         <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-16 sm:mb-20">
-          <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 shrink-0">
+          <div ref={iconRef2} className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 shrink-0">
             <RobotIcon />
           </div>
 
@@ -129,7 +222,7 @@ const WhyPerfectSection = () => {
           </p>
           <button
             onClick={() => navigate("/signup")}
-            className="px-8 py-4 rounded-full font-black uppercase tracking-widest text-white bg-pink hover:opacity-90 transition-all hover:scale-105 active:scale-95 text-base sm:text-lg shrink-0 shadow-[0_4px_24px_hsl(var(--pink)/0.4)]"
+            className="px-8 py-4 rounded-full font-black uppercase tracking-widest text-white bg-pink transition-all hover:scale-105 active:scale-95 text-base sm:text-lg shrink-0 animate-pulse-glow"
           >
             START FOR FREE
           </button>
