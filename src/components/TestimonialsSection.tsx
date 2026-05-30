@@ -1,5 +1,10 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGsapReveal } from "@/hooks/useGsapReveal";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const testimonials = [
   {
@@ -55,19 +60,53 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const cardsWrapRef = useRef<HTMLDivElement>(null);
+
+  // Heading slides up on scroll
+  const headingRef = useGsapReveal<HTMLDivElement>({ y: 30, duration: 0.7 });
+
+  // Cards stagger in when the track enters the viewport
+  useEffect(() => {
+    const container = cardsWrapRef.current;
+    if (!container) return;
+
+    const cards = Array.from(container.children) as HTMLElement[];
+    gsap.set(cards, { opacity: 0, y: 50 });
+
+    const tween = gsap.to(cards, {
+      opacity: 1,
+      y: 0,
+      duration: 0.55,
+      ease: "power2.out",
+      stagger: 0.07,
+      scrollTrigger: {
+        trigger: container,
+        start: "top 85%",
+        once: true,
+      },
+    });
+
+    return () => {
+      tween.kill();
+      ScrollTrigger.getAll().forEach((t) => {
+        if (t.vars.trigger === container) t.kill();
+      });
+    };
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    const cardWidth = el.querySelector("div")?.offsetWidth ?? 320;
-    el.scrollBy({ left: direction === "left" ? -cardWidth - 16 : cardWidth + 16, behavior: "smooth" });
+    const cardWidth = (el.querySelector("[data-card]") as HTMLElement)?.offsetWidth ?? 320;
+    el.scrollBy({ left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16, behavior: "smooth" });
   };
 
   return (
     <section className="py-20 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
+
         {/* Header */}
-        <div className="flex items-end justify-between mb-10 gap-4">
+        <div ref={headingRef} className="flex items-end justify-between mb-10 gap-4">
           <div>
             <p className="text-pink text-xs font-bold uppercase tracking-widest mb-2">Testimonials</p>
             <h2 className="text-4xl sm:text-5xl font-black text-foreground tracking-tighter leading-tight">
@@ -75,19 +114,20 @@ const TestimonialsSection = () => {
               <span className="text-pink">PARENTS SAY</span>
             </h2>
           </div>
+
           {/* Arrow buttons */}
           <div className="flex gap-2 shrink-0 mb-1">
             <button
               onClick={() => scroll("left")}
               aria-label="Scroll left"
-              className="w-11 h-11 rounded-full border border-border/40 bg-card/60 flex items-center justify-center text-foreground hover:bg-pink hover:border-pink hover:text-white transition-all"
+              className="w-11 h-11 rounded-full border border-border/40 bg-card/60 flex items-center justify-center text-foreground hover:bg-pink hover:border-pink hover:text-white transition-all duration-200"
             >
               <ChevronLeft size={20} />
             </button>
             <button
               onClick={() => scroll("right")}
               aria-label="Scroll right"
-              className="w-11 h-11 rounded-full border border-border/40 bg-card/60 flex items-center justify-center text-foreground hover:bg-pink hover:border-pink hover:text-white transition-all"
+              className="w-11 h-11 rounded-full border border-border/40 bg-card/60 flex items-center justify-center text-foreground hover:bg-pink hover:border-pink hover:text-white transition-all duration-200"
             >
               <ChevronRight size={20} />
             </button>
@@ -97,42 +137,44 @@ const TestimonialsSection = () => {
         {/* Scrollable track */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory"
+          className="overflow-x-auto scroll-smooth pb-4 snap-x snap-mandatory"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {testimonials.map((t, i) => (
-            <div
-              key={i}
-              className="snap-start shrink-0 w-[300px] sm:w-[340px] bg-card/50 border border-border/30 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-sm"
-            >
-              {/* Stars */}
-              <div className="flex gap-0.5">
-                {Array.from({ length: t.stars }).map((_, s) => (
-                  <Star key={s} size={14} className="fill-pink text-pink" />
-                ))}
-              </div>
+          {/* Inner flex row — GSAP targets the children of this div */}
+          <div ref={cardsWrapRef} className="flex gap-4 w-max">
+            {testimonials.map((t, i) => (
+              <div
+                key={i}
+                data-card
+                className="snap-start w-[300px] sm:w-[340px] bg-card/50 border border-border/30 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-sm"
+              >
+                {/* Stars */}
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.stars }).map((_, s) => (
+                    <Star key={s} size={14} className="fill-pink text-pink" />
+                  ))}
+                </div>
 
-              {/* Quote */}
-              <p className="text-foreground/85 text-sm leading-relaxed flex-1">
-                <span className="text-pink text-2xl font-black leading-none mr-1">"</span>
-                {t.quote}
-                <span className="text-pink text-2xl font-black leading-none ml-1">"</span>
-              </p>
+                {/* Quote */}
+                <p className="text-foreground/85 text-sm leading-relaxed flex-1">
+                  <span className="text-pink text-2xl font-black leading-none mr-1">"</span>
+                  {t.quote}
+                  <span className="text-pink text-2xl font-black leading-none ml-1">"</span>
+                </p>
 
-              {/* Author */}
-              <div className="border-t border-border/20 pt-4">
-                <p className="font-bold text-foreground text-sm">{t.name}</p>
-                <p className="text-muted-foreground text-xs mt-0.5">{t.child}</p>
+                {/* Author */}
+                <div className="border-t border-border/20 pt-4">
+                  <p className="font-bold text-foreground text-sm">{t.name}</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">{t.child}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Fade edges hint */}
-        <style>{`
-          div::-webkit-scrollbar { display: none; }
-        `}</style>
       </div>
+
+      <style>{`div::-webkit-scrollbar { display: none; }`}</style>
     </section>
   );
 };
