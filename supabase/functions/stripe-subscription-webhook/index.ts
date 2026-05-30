@@ -112,7 +112,7 @@ function welcomeHtml(email: string): string {
           <!-- CTA -->
           <tr>
             <td style="text-align:center;">
-              <a href="https://pay.musicable.app/dashboard"
+              <a href="https://musicable.app/dashboard"
                  style="display:inline-block;background:#ec4899;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:700;font-size:16px;letter-spacing:0.3px;">
                 Go to My Dashboard →
               </a>
