@@ -18,7 +18,7 @@ const Privacy = () => {
               Musicable ("we", "us", "our") is committed to protecting your personal information. This Privacy
               Policy explains what data we collect, how we use it, and your rights regarding it. By using our
               Platform you agree to this policy. For questions, contact us at{" "}
-              <a href="mailto:musicableapp@proton.me" className="text-primary hover:underline">musicableapp@proton.me</a>.
+              <a href="mailto:hello@musicable.app" className="text-primary hover:underline">hello@musicable.app</a>.
             </p>
           </section>
 
@@ -140,7 +140,7 @@ const Privacy = () => {
             </ul>
             <p className="text-muted-foreground mt-3">
               To exercise any of these rights, email{" "}
-              <a href="mailto:musicableapp@proton.me" className="text-primary hover:underline">musicableapp@proton.me</a>.
+              <a href="mailto:hello@musicable.app" className="text-primary hover:underline">hello@musicable.app</a>.
               We will respond within 30 days.
             </p>
           </section>
@@ -167,7 +167,7 @@ const Privacy = () => {
             <h2 className="text-xl font-bold text-foreground mb-3">12. Contact Us</h2>
             <p className="text-muted-foreground">
               For any privacy-related questions or requests:{" "}
-              <a href="mailto:musicableapp@proton.me" className="text-primary hover:underline">musicableapp@proton.me</a>
+              <a href="mailto:hello@musicable.app" className="text-primary hover:underline">hello@musicable.app</a>
               <br />
               Phone: <a href="tel:+971562102658" className="text-primary hover:underline">+971 56 210 2658</a>
               <br />

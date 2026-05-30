@@ -106,7 +106,7 @@ const Terms = () => {
             <p className="text-muted-foreground">
               We may suspend or terminate your access at any time for violation of these terms, non-payment,
               or at our discretion with reasonable notice. You may delete your account by contacting us at{" "}
-              <a href="mailto:musicableapp@proton.me" className="text-primary hover:underline">musicableapp@proton.me</a>.
+              <a href="mailto:hello@musicable.app" className="text-primary hover:underline">hello@musicable.app</a>.
             </p>
           </section>
 
@@ -130,7 +130,7 @@ const Terms = () => {
             <h2 className="text-xl font-bold text-foreground mb-3">13. Contact</h2>
             <p className="text-muted-foreground">
               Questions about these terms? Reach us at{" "}
-              <a href="mailto:musicableapp@proton.me" className="text-primary hover:underline">musicableapp@proton.me</a>{" "}
+              <a href="mailto:hello@musicable.app" className="text-primary hover:underline">hello@musicable.app</a>{" "}
               or call <a href="tel:+971562102658" className="text-primary hover:underline">+971 56 210 2658</a>.
             </p>
           </section>
