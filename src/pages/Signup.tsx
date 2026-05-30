@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { EmailCollection } from "@/components/EmailCollection";
 import Onboarding from "@/components/Onboarding";
 import TrialBilling from "@/components/TrialBilling";
+import { saveEmail } from "@/lib/signupService";
 import { Loader2, AlertCircle } from "lucide-react";
 interface OnboardingData {
   email: string;
@@ -23,6 +24,24 @@ const Signup = () => {
     if (sessionStorage.getItem("sub_needed") === "1") {
       setSubNeeded(true);
       sessionStorage.removeItem("sub_needed");
+    }
+
+    const oauthEmail = sessionStorage.getItem("oauth_email");
+    if (oauthEmail) {
+      sessionStorage.removeItem("oauth_email");
+      setEmail(oauthEmail);
+      setIsLoading(true);
+      (async () => {
+        try {
+          const docId = await saveEmail(oauthEmail);
+          setDocId(docId);
+          setStage("onboarding");
+        } catch (err) {
+          console.error("Failed to save OAuth email:", err);
+        } finally {
+          setIsLoading(false);
+        }
+      })();
     }
   }, []);
   const [email, setEmail] = useState("");

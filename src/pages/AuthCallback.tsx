@@ -72,7 +72,10 @@ const AuthCallback = () => {
       }
 
       const destination = hasSub ? "/dashboard" : "/signup";
-      if (!hasSub) sessionStorage.setItem("sub_needed", "1");
+      if (!hasSub) {
+        sessionStorage.setItem("sub_needed", "1");
+        if (user.email) sessionStorage.setItem("oauth_email", user.email);
+      }
 
       destRef.current = destination;
       setWelcome({ name: firstName, isNew, destination });
