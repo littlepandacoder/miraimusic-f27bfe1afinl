@@ -10,6 +10,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import AssessmentSection from "@/components/AssessmentSection";
 import MarqueeBanner from "@/components/MarqueeBanner";
 import StudentsSection from "@/components/StudentsSection";
+import QuizBot from "@/components/QuizBot";
 import Footer from "@/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -61,6 +62,7 @@ const Index = () => {
         <AssessmentSection />
       </main>
       <Footer />
+      <QuizBot />
     </div>
   );
 };
