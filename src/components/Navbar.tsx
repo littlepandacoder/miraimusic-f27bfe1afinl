@@ -167,7 +167,8 @@ const Navbar = () => {
         {/* Mobile Navigation — always rendered, GSAP controls visibility */}
         <div
           ref={menuRef}
-          className="md:hidden mt-4 pb-4 flex flex-col gap-3 overflow-hidden"
+          className="md:hidden mt-4 pb-4 flex flex-col gap-3"
+          style={{ overflow: "clip" }}
         >
           {isHomePage && navLinks.map((link) => (
             <a
@@ -202,7 +203,7 @@ const Navbar = () => {
           <Link
             to="/signup"
             data-item
-            className="btn-primary animate-pulse-glow text-sm text-center mt-1"
+            className="btn-primary text-sm text-center mt-1"
             onClick={close}
           >
             {t("nav.start")}
