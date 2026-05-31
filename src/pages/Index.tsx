@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -13,6 +14,8 @@ import Footer from "@/components/Footer";
 gsap.registerPlugin(ScrollTrigger);
 
 const Index = () => {
+  useSmoothScroll(); // landing page only — keeps dashboard scroll unaffected
+
   useEffect(() => {
     // Reveal section headings and feature cards as they enter the viewport
     const headings = gsap.utils.toArray<HTMLElement>(".section-title");
