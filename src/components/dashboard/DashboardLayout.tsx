@@ -93,6 +93,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
         { href: "/dashboard/districts",  icon: Settings,      label: "Assignments" },
+        { href: "/dashboard/affiliates", icon: Users,         label: "Affiliates" },
         ...gameItems,
       ];
     }
