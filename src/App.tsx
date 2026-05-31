@@ -23,13 +23,20 @@ import Privacy from "./pages/Privacy";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
 import MusicCursor from "./components/MusicCursor";
 import NotFound from "./pages/NotFound";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 
 const queryClient = new QueryClient();
+
+const AppInner = () => {
+  useSmoothScroll();
+  return null;
+};
 
 const App = () => (
   <>
     {!Capacitor.isNativePlatform() && <MusicCursor />}
   <QueryClientProvider client={queryClient}>
+    <AppInner />
     <AuthProvider>
       <TooltipProvider>
         <Toaster />

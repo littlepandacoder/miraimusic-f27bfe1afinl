@@ -10,10 +10,12 @@ const SMARTER_COLORS = ["#ec4899", "#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "
 
 const HeroSection = () => {
   const { t } = useTranslation();
-  const btnRef       = useRef<HTMLAnchorElement>(null);
-  const zoneRef      = useRef<HTMLDivElement>(null);
-  const glowTl       = useRef<gsap.core.Timeline | null>(null);
-  const smarterRefs  = useRef<(HTMLSpanElement | null)[]>([]);
+  const btnRef        = useRef<HTMLAnchorElement>(null);
+  const zoneRef       = useRef<HTMLDivElement>(null);
+  const glowTl        = useRef<gsap.core.Timeline | null>(null);
+  const smarterRefs   = useRef<(HTMLSpanElement | null)[]>([]);
+  const guarRefs      = useRef<(HTMLSpanElement | null)[]>([]);   // "100% GUARANTEED"
+  const examRefs      = useRef<(HTMLSpanElement | null)[]>([]);   // each word of exam line
 
   useEffect(() => {
     const btn  = btnRef.current;
@@ -103,12 +105,50 @@ const HeroSection = () => {
     zone.addEventListener("mouseenter", onEnter);
     zone.addEventListener("mouseleave", onLeave);
 
+    // ── "100% GUARANTEED" — blur-in per letter + repeating shimmer ──
+    const guarLetters = guarRefs.current.filter(Boolean) as HTMLSpanElement[];
+    if (guarLetters.length) {
+      gsap.set(guarLetters, { opacity: 0, filter: "blur(10px)", y: 6 });
+      gsap.to(guarLetters, {
+        opacity: 1, filter: "blur(0px)", y: 0,
+        duration: 0.38, ease: "power2.out",
+        stagger: 0.04, delay: 1.3,
+        onComplete: () => {
+          // Shimmer sweep: brightness flash travels left → right every 3.5s
+          gsap.to(guarLetters, {
+            color: "#ff9fd4",
+            textShadow: "0 0 16px #ec4899, 0 0 32px #ec489988",
+            duration: 0.18,
+            ease: "power1.out",
+            stagger: 0.055,
+            repeat: -1,
+            repeatDelay: 3.2,
+            yoyo: true,
+          });
+        },
+      });
+    }
+
+    // ── "PASS YOUR TRINITY PIANO EXAM" — word-by-word slide up ─────
+    const examWords = examRefs.current.filter(Boolean) as HTMLSpanElement[];
+    if (examWords.length) {
+      gsap.set(examWords, { opacity: 0, y: 18 });
+      gsap.to(examWords, {
+        opacity: 1, y: 0,
+        duration: 0.45, ease: "back.out(1.8)",
+        stagger: 0.1,
+        delay: 1.65,
+      });
+    }
+
     return () => {
       zone.removeEventListener("mousemove", onMove);
       zone.removeEventListener("mouseenter", onEnter);
       zone.removeEventListener("mouseleave", onLeave);
       glowTl.current?.kill();
       gsap.killTweensOf(smarterRefs.current.filter(Boolean));
+      gsap.killTweensOf(guarLetters);
+      gsap.killTweensOf(examWords);
     };
   }, []);
 
@@ -134,9 +174,29 @@ const HeroSection = () => {
               </span>
             ))}
           </h1>
-          <p className="text-xl md:text-2xl font-semibold mb-8 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            <span className="text-primary">{t("hero.guarantee")}</span>{" "}
-            <span className="text-foreground">{t("hero.exam")}</span>
+          <p className="text-xl md:text-2xl font-semibold mb-8 leading-snug">
+            {/* "100% GUARANTEED" — letter-by-letter blur-in + shimmer */}
+            {t("hero.guarantee").split("").map((char, i) => (
+              <span
+                key={i}
+                ref={(el) => { guarRefs.current[i] = el; }}
+                style={{ display: char === " " ? "inline" : "inline-block", color: "#ec4899" }}
+              >
+                {char === " " ? " " : char}
+              </span>
+            ))}
+            {" "}
+            {/* "PASS YOUR TRINITY PIANO EXAM" — word-by-word slide */}
+            {t("hero.exam").split(" ").map((word, i) => (
+              <span
+                key={i}
+                ref={(el) => { examRefs.current[i] = el; }}
+                style={{ display: "inline-block", marginRight: "0.3em" }}
+                className="text-foreground"
+              >
+                {word}
+              </span>
+            ))}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
             {/* Magnetic zone — padding expands the attraction area beyond the button */}

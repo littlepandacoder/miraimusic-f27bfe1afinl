@@ -82,42 +82,112 @@ const steps = [
 ];
 
 const FeaturesSection = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const titleRef   = useRef<HTMLDivElement>(null);
-  const cardRefs   = useRef<(HTMLDivElement | null)[]>([]);
-  const lineRef    = useRef<HTMLDivElement>(null);
+  const sectionRef  = useRef<HTMLElement>(null);
+  const titleRef    = useRef<HTMLDivElement>(null);
+  const lineRef     = useRef<HTMLDivElement>(null);
+  const cardRefs    = useRef<(HTMLDivElement | null)[]>([]);
+  const bubbleRefs  = useRef<(HTMLDivElement | null)[]>([]);
+  const iconRefs    = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    // ── 1. Title reveal ────────────────────────────────────────────
     if (titleRef.current) {
-      gsap.fromTo(
-        titleRef.current,
+      gsap.fromTo(titleRef.current,
         { y: 40, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.7, ease: "power2.out",
           scrollTrigger: { trigger: titleRef.current, start: "top 85%", once: true } }
       );
     }
 
+    // ── 2. Scrubbed line — draws in sync with scroll ───────────────
     if (lineRef.current) {
-      gsap.fromTo(
-        lineRef.current,
+      gsap.fromTo(lineRef.current,
         { scaleY: 0 },
-        { scaleY: 1, duration: 1.4, ease: "power2.inOut", transformOrigin: "top",
-          scrollTrigger: { trigger: sectionRef.current, start: "top 72%", once: true } }
+        {
+          scaleY: 1,
+          ease: "none",
+          transformOrigin: "top",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 55%",
+            end: "bottom 80%",
+            scrub: 1.2,         // follows scroll position smoothly
+          },
+        }
       );
     }
 
-    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-    cards.forEach((card, i) => {
-      gsap.fromTo(
-        card,
-        { x: i % 2 === 0 ? -60 : 60, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.7, ease: "back.out(1.4)",
-          scrollTrigger: { trigger: card, start: "top 86%", once: true },
-          delay: i * 0.05 }
-      );
+    // ── 3. Per-card sequential reveal + number bubble pulse ────────
+    const cards   = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+    const bubbles = bubbleRefs.current.filter(Boolean) as HTMLDivElement[];
+    const icons   = iconRefs.current.filter(Boolean) as HTMLDivElement[];
 
-      const onEnter = () => gsap.to(card, { y: -6, scale: 1.02, duration: 0.28, ease: "power2.out" });
-      const onLeave = () => gsap.to(card, { y: 0,  scale: 1,    duration: 0.5,  ease: "elastic.out(1, 0.4)" });
+    cards.forEach((card, i) => {
+      const bubble  = bubbles[i];
+      const iconBox = icons[i];
+
+      // Query inner elements for sequential reveal
+      const badge   = card.querySelector<HTMLElement>("[data-badge]");
+      const title   = card.querySelector<HTMLElement>("[data-title]");
+      const desc    = card.querySelector<HTMLElement>("[data-desc]");
+
+      // Hide everything initially
+      gsap.set([iconBox, badge, title, desc].filter(Boolean), { opacity: 0, y: 20 });
+      gsap.set(iconBox, { scale: 0, rotation: -15, opacity: 0, y: 0 });
+      if (bubble) gsap.set(bubble, { scale: 0.5, opacity: 0 });
+
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: card, start: "top 84%", once: true },
+      });
+
+      // Icon container pops in
+      tl.to(iconBox, { scale: 1, rotation: 0, opacity: 1, duration: 0.55, ease: "back.out(2)" })
+      // Badge slides in
+        .to(badge,   { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, "-=0.15")
+      // Title slides up
+        .to(title,   { opacity: 1, y: 0, duration: 0.4,  ease: "power2.out" }, "-=0.15")
+      // Description fades in
+        .to(desc,    { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, "-=0.15")
+      // Number bubble springs in
+        .to(bubble,  { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2.5)" }, "-=0.3")
+        .to(bubble,  {
+          boxShadow: `0 0 28px ${steps[i].color}90, 0 0 56px ${steps[i].color}40`,
+          scale: 1.1,
+          duration: 0.7,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: 2,
+        });
+    });
+
+    // ── 4. Hover: icon spins + border glows ───────────────────────
+    cards.forEach((card, i) => {
+      const iconBox = icons[i];
+      const bubble  = bubbles[i];
+
+      const onEnter = () => {
+        gsap.to(card,    { y: -8, scale: 1.02, duration: 0.3, ease: "power2.out",
+          borderColor: steps[i].color });
+        gsap.to(iconBox, { rotation: 12, scale: 1.12, duration: 0.35, ease: "back.out(2)" });
+        if (bubble) gsap.to(bubble, {
+          scale: 1.15,
+          boxShadow: `0 0 22px ${steps[i].color}cc, 0 0 44px ${steps[i].color}55`,
+          duration: 0.3, ease: "power2.out" });
+      };
+
+      const onLeave = () => {
+        gsap.to(card,    { y: 0, scale: 1, duration: 0.55, ease: "elastic.out(1, 0.4)",
+          borderColor: "" });
+        gsap.to(iconBox, { rotation: 0, scale: 1, duration: 0.55, ease: "elastic.out(1, 0.4)" });
+        if (bubble) gsap.to(bubble, {
+          scale: 1,
+          boxShadow: `0 0 18px ${steps[i].color}50`,
+          duration: 0.4, ease: "power2.out" });
+      };
+
       card.addEventListener("mouseenter", onEnter);
       card.addEventListener("mouseleave", onLeave);
     });
@@ -136,6 +206,7 @@ const FeaturesSection = () => {
 
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
 
+        {/* Heading */}
         <div ref={titleRef} className="text-center mb-16">
           <p className="text-pink text-xs font-bold uppercase tracking-widest mb-3">The Journey</p>
           <h2 className="section-title text-center text-foreground mb-4">
@@ -146,10 +217,13 @@ const FeaturesSection = () => {
           </p>
         </div>
 
+        {/* Steps */}
         <div className="relative">
+
+          {/* Scrub-driven vertical line */}
           <div
             ref={lineRef}
-            className="absolute left-1/2 top-6 bottom-6 w-px bg-gradient-to-b from-pink via-purple-500 to-cyan-400 opacity-25 hidden sm:block"
+            className="absolute left-1/2 top-6 bottom-6 w-px bg-gradient-to-b from-pink via-purple-500 to-cyan-400 opacity-30 hidden sm:block"
             style={{ transform: "translateX(-50%)" }}
             aria-hidden="true"
           />
@@ -162,36 +236,56 @@ const FeaturesSection = () => {
                   i % 2 === 1 ? "sm:flex-row-reverse" : ""
                 }`}
               >
+                {/* Card */}
                 <div
                   ref={(el) => { cardRefs.current[i] = el; }}
-                  className="feature-card flex-1 will-change-transform"
+                  className="feature-card flex-1 will-change-transform transition-colors duration-200"
+                  style={{ cursor: "default" }}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="shrink-0 w-14 h-14 rounded-xl bg-secondary/60 flex items-center justify-center">
+
+                    {/* Icon container */}
+                    <div
+                      ref={(el) => { iconRefs.current[i] = el; }}
+                      className="shrink-0 w-14 h-14 rounded-xl bg-secondary/60 flex items-center justify-center"
+                    >
                       {step.icon}
                     </div>
+
                     <div className="flex-1">
                       <span
+                        data-badge
                         className="inline-block text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border mb-3"
                         style={{ color: step.color, background: `${step.color}18`, borderColor: `${step.color}40` }}
                       >
                         {step.tag}
                       </span>
-                      <h3 className="text-lg font-black text-foreground mb-2 uppercase">{step.title}</h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{step.description}</p>
+                      <h3 data-title className="text-lg font-black text-foreground mb-2 uppercase">
+                        {step.title}
+                      </h3>
+                      <p data-desc className="text-muted-foreground text-sm leading-relaxed">
+                        {step.description}
+                      </p>
                     </div>
                   </div>
                 </div>
 
+                {/* Step number bubble — sits on the line */}
                 <div className="hidden sm:flex w-16 shrink-0 justify-center z-10">
                   <div
+                    ref={(el) => { bubbleRefs.current[i] = el; }}
                     className="w-12 h-12 rounded-full bg-card border-2 flex items-center justify-center font-black text-sm"
-                    style={{ borderColor: step.color, color: step.color, boxShadow: `0 0 18px ${step.color}50` }}
+                    style={{
+                      borderColor: step.color,
+                      color: step.color,
+                      boxShadow: `0 0 18px ${step.color}50`,
+                    }}
                   >
                     {step.number}
                   </div>
                 </div>
 
+                {/* Mirror spacer */}
                 <div className="hidden sm:block flex-1" />
               </div>
             ))}
