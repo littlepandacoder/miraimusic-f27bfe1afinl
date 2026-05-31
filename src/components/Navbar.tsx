@@ -111,6 +111,7 @@ const Navbar = () => {
           ))}
 
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
+          <Link to="/affiliate" className="nav-link font-semibold">Affiliate</Link>
 
           <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
             <LogIn className="w-4 h-4" /> {t("nav.login")}
@@ -189,6 +190,15 @@ const Navbar = () => {
             onClick={close}
           >
             {t("nav.pricing")}
+          </Link>
+
+          <Link
+            to="/affiliate"
+            data-item
+            className="nav-link py-2 font-semibold border-b border-border/20 pb-3"
+            onClick={close}
+          >
+            Affiliate
           </Link>
 
           <Link

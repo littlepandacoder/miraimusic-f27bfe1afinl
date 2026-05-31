@@ -23,9 +23,8 @@ import Privacy from "./pages/Privacy";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
 import MusicCursor from "./components/MusicCursor";
 import NotFound from "./pages/NotFound";
-import AffiliateLanding   from "./pages/AffiliateLanding";
-import AffiliateRegister  from "./pages/AffiliateRegister";
-import AffiliateDashboard from "./pages/AffiliateDashboard";
+import AffiliateLanding from "./pages/AffiliateLanding";
+import AffiliateSignup from "./pages/AffiliateSignup";
 
 const queryClient = new QueryClient();
 
@@ -55,10 +54,9 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            {/* Affiliate portal */}
-            <Route path="/affiliate"           element={<AffiliateLanding />} />
-            <Route path="/affiliate/register"  element={<AffiliateRegister />} />
-            <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+            {/* Affiliate program */}
+            <Route path="/affiliate" element={<AffiliateLanding />} />
+            <Route path="/affiliate-signup" element={<AffiliateSignup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
