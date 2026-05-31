@@ -82,8 +82,10 @@ const MusicNotesBackground = () => {
         .set(el, { y: 50, opacity: 0 });
       timelines.push(tl);
 
+      // Reduce x-drift on mobile so notes don't escape the viewport
+      const maxDrift = window.innerWidth < 640 ? 10 : 36;
       const drift = gsap.to(el, {
-        x: gsap.utils.random(18, 36) * (i % 2 === 0 ? 1 : -1),
+        x: gsap.utils.random(8, maxDrift) * (i % 2 === 0 ? 1 : -1),
         duration: note.dur * 0.65,
         ease: "sine.inOut",
         repeat: -1,
@@ -105,20 +107,25 @@ const MusicNotesBackground = () => {
       className="absolute inset-0 pointer-events-none overflow-hidden"
       aria-hidden="true"
     >
-      {NOTES.map((note, i) => (
-        <div
-          key={i}
-          data-note
-          className="absolute bottom-16"
-          style={{
-            left: note.x,
-            width: note.size,
-            height: note.type === "double" ? note.size * 1.4 : note.size * 2,
-          }}
-        >
-          <NoteIcon type={note.type} color={note.color} />
-        </div>
-      ))}
+      {NOTES.map((note, i) => {
+        // Parse the left% value; hide very-edge notes on mobile
+        const pct = parseFloat(note.x);
+        const hideOnMobile = pct < 8 || pct > 88;
+        return (
+          <div
+            key={i}
+            data-note
+            className={`absolute bottom-16 ${hideOnMobile ? "hidden sm:block" : ""}`}
+            style={{
+              left: note.x,
+              width: note.size,
+              height: note.type === "double" ? note.size * 1.4 : note.size * 2,
+            }}
+          >
+            <NoteIcon type={note.type} color={note.color} />
+          </div>
+        );
+      })}
     </div>
   );
 };

@@ -201,10 +201,10 @@ const TestimonialsSection = () => {
   return (
     <section className="relative py-20 bg-background overflow-hidden">
 
-      {/* Background glow orb */}
+      {/* Background glow orb — smaller on mobile */}
       <div
         ref={orbRef}
-        className="absolute right-0 top-1/3 w-96 h-96 rounded-full pointer-events-none"
+        className="absolute right-0 top-1/3 w-48 h-48 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-full pointer-events-none"
         style={{
           background: "radial-gradient(circle, hsl(330 85% 55% / 0.10) 0%, transparent 70%)",
           filter: "blur(24px)",
@@ -212,22 +212,22 @@ const TestimonialsSection = () => {
         aria-hidden="true"
       />
 
-      {/* Large decorative opening quote */}
+      {/* Large decorative opening quote — responsive size */}
       <div
         ref={quoteRef}
-        className="absolute top-4 left-4 text-pink font-black leading-none pointer-events-none select-none"
-        style={{ fontSize: "180px", opacity: 0.10, lineHeight: 1 }}
+        className="absolute top-4 left-2 sm:left-4 text-pink font-black leading-none pointer-events-none select-none"
+        style={{ fontSize: "clamp(60px, 15vw, 140px)", opacity: 0.10, lineHeight: 1 }}
         aria-hidden="true"
       >
         "
       </div>
 
-      {/* Floating sparkles */}
+      {/* Floating sparkles — hidden on mobile to avoid clutter */}
       {SPARKLES.map((s, i) => (
         <span
           key={i}
           ref={(el) => { sparkRefs.current[i] = el; }}
-          className="absolute pointer-events-none select-none"
+          className="absolute pointer-events-none select-none hidden sm:inline"
           style={{
             top:    s.top,
             left:   "left"  in s ? (s as any).left  : undefined,

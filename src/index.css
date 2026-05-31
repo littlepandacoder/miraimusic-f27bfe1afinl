@@ -131,11 +131,15 @@ body {
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Montserrat', sans-serif;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 }
 

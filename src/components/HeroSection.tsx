@@ -199,10 +199,10 @@ const HeroSection = () => {
             ))}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-            {/* Magnetic zone — padding expands the attraction area beyond the button */}
+            {/* Magnetic zone — smaller on mobile to avoid overflow */}
             <div
               ref={zoneRef}
-              style={{ padding: "40px", margin: "-40px", display: "inline-block" }}
+              style={{ padding: "clamp(16px, 4vw, 40px)", margin: "calc(-1 * clamp(16px, 4vw, 40px))", display: "inline-block" }}
             >
               <a
                 ref={btnRef}
