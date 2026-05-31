@@ -195,8 +195,11 @@ const QuizBot = () => {
       {hintVisible && phase === "idle" && (
         <div
           ref={hintRef}
-          className="bg-card border border-pink/40 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm font-semibold text-foreground shadow-lg max-w-[200px] text-center"
-          style={{ boxShadow: "0 0 24px hsl(330 85% 55% / 0.25)" }}
+          className="rounded-2xl rounded-br-sm px-4 py-2.5 text-sm font-black text-white shadow-lg max-w-[210px] text-center"
+          style={{
+            background: "linear-gradient(135deg, hsl(330 85% 50%) 0%, hsl(280 70% 52%) 100%)",
+            boxShadow: "0 0 28px hsl(330 85% 55% / 0.5), 0 8px 24px rgba(0,0,0,0.3)",
+          }}
         >
           🎹 Want to play a game?
         </div>
