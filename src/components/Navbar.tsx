@@ -28,9 +28,10 @@ const Navbar = () => {
 
     const items = Array.from(menu.querySelectorAll<HTMLElement>("[data-item]"));
 
-    // Start collapsed
-    gsap.set(menu,  { opacity: 0, y: -12, pointerEvents: "none", display: "flex" });
-    gsap.set(items, { x: -28, opacity: 0 });
+    // autoAlpha: 0 → opacity:0 + visibility:hidden (does NOT touch display)
+    // So md:hidden (display:none) still works correctly on desktop
+    gsap.set(menu,  { autoAlpha: 0, y: -12, pointerEvents: "none" });
+    gsap.set(items, { x: -28, autoAlpha: 0 });
 
     const tl = gsap.timeline({
       paused: true,
@@ -38,9 +39,9 @@ const Navbar = () => {
     });
 
     // Open: panel fades/slides down → links cascade in from left
-    tl.to(menu, { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" })
+    tl.to(menu, { autoAlpha: 1, y: 0, duration: 0.32, ease: "power3.out" })
       .to(items, {
-        x: 0, opacity: 1,
+        x: 0, autoAlpha: 1,
         duration: 0.3, ease: "back.out(1.6)",
         stagger: 0.07,
       }, "-=0.08");
@@ -162,8 +163,7 @@ const Navbar = () => {
         {/* Mobile Navigation — always rendered, GSAP controls visibility */}
         <div
           ref={menuRef}
-          className="md:hidden mt-4 pb-4 flex-col gap-3 overflow-hidden"
-          style={{ display: "flex" }}   /* GSAP overrides opacity/y/pointerEvents */
+          className="md:hidden mt-4 pb-4 flex flex-col gap-3 overflow-hidden"
         >
           {isHomePage && navLinks.map((link) => (
             <a
