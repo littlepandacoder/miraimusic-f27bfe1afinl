@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { EmailCollection } from "@/components/EmailCollection";
 import Onboarding from "@/components/Onboarding";
 import TrialBilling from "@/components/TrialBilling";
 import { saveEmail } from "@/lib/signupService";
+import { logClick } from "@/lib/affiliateService";
+import { supabase } from "@/integrations/supabase/client";
+import { recordConversion } from "@/lib/affiliateService";
 import { Loader2, AlertCircle } from "lucide-react";
 interface OnboardingData {
   email: string;
@@ -17,8 +20,18 @@ type Stage = "email" | "onboarding" | "billing" | "loading";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const [searchParams]  = useSearchParams();
   const [stage, setStage] = useState<Stage>("email");
   const [subNeeded, setSubNeeded] = useState(false);
+
+  // ── Affiliate referral tracking ─────────────────────────────────────
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      localStorage.setItem("musicable_ref_code", ref.toUpperCase());
+      logClick(ref.toUpperCase()); // fire-and-forget click log
+    }
+  }, []);
 
   useEffect(() => {
     if (sessionStorage.getItem("sub_needed") === "1") {
@@ -61,8 +74,12 @@ const Signup = () => {
     setStage("billing");
   };
 
-  const handleBillingComplete = () => {
-    // After successful payment, redirect to dashboard/courses
+  const handleBillingComplete = async () => {
+    // Record affiliate conversion if this signup came via a referral link
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await recordConversion(user.id, user.email ?? email, 8);
+    } catch { /* non-critical */ }
     navigate("/dashboard");
   };
 
