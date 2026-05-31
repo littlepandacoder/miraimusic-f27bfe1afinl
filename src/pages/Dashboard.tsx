@@ -158,38 +158,38 @@ const Dashboard = () => {
     };
   }, [loading, user, roles]);
 
-  const [inTrialPeriod, setInTrialPeriod] = useState(false);
+  // Show AI coach widget only to new students (signed up ≤14 days ago) and only once
+  const [showAIWidget, setShowAIWidget] = useState(false);
 
-  // Check if onboarding is needed + if user is in trial period
+  // Check if onboarding is needed + whether to show the AI widget
   useEffect(() => {
     if (!user || !subscribed || hasRole("admin") || hasRole("teacher")) return;
 
-    const key = `musicable_onboarded_${user.id}`;
-    if (localStorage.getItem(key)) return; // fast-path: already done
+    const onboardingKey = `musicable_onboarded_${user.id}`;
+    const widgetKey     = `musicable_coach_widget_seen_${user.id}`;
 
-    (supabase as any)
-      .from("user_subscriptions")
-      .select("trial_end")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data: subData }: any) => {
-        // Check if still in trial period ($8 first month)
-        if (subData?.trial_end) {
-          const trialEnd = new Date(subData.trial_end);
-          const now = new Date();
-          setInTrialPeriod(now < trialEnd);
-        }
-      });
+    // Onboarding check
+    if (!localStorage.getItem(onboardingKey)) {
+      (supabase as any)
+        .from("user_onboarding")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }: any) => {
+          if (!data) setShowOnboarding(true);
+          else localStorage.setItem(onboardingKey, "1");
+        });
+    }
 
-    (supabase as any)
-      .from("user_onboarding")
-      .select("user_id")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }: any) => {
-        if (!data) setShowOnboarding(true);
-        else localStorage.setItem(key, "1");
-      });
+    // AI widget: only new students (account ≤14 days old) who haven't seen it yet
+    if (!localStorage.getItem(widgetKey)) {
+      const accountAgeDays =
+        (Date.now() - new Date(user.created_at).getTime()) / 86_400_000;
+      if (accountAgeDays <= 14) {
+        setShowAIWidget(true);
+        localStorage.setItem(widgetKey, "1"); // mark as shown — won't appear again
+      }
+    }
   }, [user, subscribed, roles]);
 
   const handleOnboardingComplete = () => {
@@ -216,7 +216,7 @@ const Dashboard = () => {
   return (
     <>
       {showOnboarding && <OnboardingWizard onComplete={handleOnboardingComplete} />}
-      {!showOnboarding && inTrialPeriod && isStudent && <AICoachWidget />}
+      {!showOnboarding && showAIWidget && isStudent && <AICoachWidget />}
       {hasRole("admin")
         ? <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>
         : hasRole("teacher")
