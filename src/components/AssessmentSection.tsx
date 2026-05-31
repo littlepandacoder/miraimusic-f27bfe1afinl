@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDays, Clock, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const timeSlots = [
   "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
@@ -69,6 +73,51 @@ const AssessmentSection = () => {
     toast.success("Assessment scheduled! Add it to your Google Calendar.");
   };
 
+  const headingRef  = useRef<HTMLDivElement>(null);
+  const lettersRef  = useRef<(HTMLSpanElement | null)[]>([]);
+
+  useEffect(() => {
+    const letters = lettersRef.current.filter(Boolean) as HTMLSpanElement[];
+    if (!letters.length || !headingRef.current) return;
+
+    // Each letter starts squashed + invisible
+    gsap.set(letters, { opacity: 0, scaleY: 0, y: 20, transformOrigin: "bottom" });
+
+    // Spring-pop each letter in sequence on scroll
+    const revealSt = ScrollTrigger.create({
+      trigger: headingRef.current,
+      start: "top 82%",
+      once: true,
+      onEnter: () => {
+        gsap.to(letters, {
+          opacity: 1,
+          scaleY: 1,
+          y: 0,
+          duration: 0.55,
+          ease: "back.out(2.2)",
+          stagger: 0.055,
+          onComplete: () => {
+            // Continuous colour-shift glow after reveal
+            gsap.to(letters, {
+              textShadow:
+                "0 0 20px hsl(330 85% 55% / 0.9), 0 0 40px hsl(330 85% 55% / 0.5), 0 0 80px hsl(280 70% 60% / 0.3)",
+              duration: 1.8,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              stagger: { each: 0.12, repeat: -1, yoyo: true },
+            });
+          },
+        });
+      },
+    });
+
+    return () => {
+      revealSt.kill();
+      gsap.killTweensOf(letters);
+    };
+  }, []);
+
   if (isBooked) {
     return (
       <section id="assessment" className="py-20">
@@ -99,9 +148,21 @@ const AssessmentSection = () => {
   return (
     <section id="assessment" className="py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="section-title text-foreground mb-4">
-            BRING MUSICABLE TO YOUR SCHOOL OR STUDIO.
+        <div ref={headingRef} className="text-center mb-12">
+          <h2 className="section-title text-foreground mb-4 leading-tight">
+            BRING{" "}
+            {/* MUSICABLE — each letter individually animated */}
+            {"MUSICABLE".split("").map((char, i) => (
+              <span
+                key={i}
+                ref={(el) => { lettersRef.current[i] = el; }}
+                className="inline-block text-pink"
+                style={{ display: "inline-block" }}
+              >
+                {char}
+              </span>
+            ))}{" "}
+            TO YOUR SCHOOL OR STUDIO.
           </h2>
           <p className="text-xl text-muted-foreground">
             Book a free discovery call and find out how we can partner together to transform piano education.
