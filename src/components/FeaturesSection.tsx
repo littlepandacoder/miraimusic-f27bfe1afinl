@@ -98,7 +98,7 @@ const FeaturesSection = () => {
       gsap.fromTo(titleRef.current,
         { y: 40, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.7, ease: "power2.out",
-          scrollTrigger: { trigger: titleRef.current, start: "top 85%", once: true } }
+          scrollTrigger: { trigger: titleRef.current, start: "top 85%", toggleActions: "play none none reverse" } }
       );
     }
 
@@ -140,7 +140,7 @@ const FeaturesSection = () => {
       if (bubble) gsap.set(bubble, { scale: 0.5, opacity: 0 });
 
       const tl = gsap.timeline({
-        scrollTrigger: { trigger: card, start: "top 84%", once: true },
+        scrollTrigger: { trigger: card, start: "top 84%", toggleActions: "play none none reverse" },
       });
 
       // Icon container pops in

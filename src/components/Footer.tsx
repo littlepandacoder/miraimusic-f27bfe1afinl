@@ -28,7 +28,7 @@ const Footer = () => {
         duration: 0.72,
         ease: "back.out(1.6)",
         stagger: 0.12,
-        scrollTrigger: { trigger: footer, start: "top 88%", once: true },
+        scrollTrigger: { trigger: footer, start: "top 88%", toggleActions: "play none none reverse" },
       }
     );
 
@@ -43,7 +43,7 @@ const Footer = () => {
           duration: 0.55,
           ease: "power2.out",
           delay: 0.55,
-          scrollTrigger: { trigger: footer, start: "top 86%", once: true },
+          scrollTrigger: { trigger: footer, start: "top 86%", toggleActions: "play none none reverse" },
         }
       );
     }
@@ -61,7 +61,7 @@ const Footer = () => {
           ease: "back.out(2.2)",
           stagger: 0.09,
           delay: 0.35,
-          scrollTrigger: { trigger: footer, start: "top 85%", once: true },
+          scrollTrigger: { trigger: footer, start: "top 85%", toggleActions: "play none none reverse" },
         }
       );
     }

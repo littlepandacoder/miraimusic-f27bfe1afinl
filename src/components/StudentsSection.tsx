@@ -207,7 +207,7 @@ const StudentsSection = () => {
       gsap.fromTo(titleRef.current,
         { y: 40, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.7, ease: "power2.out",
-          scrollTrigger: { trigger: titleRef.current, start: "top 85%", once: true } }
+          scrollTrigger: { trigger: titleRef.current, start: "top 85%", toggleActions: "play none none reverse" } }
       );
     }
 
@@ -218,7 +218,7 @@ const StudentsSection = () => {
         y: 0, opacity: 1, scale: 1,
         duration: 0.6, ease: "back.out(1.3)",
         stagger: 0.09,
-        scrollTrigger: { trigger: sectionRef.current, start: "top 75%", once: true },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%", toggleActions: "play none none reverse" },
       }
     );
 
