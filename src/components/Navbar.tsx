@@ -28,23 +28,28 @@ const Navbar = () => {
 
     const items = Array.from(menu.querySelectorAll<HTMLElement>("[data-item]"));
 
-    // autoAlpha: 0 → opacity:0 + visibility:hidden (does NOT touch display)
-    // So md:hidden (display:none) still works correctly on desktop
-    gsap.set(menu,  { autoAlpha: 0, y: -12, pointerEvents: "none" });
-    gsap.set(items, { x: -28, autoAlpha: 0 });
+    // display:none takes the element out of flow entirely — no invisible space
+    gsap.set(menu,  { display: "none", y: -12, pointerEvents: "none" });
+    gsap.set(items, { x: -28, opacity: 0 });
 
     const tl = gsap.timeline({
       paused: true,
-      onReverseComplete: () => gsap.set(menu, { pointerEvents: "none" }),
+      onReverseComplete: () => {
+        gsap.set(menu, { display: "none", pointerEvents: "none" });
+      },
     });
 
-    // Open: panel fades/slides down → links cascade in from left
-    tl.to(menu, { autoAlpha: 1, y: 0, duration: 0.32, ease: "power3.out" })
-      .to(items, {
-        x: 0, autoAlpha: 1,
-        duration: 0.3, ease: "back.out(1.6)",
-        stagger: 0.07,
-      }, "-=0.08");
+    // Open: set display first, then animate panel + links
+    tl.set(menu, { display: "flex", pointerEvents: "auto" })
+      .fromTo(menu,
+        { opacity: 0, y: -12 },
+        { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" }
+      )
+      .fromTo(items,
+        { x: -28, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.3, ease: "back.out(1.6)", stagger: 0.07 },
+        "-=0.08"
+      );
 
     tlRef.current = tl;
 
@@ -57,7 +62,6 @@ const Navbar = () => {
     if (!tl) return;
 
     if (!isOpen) {
-      gsap.set(menuRef.current, { pointerEvents: "auto" });
       tl.play();
       // Animate hamburger → X
       gsap.to(btnRef.current, { rotation: 90, duration: 0.28, ease: "power2.out" });
