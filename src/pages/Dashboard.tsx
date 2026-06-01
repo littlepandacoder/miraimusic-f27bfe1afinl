@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import TeacherDashboard from "@/components/dashboard/TeacherDashboard";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
-import AffiliateDashboard from "@/pages/AffiliateDashboard";
 import { DashboardErrorBoundary } from "@/components/DashboardErrorBoundary";
 import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -210,8 +209,7 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  // Allow access if subscribed OR is an affiliate
-  if (!subscribed && !hasRole("affiliate")) return <SubscriptionGate />;
+  if (!subscribed) return <SubscriptionGate />;
 
   const isStudent = !hasRole("admin") && !hasRole("teacher");
 
@@ -223,9 +221,7 @@ const Dashboard = () => {
         ? <DashboardErrorBoundary><AdminDashboard /></DashboardErrorBoundary>
         : hasRole("teacher")
           ? <DashboardErrorBoundary><TeacherDashboard /></DashboardErrorBoundary>
-          : hasRole("affiliate")
-            ? <DashboardErrorBoundary><AffiliateDashboard /></DashboardErrorBoundary>
-            : <DashboardErrorBoundary><StudentDashboard /></DashboardErrorBoundary>}
+          : <DashboardErrorBoundary><StudentDashboard /></DashboardErrorBoundary>}
     </>
   );
 };

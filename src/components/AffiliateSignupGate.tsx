@@ -92,7 +92,7 @@ const AffiliateSignupGate = () => {
       }
 
       setSuccess(true);
-      setTimeout(() => navigate("/dashboard/affiliate"), 2000);
+      setTimeout(() => navigate("/affiliate-dashboard"), 2000);
     } catch (err: any) {
       console.error("Signup error:", err);
       setError(err?.message || "Something went wrong. Please try again.");
@@ -263,7 +263,7 @@ const AffiliateSignupGate = () => {
               Already an affiliate?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/affiliate")}
+                onClick={() => navigate("/affiliate-dashboard")}
                 className="text-pink hover:underline font-semibold"
               >
                 Go to Dashboard
