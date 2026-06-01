@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { registerAffiliate, generateCode } from "@/lib/affiliateService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, Check } from "lucide-react";
@@ -67,20 +66,15 @@ const AffiliateSignupGate = () => {
         return;
       }
 
-      // 1. Save affiliate profile to Firestore
-      if (db) {
-        await addDoc(collection(db, "affiliates"), {
-          userId: user.id,
-          email: user.email,
-          fullName: formData.fullName,
-          website: formData.website || null,
-          payoutMethod: formData.payoutMethod,
-          payoutEmail: formData.bankEmail,
-          status: "active",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
+      // 1. Generate affiliate code and register in Supabase
+      const code = generateCode(formData.fullName);
+      await registerAffiliate(
+        user.id,
+        formData.fullName,
+        user.email || formData.email,
+        code,
+        formData.bankEmail
+      );
 
       // 2. Add "affiliate" role to user in Supabase
       const { error: roleError } = await (supabase as any)
