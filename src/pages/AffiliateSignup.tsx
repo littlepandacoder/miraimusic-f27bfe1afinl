@@ -11,9 +11,8 @@ const AffiliateSignup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Allow signup if: user exists AND (is student OR teacher)
-    // Redirect only if explicitly not authenticated
-    if (!loading && !user) navigate("/login");
+    // Redirect to login with next param to return to affiliate signup
+    if (!loading && !user) navigate(`/login?next=/affiliate-signup`);
     // If user is already an affiliate, redirect to affiliate dashboard
     if (!loading && user && roles.includes("affiliate")) navigate("/affiliate-dashboard");
   }, [loading, user, roles, navigate]);
