@@ -127,7 +127,7 @@ const AffiliateSignupGate = () => {
             Become a <span className="text-pink">Musicable</span> Affiliate
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Join our affiliate program and start earning 30% recurring commission. Students and
+            Join our affiliate program and start earning 20% recurring commission. Students and
             teachers can become affiliates too!
           </p>
         </CardHeader>

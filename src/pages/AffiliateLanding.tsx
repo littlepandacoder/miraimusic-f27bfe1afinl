@@ -11,8 +11,8 @@ const AffiliateLanding = () => {
   const benefits = [
     {
       icon: DollarSign,
-      title: "Earn 30% Commission",
-      desc: "Get 30% of every subscription referred — recurring monthly.",
+      title: "Earn 20% Commission",
+      desc: "Get 20% of every subscription referred — recurring monthly.",
     },
     {
       icon: Users,
@@ -32,7 +32,7 @@ const AffiliateLanding = () => {
   ];
 
   const features = [
-    "30% recurring commission on all referrals",
+    "20% recurring commission on all referrals",
     "Lifetime cookie window (180 days)",
     "Real-time performance dashboard",
     "Dedicated affiliate support",
@@ -55,7 +55,7 @@ const AffiliateLanding = () => {
               Become a <span className="text-pink">Musicable</span><br />Affiliate
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Earn 30% recurring commission for every student you refer. No limits. No catch.
+              Earn 20% recurring commission for every student you refer. No limits. No catch.
             </p>
             <button
               onClick={() => navigate(user ? "/affiliate-signup" : "/login?next=/affiliate-signup")}
@@ -107,7 +107,7 @@ const AffiliateLanding = () => {
                 </div>
               </div>
               <div className="bg-gradient-to-br from-pink/20 to-purple/20 rounded-2xl p-12 border border-border/30 text-center">
-                <div className="text-6xl font-black text-pink mb-4">30%</div>
+                <div className="text-6xl font-black text-pink mb-4">20%</div>
                 <p className="text-xl font-bold text-foreground mb-2">Recurring Commission</p>
                 <p className="text-muted-foreground mb-8">
                   Earn every month your referrals stay subscribed. No expiration.
@@ -115,7 +115,7 @@ const AffiliateLanding = () => {
                 <div className="bg-background/50 rounded-lg p-4 text-sm text-muted-foreground">
                   <p>
                     Refer a student who pays $17/month?<br />
-                    <span className="text-pink font-bold text-lg">You earn $5.10/month</span>
+                    <span className="text-pink font-bold text-lg">You earn $3.40/month</span>
                   </p>
                 </div>
               </div>
