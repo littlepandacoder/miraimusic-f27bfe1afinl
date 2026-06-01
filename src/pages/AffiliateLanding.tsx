@@ -1,12 +1,21 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { TrendingUp, DollarSign, Users, Zap, Check } from "lucide-react";
 
+gsap.registerPlugin(ScrollTrigger);
+
 const AffiliateLanding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const benefitsRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const commissionBoxRef = useRef<HTMLDivElement>(null);
 
   const benefits = [
     {
@@ -42,22 +51,120 @@ const AffiliateLanding = () => {
     "Works for teachers & students too",
   ];
 
+  useEffect(() => {
+    // Hero animations: title + subtitle + button
+    if (heroRef.current) {
+      const hero = heroRef.current;
+      const elements = hero.querySelectorAll("[data-animate]") as NodeListOf<HTMLElement>;
+      gsap.set(elements, { opacity: 0, y: 30 });
+      gsap.to(elements, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: "power2.out",
+        stagger: 0.1,
+      });
+    }
+
+    // Benefits cards: stagger on scroll
+    if (benefitsRef.current) {
+      const cards = benefitsRef.current.querySelectorAll("[data-card]") as NodeListOf<HTMLElement>;
+      gsap.set(cards, { opacity: 0, y: 40 });
+      gsap.to(cards, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "back.out(1.2)",
+        stagger: 0.12,
+        scrollTrigger: {
+          trigger: benefitsRef.current,
+          start: "top 85%",
+          once: true,
+        },
+      });
+    }
+
+    // Features section: heading + checklist items
+    if (featuresRef.current) {
+      const heading = featuresRef.current.querySelector("[data-heading]") as HTMLElement;
+      const items = featuresRef.current.querySelectorAll("[data-item]") as NodeListOf<HTMLElement>;
+      
+      if (heading) {
+        gsap.fromTo(
+          heading,
+          { opacity: 0, y: 25 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: featuresRef.current,
+              start: "top 80%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      if (items.length) {
+        gsap.set(items, { opacity: 0, x: -20 });
+        gsap.to(items, {
+          opacity: 1,
+          x: 0,
+          duration: 0.55,
+          ease: "power2.out",
+          stagger: 0.08,
+          scrollTrigger: {
+            trigger: featuresRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        });
+      }
+    }
+
+    // Commission box: scale + fade
+    if (commissionBoxRef.current) {
+      gsap.fromTo(
+        commissionBoxRef.current,
+        { opacity: 0, scale: 0.9 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          ease: "elastic.out(1, 0.5)",
+          scrollTrigger: {
+            trigger: commissionBoxRef.current,
+            start: "top 85%",
+            once: true,
+          },
+        }
+      );
+    }
+
+    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
       <main>
         {/* Hero */}
-        <section className="py-20 lg:py-32 bg-gradient-to-b from-navy-dark/50 to-background">
+        <section ref={heroRef} className="py-20 lg:py-32 bg-gradient-to-b from-navy-dark/50 to-background">
           <div className="container mx-auto px-4 text-center">
-            <p className="text-pink text-xs font-bold uppercase tracking-widest mb-4">Earn Money</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 tracking-tighter">
+            <p data-animate className="text-pink text-xs font-bold uppercase tracking-widest mb-4">
+              Earn Money
+            </p>
+            <h1 data-animate className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground mb-6 tracking-tighter">
               Become a <span className="text-pink">Musicable</span><br />Affiliate
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p data-animate className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Earn 20% recurring commission for every student you refer. No limits. No catch.
             </p>
             <button
+              data-animate
               onClick={() => navigate(user ? "/affiliate-signup" : "/login?next=/affiliate-signup")}
               className="btn-hero"
             >
@@ -67,7 +174,7 @@ const AffiliateLanding = () => {
         </section>
 
         {/* Benefits Grid */}
-        <section className="py-20 bg-background">
+        <section ref={benefitsRef} className="py-20 bg-background">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl font-black text-center text-foreground mb-16 tracking-tighter">
               Why Join Our <span className="text-pink">Affiliate Program</span>
@@ -76,7 +183,11 @@ const AffiliateLanding = () => {
               {benefits.map((b, i) => {
                 const Icon = b.icon;
                 return (
-                  <div key={i} className="bg-card/50 border border-border/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div
+                    key={i}
+                    data-card
+                    className="bg-card/50 border border-border/30 rounded-xl p-6 backdrop-blur-sm"
+                  >
                     <div className="w-12 h-12 bg-pink/20 rounded-lg flex items-center justify-center mb-4">
                       <Icon className="w-6 h-6 text-pink" />
                     </div>
@@ -90,23 +201,26 @@ const AffiliateLanding = () => {
         </section>
 
         {/* Features */}
-        <section className="py-20 bg-navy-dark/30">
+        <section ref={featuresRef} className="py-20 bg-navy-dark/30">
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-4xl font-black text-foreground mb-8 tracking-tighter">
+                <h2 data-heading className="text-4xl font-black text-foreground mb-8 tracking-tighter">
                   Everything You Need
                 </h2>
                 <div className="space-y-3">
                   {features.map((f, i) => (
-                    <div key={i} className="flex items-start gap-3">
+                    <div key={i} data-item className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-pink flex-shrink-0 mt-0.5" />
                       <p className="text-foreground/85">{f}</p>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-pink/20 to-purple/20 rounded-2xl p-12 border border-border/30 text-center">
+              <div
+                ref={commissionBoxRef}
+                className="bg-gradient-to-br from-pink/20 to-purple/20 rounded-2xl p-12 border border-border/30 text-center"
+              >
                 <div className="text-6xl font-black text-pink mb-4">20%</div>
                 <p className="text-xl font-bold text-foreground mb-2">Recurring Commission</p>
                 <p className="text-muted-foreground mb-8">
