@@ -28,6 +28,8 @@ export function useSmoothScroll() {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      // Reset scroll position when unmounting (navigating away)
+      window.scrollTo(0, 0);
       lenis.destroy();
       gsap.ticker.remove(tick);
     };
