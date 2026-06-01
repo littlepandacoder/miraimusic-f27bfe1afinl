@@ -47,10 +47,10 @@ const AffiliateDashboard = () => {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/affiliate"); return; }
+      if (!user) { navigate(`/login?next=/affiliate-dashboard`); return; }
 
       const aff = await getMyAffiliate();
-      if (!aff) { navigate("/affiliate"); return; }
+      if (!aff) { navigate("/affiliate-signup"); return; }
 
       const [cls, convs] = await Promise.all([
         getMyClicks(aff.code),
