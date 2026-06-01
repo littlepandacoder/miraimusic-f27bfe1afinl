@@ -25,6 +25,7 @@ import MusicCursor from "./components/MusicCursor";
 import NotFound from "./pages/NotFound";
 import AffiliateLanding from "./pages/AffiliateLanding";
 import AffiliateSignup from "./pages/AffiliateSignup";
+import AffiliateRegister from "./pages/AffiliateRegister";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             {/* Affiliate program */}
             <Route path="/affiliate" element={<AffiliateLanding />} />
             <Route path="/affiliate-signup" element={<AffiliateSignup />} />
+            <Route path="/affiliate-register" element={<AffiliateRegister />} />
             <Route path="/affiliate-dashboard" element={<AffiliateDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
