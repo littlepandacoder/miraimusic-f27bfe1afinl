@@ -31,6 +31,10 @@ const AuthCallback = () => {
     const isNew = new Date(user.created_at).getTime() > Date.now() - 90_000;
     const isStaff = roles.some(r => r === "admin" || r === "teacher");
 
+    // Check for next parameter to redirect to specific page after login
+    const params = new URLSearchParams(window.location.search);
+    const nextPath = params.get("next");
+
     // Wrap async checks in an inner function (useEffect can't be async)
     (async () => {
       // Resolve display name: OAuth metadata → profiles table → email prefix
@@ -71,8 +75,15 @@ const AuthCallback = () => {
         }
       }
 
-      const destination = hasSub ? "/dashboard" : "/signup";
-      if (!hasSub) {
+      // Determine destination: use next param if provided, otherwise default routing
+      let destination = "/dashboard";
+      if (nextPath) {
+        destination = nextPath;
+      } else if (!hasSub) {
+        destination = "/signup";
+      }
+
+      if (!hasSub && !nextPath) {
         sessionStorage.setItem("sub_needed", "1");
         if (user.email) sessionStorage.setItem("oauth_email", user.email);
       }

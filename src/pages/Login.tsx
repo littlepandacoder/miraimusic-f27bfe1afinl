@@ -29,7 +29,11 @@ const Login = () => {
     if (!user || authLoading) return;
     // Route through /auth/callback so both email and Google logins
     // get the same welcome screen, subscription check, and final routing.
-    navigate("/auth/callback");
+    // Pass through the next parameter if it exists
+    const params = new URLSearchParams(window.location.search);
+    const nextPath = params.get("next");
+    const callbackUrl = nextPath ? `/auth/callback?next=${encodeURIComponent(nextPath)}` : "/auth/callback";
+    navigate(callbackUrl);
   }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
