@@ -14,8 +14,8 @@ const AffiliateSignup = () => {
     // Allow signup if: user exists AND (is student OR teacher)
     // Redirect only if explicitly not authenticated
     if (!loading && !user) navigate("/login");
-    // If user is already an affiliate, redirect to dashboard
-    if (!loading && user && roles.includes("affiliate")) navigate("/dashboard");
+    // If user is already an affiliate, redirect to affiliate dashboard
+    if (!loading && user && roles.includes("affiliate")) navigate("/affiliate-dashboard");
   }, [loading, user, roles, navigate]);
 
   if (loading) {
