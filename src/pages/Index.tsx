@@ -8,6 +8,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import WhyPerfectSection from "@/components/WhyPerfectSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import AssessmentSection from "@/components/AssessmentSection";
+import AffiliatePromoSection from "@/components/AffiliatePromoSection";
 import MarqueeBanner from "@/components/MarqueeBanner";
 import StudentsSection from "@/components/StudentsSection";
 import QuizBot from "@/components/QuizBot";
@@ -60,6 +61,7 @@ const Index = () => {
         <WhyPerfectSection />
         <StudentsSection />
         <AssessmentSection />
+        <AffiliatePromoSection />
       </main>
       <Footer />
       <QuizBot />
