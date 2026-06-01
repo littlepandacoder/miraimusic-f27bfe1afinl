@@ -27,7 +27,7 @@ const AffiliatePromoSection = () => {
           </div>
           <div className="flex-shrink-0">
             <button
-              onClick={() => navigate("/affiliate")}
+              onClick={() => navigate("/affiliate-register")}
               className="btn-primary whitespace-nowrap"
             >
               Learn More

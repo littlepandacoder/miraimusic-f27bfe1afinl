@@ -165,7 +165,7 @@ const AffiliateLanding = () => {
             </p>
             <button
               data-animate
-              onClick={() => navigate(user ? "/affiliate-signup" : "/login?next=/affiliate-signup")}
+              onClick={() => navigate("/affiliate-register")}
               className="btn-hero"
             >
               Start Earning Today
@@ -244,7 +244,7 @@ const AffiliateLanding = () => {
               Ready to Start <span className="text-pink">Earning?</span>
             </h2>
             <button
-              onClick={() => navigate(user ? "/affiliate-signup" : "/login?next=/affiliate-signup")}
+              onClick={() => navigate("/affiliate-register")}
               className="btn-primary text-lg px-10 py-5"
             >
               Become an Affiliate

@@ -172,8 +172,8 @@ const AffiliateRegister = () => {
         </form>
 
         <p className="text-center text-muted-foreground text-sm mt-6">
-          Already registered?{" "}
-          <Link to="/affiliate" className="text-pink font-semibold hover:underline">Sign in</Link>
+          Already a member?{" "}
+          <Link to="/affiliate-signup" className="text-pink font-semibold hover:underline">Sign in</Link>
         </p>
       </div>
     </div>
