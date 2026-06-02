@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Upload, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, X, ChevronUp, ChevronDown } from "lucide-react";
 
 interface StudentVideo {
   id: string;
@@ -89,6 +89,32 @@ const ManageStudentVideos = () => {
       setStudents(prev => prev.filter(s => s.id !== id));
       toast({ title: "Student deleted" });
     }
+  };
+
+  const moveStudent = async (studentId: string, direction: "up" | "down") => {
+    const currentIndex = students.findIndex(s => s.id === studentId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= students.length) return;
+
+    const currentStudent = students[currentIndex];
+    const targetStudent = students[targetIndex];
+
+    await supabase
+      .from("student_testimonials")
+      .update({ sort_order: targetStudent.sort_order })
+      .eq("id", currentStudent.id);
+
+    await supabase
+      .from("student_testimonials")
+      .update({ sort_order: currentStudent.sort_order })
+      .eq("id", targetStudent.id);
+
+    const newStudents = [...students];
+    [newStudents[currentIndex], newStudents[targetIndex]] = [newStudents[targetIndex], newStudents[currentIndex]];
+    setStudents(newStudents);
+    toast({ title: `Moved ${direction}` });
   };
 
   const handleVideoUpload = async (studentId: string, file: File) => {
@@ -298,13 +324,31 @@ const ManageStudentVideos = () => {
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-1">{student.achievement}</p>
                 </div>
-                <button
-                  onClick={() => deleteStudent(student.id)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => moveStudent(student.id, "up")}
+                    disabled={students.indexOf(student) === 0}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Move up"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => moveStudent(student.id, "down")}
+                    disabled={students.indexOf(student) === students.length - 1}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Move down"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => deleteStudent(student.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
