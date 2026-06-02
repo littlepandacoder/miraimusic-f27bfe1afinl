@@ -121,7 +121,7 @@ const VideoCard = ({
             boxShadow: `0 0 20px ${student.accent}55`,
           }}
         >
-          <svg viewBox="0 0 24 24" className="w-7 h-7 ml-1" fill={student.accent}>
+          <svg viewBox="0 0 24 24" className="w-7 h-7" fill={student.accent} style={{ marginLeft: '2px' }}>
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
