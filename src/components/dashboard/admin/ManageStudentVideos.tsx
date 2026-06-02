@@ -29,6 +29,7 @@ const ManageStudentVideos = () => {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [showForm, setShowForm] = useState(false);
+  const [detailViewIndex, setDetailViewIndex] = useState<number | null>(null);
 
   // New student form
   const [newName, setNewName] = useState("");
@@ -326,16 +327,231 @@ const ManageStudentVideos = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {students.map((student) => (
+      {/* Detail View Mode */}
+      {detailViewIndex !== null && students[detailViewIndex] && (
+        <Card className="bg-card border-border mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl">
+                {students[detailViewIndex].icon} {students[detailViewIndex].name}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Student {detailViewIndex + 1} of {students.length}
+              </p>
+            </div>
+            <button
+              onClick={() => setDetailViewIndex(null)}
+              className="text-muted-foreground hover:text-foreground"
+              title="Close detail view"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Detail view content - reuse the same card content */}
+            {(() => {
+              const student = students[detailViewIndex];
+              return (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">Age</label>
+                      <p className="font-bold">{student.age}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">Achievement</label>
+                      <p className="font-bold">{student.achievement}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground">Quote</label>
+                    <p className="text-sm italic">"{student.quote}"</p>
+                  </div>
+
+                  {/* Video Upload */}
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground mb-2 block">Video</label>
+                    {student.video_url ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-green-500 flex items-center gap-1">
+                          ✓ Video uploaded
+                        </p>
+                        <video
+                          src={student.video_url}
+                          className="w-full h-32 bg-black rounded object-cover"
+                          controls
+                        />
+                      </div>
+                    ) : (
+                      <label className="border border-dashed border-border rounded p-3 cursor-pointer hover:bg-secondary transition-colors flex flex-col items-center justify-center min-h-24">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleVideoUpload(student.id, e.target.files[0]);
+                            }
+                          }}
+                          className="hidden"
+                          disabled={uploadingId === student.id}
+                        />
+                        {uploadingId === student.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-xs text-muted-foreground mt-1">
+                              Uploading... {Math.round(uploadProgress[student.id] || 0)}%
+                            </span>
+                            <div className="w-full mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${uploadProgress[student.id] || 0}%` }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground mt-1">Click to upload</span>
+                          </>
+                        )}
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Video Pan Controls */}
+                  {student.video_url && (
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-2 block">Video Position</label>
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <button
+                          onClick={() => updatePan(student.id, student.pan_x - 10, student.pan_y)}
+                          className="p-1 rounded hover:bg-secondary transition-colors"
+                          title="Pan left"
+                        >
+                          <ArrowLeft className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => updatePan(student.id, student.pan_x, student.pan_y + 10)}
+                          className="p-1 rounded hover:bg-secondary transition-colors"
+                          title="Pan down"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => updatePan(student.id, 0, 0)}
+                          className="px-2 py-1 text-xs rounded border border-border hover:bg-secondary transition-colors"
+                        >
+                          Reset
+                        </button>
+                        <button
+                          onClick={() => updatePan(student.id, student.pan_x, student.pan_y - 10)}
+                          className="p-1 rounded hover:bg-secondary transition-colors"
+                          title="Pan up"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => updatePan(student.id, student.pan_x + 10, student.pan_y)}
+                          className="p-1 rounded hover:bg-secondary transition-colors"
+                          title="Pan right"
+                        >
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">X: {student.pan_x}px, Y: {student.pan_y}px</p>
+                    </div>
+                  )}
+
+                  {/* Thumbnail Upload */}
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground mb-2 block">Thumbnail</label>
+                    {student.thumbnail_url ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-green-500 flex items-center gap-1">
+                          ✓ Thumbnail uploaded
+                        </p>
+                        <img
+                          src={student.thumbnail_url}
+                          alt={student.name}
+                          className="w-full h-24 bg-muted rounded object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <label className="border border-dashed border-border rounded p-3 cursor-pointer hover:bg-secondary transition-colors flex flex-col items-center justify-center min-h-20">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleThumbnailUpload(student.id, e.target.files[0]);
+                            }
+                          }}
+                          className="hidden"
+                          disabled={uploadingId === student.id}
+                        />
+                        {uploadingId === student.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-xs text-muted-foreground mt-1">
+                              Uploading... {Math.round(uploadProgress[student.id] || 0)}%
+                            </span>
+                            <div className="w-full mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${uploadProgress[student.id] || 0}%` }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground mt-1">Click to upload</span>
+                          </>
+                        )}
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Detail view navigation */}
+                  <div className="flex gap-2 pt-4 border-t border-border">
+                    <Button
+                      onClick={() => setDetailViewIndex(Math.max(0, detailViewIndex - 1))}
+                      disabled={detailViewIndex === 0}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      ← Previous
+                    </Button>
+                    <Button
+                      onClick={() => setDetailViewIndex(Math.min(students.length - 1, detailViewIndex + 1))}
+                      disabled={detailViewIndex === students.length - 1}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Next →
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Grid View Mode */}
+      {detailViewIndex === null && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {students.map((student, index) => (
           <Card key={student.id} className="bg-card border-border overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
+                <div className="flex-1 cursor-pointer hover:opacity-80" onClick={() => setDetailViewIndex(index)}>
                   <CardTitle className="text-lg">
                     {student.icon} {student.name}, {student.age}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-1">{student.achievement}</p>
+                  <p className="text-xs text-primary mt-1">Click for details</p>
                 </div>
                 <div className="flex gap-1">
                   <button
@@ -512,8 +728,9 @@ const ManageStudentVideos = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+            ))}
+        </div>
+      )}
 
       {students.length === 0 && !showForm && (
         <Card className="bg-card border-border">
