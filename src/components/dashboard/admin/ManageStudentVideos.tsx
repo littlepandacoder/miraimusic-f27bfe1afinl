@@ -106,18 +106,21 @@ const ManageStudentVideos = () => {
       });
     }, 200);
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from("student-videos")
       .upload(path, file, { upsert: true });
 
     clearInterval(progressInterval);
 
     if (uploadError) {
+      console.error("Video upload error:", uploadError);
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setUploadingId(null);
       setUploadProgress({});
       return;
     }
+
+    console.log("Video upload successful:", uploadData);
 
     setUploadProgress({ [studentId]: 95 });
 
@@ -155,18 +158,21 @@ const ManageStudentVideos = () => {
       });
     }, 200);
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from("student-videos")
       .upload(path, file, { upsert: true });
 
     clearInterval(progressInterval);
 
     if (uploadError) {
+      console.error("Thumbnail upload error:", uploadError);
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setUploadingId(null);
       setUploadProgress({});
       return;
     }
+
+    console.log("Thumbnail upload successful:", uploadData);
 
     setUploadProgress({ [studentId]: 95 });
 
