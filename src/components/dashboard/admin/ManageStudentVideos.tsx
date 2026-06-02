@@ -25,6 +25,7 @@ const ManageStudentVideos = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [showForm, setShowForm] = useState(false);
 
   // New student form
@@ -92,18 +93,33 @@ const ManageStudentVideos = () => {
 
   const handleVideoUpload = async (studentId: string, file: File) => {
     setUploadingId(studentId);
+    setUploadProgress({ [studentId]: 0 });
+
     const ext = file.name.split(".").pop();
     const path = `student-testimonials/${studentId}/video.${ext}`;
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        const current = prev[studentId] || 0;
+        return { [studentId]: Math.min(current + Math.random() * 30, 90) };
+      });
+    }, 200);
 
     const { error: uploadError } = await supabase.storage
       .from("student-videos")
       .upload(path, file, { upsert: true });
 
+    clearInterval(progressInterval);
+
     if (uploadError) {
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setUploadingId(null);
+      setUploadProgress({});
       return;
     }
+
+    setUploadProgress({ [studentId]: 95 });
 
     const { data: urlData } = supabase.storage.from("student-videos").getPublicUrl(path);
 
@@ -112,6 +128,8 @@ const ManageStudentVideos = () => {
       .update({ video_url: urlData.publicUrl })
       .eq("id", studentId);
 
+    setUploadProgress({ [studentId]: 100 });
+
     if (!updateError) {
       setStudents(prev =>
         prev.map(s => (s.id === studentId ? { ...s, video_url: urlData.publicUrl } : s))
@@ -119,22 +137,38 @@ const ManageStudentVideos = () => {
       toast({ title: "Video uploaded!" });
     }
     setUploadingId(null);
+    setUploadProgress({});
   };
 
   const handleThumbnailUpload = async (studentId: string, file: File) => {
     setUploadingId(studentId);
+    setUploadProgress({ [studentId]: 0 });
+
     const ext = file.name.split(".").pop();
     const path = `student-testimonials/${studentId}/thumbnail.${ext}`;
+
+    // Simulate progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        const current = prev[studentId] || 0;
+        return { [studentId]: Math.min(current + Math.random() * 30, 90) };
+      });
+    }, 200);
 
     const { error: uploadError } = await supabase.storage
       .from("student-videos")
       .upload(path, file, { upsert: true });
 
+    clearInterval(progressInterval);
+
     if (uploadError) {
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setUploadingId(null);
+      setUploadProgress({});
       return;
     }
+
+    setUploadProgress({ [studentId]: 95 });
 
     const { data: urlData } = supabase.storage.from("student-videos").getPublicUrl(path);
 
@@ -143,6 +177,8 @@ const ManageStudentVideos = () => {
       .update({ thumbnail_url: urlData.publicUrl })
       .eq("id", studentId);
 
+    setUploadProgress({ [studentId]: 100 });
+
     if (!updateError) {
       setStudents(prev =>
         prev.map(s => (s.id === studentId ? { ...s, thumbnail_url: urlData.publicUrl } : s))
@@ -150,6 +186,7 @@ const ManageStudentVideos = () => {
       toast({ title: "Thumbnail uploaded!" });
     }
     setUploadingId(null);
+    setUploadProgress({});
   };
 
   if (loading) {
@@ -297,7 +334,15 @@ const ManageStudentVideos = () => {
                     {uploadingId === student.id ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span className="text-xs text-muted-foreground mt-1">Uploading...</span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          Uploading... {Math.round(uploadProgress[student.id] || 0)}%
+                        </span>
+                        <div className="w-full mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${uploadProgress[student.id] || 0}%` }}
+                          />
+                        </div>
                       </>
                     ) : (
                       <>
@@ -339,7 +384,15 @@ const ManageStudentVideos = () => {
                     {uploadingId === student.id ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span className="text-xs text-muted-foreground mt-1">Uploading...</span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          Uploading... {Math.round(uploadProgress[student.id] || 0)}%
+                        </span>
+                        <div className="w-full mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${uploadProgress[student.id] || 0}%` }}
+                          />
+                        </div>
                       </>
                     ) : (
                       <>
