@@ -2,77 +2,38 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { supabase } from "@/integrations/supabase/client";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ── Placeholder student data — swap src / thumbnail later ───────────── */
-const students = [
-  {
-    name: "Emma",
-    age: 9,
-    achievement: "Trinity Grade 1 — Distinction",
-    quote: "I can now play my favourite song!",
-    bg: "linear-gradient(135deg, #2d0a1f 0%, #0f1729 50%, #1a0d2e 100%)",
-    accent: "#ec4899",
-    icon: "🎹",
-    videoSrc: "",           // ← drop your video URL here
-    thumbnail: "",          // ← drop your thumbnail URL here
-  },
-  {
-    name: "Liam",
-    age: 11,
-    achievement: "Trinity Grade 2 — Merit",
-    quote: "Piano Hero made practice actually fun.",
-    bg: "linear-gradient(135deg, #1a0d2e 0%, #0f1729 50%, #0d1f38 100%)",
-    accent: "#a855f7",
-    icon: "🎵",
-    videoSrc: "",
-    thumbnail: "",
-  },
-  {
-    name: "Anaya",
-    age: 8,
-    achievement: "Trinity Grade 1 — Pass",
-    quote: "Sight reading used to scare me. Not anymore!",
-    bg: "linear-gradient(135deg, #0d2030 0%, #0f1729 50%, #0d2030 100%)",
-    accent: "#22d3ee",
-    icon: "🎶",
-    videoSrc: "",
-    thumbnail: "",
-  },
-  {
-    name: "Noah",
-    age: 13,
-    achievement: "Trinity Grade 3 — Distinction",
-    quote: "The gamified modules kept me hooked.",
-    bg: "linear-gradient(135deg, #0d2010 0%, #0f1729 50%, #0d200d 100%)",
-    accent: "#84cc16",
-    icon: "🎼",
-    videoSrc: "",
-    thumbnail: "",
-  },
-  {
-    name: "Zara",
-    age: 10,
-    achievement: "Trinity Grade 2 — Distinction",
-    quote: "20 minutes a day changed everything.",
-    bg: "linear-gradient(135deg, #2d1f00 0%, #0f1729 50%, #2d1500 100%)",
-    accent: "#f5c518",
-    icon: "🌟",
-    videoSrc: "",
-    thumbnail: "",
-  },
-  {
-    name: "Sofia",
-    age: 7,
-    achievement: "Trinity Grade 1 — Merit",
-    quote: "I love collecting XP in Piano Hero!",
-    bg: "linear-gradient(135deg, #2d0014 0%, #0f1729 50%, #2d0a1f 100%)",
-    accent: "#f43f5e",
-    icon: "⭐",
-    videoSrc: "",
-    thumbnail: "",
-  },
+interface StudentData {
+  name: string;
+  age: number;
+  achievement: string;
+  quote: string;
+  bg: string;
+  accent: string;
+  icon: string;
+  videoSrc: string | null;
+  thumbnail: string | null;
+}
+
+const ACCENT_COLORS = [
+  "#ec4899", // pink
+  "#a855f7", // purple
+  "#22d3ee", // cyan
+  "#84cc16", // lime
+  "#f5c518", // yellow
+  "#f43f5e", // rose
+];
+
+const BACKGROUND_GRADIENTS = [
+  "linear-gradient(135deg, #2d0a1f 0%, #0f1729 50%, #1a0d2e 100%)",
+  "linear-gradient(135deg, #1a0d2e 0%, #0f1729 50%, #0d1f38 100%)",
+  "linear-gradient(135deg, #0d2030 0%, #0f1729 50%, #0d2030 100%)",
+  "linear-gradient(135deg, #0d2010 0%, #0f1729 50%, #0d200d 100%)",
+  "linear-gradient(135deg, #2d1f00 0%, #0f1729 50%, #2d1500 100%)",
+  "linear-gradient(135deg, #2d0014 0%, #0f1729 50%, #2d0a1f 100%)",
 ];
 
 /* ── Video Card ──────────────────────────────────────────────────────── */
@@ -82,7 +43,7 @@ const VideoCard = ({
   onClick,
   cardRef,
 }: {
-  student: typeof students[0];
+  student: StudentData;
   index: number;
   onClick: () => void;
   cardRef: (el: HTMLDivElement | null) => void;
@@ -193,6 +154,7 @@ const VideoCard = ({
 
 /* ── Main Section ────────────────────────────────────────────────────── */
 const StudentsSection = () => {
+  const [students, setStudents] = useState<StudentData[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const sectionRef   = useRef<HTMLElement>(null);
   const titleRef     = useRef<HTMLDivElement>(null);
@@ -200,6 +162,31 @@ const StudentsSection = () => {
   const backdropRef  = useRef<HTMLDivElement>(null);
   const playerRef    = useRef<HTMLDivElement>(null);
   const videoRef     = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const { data } = await supabase
+        .from("student_testimonials")
+        .select("*")
+        .order("sort_order");
+
+      if (data) {
+        const studentData = data.map((s, i) => ({
+          name: s.name,
+          age: s.age,
+          achievement: s.achievement,
+          quote: s.quote,
+          icon: s.icon,
+          videoSrc: s.video_url,
+          thumbnail: s.thumbnail_url,
+          bg: BACKGROUND_GRADIENTS[i % BACKGROUND_GRADIENTS.length],
+          accent: ACCENT_COLORS[i % ACCENT_COLORS.length],
+        }));
+        setStudents(studentData);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   /* ── Scroll reveal for cards ──────────────────────────────────────── */
   useEffect(() => {
@@ -281,17 +268,23 @@ const StudentsSection = () => {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {students.map((s, i) => (
-              <VideoCard
-                key={i}
-                student={s}
-                index={i}
-                onClick={() => openModal(i)}
-                cardRef={(el) => { cardRefs.current[i] = el; }}
-              />
-            ))}
-          </div>
+          {students.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {students.map((s, i) => (
+                <VideoCard
+                  key={i}
+                  student={s}
+                  index={i}
+                  onClick={() => openModal(i)}
+                  cardRef={(el) => { cardRefs.current[i] = el; }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Student testimonials coming soon...</p>
+            </div>
+          )}
         </div>
       </section>
 

@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   MessageSquare,
+  Film,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -86,14 +87,15 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     if (role === "admin") {
       return [
         ...baseItems,
-        { href: "/dashboard/users",      icon: Users,         label: t("dashboard.nav.manageUsers") },
-        { href: "/dashboard/courses",    icon: BookOpen,      label: t("dashboard.nav.courseContent") },
-        { href: "/dashboard/lessons",    icon: Calendar,      label: t("dashboard.nav.allLessons") },
-        { href: "/dashboard/slots",      icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
-        { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
-        { href: "/dashboard/piano-hero", icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
-        { href: "/dashboard/districts",  icon: Settings,      label: "Assignments" },
-        { href: "/dashboard/affiliates", icon: Users,         label: "Affiliates" },
+        { href: "/dashboard/users",           icon: Users,         label: t("dashboard.nav.manageUsers") },
+        { href: "/dashboard/courses",         icon: BookOpen,      label: t("dashboard.nav.courseContent") },
+        { href: "/dashboard/lessons",         icon: Calendar,      label: t("dashboard.nav.allLessons") },
+        { href: "/dashboard/slots",           icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
+        { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
+        { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
+        { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
+        { href: "/dashboard/districts",       icon: Settings,      label: "Assignments" },
+        { href: "/dashboard/affiliates",      icon: Users,         label: "Affiliates" },
         ...gameItems,
       ];
     }
