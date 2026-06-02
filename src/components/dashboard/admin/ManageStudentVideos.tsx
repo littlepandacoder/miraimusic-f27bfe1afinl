@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Upload, Loader2, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, X, ChevronUp, ChevronDown, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 
 interface StudentVideo {
   id: string;
@@ -16,6 +16,8 @@ interface StudentVideo {
   icon: string;
   video_url: string | null;
   thumbnail_url: string | null;
+  pan_x: number;
+  pan_y: number;
   sort_order: number;
   created_at: string;
 }
@@ -115,6 +117,17 @@ const ManageStudentVideos = () => {
     [newStudents[currentIndex], newStudents[targetIndex]] = [newStudents[targetIndex], newStudents[currentIndex]];
     setStudents(newStudents);
     toast({ title: `Moved ${direction}` });
+  };
+
+  const updatePan = async (studentId: string, panX: number, panY: number) => {
+    await supabase
+      .from("student_testimonials")
+      .update({ pan_x: panX, pan_y: panY })
+      .eq("id", studentId);
+
+    setStudents(prev =>
+      prev.map(s => (s.id === studentId ? { ...s, pan_x: panX, pan_y: panY } : s))
+    );
   };
 
   const handleVideoUpload = async (studentId: string, file: File) => {
@@ -403,6 +416,50 @@ const ManageStudentVideos = () => {
                   </label>
                 )}
               </div>
+
+              {/* Video Pan Controls */}
+              {student.video_url && (
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground mb-2 block">Video Position</label>
+                  <div className="flex items-center justify-center gap-1 mb-2">
+                    <button
+                      onClick={() => updatePan(student.id, student.pan_x - 10, student.pan_y)}
+                      className="p-1 rounded hover:bg-secondary transition-colors"
+                      title="Pan left"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => updatePan(student.id, student.pan_x, student.pan_y + 10)}
+                      className="p-1 rounded hover:bg-secondary transition-colors"
+                      title="Pan down"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => updatePan(student.id, 0, 0)}
+                      className="px-2 py-1 text-xs rounded border border-border hover:bg-secondary transition-colors"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={() => updatePan(student.id, student.pan_x, student.pan_y - 10)}
+                      className="p-1 rounded hover:bg-secondary transition-colors"
+                      title="Pan up"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => updatePan(student.id, student.pan_x + 10, student.pan_y)}
+                      className="p-1 rounded hover:bg-secondary transition-colors"
+                      title="Pan right"
+                    >
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">X: {student.pan_x}px, Y: {student.pan_y}px</p>
+                </div>
+              )}
 
               {/* Thumbnail Upload */}
               <div>

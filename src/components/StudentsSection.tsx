@@ -16,6 +16,8 @@ interface StudentData {
   icon: string;
   videoSrc: string | null;
   thumbnail: string | null;
+  panX: number;
+  panY: number;
 }
 
 const ACCENT_COLORS = [
@@ -156,7 +158,6 @@ const VideoCard = ({
 const StudentsSection = () => {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [videoPan, setVideoPan] = useState({ x: 0, y: 0 });
   const sectionRef   = useRef<HTMLElement>(null);
   const titleRef     = useRef<HTMLDivElement>(null);
   const cardRefs     = useRef<(HTMLDivElement | null)[]>([]);
@@ -180,6 +181,8 @@ const StudentsSection = () => {
           icon: s.icon,
           videoSrc: s.video_url,
           thumbnail: s.thumbnail_url,
+          panX: s.pan_x || 0,
+          panY: s.pan_y || 0,
           bg: BACKGROUND_GRADIENTS[i % BACKGROUND_GRADIENTS.length],
           accent: ACCENT_COLORS[i % ACCENT_COLORS.length],
         }));
@@ -344,87 +347,44 @@ const StudentsSection = () => {
               </button>
             </div>
 
-            {/* Video area with pan controls */}
-            <div className="space-y-2">
-              <div className="relative bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
-                {/* Placeholder state (shown when no src) */}
-                {!current.videoSrc && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                    <div
-                      className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border"
-                      style={{
-                        background: `${current.accent}12`,
-                        borderColor: `${current.accent}30`,
-                        boxShadow: `0 0 30px ${current.accent}20`,
-                      }}
-                    >
-                      {current.icon}
-                    </div>
-                    <p className="text-foreground font-black text-lg">{current.name}'s Story</p>
-                    <p className="text-muted-foreground text-sm">Video coming soon</p>
-                    <span
-                      className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border"
-                      style={{ color: current.accent, background: `${current.accent}12`, borderColor: `${current.accent}30` }}
-                    >
-                      {current.achievement}
-                    </span>
+            {/* Video area */}
+            <div className="relative bg-black overflow-hidden" style={{ aspectRatio: "16/9" }}>
+              {/* Placeholder state (shown when no src) */}
+              {!current.videoSrc && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-4xl border"
+                    style={{
+                      background: `${current.accent}12`,
+                      borderColor: `${current.accent}30`,
+                      boxShadow: `0 0 30px ${current.accent}20`,
+                    }}
+                  >
+                    {current.icon}
                   </div>
-                )}
-
-                {/* Actual video with pan transform */}
-                <video
-                  ref={videoRef}
-                  src={current.videoSrc}
-                  className={`w-full h-full object-cover ${current.videoSrc ? "block" : "hidden"}`}
-                  controls
-                  playsInline
-                  autoPlay
-                  style={{
-                    transform: `translate(${videoPan.x}px, ${videoPan.y}px)`,
-                    transition: "transform 0.2s ease-out",
-                  }}
-                />
-              </div>
-
-              {/* Pan controls */}
-              {current.videoSrc && (
-                <div className="flex items-center justify-center gap-2">
-                  <button
-                    onClick={() => setVideoPan(p => ({ ...p, x: p.x + 10 }))}
-                    className="p-1 rounded hover:bg-white/10 transition-colors"
-                    title="Pan left"
+                  <p className="text-foreground font-black text-lg">{current.name}'s Story</p>
+                  <p className="text-muted-foreground text-sm">Video coming soon</p>
+                  <span
+                    className="text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border"
+                    style={{ color: current.accent, background: `${current.accent}12`, borderColor: `${current.accent}30` }}
                   >
-                    ◀
-                  </button>
-                  <button
-                    onClick={() => setVideoPan(p => ({ ...p, y: p.y + 10 }))}
-                    className="p-1 rounded hover:bg-white/10 transition-colors"
-                    title="Pan down"
-                  >
-                    ▼
-                  </button>
-                  <button
-                    onClick={() => setVideoPan({ x: 0, y: 0 })}
-                    className="px-3 py-1 text-xs rounded border border-border hover:bg-white/10 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    onClick={() => setVideoPan(p => ({ ...p, y: p.y - 10 }))}
-                    className="p-1 rounded hover:bg-white/10 transition-colors"
-                    title="Pan up"
-                  >
-                    ▲
-                  </button>
-                  <button
-                    onClick={() => setVideoPan(p => ({ ...p, x: p.x - 10 }))}
-                    className="p-1 rounded hover:bg-white/10 transition-colors"
-                    title="Pan right"
-                  >
-                    ▶
-                  </button>
+                    {current.achievement}
+                  </span>
                 </div>
               )}
+
+              {/* Actual video with pan transform from database */}
+              <video
+                ref={videoRef}
+                src={current.videoSrc}
+                className={`w-full h-full object-cover ${current.videoSrc ? "block" : "hidden"}`}
+                controls
+                playsInline
+                autoPlay
+                style={{
+                  transform: `translate(${current.panX}px, ${current.panY}px)`,
+                }}
+              />
             </div>
 
             {/* Footer */}
