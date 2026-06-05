@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Pricing from "./pages/Pricing";
 import PianoTheory from "./pages/PianoTheory";
 import SightReading from "./pages/SightReading";
+import DrumSightReading from "./pages/DrumSightReading";
 import NoteNaming from "./pages/NoteNaming";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/blog/piano-theory" element={<PianoTheory />} />
             <Route path="/blog/sight-reading" element={<SightReading />} />
+            <Route path="/blog/drum-sight-reading" element={<DrumSightReading />} />
             <Route path="/blog/note-naming" element={<NoteNaming />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

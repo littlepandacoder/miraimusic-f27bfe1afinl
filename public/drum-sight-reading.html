@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Drum Sight Reading — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<style>
+:root {
+  --bg:       #0f172a;
+  --bg2:      #141e30;
+  --card:     #1a2540;
+  --card2:    #1e2d4a;
+  --border:   rgba(255,255,255,0.08);
+  --pink:     #ec4899;
+  --pink-dim: rgba(236,72,153,0.15);
+  --sky:      #00D4FF;
+  --green:    #39D98A;
+  --purple:   #A78BFA;
+  --amber:    #F59E0B;
+  --red:      #EF4444;
+  --white:    #FFFFFF;
+  --off-white:#E8ECF0;
+  --muted:    #8892A4;
+  --muted2:   #4A5568;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--off-white);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden;min-height:100vh}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:60px;background:rgba(15,23,42,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-weight:800;font-size:1.15rem;color:var(--white);letter-spacing:-.03em;text-decoration:none}
+.nav-right{display:flex;align-items:center;gap:.8rem}
+.nav-link{color:var(--muted);font-size:.82rem;text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--white)}
+.midi-status{display:flex;align-items:center;gap:.4rem;font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);padding:.3rem .8rem;border:1px solid var(--border);border-radius:100px}
+.midi-dot{width:7px;height:7px;border-radius:50%;background:var(--muted2);transition:background .3s}
+.midi-dot.connected{background:var(--green);box-shadow:0 0 6px rgba(57,217,138,.6)}
+
+.page{max-width:1400px;margin:0 auto;padding:80px 2.5rem 4rem}
+
+.hero-strip{background:linear-gradient(135deg,rgba(255,45,120,.12) 0%,rgba(0,212,255,.06) 100%);border:1px solid rgba(255,45,120,.2);border-radius:16px;padding:2rem 2.5rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.hero-title{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;color:var(--white);letter-spacing:-.03em;line-height:1.1}
+.hero-title span{color:var(--pink)}
+.hero-sub{font-size:.9rem;color:var(--muted);margin-top:.35rem}
+.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.badge{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);font-size:.72rem;padding:.25rem .75rem;border-radius:100px;font-family:'DM Mono',monospace}
+.badge.pink{background:var(--pink-dim);border-color:rgba(255,45,120,.3);color:var(--pink)}
+.badge.green{background:rgba(57,217,138,.1);border-color:rgba(57,217,138,.3);color:var(--green)}
+
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start}
+@media(max-width:960px){.main-grid{grid-template-columns:1fr}}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem}
+.card-title{font-size:.68rem;font-weight:700;color:var(--pink);letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
+.card-title::before{content:'';width:14px;height:1px;background:var(--pink)}
+
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem}
+.setting-group label{display:block;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+.seg-control{display:flex;gap:1px;background:var(--bg2);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.seg-btn{flex:1;padding:.45rem .5rem;font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;color:var(--muted);background:transparent;border:none;cursor:pointer;transition:all .15s;text-align:center}
+.seg-btn.active{background:var(--pink);color:#fff}
+.seg-btn:hover:not(.active){background:rgba(255,255,255,.05);color:var(--off-white)}
+.start-btn{width:100%;padding:.8rem;background:var(--pink);color:#fff;font-weight:800;font-size:.9rem;border:none;border-radius:10px;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:opacity .2s,transform .2s;margin-top:.5rem}
+.start-btn:hover{opacity:.88;transform:scale(1.02)}
+.start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;position:relative;min-height:280px;display:flex;align-items:center;justify-content:center}
+#staffCanvas{width:100%;height:auto;display:block;border-radius:6px}
+
+.feedback-banner{border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;font-weight:600;font-size:.9rem;min-height:52px;transition:all .3s;opacity:0;transform:translateY(-6px)}
+.feedback-banner.show{opacity:1;transform:translateY(0)}
+.feedback-banner.correct{background:rgba(57,217,138,.12);border:1px solid rgba(57,217,138,.3);color:var(--green)}
+.feedback-banner.wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red)}
+.feedback-banner.slow{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:var(--amber)}
+.feedback-icon{font-size:1.2rem;flex-shrink:0}
+
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:.4rem;margin-bottom:1rem}
+.timer-ring-svg{transform:rotate(-90deg)}
+.timer-ring-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:5}
+.timer-ring-fill{fill:none;stroke-width:5;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:220;transition:stroke-dashoffset .1s linear,stroke .5s}
+.timer-text{font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--white);text-align:center;line-height:1}
+.timer-sublabel{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);letter-spacing:.1em;text-align:center}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.8rem}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.8rem;text-align:center}
+.stat-val{font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--pink);line-height:1;margin-bottom:.2rem}
+.stat-lbl{font-size:.7rem;color:var(--muted2);letter-spacing:.04em}
+.accuracy-bar-wrap{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-top:.3rem}
+.accuracy-bar{height:100%;background:var(--green);border-radius:3px;transition:width .5s ease;width:0%}
+
+.session-log{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem}
+.session-log::-webkit-scrollbar{width:4px}
+.session-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.log-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .6rem;background:var(--bg2);border-radius:6px;font-size:.78rem}
+.log-note{font-family:'DM Mono',monospace;font-weight:500;color:var(--off-white)}
+.log-time{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted2)}
+.log-result{font-size:.72rem;font-weight:600}
+.log-result.ok{color:var(--green)}.log-result.no{color:var(--red)}.log-result.slow{color:var(--amber)}
+.log-empty{text-align:center;color:var(--muted2);font-size:.82rem;padding:1.5rem 0;font-style:italic}
+
+.progress-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:1rem;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:2px;transition:width .4s ease;width:0%}
+
+.idle-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;border-radius:12px;background:rgba(13,17,23,.7)}
+.idle-icon{font-size:2.5rem}
+.idle-text{font-size:.88rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:center}
+
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--pink);color:#fff;border-radius:10px;padding:.7rem 1.4rem;font-size:.85rem;font-weight:600;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:680px){.settings-grid{grid-template-columns:1fr}nav{padding:0 1rem}}
+</style>
+<script src="/ranking-popup.js"></script>
+</head>
+<body>
+<script>
+(function(){try{var h=Object.keys(localStorage).some(function(k){return /^sb-.*-auth-token$/.test(k)&&localStorage.getItem(k);});if(!h)window.location.replace('/login');}catch(e){}})();
+</script>
+
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/dashboard" class="nav-logo">Musicable</a>
+  <div class="nav-right">
+    <div class="midi-status" id="midiStatus">
+      <div class="midi-dot" id="midiDot"></div>
+      <span id="midiLabel">MIDI: off</span>
+    </div>
+    <a href="/dashboard" class="nav-link">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero-strip">
+    <div>
+      <div class="hero-title">Drum Sight <span>Reading</span></div>
+      <div class="hero-sub">Learn drum notation by playing along with your electronic drums. Real-time MIDI input validation.</div>
+      <div class="hero-badges">
+        <span class="badge pink">MIDI Ready</span>
+        <span class="badge green">E-Drums</span>
+        <span class="badge">Drum Notation</span>
+        <span class="badge">Response Timer</span>
+        <span class="badge">Accuracy Tracking</span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted2);margin-bottom:.3rem">SESSION</div>
+      <div id="sessionCounter" style="font-family:'DM Mono',monospace;font-size:2rem;font-weight:500;color:var(--white);line-height:1">0 / 0</div>
+      <div style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);margin-top:.2rem">correct / total</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- LEFT: Staff + Answer -->
+    <div>
+
+      <!-- Staff display -->
+      <div class="staff-area">
+        <canvas id="staffCanvas" width="900" height="280"></canvas>
+        <div class="idle-overlay" id="idleOverlay">
+          <div class="idle-icon">🥁</div>
+          <div class="idle-text">Configure settings and press<br/><strong style="color:var(--pink)">Start Session</strong></div>
+        </div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-banner" id="feedbackBanner">
+        <span class="feedback-icon" id="feedbackIcon"></span>
+        <div>
+          <div id="feedbackMain"></div>
+          <div id="feedbackSub" style="font-size:.78rem;opacity:.75;margin-top:.1rem"></div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+      <!-- Drum instructions -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.5rem">
+        <div class="card-title" style="margin-bottom:.8rem">🎯 Play the drum note</div>
+        <div id="drumInstructions" style="font-size:.9rem;color:var(--muted);line-height:1.6">
+          Play the drum sound shown on the staff. Make sure your MIDI device is connected above.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Settings + Stats -->
+    <div>
+
+      <!-- Settings card -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">⚙ Settings</div>
+
+        <div class="setting-group" style="margin-bottom:.8rem">
+          <label>Difficulty</label>
+          <div class="seg-control">
+            <button class="seg-btn active" data-diff="beginner" onclick="setDiff('beginner',this)">Easy</button>
+            <button class="seg-btn" data-diff="intermediate" onclick="setDiff('intermediate',this)">Mid</button>
+            <button class="seg-btn" data-diff="advanced" onclick="setDiff('advanced',this)">Hard</button>
+          </div>
+        </div>
+
+        <div class="setting-group" style="margin-bottom:.8rem">
+          <label>Questions per session</label>
+          <div class="seg-control">
+            <button class="seg-btn" data-count="5" onclick="setCount(5,this)">5</button>
+            <button class="seg-btn active" data-count="10" onclick="setCount(10,this)">10</button>
+            <button class="seg-btn" data-count="20" onclick="setCount(20,this)">20</button>
+            <button class="seg-btn" data-count="0" onclick="setCount(0,this)">∞</button>
+          </div>
+        </div>
+
+        <button class="start-btn" id="startBtn" onclick="startSession()">▶ Start Session</button>
+        <button class="start-btn" id="stopBtn" onclick="stopSession()" style="display:none;background:var(--card2);border:1px solid var(--border);color:var(--muted)">⏹ End Session</button>
+      </div>
+
+      <!-- Timer -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">⏱ Response Timer</div>
+        <div class="timer-wrap">
+          <svg width="80" height="80" class="timer-ring-svg">
+            <circle class="timer-ring-bg" cx="40" cy="40" r="35"/>
+            <circle class="timer-ring-fill" id="timerRing" cx="40" cy="40" r="35" stroke="#FF2D78" stroke-dasharray="220" stroke-dashoffset="220"/>
+          </svg>
+          <div class="timer-text" id="timerText">—</div>
+          <div class="timer-sublabel">SECONDS</div>
+        </div>
+        <div id="timerLimitLabel" style="font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted2);text-align:center">Limit: 2.0s · Faster = better score</div>
+      </div>
+
+      <!-- Live stats -->
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-title">📊 Live Stats</div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-val" id="statAcc">—</div>
+            <div class="stat-lbl">accuracy</div>
+            <div class="accuracy-bar-wrap"><div class="accuracy-bar" id="accBar"></div></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statAvgTime">—</div>
+            <div class="stat-lbl">avg time</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statStreak">0</div>
+            <div class="stat-lbl">streak</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session log -->
+      <div class="card">
+        <div class="card-title">📋 Session Log</div>
+        <div class="session-log" id="sessionLog">
+          <div class="log-empty">No answers yet — start a session!</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   TONE.JS AUDIO
+═══════════════════════════════════════════════════════════ */
+const limiter = new Tone.Limiter(-3).toDestination();
+
+const drumSynth = new Tone.PolySynth(Tone.Synth, {
+  oscillator: { type: 'square' },
+  envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
+  volume: -12,
+}).connect(limiter);
+
+async function ensureAudio() {
+  if (Tone.context.state !== 'running') await Tone.start();
+}
+
+function playDrumSound(drumType) {
+  ensureAudio().then(() => {
+    const now = Tone.now();
+    switch(drumType) {
+      case 'kick':
+        // Low frequency drum sound
+        const kickSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.3, sustain: 0, release: 0.1 } }).connect(limiter);
+        kickSynth.triggerAttackRelease('C1', '8n', now);
+        break;
+      case 'snare':
+        // White noise snare
+        const noise = new Tone.Noise('white').connect(limiter);
+        noise.start(now);
+        noise.stop(now + 0.15);
+        break;
+      case 'hihat':
+        // Short high-pitched sound
+        drumSynth.triggerAttackRelease('G5', '16n', now);
+        break;
+      case 'tom-high':
+        drumSynth.triggerAttackRelease('A4', '16n', now);
+        break;
+      case 'tom-mid':
+        drumSynth.triggerAttackRelease('F4', '16n', now);
+        break;
+      case 'tom-low':
+        drumSynth.triggerAttackRelease('C4', '16n', now);
+        break;
+    }
+  });
+}
+
+function playCorrect() {
+  ensureAudio().then(() => {
+    const now = Tone.now();
+    const correctSynth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.4 },
+      volume: -14,
+    }).connect(limiter);
+    correctSynth.triggerAttackRelease('C5', '8n', now);
+    correctSynth.triggerAttackRelease('E5', '8n', now + 0.12);
+  });
+}
+
+function playWrong() {
+  ensureAudio().then(() => {
+    const wrongSynth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.2 },
+      volume: -18,
+    }).connect(limiter);
+    wrongSynth.triggerAttackRelease('A2', '8n', Tone.now());
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DRUM DATA
+═══════════════════════════════════════════════════════════ */
+const DRUM_TYPES = [
+  { name: 'kick', label: 'Kick Drum', symbol: '🥁', midiNote: 36 },
+  { name: 'snare', label: 'Snare', symbol: '🎯', midiNote: 38 },
+  { name: 'hihat', label: 'Hi-Hat', symbol: '🔔', midiNote: 42 },
+  { name: 'tom-high', label: 'Hi Tom', symbol: '🥁', midiNote: 50 },
+  { name: 'tom-mid', label: 'Mid Tom', symbol: '🥁', midiNote: 47 },
+  { name: 'tom-low', label: 'Low Tom', symbol: '🥁', midiNote: 45 },
+];
+
+const DRUM_MAP = {};
+DRUM_TYPES.forEach(d => { DRUM_MAP[d.midiNote] = d.name; });
+
+/* ═══════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════ */
+let state = {
+  running:       false,
+  difficulty:    'beginner',
+  count:         10,
+  midiConnected: false,
+  currentDrum:   null,
+  questionNum:   0,
+  totalQ:        0,
+  correct:       0,
+  streak:        0,
+  bestStreak:    0,
+  questionStart: 0,
+  timerRAF:      null,
+  log:           [],
+  answered:      false,
+  lastDrumType:  null,
+};
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════ */
+function setDiff(v, btn) {
+  state.difficulty = v;
+  document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setCount(v, btn) {
+  state.count = v;
+  document.querySelectorAll('[data-count]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SESSION CONTROL
+═══════════════════════════════════════════════════════════ */
+function startSession() {
+  ensureAudio();
+
+  state.running      = true;
+  state.questionNum  = 0;
+  state.totalQ       = 0;
+  state.correct      = 0;
+  state.streak       = 0;
+  state.bestStreak   = 0;
+  state.log          = [];
+  state.answered     = false;
+  state.lastDrumType = null;
+
+  document.getElementById('startBtn').style.display  = 'none';
+  document.getElementById('stopBtn').style.display   = 'block';
+  document.getElementById('idleOverlay').style.display = 'none';
+  document.getElementById('sessionLog').innerHTML    = '<div class="log-empty" style="opacity:.5">Session started…</div>';
+  hideFeedback();
+  updateStats();
+  nextQuestion();
+}
+
+function stopSession() {
+  state.running = false;
+  cancelAnimationFrame(state.timerRAF);
+  setTimerDisplay(null);
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('stopBtn').style.display  = 'none';
+  document.getElementById('idleOverlay').style.display = 'flex';
+  updateStats();
+}
+
+function nextQuestion() {
+  if (!state.running) return;
+  if (state.count > 0 && state.questionNum >= state.count) {
+    sessionComplete();
+    return;
+  }
+
+  state.questionNum++;
+  state.totalQ++;
+  state.answered = false;
+
+  // Pick a drum (avoid repetition)
+  let drum;
+  let attempts = 0;
+  do {
+    drum = DRUM_TYPES[Math.floor(Math.random() * DRUM_TYPES.length)];
+    if (drum.name !== state.lastDrumType || attempts >= 20) break;
+    attempts++;
+  } while (true);
+
+  state.currentDrum = drum;
+  state.lastDrumType = drum.name;
+
+  drawStaff(drum);
+  playDrumSound(drum.name);
+  document.getElementById('drumInstructions').textContent = `Play the ${drum.label}`;
+
+  if (state.count > 0) {
+    document.getElementById('progressFill').style.width = ((state.questionNum - 1) / state.count * 100) + '%';
+  }
+  document.getElementById('sessionCounter').textContent = `${state.correct} / ${state.totalQ}`;
+
+  hideFeedback();
+  state.questionStart = performance.now();
+  startTimer();
+}
+
+function handleAnswer(drumName) {
+  if (!state.running || state.answered) return;
+  state.answered = true;
+  cancelAnimationFrame(state.timerRAF);
+
+  const elapsed = (performance.now() - state.questionStart) / 1000;
+  const timerLimit = 2.0;
+  const correct = drumName === state.currentDrum.name;
+  const tooSlow = elapsed > timerLimit;
+  const win = correct && !tooSlow;
+
+  setTimerDisplay(elapsed, elapsed <= timerLimit * 0.5 ? 'green' : elapsed <= timerLimit * 0.85 ? 'amber' : 'red');
+
+  if (win) {
+    playCorrect();
+    state.correct++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  } else {
+    playWrong();
+    state.streak = 0;
+  }
+
+  // Feedback
+  if (tooSlow && correct) {
+    showFeedback('slow', '⏰', `Correct but too slow!`, `${elapsed.toFixed(2)}s · Keep practicing`);
+  } else if (win) {
+    showFeedback('correct', '✓', `Correct! ${state.currentDrum.label}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+  } else {
+    showFeedback('wrong', '✗', `Not quite — it was ${state.currentDrum.label}`, `You played ${DRUM_MAP[drumName] || drumName} · ${elapsed.toFixed(2)}s`);
+  }
+
+  // Log
+  const result = tooSlow || !correct ? (tooSlow ? 'slow' : 'no') : 'ok';
+  state.log.push({ note: state.currentDrum.label, guess: DRUM_MAP[drumName] || drumName, time: elapsed, correct: win, tooSlow, result });
+  appendLogRow(state.log[state.log.length - 1]);
+  updateStats();
+
+  setTimeout(() => {
+    nextQuestion();
+  }, 1400);
+}
+
+function sessionComplete() {
+  state.running = false;
+  const acc = state.totalQ > 0 ? Math.round((state.correct / state.totalQ) * 100) : 0;
+  showFeedback('correct', '🏆', `Session complete! ${acc}% accuracy`, `${state.correct}/${state.totalQ} correct · Best streak: ${state.bestStreak}`);
+  document.getElementById('progressFill').style.width = '100%';
+
+  const overlay = document.getElementById('idleOverlay');
+  overlay.style.display = 'flex';
+  overlay.querySelector('.idle-icon').textContent = '🏆';
+  overlay.querySelector('.idle-text').innerHTML = `<strong style="color:var(--green)">${acc}% accuracy</strong><br><span>Press Start for a new session</span>`;
+
+  showToast(`🏆 Session done! ${acc}% accuracy`);
+
+  if (state.totalQ > 0) saveGameScore('drum_sight_reading', state.correct, state.correct, state.totalQ, state.bestStreak);
+}
+
+function saveGameScore(game, score, correct, total, bestStreak) {
+  try {
+    var key = Object.keys(localStorage).find(function(k) { return /^sb-.*-auth-token$/.test(k); });
+    if (!key) return;
+    var session = JSON.parse(localStorage.getItem(key) || '{}');
+    var token = session.access_token;
+    if (!token) return;
+    var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    var userId = payload.sub;
+    if (!userId) return;
+    fetch('https://tychkyunjfbkksyxknhn.supabase.co/rest/v1/game_scores', {
+      method: 'POST',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw',
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ user_id: userId, game: game, score: score, correct: correct, total: total, best_streak: bestStreak })
+    }).catch(function() {});
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════════════════════ */
+const TIMER_LIMIT = 2.0;
+const RING_CIRCUM = 2 * Math.PI * 35;
+
+function startTimer() {
+  cancelAnimationFrame(state.timerRAF);
+  const t0 = performance.now();
+
+  function tick() {
+    if (!state.running || state.answered) return;
+    const elapsed = (performance.now() - t0) / 1000;
+    const fraction = Math.min(elapsed / TIMER_LIMIT, 1);
+    const offset = RING_CIRCUM * (1 - fraction);
+
+    const ring = document.getElementById('timerRing');
+    const text = document.getElementById('timerText');
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = fraction < 0.5 ? '#39D98A' : fraction < 0.85 ? '#F59E0B' : '#EF4444';
+    text.textContent = elapsed.toFixed(1);
+    text.style.color = fraction > 0.85 ? '#EF4444' : 'var(--white)';
+
+    if (elapsed >= TIMER_LIMIT) {
+      ring.style.strokeDashoffset = 0;
+      text.textContent = TIMER_LIMIT.toFixed(1);
+      if (!state.answered) handleAnswer(null);
+      return;
+    }
+    state.timerRAF = requestAnimationFrame(tick);
+  }
+  state.timerRAF = requestAnimationFrame(tick);
+}
+
+function setTimerDisplay(val, color = 'white') {
+  const ring = document.getElementById('timerRing');
+  const text = document.getElementById('timerText');
+  if (val === null) {
+    ring.style.strokeDashoffset = RING_CIRCUM;
+    ring.style.stroke = '#FF2D78';
+    text.textContent = '—';
+    text.style.color = 'var(--white)';
+    return;
+  }
+  ring.style.strokeDashoffset = RING_CIRCUM * (1 - Math.min(val / TIMER_LIMIT, 1));
+  ring.style.stroke = color === 'green' ? '#39D98A' : color === 'amber' ? '#F59E0B' : '#EF4444';
+  text.textContent = val.toFixed(2);
+  text.style.color = color === 'red' ? '#EF4444' : 'var(--white)';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FEEDBACK
+═══════════════════════════════════════════════════════════ */
+function showFeedback(type, icon, main, sub) {
+  const banner = document.getElementById('feedbackBanner');
+  banner.className = `feedback-banner ${type} show`;
+  document.getElementById('feedbackIcon').textContent = icon;
+  document.getElementById('feedbackMain').textContent = main;
+  document.getElementById('feedbackSub').textContent = sub || '';
+}
+
+function hideFeedback() {
+  document.getElementById('feedbackBanner').className = 'feedback-banner';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS
+═══════════════════════════════════════════════════════════ */
+function updateStats() {
+  const acc = state.totalQ > 0 ? Math.round((state.correct / state.totalQ) * 100) : 0;
+  const times = state.log.map(l => l.time);
+  const avg = times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2) : '—';
+
+  document.getElementById('statAcc').textContent = state.totalQ > 0 ? acc + '%' : '—';
+  document.getElementById('statAvgTime').textContent = avg === '—' ? '—' : avg + 's';
+  document.getElementById('statStreak').textContent = state.streak;
+  document.getElementById('accBar').style.width = acc + '%';
+  document.getElementById('accBar').style.background = acc >= 80 ? 'var(--green)' : acc >= 50 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('sessionCounter').textContent = `${state.correct} / ${state.totalQ}`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SESSION LOG
+═══════════════════════════════════════════════════════════ */
+function appendLogRow(entry) {
+  const container = document.getElementById('sessionLog');
+  const empty = container.querySelector('.log-empty');
+  if (empty) empty.remove();
+
+  const resultLabels = { ok: '✓ correct', no: '✗ wrong', slow: '⏰ slow' };
+  const row = document.createElement('div');
+  row.className = 'log-row';
+  row.innerHTML = `
+    <span class="log-note">${entry.note}</span>
+    <span class="log-time">${entry.time.toFixed(2)}s</span>
+    <span class="log-result ${entry.result}">${resultLabels[entry.result] || entry.result}</span>
+  `;
+  container.insertBefore(row, container.firstChild);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STAFF CANVAS
+═══════════════════════════════════════════════════════════ */
+const staffCanvas = document.getElementById('staffCanvas');
+const sCtx = staffCanvas.getContext('2d');
+const SW = 900, SH = 280;
+
+function drawStaff(drum) {
+  sCtx.clearRect(0, 0, SW, SH);
+  sCtx.fillStyle = '#0D1117';
+  sCtx.fillRect(0, 0, SW, SH);
+
+  if (!drum) return;
+
+  const staffTop = 100;
+  const staffLeft = 90;
+  const staffW = SW - 130;
+  const lineGap = 15;
+
+  // Draw 5 staff lines
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth = 1.5;
+  for (let i = 0; i < 5; i++) {
+    sCtx.beginPath();
+    sCtx.moveTo(staffLeft, staffTop + i * lineGap);
+    sCtx.lineTo(staffLeft + staffW, staffTop + i * lineGap);
+    sCtx.stroke();
+  }
+
+  // Label and question number
+  sCtx.font = '12px "DM Mono",monospace';
+  sCtx.fillStyle = '#FF2D78';
+  sCtx.fillText('DRUM STAFF', staffLeft + 5, staffTop - 14);
+  sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
+
+  // Draw drum note on staff
+  const noteX = SW / 2;
+
+  // Position varies by drum type
+  let noteY;
+  switch(drum.name) {
+    case 'kick': noteY = staffTop + 4 * lineGap; break;
+    case 'snare': noteY = staffTop + 2 * lineGap; break;
+    case 'hihat': noteY = staffTop - 2 * lineGap; break;
+    case 'tom-high': noteY = staffTop - lineGap; break;
+    case 'tom-mid': noteY = staffTop + lineGap; break;
+    case 'tom-low': noteY = staffTop + 3 * lineGap; break;
+    default: noteY = staffTop + 2 * lineGap;
+  }
+
+  // Draw note head
+  sCtx.shadowColor = '#FF2D78';
+  sCtx.shadowBlur = 26;
+  sCtx.fillStyle = '#FF2D78';
+  sCtx.beginPath();
+  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
+  sCtx.fill();
+  sCtx.shadowBlur = 0;
+
+  // Draw stem
+  sCtx.strokeStyle = '#FF2D78';
+  sCtx.lineWidth = 2;
+  sCtx.beginPath();
+  sCtx.moveTo(noteX + 17, noteY);
+  sCtx.lineTo(noteX + 17, noteY - 35);
+  sCtx.stroke();
+
+  // Draw label below staff
+  sCtx.font = 'bold 16px "DM Mono",monospace';
+  sCtx.fillStyle = '#FF2D78';
+  sCtx.textAlign = 'center';
+  sCtx.fillText(drum.label, noteX, staffTop + 6 * lineGap + 20);
+
+  // Closing barline
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth = 2;
+  sCtx.beginPath();
+  sCtx.moveTo(staffLeft + staffW, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW, staffTop + 4 * lineGap + 2);
+  sCtx.stroke();
+  sCtx.lineWidth = 5;
+  sCtx.beginPath();
+  sCtx.moveTo(staffLeft + staffW + 5, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW + 5, staffTop + 4 * lineGap + 2);
+  sCtx.stroke();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MIDI INPUT
+═══════════════════════════════════════════════════════════ */
+function onMidiMessage(msg) {
+  const [status, note, velocity] = msg.data;
+  const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
+  if (!isNoteOn) return;
+
+  if (state.running && !state.answered) {
+    const drumName = DRUM_MAP[note];
+    if (drumName) {
+      playDrumSound(drumName);
+      handleAnswer(drumName);
+    }
+  }
+}
+
+function initMidi() {
+  if (!navigator.requestMIDIAccess) return;
+  navigator.requestMIDIAccess().then(access => {
+    const update = () => {
+      let count = 0;
+      access.inputs.forEach(input => { input.onmidimessage = onMidiMessage; count++; });
+      state.midiConnected = count > 0;
+      document.getElementById('midiDot').className = 'midi-dot' + (count ? ' connected' : '');
+      document.getElementById('midiLabel').textContent = count
+        ? `MIDI: ${count} device${count !== 1 ? 's' : ''}`
+        : 'MIDI: no device';
+    };
+    update();
+    access.onstatechange = update;
+    showToast('🥁 MIDI access granted');
+  }).catch(() => {
+    document.getElementById('midiLabel').textContent = 'MIDI: denied';
+  });
+}
+initMidi();
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+drawStaff(null);
+updateStats();
+
+</script>
+</body>
+</html>
