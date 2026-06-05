@@ -173,9 +173,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
       </div>
     </div>
 
-    <div style="display:flex;gap:.8rem">
-      <button onclick="clearMidiLog()" style="flex:1;padding:.8rem;background:var(--bg2);border:1px solid var(--border);color:var(--off-white);border-radius:8px;cursor:pointer;font-weight:600">Clear Log</button>
-      <button onclick="closeMidiModal()" style="flex:1;padding:.8rem;background:var(--pink);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600">Done</button>
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+      <button onclick="clearMidiLog()" style="flex:1;min-width:120px;padding:.8rem;background:var(--bg2);border:1px solid var(--border);color:var(--off-white);border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem">Clear Log</button>
+      <button onclick="resetMappings()" style="flex:1;min-width:120px;padding:.8rem;background:var(--bg2);border:1px solid var(--border);color:var(--amber);border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem">↻ Reset</button>
+      <button onclick="closeMidiModal()" style="flex:1;min-width:120px;padding:.8rem;background:var(--pink);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem">Done</button>
     </div>
   </div>
 </div>
@@ -895,7 +896,48 @@ function showToast(msg) {
 let midiCalibrationState = {
   eventLog: [],
   detectedNotes: new Set(),
+  learningMode: null, // which drum is being learned
+  customMapping: {}, // user-defined MIDI note mappings
 };
+
+// Load custom mappings from localStorage
+function loadCustomMappings() {
+  const saved = localStorage.getItem('drumMidiMapping');
+  if (saved) {
+    midiCalibrationState.customMapping = JSON.parse(saved);
+    applyCustomMappings();
+  }
+}
+
+function applyCustomMappings() {
+  // Clear old DRUM_MAP and rebuild with custom mappings
+  Object.keys(DRUM_MAP).forEach(key => delete DRUM_MAP[key]);
+
+  DRUM_TYPES.forEach(drum => {
+    // Use custom mapping if available, otherwise use default
+    const midiNote = midiCalibrationState.customMapping[drum.name] !== undefined
+      ? midiCalibrationState.customMapping[drum.name]
+      : drum.midiNote;
+    DRUM_MAP[midiNote] = drum;
+  });
+}
+
+function saveCustomMappings() {
+  localStorage.setItem('drumMidiMapping', JSON.stringify(midiCalibrationState.customMapping));
+  applyCustomMappings();
+}
+
+function resetMappings() {
+  if (confirm('Reset all MIDI mappings to defaults? This cannot be undone.')) {
+    midiCalibrationState.customMapping = {};
+    localStorage.removeItem('drumMidiMapping');
+    applyCustomMappings();
+    renderCalibrationGrid();
+    showToast('✓ Mappings reset to defaults');
+  }
+}
+
+loadCustomMappings();
 
 function openMidiModal() {
   const modal = document.getElementById('midiModal');
@@ -915,17 +957,37 @@ function renderCalibrationGrid() {
   const grid = document.getElementById('calibrationGrid');
   grid.innerHTML = '';
   DRUM_TYPES.forEach(drum => {
+    const customNote = midiCalibrationState.customMapping[drum.name];
+    const currentNote = customNote !== undefined ? customNote : drum.midiNote;
+    const isCustom = customNote !== undefined;
+
     const btn = document.createElement('div');
     btn.className = 'drum-calibration-btn';
     btn.dataset.drum = drum.name;
-    btn.dataset.midi = drum.midiNote;
+    btn.dataset.midi = currentNote;
+    btn.style.cursor = 'pointer';
     btn.innerHTML = `
       <span class="drum-calibration-label">${drum.label}</span>
-      <span style="font-size:.8rem;color:var(--muted)">MIDI: ${drum.midiNote}</span>
-      <div class="drum-calibration-status waiting" id="status-${drum.name}">Press pad...</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <span style="font-size:.8rem;color:var(--muted)">MIDI: <strong style="color:${isCustom ? 'var(--pink)' : 'var(--muted)'}">${currentNote}</strong></span>
+        <span style="font-size:.65rem;color:var(--amber);font-weight:600${isCustom ? '' : ';opacity:0'}">${isCustom ? 'CUSTOM' : ''}</span>
+      </div>
+      <button onclick="startLearning('${drum.name}')" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border);color:var(--off-white);border-radius:6px;cursor:pointer;font-size:.75rem;font-family:'DM Mono',monospace;transition:all .2s">
+        ${midiCalibrationState.learningMode === drum.name ? '🎧 Listening...' : '⚙ Learn Note'}
+      </button>
+      <div class="drum-calibration-status waiting" id="status-${drum.name}" style="margin-top:.5rem">Ready</div>
     `;
     grid.appendChild(btn);
   });
+}
+
+function startLearning(drumName) {
+  const drum = DRUM_TYPES.find(d => d.name === drumName);
+  if (!drum) return;
+
+  midiCalibrationState.learningMode = drumName;
+  renderCalibrationGrid();
+  showToast(`🎧 Press the ${drum.label} pad now...`);
 }
 
 function onMidiMessageCalibration(msg) {
@@ -933,6 +995,32 @@ function onMidiMessageCalibration(msg) {
   const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
   if (!isNoteOn) return;
 
+  // If in learning mode, capture this MIDI note
+  if (midiCalibrationState.learningMode) {
+    const drumName = midiCalibrationState.learningMode;
+    const drum = DRUM_TYPES.find(d => d.name === drumName);
+    if (drum) {
+      midiCalibrationState.customMapping[drumName] = note;
+      saveCustomMappings();
+      midiCalibrationState.learningMode = null;
+      renderCalibrationGrid();
+
+      const statusEl = document.getElementById(`status-${drumName}`);
+      if (statusEl) {
+        statusEl.className = 'drum-calibration-status detected';
+        statusEl.innerHTML = `✓ Mapped to MIDI ${note}!`;
+        statusEl.style.color = 'var(--green)';
+        setTimeout(() => {
+          statusEl.className = 'drum-calibration-status waiting';
+          statusEl.innerHTML = 'Ready';
+        }, 2000);
+      }
+      showToast(`✓ ${drum.label} → MIDI ${note}`);
+    }
+    return;
+  }
+
+  // Normal monitoring mode
   const drum = DRUM_MAP[note];
   const drumName = drum ? drum.name : 'unknown';
   const drumLabel = drum ? drum.label : `Unknown (${note})`;
@@ -951,8 +1039,8 @@ function onMidiMessageCalibration(msg) {
     statusEl.style.color = 'var(--green)';
     setTimeout(() => {
       statusEl.className = 'drum-calibration-status waiting';
-      statusEl.innerHTML = 'Press pad...';
-      statusEl.style.color = 'var(--amber)';
+      statusEl.innerHTML = 'Ready';
+      statusEl.style.color = 'var(--muted)';
     }, 2000);
   }
 
