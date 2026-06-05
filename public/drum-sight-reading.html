@@ -345,16 +345,19 @@ function playWrong() {
    DRUM DATA
 ═══════════════════════════════════════════════════════════ */
 const DRUM_TYPES = [
-  { name: 'kick', label: 'Kick Drum', symbol: '🥁', midiNote: 36 },
-  { name: 'snare', label: 'Snare', symbol: '🎯', midiNote: 38 },
-  { name: 'hihat', label: 'Hi-Hat', symbol: '🔔', midiNote: 42 },
-  { name: 'tom-high', label: 'Hi Tom', symbol: '🥁', midiNote: 50 },
-  { name: 'tom-mid', label: 'Mid Tom', symbol: '🥁', midiNote: 47 },
-  { name: 'tom-low', label: 'Low Tom', symbol: '🥁', midiNote: 45 },
+  { name: 'kick', label: 'Kick Drum', symbol: '🥁', midiNote: 36, staffPosition: 'below-1' },
+  { name: 'snare', label: 'Snare', symbol: '🎯', midiNote: 38, staffPosition: 'line-2' },
+  { name: 'hihat-closed', label: 'Hi-Hat (Closed)', symbol: '🔔', midiNote: 42, staffPosition: 'space-3' },
+  { name: 'hihat-open', label: 'Hi-Hat (Open)', symbol: '🔔', midiNote: 46, staffPosition: 'space-3' },
+  { name: 'tom-high', label: 'High Tom', symbol: '🥁', midiNote: 50, staffPosition: 'space-4' },
+  { name: 'tom-mid', label: 'Mid Tom', symbol: '🥁', midiNote: 47, staffPosition: 'line-4' },
+  { name: 'tom-low', label: 'Low Tom', symbol: '🥁', midiNote: 45, staffPosition: 'space-2' },
+  { name: 'ride', label: 'Ride Cymbal', symbol: '💿', midiNote: 51, staffPosition: 'above-1' },
+  { name: 'crash', label: 'Crash Cymbal', symbol: '💿', midiNote: 49, staffPosition: 'above-2' },
 ];
 
 const DRUM_MAP = {};
-DRUM_TYPES.forEach(d => { DRUM_MAP[d.midiNote] = d.name; });
+DRUM_TYPES.forEach(d => { DRUM_MAP[d.midiNote] = d; });
 
 /* ═══════════════════════════════════════════════════════════
    APP STATE
@@ -475,6 +478,15 @@ function handleAnswer(drumName) {
   const tooSlow = elapsed > timerLimit;
   const win = correct && !tooSlow;
 
+  // Find the played drum for display
+  let playedDrumLabel = 'unknown';
+  for (let drum of DRUM_TYPES) {
+    if (drum.name === drumName) {
+      playedDrumLabel = drum.label;
+      break;
+    }
+  }
+
   setTimerDisplay(elapsed, elapsed <= timerLimit * 0.5 ? 'green' : elapsed <= timerLimit * 0.85 ? 'amber' : 'red');
 
   if (win) {
@@ -493,12 +505,12 @@ function handleAnswer(drumName) {
   } else if (win) {
     showFeedback('correct', '✓', `Correct! ${state.currentDrum.label}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
   } else {
-    showFeedback('wrong', '✗', `Not quite — it was ${state.currentDrum.label}`, `You played ${DRUM_MAP[drumName] || drumName} · ${elapsed.toFixed(2)}s`);
+    showFeedback('wrong', '✗', `Not quite — it was ${state.currentDrum.label}`, `You played ${playedDrumLabel} · ${elapsed.toFixed(2)}s`);
   }
 
   // Log
   const result = tooSlow || !correct ? (tooSlow ? 'slow' : 'no') : 'ok';
-  state.log.push({ note: state.currentDrum.label, guess: DRUM_MAP[drumName] || drumName, time: elapsed, correct: win, tooSlow, result });
+  state.log.push({ note: state.currentDrum.label, guess: playedDrumLabel, time: elapsed, correct: win, tooSlow, result });
   appendLogRow(state.log[state.log.length - 1]);
   updateStats();
 
@@ -681,18 +693,22 @@ function drawStaff(drum) {
   sCtx.fillText('DRUM STAFF', staffLeft + 5, staffTop - 14);
   sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
 
-  // Draw drum note on staff
+  // Draw drum note on staff based on standard drum notation
   const noteX = SW / 2;
 
-  // Position varies by drum type
+  // Position based on standard drum staff layout
   let noteY;
-  switch(drum.name) {
-    case 'kick': noteY = staffTop + 4 * lineGap; break;
-    case 'snare': noteY = staffTop + 2 * lineGap; break;
-    case 'hihat': noteY = staffTop - 2 * lineGap; break;
-    case 'tom-high': noteY = staffTop - lineGap; break;
-    case 'tom-mid': noteY = staffTop + lineGap; break;
-    case 'tom-low': noteY = staffTop + 3 * lineGap; break;
+  switch(drum.staffPosition) {
+    case 'below-1': noteY = staffTop + 5 * lineGap; break;        // Below staff: Kick
+    case 'space-2': noteY = staffTop + 3.5 * lineGap; break;      // Space 2: Low Tom
+    case 'line-2': noteY = staffTop + 3 * lineGap; break;         // Line 2: Snare
+    case 'space-3': noteY = staffTop + 2.5 * lineGap; break;      // Space 3: Hi-hat
+    case 'line-3': noteY = staffTop + 2 * lineGap; break;         // Line 3
+    case 'space-4': noteY = staffTop + 1.5 * lineGap; break;      // Space 4: High Tom
+    case 'line-4': noteY = staffTop + 1 * lineGap; break;         // Line 4: Mid Tom
+    case 'space-5': noteY = staffTop + 0.5 * lineGap; break;      // Space 5
+    case 'above-1': noteY = staffTop - 1 * lineGap; break;        // Above staff: Ride
+    case 'above-2': noteY = staffTop - 2 * lineGap; break;        // Above staff: Crash
     default: noteY = staffTop + 2 * lineGap;
   }
 
@@ -742,10 +758,10 @@ function onMidiMessage(msg) {
   if (!isNoteOn) return;
 
   if (state.running && !state.answered) {
-    const drumName = DRUM_MAP[note];
-    if (drumName) {
-      playDrumSound(drumName);
-      handleAnswer(drumName);
+    const drum = DRUM_MAP[note];
+    if (drum) {
+      playDrumSound(drum.name);
+      handleAnswer(drum.name);
     }
   }
 }
