@@ -609,6 +609,7 @@ let state = {
   adaptiveDiffLevel:  0,     // 0-4, auto-adjusts based on chord performance
   chordCorrectStreak: 0,
   chordWrongStreak:   0,
+  lastNoteKey:   null,       // track last note to prevent repetition
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -940,6 +941,7 @@ function startSession() {
   state.currentChord = [];
   state.chordSelected = new Set();
   state.chordSelectedDisplay = [];
+  state.lastNoteKey  = null;
   document.getElementById('chordCheckRow').style.display = 'none';
 
   document.getElementById('startBtn').style.display  = 'none';
@@ -1029,10 +1031,20 @@ function nextQuestion() {
     }
 
   } else {
-    // Single note mode
-    const pick      = state.notePool[Math.floor(Math.random() * state.notePool.length)];
+    // Single note mode — avoid repeating the same note twice
+    let pick;
+    let attempts = 0;
+    const maxAttempts = state.notePool.length * 2;
+    do {
+      pick = state.notePool[Math.floor(Math.random() * state.notePool.length)];
+      const currentKey = pick.note + pick.octave;
+      if (currentKey !== state.lastNoteKey || attempts >= maxAttempts) break;
+      attempts++;
+    } while (true);
+
     const noteLabel = pick.note + (pick.accidental || '');
     state.currentNote  = { ...pick, label: noteLabel, display: noteLabel + pick.octave };
+    state.lastNoteKey  = pick.note + pick.octave;
     state.currentChord = [];
 
     if (state.clef === 'both') {
@@ -1098,13 +1110,23 @@ function handleAnswer(guessNote) {
       }
     });
   } else {
-    correct  = !isTimeout && guessNote === state.currentNote.note;
+    // Check if MIDI input (format: "C|4") or button click (format: "C")
+    let guessNoteName = guessNote;
+    let guessOctave = null;
+    if (guessNote.includes('|')) {
+      [guessNoteName, guessOctave] = guessNote.split('|');
+      guessOctave = parseInt(guessOctave, 10);
+    }
+
+    // For MIDI: check both note name AND octave; for buttons: check note name only
+    correct = !isTimeout && guessNoteName === state.currentNote.note &&
+      (guessOctave === null || guessOctave === state.currentNote.octave);
     tooSlow  = elapsed > timerLimit;
     win      = correct && !tooSlow;
 
-    if (!isTimeout) drawMiniKb({ note: guessNote, correct: win });
+    if (!isTimeout) drawMiniKb({ note: guessNoteName, correct: win });
     if (!isTimeout) {
-      const btn = document.querySelector(`.note-btn[data-note="${guessNote}"]`);
+      const btn = document.querySelector(`.note-btn[data-note="${guessNoteName}"]`);
       if (btn) btn.classList.add(win ? 'correct' : 'wrong');
     }
     if (!win && !isTimeout) {
@@ -1674,8 +1696,15 @@ function onMidiMessage(msg) {
   if (hz > 0) playNote(hz, 0.5);
 
   if (state.running && !state.answered) {
-    drawMiniKb({ note: parsed.note, correct: parsed.note === state.currentNote?.note });
-    handleAnswer(parsed.note);
+    const isCorrect = state.mode === 'chord'
+      ? false
+      : parsed.note === state.currentNote?.note && parsed.octave === state.currentNote?.octave;
+    drawMiniKb({ note: parsed.note, correct: isCorrect });
+    if (state.mode === 'chord') {
+      toggleChordNote(parsed.note, document.querySelector(`.note-btn[data-note="${parsed.note}"]`));
+    } else {
+      handleAnswer(parsed.note + '|' + parsed.octave);
+    }
   }
 }
 
