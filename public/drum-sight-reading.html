@@ -110,7 +110,35 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--pink);color:#fff;border-radius:10px;padding:.7rem 1.4rem;font-size:.85rem;font-weight:600;opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-@media(max-width:680px){.settings-grid{grid-template-columns:1fr}nav{padding:0 1rem}}
+/* MIDI CALIBRATION MODAL */
+#midiModal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);padding:1rem}
+#midiModal.show{display:flex}
+.midi-modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:600px;width:100%;max-height:80vh;overflow-y:auto}
+.midi-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.midi-modal-title{font-size:1.4rem;font-weight:900;color:var(--white)}
+.midi-modal-close{background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.midi-modal-close:hover{color:var(--pink)}
+
+.midi-monitor{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1rem}
+.midi-monitor-title{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted2);text-transform:uppercase;margin-bottom:.8rem;letter-spacing:.05em}
+.midi-event{display:grid;grid-template-columns:80px 1fr 100px;gap:1rem;padding:.8rem;background:var(--bg);border-radius:8px;margin-bottom:.5rem;font-family:'DM Mono',monospace;font-size:.85rem;align-items:center}
+.midi-event.detected{border-left:3px solid var(--green)}
+.midi-event.unknown{border-left:3px solid var(--amber)}
+.midi-note-num{color:var(--pink);font-weight:600}
+.midi-drum-name{color:var(--off-white)}
+.midi-drum-name.unknown{color:var(--amber)}
+.midi-velocity{color:var(--muted);text-align:right}
+
+.midi-calibration-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem}
+.drum-calibration-btn{background:var(--bg2);border:1px solid var(--border);color:var(--off-white);padding:1rem;border-radius:10px;text-align:left;cursor:pointer;transition:all .2s;font-size:.85rem}
+.drum-calibration-btn:hover{border-color:var(--pink);background:rgba(236,72,153,.1)}
+.drum-calibration-btn.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.drum-calibration-label{display:block;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted2);text-transform:uppercase;margin-bottom:.3rem;letter-spacing:.04em}
+.drum-calibration-status{font-size:.75rem;margin-top:.4rem;padding:.4rem;background:rgba(255,255,255,.05);border-radius:6px;font-family:'DM Mono',monospace}
+.drum-calibration-status.detected{color:var(--green)}
+.drum-calibration-status.waiting{color:var(--amber)}
+
+@media(max-width:680px){.settings-grid{grid-template-columns:1fr}nav{padding:0 1rem}.midi-calibration-grid{grid-template-columns:1fr}}
 </style>
 <script src="/ranking-popup.js"></script>
 </head>
@@ -120,6 +148,37 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 </script>
 
 <div id="toast"></div>
+
+<!-- MIDI CALIBRATION MODAL -->
+<div id="midiModal">
+  <div class="midi-modal-content">
+    <div class="midi-modal-header">
+      <div class="midi-modal-title">🎹 MIDI Calibration Tool</div>
+      <button class="midi-modal-close" onclick="closeMidiModal()">×</button>
+    </div>
+
+    <div class="midi-monitor">
+      <div class="midi-monitor-title">📡 Real-Time MIDI Events</div>
+      <div id="midiEventLog" style="max-height:200px;overflow-y:auto">
+        <div style="color:var(--muted2);font-size:.85rem;font-family:'DM Mono',monospace;text-align:center;padding:1rem">
+          Press any pad on your drum kit — events will appear here
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1.5rem">
+      <div class="midi-monitor-title" style="margin-bottom:.8rem">🥁 Test Each Drum Pad</div>
+      <div class="midi-calibration-grid" id="calibrationGrid">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.8rem">
+      <button onclick="clearMidiLog()" style="flex:1;padding:.8rem;background:var(--bg2);border:1px solid var(--border);color:var(--off-white);border-radius:8px;cursor:pointer;font-weight:600">Clear Log</button>
+      <button onclick="closeMidiModal()" style="flex:1;padding:.8rem;background:var(--pink);border:none;color:#fff;border-radius:8px;cursor:pointer;font-weight:600">Done</button>
+    </div>
+  </div>
+</div>
 
 <!-- NAV -->
 <nav>
@@ -219,6 +278,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 
         <button class="start-btn" id="startBtn" onclick="startSession()">▶ Start Session</button>
         <button class="start-btn" id="stopBtn" onclick="stopSession()" style="display:none;background:var(--card2);border:1px solid var(--border);color:var(--muted)">⏹ End Session</button>
+
+        <button onclick="openMidiModal()" style="width:100%;padding:.6rem;background:var(--bg2);border:1px solid var(--border);color:var(--off-white);font-weight:600;border-radius:8px;cursor:pointer;margin-top:.8rem;font-family:'DM Mono',monospace;font-size:.85rem;letter-spacing:.02em">🎹 MIDI Calibration</button>
       </div>
 
       <!-- Timer -->
@@ -766,12 +827,28 @@ function onMidiMessage(msg) {
   }
 }
 
+let midiAccess = null;
+
+function updateMidiHandlers() {
+  if (!midiAccess) return;
+  const modal = document.getElementById('midiModal');
+  const isCalibrating = modal.classList.contains('show');
+
+  midiAccess.inputs.forEach(input => {
+    input.onmidimessage = isCalibrating ? onMidiMessageCalibration : onMidiMessage;
+  });
+}
+
 function initMidi() {
   if (!navigator.requestMIDIAccess) return;
   navigator.requestMIDIAccess().then(access => {
+    midiAccess = access;
     const update = () => {
       let count = 0;
-      access.inputs.forEach(input => { input.onmidimessage = onMidiMessage; count++; });
+      access.inputs.forEach(input => {
+        input.onmidimessage = onMidiMessage;
+        count++;
+      });
       state.midiConnected = count > 0;
       document.getElementById('midiDot').className = 'midi-dot' + (count ? ' connected' : '');
       document.getElementById('midiLabel').textContent = count
@@ -787,6 +864,19 @@ function initMidi() {
 }
 initMidi();
 
+// Update handlers when modal opens/closes
+const originalOpenModal = window.openMidiModal;
+window.openMidiModal = function() {
+  originalOpenModal();
+  setTimeout(updateMidiHandlers, 100);
+};
+
+const originalCloseModal = window.closeMidiModal;
+window.closeMidiModal = function() {
+  originalCloseModal();
+  updateMidiHandlers();
+};
+
 /* ═══════════════════════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════════════════════ */
@@ -800,10 +890,110 @@ function showToast(msg) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   MIDI CALIBRATION TOOL
+═══════════════════════════════════════════════════════════ */
+let midiCalibrationState = {
+  eventLog: [],
+  detectedNotes: new Set(),
+};
+
+function openMidiModal() {
+  const modal = document.getElementById('midiModal');
+  modal.classList.add('show');
+  midiCalibrationState.eventLog = [];
+  midiCalibrationState.detectedNotes = new Set();
+  renderCalibrationGrid();
+  clearMidiLog();
+}
+
+function closeMidiModal() {
+  const modal = document.getElementById('midiModal');
+  modal.classList.remove('show');
+}
+
+function renderCalibrationGrid() {
+  const grid = document.getElementById('calibrationGrid');
+  grid.innerHTML = '';
+  DRUM_TYPES.forEach(drum => {
+    const btn = document.createElement('div');
+    btn.className = 'drum-calibration-btn';
+    btn.dataset.drum = drum.name;
+    btn.dataset.midi = drum.midiNote;
+    btn.innerHTML = `
+      <span class="drum-calibration-label">${drum.label}</span>
+      <span style="font-size:.8rem;color:var(--muted)">MIDI: ${drum.midiNote}</span>
+      <div class="drum-calibration-status waiting" id="status-${drum.name}">Press pad...</div>
+    `;
+    grid.appendChild(btn);
+  });
+}
+
+function onMidiMessageCalibration(msg) {
+  const [status, note, velocity] = msg.data;
+  const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
+  if (!isNoteOn) return;
+
+  const drum = DRUM_MAP[note];
+  const drumName = drum ? drum.name : 'unknown';
+  const drumLabel = drum ? drum.label : `Unknown (${note})`;
+
+  midiCalibrationState.eventLog.unshift({ note, drumName, drumLabel, velocity, time: new Date().toLocaleTimeString() });
+  midiCalibrationState.detectedNotes.add(note);
+
+  // Update log display
+  updateMidiLog();
+
+  // Update status for this drum
+  const statusEl = document.getElementById(`status-${drumName}`);
+  if (statusEl) {
+    statusEl.className = 'drum-calibration-status detected';
+    statusEl.innerHTML = `✓ Detected! Velocity: ${velocity}`;
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => {
+      statusEl.className = 'drum-calibration-status waiting';
+      statusEl.innerHTML = 'Press pad...';
+      statusEl.style.color = 'var(--amber)';
+    }, 2000);
+  }
+
+  // Highlight the button if detected
+  const btn = document.querySelector(`[data-drum="${drumName}"]`);
+  if (btn) {
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 500);
+  }
+}
+
+function updateMidiLog() {
+  const logEl = document.getElementById('midiEventLog');
+  logEl.innerHTML = midiCalibrationState.eventLog.slice(0, 10).map(event => `
+    <div class="midi-event ${event.drumName === 'unknown' ? 'unknown' : 'detected'}">
+      <div class="midi-note-num">${event.note}</div>
+      <div class="midi-drum-name ${event.drumName === 'unknown' ? 'unknown' : ''}">
+        ${event.drumLabel}
+      </div>
+      <div class="midi-velocity">v${event.velocity}</div>
+    </div>
+  `).join('');
+
+  if (midiCalibrationState.eventLog.length === 0) {
+    logEl.innerHTML = `<div style="color:var(--muted2);font-size:.85rem;font-family:'DM Mono',monospace;text-align:center;padding:1rem">
+      Press any pad on your drum kit — events will appear here
+    </div>`;
+  }
+}
+
+function clearMidiLog() {
+  midiCalibrationState.eventLog = [];
+  updateMidiLog();
+}
+
+/* ═══════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════ */
 drawStaff(null);
 updateStats();
+renderCalibrationGrid();
 
 </script>
 </body>
