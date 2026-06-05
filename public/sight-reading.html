@@ -612,6 +612,7 @@ let state = {
   lastNoteKey:   null,       // track last note to prevent repetition
   midiHeldNotes: new Set(),  // track currently pressed MIDI notes
   midiChordTimer: null,      // timer to detect chord completion
+  lastChordKey:  null,       // track last chord to prevent repetition
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -704,36 +705,53 @@ function setChordSize(v, btn) {
    CHORD HELPERS
 ═══════════════════════════════════════════════════════════ */
 function pickChord(pool, size) {
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const chord    = [];
-  const usedNames = new Set();
-  for (const n of shuffled) {
-    if (usedNames.has(n.note)) continue;
-    const dSteps = diatonicStepsFromC4(n.note, n.octave);
+  let attempts = 0;
+  const maxAttempts = 50;
+  let chord;
 
-    // Not adjacent to any existing note (interval ≥ 2nd)
-    const tooClose = chord.some(c => Math.abs(diatonicStepsFromC4(c.note, c.octave) - dSteps) <= 1);
-    if (tooClose) continue;
+  do {
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    chord = [];
+    const usedNames = new Set();
 
-    // Span from lowest to highest must stay within a 6th (6 diatonic steps)
-    if (chord.length > 0) {
-      const allSteps = chord.map(c => diatonicStepsFromC4(c.note, c.octave));
-      allSteps.push(dSteps);
-      if (Math.max(...allSteps) - Math.min(...allSteps) > 6) continue;
-    }
-
-    chord.push(n);
-    usedNames.add(n.note);
-    if (chord.length >= size) break;
-  }
-  // Fallback: relax constraints if pool is too small
-  if (chord.length < 2) {
-    const names = new Set(chord.map(n => n.note));
     for (const n of shuffled) {
-      if (!names.has(n.note)) { chord.push(n); names.add(n.note); }
+      if (usedNames.has(n.note)) continue;
+      const dSteps = diatonicStepsFromC4(n.note, n.octave);
+
+      // Not adjacent to any existing note (interval ≥ 2nd)
+      const tooClose = chord.some(c => Math.abs(diatonicStepsFromC4(c.note, c.octave) - dSteps) <= 1);
+      if (tooClose) continue;
+
+      // Span from lowest to highest must stay within a 6th (6 diatonic steps)
+      if (chord.length > 0) {
+        const allSteps = chord.map(c => diatonicStepsFromC4(c.note, c.octave));
+        allSteps.push(dSteps);
+        if (Math.max(...allSteps) - Math.min(...allSteps) > 6) continue;
+      }
+
+      chord.push(n);
+      usedNames.add(n.note);
       if (chord.length >= size) break;
     }
-  }
+
+    // Fallback: relax constraints if pool is too small
+    if (chord.length < 2) {
+      const names = new Set(chord.map(n => n.note));
+      for (const n of shuffled) {
+        if (!names.has(n.note)) { chord.push(n); names.add(n.note); }
+        if (chord.length >= size) break;
+      }
+    }
+
+    // Check if this chord is different from the last one
+    const chordKey = sortNotesWithAcc(chord.map(n => n.note + (n.accidental || ''))).join('+');
+    if (chordKey !== state.lastChordKey || attempts >= maxAttempts) {
+      state.lastChordKey = chordKey;
+      break;
+    }
+    attempts++;
+  } while (true);
+
   return chord;
 }
 
@@ -944,6 +962,7 @@ function startSession() {
   state.chordSelected = new Set();
   state.chordSelectedDisplay = [];
   state.lastNoteKey  = null;
+  state.lastChordKey = null;
   document.getElementById('chordCheckRow').style.display = 'none';
 
   document.getElementById('startBtn').style.display  = 'none';
@@ -1752,21 +1771,27 @@ function onMidiMessage(msg) {
 function submitMidiChord() {
   if (state.midiHeldNotes.size < 2) return;
 
-  // Convert held notes to note names for comparison
+  // For MIDI chords, validate both note names AND octaves
+  const heldNotes = new Set();
+  state.midiHeldNotes.forEach(key => {
+    heldNotes.add(key); // Format: "C|4"
+  });
+
+  // Expected chord: check both note name and octave
+  const expectedNotes = new Set(state.currentChord.map(n => n.note + '|' + n.octave));
+
+  // Check if they match exactly (bidirectional)
+  const allMatch = [...expectedNotes].every(n => heldNotes.has(n)) &&
+                   [...heldNotes].every(n => expectedNotes.has(n));
+
+  // Mark buttons - show which note names were correct
+  const chordNames = new Set(state.currentChord.map(n => n.note));
   const heldNoteNames = new Set();
   state.midiHeldNotes.forEach(key => {
     const [noteName] = key.split('|');
     heldNoteNames.add(noteName);
   });
 
-  // Get expected chord note names
-  const chordNames = new Set(state.currentChord.map(n => n.note));
-
-  // Check if they match (both direction)
-  const allMatch = [...chordNames].every(n => heldNoteNames.has(n)) &&
-                   [...heldNoteNames].every(n => chordNames.has(n));
-
-  // Mark buttons and submit
   document.querySelectorAll('.note-btn').forEach(b => {
     const n = b.dataset.note;
     if (chordNames.has(n)) {
