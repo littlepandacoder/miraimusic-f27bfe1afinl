@@ -67,7 +67,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 
 .staff-area{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;position:relative;min-height:280px;display:flex;align-items:center;justify-content:center}
+.staff-area.fullscreen{position:fixed;inset:0;z-index:400;border-radius:0;padding:2rem;margin:0;border:none}
+.staff-area.fullscreen #staffCanvas{max-height:70vh}
 #staffCanvas{width:100%;height:auto;display:block;border-radius:6px}
+.fullscreen-btn{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--off-white);width:40px;height:40px;border-radius:8px;cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:10}
+.fullscreen-btn:hover{background:var(--pink);border-color:var(--pink);color:#fff}
+.staff-area.fullscreen .fullscreen-btn::after{content:'⛶'}
+.staff-area:not(.fullscreen) .fullscreen-btn::after{content:'⛶'}
 
 .feedback-banner{border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;font-weight:600;font-size:.9rem;min-height:52px;transition:all .3s;opacity:0;transform:translateY(-6px)}
 .feedback-banner.show{opacity:1;transform:translateY(0)}
@@ -221,7 +227,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
     <div>
 
       <!-- Staff display -->
-      <div class="staff-area">
+      <div class="staff-area" id="staffArea">
+        <button class="fullscreen-btn" onclick="toggleStaffFullscreen()" title="Fullscreen"></button>
         <canvas id="staffCanvas" width="900" height="280"></canvas>
         <div class="idle-overlay" id="idleOverlay">
           <div class="idle-icon">🥁</div>
@@ -1073,6 +1080,41 @@ function clearMidiLog() {
   midiCalibrationState.eventLog = [];
   updateMidiLog();
 }
+
+/* ═══════════════════════════════════════════════════════════
+   FULLSCREEN STAFF
+═══════════════════════════════════════════════════════════ */
+function toggleStaffFullscreen() {
+  const staffArea = document.getElementById('staffArea');
+  const page = document.querySelector('.page');
+  const mainGrid = document.querySelector('.main-grid');
+
+  staffArea.classList.toggle('fullscreen');
+
+  if (staffArea.classList.contains('fullscreen')) {
+    // Enter fullscreen
+    page.style.display = 'none';
+    staffArea.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    showToast('🖥 Fullscreen mode — Press ⛶ to exit');
+  } else {
+    // Exit fullscreen
+    page.style.display = 'block';
+    staffArea.style.display = 'block';
+    document.body.style.overflow = 'auto';
+    showToast('← Fullscreen closed');
+  }
+}
+
+// Close fullscreen when session ends
+const originalStopSession = window.stopSession;
+window.stopSession = function() {
+  const staffArea = document.getElementById('staffArea');
+  if (staffArea && staffArea.classList.contains('fullscreen')) {
+    toggleStaffFullscreen();
+  }
+  originalStopSession();
+};
 
 /* ═══════════════════════════════════════════════════════════
    INIT
