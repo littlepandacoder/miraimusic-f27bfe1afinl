@@ -610,6 +610,8 @@ let state = {
   chordCorrectStreak: 0,
   chordWrongStreak:   0,
   lastNoteKey:   null,       // track last note to prevent repetition
+  midiHeldNotes: new Set(),  // track currently pressed MIDI notes
+  midiChordTimer: null,      // timer to detect chord completion
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -959,6 +961,8 @@ function startSession() {
 function stopSession() {
   state.running = false;
   cancelAnimationFrame(state.timerRAF);
+  clearTimeout(state.midiChordTimer);
+  state.midiHeldNotes.clear();
   setTimerDisplay(null);
   document.getElementById('startBtn').style.display = 'block';
   document.getElementById('stopBtn').style.display  = 'none';
@@ -986,6 +990,8 @@ function nextQuestion() {
   state.answered     = false;
   state.chordSelected = new Set();
   state.chordSelectedDisplay = [];
+  state.midiHeldNotes = new Set();
+  clearTimeout(state.midiChordTimer);
 
   if (state.mode === 'chord') {
     updateAdaptiveLevelDisplay();
@@ -1689,23 +1695,91 @@ function midiNoteToName(midiNum) {
 function onMidiMessage(msg) {
   const [status, note, velocity] = msg.data;
   const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
-  if (!isNoteOn) return;
+  const isNoteOff = (status & 0xF0) === 0x80 || ((status & 0xF0) === 0x90 && velocity === 0);
 
   const parsed = midiNoteToName(note);
-  const hz     = noteHz(parsed.full, parsed.octave);
-  if (hz > 0) playNote(hz, 0.5);
+  const noteKey = parsed.note + '|' + parsed.octave;
 
-  if (state.running && !state.answered) {
-    const isCorrect = state.mode === 'chord'
-      ? false
-      : parsed.note === state.currentNote?.note && parsed.octave === state.currentNote?.octave;
+  if (!state.running || state.answered) return;
+
+  // Play sound for both note-on and note-off
+  if (isNoteOn || isNoteOff) {
+    const hz = noteHz(parsed.full, parsed.octave);
+    if (hz > 0 && isNoteOn) playNote(hz, 0.5);
+  }
+
+  if (state.mode === 'chord') {
+    // Chord mode: collect multiple notes
+    if (isNoteOn) {
+      state.midiHeldNotes.add(noteKey);
+    } else if (isNoteOff) {
+      state.midiHeldNotes.delete(noteKey);
+    }
+
+    // Reset chord timer
+    clearTimeout(state.midiChordTimer);
+
+    // If 2+ notes held, wait for either release or timeout
+    if (state.midiHeldNotes.size >= 2) {
+      state.midiChordTimer = setTimeout(() => {
+        if (state.midiHeldNotes.size >= 2 && state.running && !state.answered) {
+          submitMidiChord();
+        }
+      }, 400); // 400ms to complete chord
+    } else if (state.midiHeldNotes.size === 0 && !isNoteOn) {
+      // All notes released - submit if we had a chord
+      // (will be handled above with timeout)
+    }
+
+    // Visual feedback
+    const noteName = parsed.note;
+    const btn = document.querySelector(`.note-btn[data-note="${noteName}"]`);
+    if (isNoteOn && btn) {
+      btn.classList.add('selected');
+    } else if (isNoteOff && btn) {
+      btn.classList.remove('selected');
+    }
+  } else {
+    // Single note mode: submit immediately on MIDI note
+    const isCorrect = parsed.note === state.currentNote?.note && parsed.octave === state.currentNote?.octave;
     drawMiniKb({ note: parsed.note, correct: isCorrect });
-    if (state.mode === 'chord') {
-      toggleChordNote(parsed.note, document.querySelector(`.note-btn[data-note="${parsed.note}"]`));
-    } else {
+    if (isNoteOn) {
       handleAnswer(parsed.note + '|' + parsed.octave);
     }
   }
+}
+
+function submitMidiChord() {
+  if (state.midiHeldNotes.size < 2) return;
+
+  // Convert held notes to note names for comparison
+  const heldNoteNames = new Set();
+  state.midiHeldNotes.forEach(key => {
+    const [noteName] = key.split('|');
+    heldNoteNames.add(noteName);
+  });
+
+  // Get expected chord note names
+  const chordNames = new Set(state.currentChord.map(n => n.note));
+
+  // Check if they match (both direction)
+  const allMatch = [...chordNames].every(n => heldNoteNames.has(n)) &&
+                   [...heldNoteNames].every(n => chordNames.has(n));
+
+  // Mark buttons and submit
+  document.querySelectorAll('.note-btn').forEach(b => {
+    const n = b.dataset.note;
+    if (chordNames.has(n)) {
+      b.classList.remove('selected');
+      b.classList.add('correct');
+    } else if (heldNoteNames.has(n)) {
+      b.classList.remove('selected');
+      b.classList.add('wrong');
+    }
+  });
+
+  handleAnswer(allMatch ? '__CHORD_OK__' : '__CHORD_WRONG__');
+  state.midiHeldNotes.clear();
 }
 
 function initMidi() {
