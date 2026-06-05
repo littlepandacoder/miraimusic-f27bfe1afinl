@@ -275,6 +275,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
         </div>
 
         <div class="setting-group" style="margin-bottom:.8rem">
+          <label>Mode</label>
+          <div class="seg-control">
+            <button class="seg-btn active" data-mode="single" onclick="setMode('single',this)">Single</button>
+            <button class="seg-btn" data-mode="pattern" onclick="setMode('pattern',this)">Pattern</button>
+          </div>
+        </div>
+
+        <div class="setting-group" style="margin-bottom:.8rem">
           <label>Questions per session</label>
           <div class="seg-control">
             <button class="seg-btn" data-count="5" onclick="setCount(5,this)">5</button>
@@ -435,8 +443,11 @@ let state = {
   running:       false,
   difficulty:    'beginner',
   count:         10,
+  mode:          'single',      // 'single' | 'pattern'
   midiConnected: false,
   currentDrum:   null,
+  currentPattern: [],            // for pattern mode
+  midiPressed:   new Set(),      // currently pressed MIDI notes
   questionNum:   0,
   totalQ:        0,
   correct:       0,
@@ -461,6 +472,12 @@ function setDiff(v, btn) {
 function setCount(v, btn) {
   state.count = v;
   document.querySelectorAll('[data-count]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setMode(v, btn) {
+  state.mode = v;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -509,21 +526,46 @@ function nextQuestion() {
   state.questionNum++;
   state.totalQ++;
   state.answered = false;
+  state.midiPressed.clear();
 
-  // Pick a drum (avoid repetition)
-  let drum;
-  let attempts = 0;
-  do {
-    drum = DRUM_TYPES[Math.floor(Math.random() * DRUM_TYPES.length)];
-    if (drum.name !== state.lastDrumType || attempts >= 20) break;
-    attempts++;
-  } while (true);
+  if (state.mode === 'pattern') {
+    // Pattern mode: 2-3 drums to play
+    const patternSize = state.difficulty === 'beginner' ? 2 : state.difficulty === 'intermediate' ? 3 : 4;
+    state.currentPattern = [];
+    const usedNames = new Set();
 
-  state.currentDrum = drum;
-  state.lastDrumType = drum.name;
+    for (let i = 0; i < patternSize; i++) {
+      let drum;
+      let attempts = 0;
+      do {
+        drum = DRUM_TYPES[Math.floor(Math.random() * DRUM_TYPES.length)];
+        if (!usedNames.has(drum.name) || attempts >= 20) break;
+        attempts++;
+      } while (true);
+      state.currentPattern.push(drum);
+      usedNames.add(drum.name);
+    }
+    state.currentDrum = null;
+    drawStaffPattern(state.currentPattern);
+    const labels = state.currentPattern.map(d => d.label).join(' + ');
+    document.getElementById('drumInstructions').textContent = `Play: ${labels}`;
+  } else {
+    // Single mode
+    let drum;
+    let attempts = 0;
+    do {
+      drum = DRUM_TYPES[Math.floor(Math.random() * DRUM_TYPES.length)];
+      if (drum.name !== state.lastDrumType || attempts >= 20) break;
+      attempts++;
+    } while (true);
 
-  drawStaff(drum);
-  document.getElementById('drumInstructions').textContent = `Play the ${drum.label}`;
+    state.currentDrum = drum;
+    state.lastDrumType = drum.name;
+    state.currentPattern = [];
+
+    drawStaff(drum);
+    document.getElementById('drumInstructions').textContent = `Play the ${drum.label}`;
+  }
 
   if (state.count > 0) {
     document.getElementById('progressFill').style.width = ((state.questionNum - 1) / state.count * 100) + '%';
@@ -535,26 +577,35 @@ function nextQuestion() {
   startTimer();
 }
 
-function handleAnswer(drumName) {
+function handleAnswer(answerType) {
   if (!state.running || state.answered) return;
   state.answered = true;
   cancelAnimationFrame(state.timerRAF);
 
   const elapsed = (performance.now() - state.questionStart) / 1000;
-  const timerLimit = 2.0;
-  const correct = drumName === state.currentDrum.name;
-  const tooSlow = elapsed > timerLimit;
-  const win = correct && !tooSlow;
+  const timerLimit = state.mode === 'pattern' ? 3.0 : 2.0;
 
-  // Find the played drum for display
-  let playedDrumLabel = 'unknown';
-  for (let drum of DRUM_TYPES) {
-    if (drum.name === drumName) {
-      playedDrumLabel = drum.label;
-      break;
+  let correct, win, displayLabel;
+
+  if (state.mode === 'pattern') {
+    correct = answerType === '__PATTERN_OK__';
+    win = correct && elapsed <= timerLimit;
+    displayLabel = state.currentPattern.map(d => d.label).join(' + ');
+  } else {
+    correct = answerType === state.currentDrum.name;
+    win = correct && elapsed <= timerLimit;
+    displayLabel = state.currentDrum.label;
+
+    let playedDrumLabel = 'unknown';
+    for (let drum of DRUM_TYPES) {
+      if (drum.name === answerType) {
+        playedDrumLabel = drum.label;
+        break;
+      }
     }
   }
 
+  const tooSlow = elapsed > timerLimit;
   setTimerDisplay(elapsed, elapsed <= timerLimit * 0.5 ? 'green' : elapsed <= timerLimit * 0.85 ? 'amber' : 'red');
 
   if (win) {
@@ -571,14 +622,17 @@ function handleAnswer(drumName) {
   if (tooSlow && correct) {
     showFeedback('slow', '⏰', `Correct but too slow!`, `${elapsed.toFixed(2)}s · Keep practicing`);
   } else if (win) {
-    showFeedback('correct', '✓', `Correct! ${state.currentDrum.label}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+    showFeedback('correct', '✓', `Correct! ${displayLabel}`, `${elapsed.toFixed(2)}s · Streak: ${state.streak}🔥`);
+  } else if (state.mode === 'pattern') {
+    showFeedback('wrong', '✗', `Not quite — play: ${displayLabel}`, `${elapsed.toFixed(2)}s`);
   } else {
-    showFeedback('wrong', '✗', `Not quite — it was ${state.currentDrum.label}`, `You played ${playedDrumLabel} · ${elapsed.toFixed(2)}s`);
+    const playedLabel = state.mode === 'pattern' ? 'notes' : answerType;
+    showFeedback('wrong', '✗', `Not quite — it was ${displayLabel}`, `${elapsed.toFixed(2)}s`);
   }
 
   // Log
   const result = tooSlow || !correct ? (tooSlow ? 'slow' : 'no') : 'ok';
-  state.log.push({ note: state.currentDrum.label, guess: playedDrumLabel, time: elapsed, correct: win, tooSlow, result });
+  state.log.push({ note: displayLabel, guess: state.mode === 'pattern' ? 'pattern' : answerType, time: elapsed, correct: win, tooSlow, result });
   appendLogRow(state.log[state.log.length - 1]);
   updateStats();
 
@@ -733,6 +787,57 @@ const staffCanvas = document.getElementById('staffCanvas');
 const sCtx = staffCanvas.getContext('2d');
 const SW = 900, SH = 280;
 
+function drawDrumNote(drum, noteX, staffTop, lineGap) {
+  // Position based on standard drum staff layout
+  let noteY;
+  switch(drum.staffPosition) {
+    case 'below-1': noteY = staffTop + 5 * lineGap; break;
+    case 'space-2': noteY = staffTop + 3.5 * lineGap; break;
+    case 'line-2': noteY = staffTop + 3 * lineGap; break;
+    case 'space-3': noteY = staffTop + 2.5 * lineGap; break;
+    case 'line-3': noteY = staffTop + 2 * lineGap; break;
+    case 'space-4': noteY = staffTop + 1.5 * lineGap; break;
+    case 'line-4': noteY = staffTop + 1 * lineGap; break;
+    case 'space-5': noteY = staffTop + 0.5 * lineGap; break;
+    case 'above-1': noteY = staffTop - 1 * lineGap; break;
+    case 'above-2': noteY = staffTop - 2 * lineGap; break;
+    default: noteY = staffTop + 2 * lineGap;
+  }
+
+  const isCymbal = ['hihat-closed', 'hihat-open', 'ride', 'crash'].includes(drum.name);
+
+  sCtx.shadowColor = '#FF2D78';
+  sCtx.shadowBlur = 26;
+  sCtx.fillStyle = '#FF2D78';
+  sCtx.strokeStyle = '#FF2D78';
+  sCtx.lineWidth = 2;
+
+  if (isCymbal) {
+    // Draw X for cymbals
+    sCtx.beginPath();
+    sCtx.moveTo(noteX - 12, noteY - 12);
+    sCtx.lineTo(noteX + 12, noteY + 12);
+    sCtx.stroke();
+    sCtx.beginPath();
+    sCtx.moveTo(noteX + 12, noteY - 12);
+    sCtx.lineTo(noteX - 12, noteY + 12);
+    sCtx.stroke();
+  } else {
+    // Draw note head for drums
+    sCtx.beginPath();
+    sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
+    sCtx.fill();
+  }
+
+  sCtx.shadowBlur = 0;
+
+  // Draw stem
+  sCtx.beginPath();
+  sCtx.moveTo(noteX + 17, noteY);
+  sCtx.lineTo(noteX + 17, noteY - 35);
+  sCtx.stroke();
+}
+
 function drawStaff(drum) {
   sCtx.clearRect(0, 0, SW, SH);
   sCtx.fillStyle = '#0D1117';
@@ -761,47 +866,65 @@ function drawStaff(drum) {
   sCtx.fillText('DRUM STAFF', staffLeft + 5, staffTop - 14);
   sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
 
-  // Draw drum note on staff based on standard drum notation
   const noteX = SW / 2;
+  drawDrumNote(drum, noteX, staffTop, lineGap);
 
-  // Position based on standard drum staff layout
-  let noteY;
-  switch(drum.staffPosition) {
-    case 'below-1': noteY = staffTop + 5 * lineGap; break;        // Below staff: Kick
-    case 'space-2': noteY = staffTop + 3.5 * lineGap; break;      // Space 2: Low Tom
-    case 'line-2': noteY = staffTop + 3 * lineGap; break;         // Line 2: Snare
-    case 'space-3': noteY = staffTop + 2.5 * lineGap; break;      // Space 3: Hi-hat
-    case 'line-3': noteY = staffTop + 2 * lineGap; break;         // Line 3
-    case 'space-4': noteY = staffTop + 1.5 * lineGap; break;      // Space 4: High Tom
-    case 'line-4': noteY = staffTop + 1 * lineGap; break;         // Line 4: Mid Tom
-    case 'space-5': noteY = staffTop + 0.5 * lineGap; break;      // Space 5
-    case 'above-1': noteY = staffTop - 1 * lineGap; break;        // Above staff: Ride
-    case 'above-2': noteY = staffTop - 2 * lineGap; break;        // Above staff: Crash
-    default: noteY = staffTop + 2 * lineGap;
+  // Draw label below staff (only on easy difficulty)
+  if (state.difficulty === 'beginner') {
+    sCtx.font = 'bold 16px "DM Mono",monospace';
+    sCtx.fillStyle = '#FF2D78';
+    sCtx.textAlign = 'center';
+    sCtx.fillText(drum.label, noteX, staffTop + 6 * lineGap + 20);
   }
 
-  // Draw note head
-  sCtx.shadowColor = '#FF2D78';
-  sCtx.shadowBlur = 26;
-  sCtx.fillStyle = '#FF2D78';
-  sCtx.beginPath();
-  sCtx.ellipse(noteX, noteY, 17, 12, -0.18, 0, Math.PI * 2);
-  sCtx.fill();
-  sCtx.shadowBlur = 0;
-
-  // Draw stem
-  sCtx.strokeStyle = '#FF2D78';
+  // Closing barline
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
   sCtx.lineWidth = 2;
   sCtx.beginPath();
-  sCtx.moveTo(noteX + 17, noteY);
-  sCtx.lineTo(noteX + 17, noteY - 35);
+  sCtx.moveTo(staffLeft + staffW, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW, staffTop + 4 * lineGap + 2);
   sCtx.stroke();
+  sCtx.lineWidth = 5;
+  sCtx.beginPath();
+  sCtx.moveTo(staffLeft + staffW + 5, staffTop - 2);
+  sCtx.lineTo(staffLeft + staffW + 5, staffTop + 4 * lineGap + 2);
+  sCtx.stroke();
+}
 
-  // Draw label below staff
-  sCtx.font = 'bold 16px "DM Mono",monospace';
+function drawStaffPattern(drums) {
+  sCtx.clearRect(0, 0, SW, SH);
+  sCtx.fillStyle = '#0D1117';
+  sCtx.fillRect(0, 0, SW, SH);
+
+  if (!drums || drums.length === 0) return;
+
+  const staffTop = 100;
+  const staffLeft = 90;
+  const staffW = SW - 130;
+  const lineGap = 15;
+
+  // Draw 5 staff lines
+  sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
+  sCtx.lineWidth = 1.5;
+  for (let i = 0; i < 5; i++) {
+    sCtx.beginPath();
+    sCtx.moveTo(staffLeft, staffTop + i * lineGap);
+    sCtx.lineTo(staffLeft + staffW, staffTop + i * lineGap);
+    sCtx.stroke();
+  }
+
+  // Label and question number
+  sCtx.font = '12px "DM Mono",monospace';
   sCtx.fillStyle = '#FF2D78';
-  sCtx.textAlign = 'center';
-  sCtx.fillText(drum.label, noteX, staffTop + 6 * lineGap + 20);
+  sCtx.fillText('DRUM PATTERN', staffLeft + 5, staffTop - 14);
+  sCtx.fillText(`Q${state.questionNum}`, staffLeft + 5, staffTop - 2);
+
+  // Draw all drums in pattern, spaced across
+  const spacing = (staffW - 100) / (drums.length);
+  drums.forEach((drum, index) => {
+    const noteX = staffLeft + 50 + (index * spacing);
+    drawDrumNote(drum, noteX, staffTop, lineGap);
+  });
 
   // Closing barline
   sCtx.strokeStyle = 'rgba(255,255,255,0.45)';
@@ -823,9 +946,35 @@ function drawStaff(drum) {
 function onMidiMessage(msg) {
   const [status, note, velocity] = msg.data;
   const isNoteOn = (status & 0xF0) === 0x90 && velocity > 0;
-  if (!isNoteOn) return;
+  const isNoteOff = (status & 0xF0) === 0x80 || ((status & 0xF0) === 0x90 && velocity === 0);
 
-  if (state.running && !state.answered) {
+  if (isNoteOn) {
+    state.midiPressed.add(note);
+  } else if (isNoteOff) {
+    state.midiPressed.delete(note);
+  }
+
+  if (!state.running || state.answered) return;
+
+  if (state.mode === 'pattern') {
+    // Pattern mode: check if pressed notes match pattern
+    if (state.midiPressed.size >= state.currentPattern.length) {
+      const pressedDrums = new Set();
+      state.midiPressed.forEach(n => {
+        const drum = DRUM_MAP[n];
+        if (drum) pressedDrums.add(drum.name);
+      });
+
+      const expectedDrums = new Set(state.currentPattern.map(d => d.name));
+      const match = [...expectedDrums].every(d => pressedDrums.has(d)) &&
+                    [...pressedDrums].every(d => expectedDrums.has(d));
+
+      if (match) {
+        handleAnswer('__PATTERN_OK__');
+      }
+    }
+  } else if (isNoteOn) {
+    // Single mode: handle on note-on
     const drum = DRUM_MAP[note];
     if (drum) {
       handleAnswer(drum.name);
