@@ -516,7 +516,6 @@ function nextQuestion() {
   state.lastDrumType = drum.name;
 
   drawStaff(drum);
-  playDrumSound(drum.name);
   document.getElementById('drumInstructions').textContent = `Play the ${drum.label}`;
 
   if (state.count > 0) {
@@ -822,7 +821,6 @@ function onMidiMessage(msg) {
   if (state.running && !state.answered) {
     const drum = DRUM_MAP[note];
     if (drum) {
-      playDrumSound(drum.name);
       handleAnswer(drum.name);
     }
   }
