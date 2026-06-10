@@ -10746,6 +10746,55 @@ document.addEventListener('keyup', (e) => {
   roomHandleMidiNoteOff(midi);
 });
 
+/* ── Audio Bridge: Handle notes from React audio input ──────────── */
+window.addEventListener('message', (event) => {
+  // Accept messages from parent/React wrapper
+  if (event.origin !== window.location.origin && !event.origin.includes('localhost') && !event.origin.includes('127.0.0.1')) return;
+
+  if (event.data?.type === 'AUDIO_NOTE_DETECTED') {
+    const { midiNote, noteName, frequency, cents, confidence } = event.data.payload;
+
+    // Only process if in game or room mode and confidence is high enough
+    if (confidence < 0.7) return;
+
+    const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+    const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+
+    if (!isRoom && !isPlay) return;
+
+    // Handle note on
+    if (isRoom) {
+      roomHandleMidiNoteOn(midiNote);
+    } else if (isPlay && game.inputMode === 'mic') {
+      // In play mode, register the note hit
+      startAudio().then(() => noteAttack(midiNote));
+    }
+  } else if (event.data?.type === 'AUDIO_NOTE_OFF') {
+    const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+    const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+
+    if (isRoom) {
+      // Clear all notes when audio stops
+      Array.from({length: 128}, (_, i) => {
+        if (ROOM.myNotes.has(i)) {
+          roomHandleMidiNoteOff(i);
+          noteRelease(i);
+        }
+      });
+    } else if (isPlay) {
+      releaseAllNotes();
+    }
+  } else if (event.data?.type === 'GAME_READY') {
+    // Indicate the game is ready to receive audio input
+    // Do nothing — the game is already ready
+  }
+});
+
+/* Notify parent that game is ready for audio input */
+if (window.parent !== window) {
+  window.parent.postMessage({ type: 'GAME_READY' }, '*');
+}
+
 /* ── Resize room canvases ────────────────────────────────────── */
 window.addEventListener('resize', () => {
   if (!document.getElementById('screen-room')?.classList.contains('active')) return;
