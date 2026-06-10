@@ -157,7 +157,7 @@ const HeroSection = () => {
       <MusicNotesBackground />
       <div className="container mx-auto px-3 sm:px-4 relative z-10">
         <div className="text-center mb-4 sm:mb-8">
-          <h1 className="text-4xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-foreground mb-3 sm:mb-6 animate-slide-up leading-tight">
+          <h1 className="font-black text-foreground mb-3 sm:mb-6 animate-slide-up leading-tight" style={{ fontSize: "clamp(2.75rem, 6vw, 7rem)" }}>
             {t("hero.line1")}<br />
             {/* "SMARTER" — spectrum colours + wave animation */}
             {t("hero.line2").split("").map((char, i) => (
