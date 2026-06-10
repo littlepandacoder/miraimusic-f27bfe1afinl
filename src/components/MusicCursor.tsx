@@ -51,8 +51,6 @@ const MusicCursor = () => {
     const observer = new MutationObserver(updateCursorForModal);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    return () => observer.disconnect();
-
     // Main cursor — smooth rAF follow
     const tick = () => {
       cursor.style.transform = `translate(${pos.current.x}px, ${pos.current.y}px)`;
@@ -132,6 +130,7 @@ const MusicCursor = () => {
     return () => {
       document.removeEventListener("mousemove", onMove);
       if (raf.current) cancelAnimationFrame(raf.current);
+      observer.disconnect();
     };
   }, []);
 
