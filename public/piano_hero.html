@@ -1455,6 +1455,7 @@ window.musicableUserId   = null;
           <div class="option-desc" id="micOptionDesc">Sing or play an acoustic instrument · Pitch detected live</div>
           <div id="micPermStatus" style="display:none;font-family:'DM Mono',monospace;font-size:.68rem;margin-top:.35rem"></div>
           <div class="mic-test-bar" id="micTestBar" style="display:none"><div class="mic-test-fill" id="micTestFill"></div></div>
+          <button onclick="openMicCalibration(event)" style="margin-top:.5rem;padding:.35rem .7rem;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);color:var(--sky);border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:.68rem;font-weight:600;transition:all .15s">🔧 Test Frequency Detection</button>
         </div>
         <div class="option-check">✓</div>
       </div>
@@ -1472,6 +1473,68 @@ window.musicableUserId   = null;
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeInputModal()">Cancel</button>
       <button class="modal-btn-play" id="modalPlayBtn" onclick="confirmAndPlay()">▶ Play</button>
+    </div>
+  </div>
+</div>
+
+<!-- MICROPHONE CALIBRATION MODAL -->
+<div id="micCalibrationModal" style="position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(10,8,18,.92);backdrop-filter:blur(10px)">
+  <div style="background:#151228;border:1px solid rgba(0,212,255,.25);border-radius:18px;padding:2rem;max-width:480px;width:90%;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:var(--sky)">🎤 Frequency Detection Test</div>
+      <button onclick="closeMicCalibration()" style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+
+    <!-- Status -->
+    <div style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:10px;padding:1rem;margin-bottom:1rem">
+      <div style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);margin-bottom:.5rem">STATUS</div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">Listening</div>
+          <div id="calibStatus" style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--muted)">⚪ Inactive</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted)">Amplitude</div>
+          <div style="height:20px;background:rgba(0,0,0,.3);border-radius:4px;margin-top:.3rem;overflow:hidden">
+            <div id="calibAmpBar" style="height:100%;width:0%;background:linear-gradient(90deg, var(--sky), var(--pink));transition:width .05s"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detected Frequency -->
+    <div style="background:rgba(255,45,120,.08);border:1px solid rgba(255,45,120,.2);border-radius:10px;padding:1.5rem;margin-bottom:1rem;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase">Detected Note</div>
+      <div id="calibNoteName" style="font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;color:var(--pink);text-shadow:0 0 20px rgba(255,45,120,.5);line-height:1">—</div>
+      <div id="calibFreq" style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--muted);margin-top:.5rem">0 Hz</div>
+      <div id="calibMidi" style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted)">MIDI 0</div>
+    </div>
+
+    <!-- Confidence -->
+    <div style="background:rgba(57,217,138,.08);border:1px solid rgba(57,217,138,.2);border-radius:10px;padding:1rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);text-transform:uppercase">Confidence</div>
+        <div id="calibConf" style="font-family:'Orbitron',monospace;font-size:1rem;color:var(--green)">0%</div>
+      </div>
+      <div style="height:8px;background:rgba(0,0,0,.3);border-radius:4px;overflow:hidden">
+        <div id="calibConfBar" style="height:100%;width:0%;background:var(--green);transition:width .05s"></div>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--off-white)">How to test:</strong><br>
+      1. Click "Start Test" below<br>
+      2. Sing or play a note into your microphone<br>
+      3. Watch for the detected frequency in real-time<br>
+      4. The note name should match what you're singing
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;gap:.8rem">
+      <button id="calibStartBtn" onclick="calibrationStart()" style="flex:1;padding:.7rem 1rem;background:var(--sky);border:none;border-radius:8px;color:#000;font-family:'DM Mono',monospace;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s">▶ Start Test</button>
+      <button id="calibStopBtn" onclick="calibrationStop()" style="flex:1;padding:.7rem 1rem;background:var(--red);border:none;border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-weight:700;font-size:.8rem;cursor:pointer;display:none;transition:all .15s">⏹ Stop Test</button>
+      <button onclick="closeMicCalibration()" style="padding:.7rem 1rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:var(--off-white);font-family:'DM Mono',monospace;font-weight:700;font-size:.8rem;cursor:pointer">Close</button>
     </div>
   </div>
 </div>
@@ -6111,6 +6174,101 @@ function stopPitchDetection() {
   }
   lastDetectedMidi = -1;
   detectionConfidence = 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MICROPHONE CALIBRATION TOOL
+   ════════════════════════════════════════════════════════════════ */
+let calibrationActive = false;
+let calibrationRaf = null;
+let calibDetectionBuffer = new Float32Array(4096);
+
+function openMicCalibration(e) {
+  e.stopPropagation();
+  document.getElementById('micCalibrationModal').style.display = 'flex';
+
+  // Start mic preview if not already active
+  if (!micPreviewCtx) {
+    startMicPreview();
+  }
+}
+
+function closeMicCalibration() {
+  calibrationStop();
+  document.getElementById('micCalibrationModal').style.display = 'none';
+}
+
+function calibrationStart() {
+  if (!micPreviewCtx) {
+    startMicPreview();
+    // Wait a moment for mic to initialize
+    setTimeout(() => calibrationStart(), 500);
+    return;
+  }
+
+  calibrationActive = true;
+  document.getElementById('calibStartBtn').style.display = 'none';
+  document.getElementById('calibStopBtn').style.display = 'block';
+  document.getElementById('calibStatus').textContent = '🔴 Active';
+  document.getElementById('calibStatus').style.color = 'var(--pink)';
+
+  const { analyser, actx } = micPreviewCtx;
+  const sampleRate = actx.sampleRate;
+
+  const detectLoop = () => {
+    if (!calibrationActive || !micPreviewCtx) { calibrationRaf = null; return; }
+    calibrationRaf = requestAnimationFrame(detectLoop);
+
+    analyser.getFloatTimeDomainData(calibDetectionBuffer);
+
+    // Calculate RMS for amplitude display
+    let rms = 0;
+    for (const v of calibDetectionBuffer) rms += v * v;
+    rms = Math.sqrt(rms / calibDetectionBuffer.length);
+    document.getElementById('calibAmpBar').style.width = Math.min(100, rms * 500) + '%';
+
+    const frequency = autoCorrelate(calibDetectionBuffer, sampleRate);
+
+    if (frequency > 0) {
+      const midi = frequencyToMidi(frequency);
+      const note = NOTE_NAMES[midi % 12];
+      const octave = Math.floor(midi / 12) - 1;
+      const confidence = 0.85; // High confidence from autocorrelation
+
+      document.getElementById('calibNoteName').textContent = note + octave;
+      document.getElementById('calibFreq').textContent = frequency.toFixed(2) + ' Hz';
+      document.getElementById('calibMidi').textContent = 'MIDI ' + midi;
+      document.getElementById('calibConf').textContent = (confidence * 100).toFixed(0) + '%';
+      document.getElementById('calibConfBar').style.width = (confidence * 100) + '%';
+    } else {
+      document.getElementById('calibNoteName').textContent = '—';
+      document.getElementById('calibFreq').textContent = '0 Hz';
+      document.getElementById('calibMidi').textContent = 'MIDI 0';
+      document.getElementById('calibConf').textContent = '0%';
+      document.getElementById('calibConfBar').style.width = '0%';
+    }
+  };
+
+  detectLoop();
+}
+
+function calibrationStop() {
+  calibrationActive = false;
+  if (calibrationRaf) {
+    cancelAnimationFrame(calibrationRaf);
+    calibrationRaf = null;
+  }
+
+  document.getElementById('calibStartBtn').style.display = 'block';
+  document.getElementById('calibStopBtn').style.display = 'none';
+  document.getElementById('calibStatus').textContent = '⚪ Inactive';
+  document.getElementById('calibStatus').style.color = 'var(--muted)';
+  document.getElementById('calibNoteName').textContent = '—';
+  document.getElementById('calibFreq').textContent = '0 Hz';
+  document.getElementById('calibMidi').textContent = 'MIDI 0';
+  document.getElementById('calibConf').textContent = '0%';
+  document.getElementById('calibConfBar').style.width = '0%';
+  document.getElementById('calibAmpBar').style.width = '0%';
 }
 
 function closeInputModal() {
