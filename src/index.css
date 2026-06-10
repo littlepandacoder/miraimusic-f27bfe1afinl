@@ -46,9 +46,10 @@ body {
   background: #db2777;
 }
 
-/* Brighten cursor when dialog/modal is open */
+/* Brighten and pink cursor when dialog/modal is open */
 body[data-modal-open="true"] .music-cursor-trail {
   opacity: 1 !important;
+  background: #ff1493 !important;
 }
 
 [role="dialog"]:not([open="false"]) ~ * .music-cursor-trail {

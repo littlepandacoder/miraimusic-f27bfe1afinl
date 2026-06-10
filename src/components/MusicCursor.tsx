@@ -34,16 +34,20 @@ const MusicCursor = () => {
     const cursor = cursorRef.current;
     if (!cursor) return;
 
-    // Check if modal is open and update cursor style
+    // Check if modal is open and update cursor style to pink
     const updateCursorForModal = () => {
       const modals = document.querySelectorAll('[role="dialog"][open], [role="dialog"]');
       isModalOpen.current = modals.length > 0;
       if (isModalOpen.current) {
-        cursor.style.filter = "drop-shadow(0 0 10px #ff1493) drop-shadow(0 0 20px #ff69b4) drop-shadow(0 0 30px #c084fc)";
-        cursor.style.fontSize = "32px";
+        cursor.style.color = "#ff1493"; // Pink
+        cursor.style.filter = "drop-shadow(0 0 12px #ff1493) drop-shadow(0 0 24px #ff69b4) drop-shadow(0 0 36px #ff1493)";
+        cursor.style.fontSize = "34px";
+        cursor.style.zIndex = "10001"; // Above modal z-index
       } else {
-        cursor.style.filter = "drop-shadow(0 0 6px #ff69b4) drop-shadow(0 0 12px #c084fc)";
+        cursor.style.color = "#ffffff"; // White (glitter)
+        cursor.style.filter = "drop-shadow(0 0 8px #ffff99) drop-shadow(0 0 16px #fffacd) drop-shadow(0 0 24px rgba(255,255,255,0.6))";
         cursor.style.fontSize = "28px";
+        cursor.style.zIndex = "9999"; // Normal z-index
       }
     };
 
