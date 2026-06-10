@@ -102,6 +102,7 @@ export async function registerAffiliate(
   code: string,
   payoutEmail?: string
 ) {
+  // Insert affiliate record
   const { data, error } = await (supabase as any)
     .from("affiliates")
     .insert({ user_id: userId, name, email, code, payout_email: payoutEmail ?? email })
@@ -109,5 +110,15 @@ export async function registerAffiliate(
     .maybeSingle();
 
   if (error) throw error;
+
+  // Assign affiliate role to the user
+  try {
+    await (supabase as any)
+      .from("user_roles")
+      .insert({ user_id: userId, role: "affiliate" });
+  } catch (roleError) {
+    console.warn("Failed to assign affiliate role:", roleError);
+  }
+
   return data;
 }

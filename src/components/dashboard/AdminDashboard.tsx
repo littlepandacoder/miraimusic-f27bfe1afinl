@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn, FileDown, RotateCcw } from "lucide-react";
+import { Users, Calendar, BookOpen, UserPlus, Gamepad2, Loader2, ChevronDown, ChevronUp, Trophy, Clock, LogIn, FileDown, RotateCcw, Zap } from "lucide-react";
 import { exportAllStudentsReport, exportSingleStudentReport, type AdminStudentRow } from "@/lib/exportReport";
 import ManageUsers from "./admin/ManageUsers";
 import ManageLessons from "./admin/ManageLessons";
@@ -338,27 +338,31 @@ const AdminHome = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalTeachers: 0,
+    totalAffiliates: 0,
     totalLessons: 0,
     upcomingLessons: 0,
   });
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [studentsRes, teachersRes, lessonsRes, upcomingRes] = await Promise.all([
+      const [studentsRes, teachersRes, affiliatesRes, lessonsRes, upcomingRes] = await Promise.all([
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "student"),
         supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "affiliate"),
         supabase.from("lessons").select("*", { count: "exact", head: true }),
         supabase.from("lessons").select("*", { count: "exact", head: true }).eq("status", "scheduled").gte("scheduled_date", new Date().toISOString().split("T")[0]),
       ]);
 
       if (studentsRes.error) console.error("fetchStats students:", studentsRes.error.message);
       if (teachersRes.error) console.error("fetchStats teachers:", teachersRes.error.message);
+      if (affiliatesRes.error) console.error("fetchStats affiliates:", affiliatesRes.error.message);
       if (lessonsRes.error)  console.error("fetchStats lessons:",  lessonsRes.error.message);
       if (upcomingRes.error) console.error("fetchStats upcoming:", upcomingRes.error.message);
 
       setStats({
         totalStudents: studentsRes.count ?? 0,
         totalTeachers: teachersRes.count ?? 0,
+        totalAffiliates: affiliatesRes.count ?? 0,
         totalLessons:  lessonsRes.count  ?? 0,
         upcomingLessons: upcomingRes.count ?? 0,
       });
@@ -369,7 +373,7 @@ const AdminHome = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
@@ -387,6 +391,16 @@ const AdminHome = () => {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.totalTeachers}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Affiliates</CardTitle>
+            <Zap className="w-5 h-5 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{stats.totalAffiliates}</p>
           </CardContent>
         </Card>
 
