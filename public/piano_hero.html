@@ -65,6 +65,48 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
   font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);
   padding:.25rem .7rem;border:1px solid var(--border);border-radius:100px;
 }
+
+/* ═══ MIC LEVEL GAUGE ═══════════════════════════════════════ */
+.mic-gauge-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 45, 120, 0.08);
+  border: 1px solid rgba(255, 45, 120, 0.25);
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.mic-gauge-bar {
+  height: 24px;
+  width: 120px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mic-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #39D98A, #00D4FF, #FF2D78);
+  width: 0%;
+  transition: width 0.05s;
+}
+
+.mic-gauge-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.mic-gauge-value {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: var(--pink);
+}
 .midi-dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
 .midi-dot.on{background:var(--green);box-shadow:0 0 6px rgba(57,217,138,.8)}
 .nav-link{font-size:.78rem;color:var(--muted);text-decoration:none;transition:color .2s}
@@ -1393,6 +1435,16 @@ window.musicableUserId   = null;
     <div class="midi-badge">
       <div class="midi-dot" id="midiDot"></div>
       <span id="midiLabel">MIDI: n/a</span>
+    </div>
+    <!-- Microphone Level Gauge -->
+    <div class="mic-gauge-container" id="micGaugeContainer" style="display:none">
+      <div class="mic-gauge-label">
+        <span>🎤 Input</span>
+        <span class="mic-gauge-value" id="micGaugeValue">0%</span>
+      </div>
+      <div class="mic-gauge-bar">
+        <div class="mic-gauge-fill" id="micGaugeFill"></div>
+      </div>
     </div>
     <a href="/dashboard" class="nav-link">← Dashboard</a>
   </div>
@@ -6041,6 +6093,7 @@ async function startMicPreview() {
   // If we already have a live preview stream, don't re-request
   if (micPreviewCtx) {
     setMicStatus('granted');
+    startMicGaugeUpdate(); // Ensure gauge is updating
     return;
   }
 
@@ -6059,6 +6112,7 @@ async function startMicPreview() {
 
     // Permission granted — update UI
     setMicStatus('granted');
+    startMicGaugeUpdate(); // Start showing mic level gauge
 
     const fill = document.getElementById('micTestFill');
     const loop = () => {
@@ -6080,6 +6134,7 @@ async function startMicPreview() {
 
 function stopMicPreview() {
   cancelAnimationFrame(micPreviewRaf);
+  stopMicGaugeUpdate(); // Stop gauge updates
   if (micPreviewCtx) {
     micPreviewCtx.stream.getTracks().forEach(t => t.stop());
     micPreviewCtx.actx.close().catch(()=>{});
@@ -6097,6 +6152,8 @@ let pitchDetectorRaf = null;
 let detectionBuffer = new Float32Array(4096);
 let lastDetectedMidi = -1;
 let detectionConfidence = 0;
+let micGaugeRaf = null;
+let lastRms = 0;
 
 // Sensitivity settings (0-100, default 50)
 let audioSensitivity = localStorage.getItem('audioSensitivity') ? parseInt(localStorage.getItem('audioSensitivity')) : 50;
@@ -6110,6 +6167,60 @@ function setAudioSensitivity(value) {
   // Update all sliders
   const sliders = document.querySelectorAll('[id*="SensitivitySlider"]');
   sliders.forEach(slider => slider.value = audioSensitivity);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MICROPHONE LEVEL GAUGE
+   ════════════════════════════════════════════════════════════════ */
+function startMicGaugeUpdate() {
+  if (!micPreviewCtx || micGaugeRaf) return;
+
+  const { analyser } = micPreviewCtx;
+  const gaugeBuffer = new Float32Array(analyser.fftSize);
+  const gaugeContainer = document.getElementById('micGaugeContainer');
+  if (gaugeContainer) gaugeContainer.style.display = 'flex';
+
+  const updateGauge = () => {
+    if (!micPreviewCtx) {
+      micGaugeRaf = null;
+      if (gaugeContainer) gaugeContainer.style.display = 'none';
+      return;
+    }
+
+    micGaugeRaf = requestAnimationFrame(updateGauge);
+
+    analyser.getFloatTimeDomainData(gaugeBuffer);
+
+    // Calculate RMS
+    let rms = 0;
+    for (const v of gaugeBuffer) rms += v * v;
+    rms = Math.sqrt(rms / gaugeBuffer.length);
+    lastRms = rms;
+
+    // Convert to percentage (0-100)
+    const percentage = Math.min(100, rms * 500);
+
+    // Update gauge bar
+    const fill = document.getElementById('micGaugeFill');
+    if (fill) fill.style.width = percentage + '%';
+
+    // Update percentage display
+    const value = document.getElementById('micGaugeValue');
+    if (value) value.textContent = Math.round(percentage) + '%';
+  };
+
+  updateGauge();
+}
+
+function stopMicGaugeUpdate() {
+  if (micGaugeRaf) {
+    cancelAnimationFrame(micGaugeRaf);
+    micGaugeRaf = null;
+  }
+  const gaugeContainer = document.getElementById('micGaugeContainer');
+  if (gaugeContainer) {
+    gaugeContainer.style.display = 'none';
+  }
 }
 
 function updateMicSensitivity(value) {
