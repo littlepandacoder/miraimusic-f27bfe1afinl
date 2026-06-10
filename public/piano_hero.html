@@ -1452,7 +1452,7 @@ window.musicableUserId   = null;
         <div class="option-icon" id="micOptionIcon">🎤</div>
         <div style="flex:1">
           <div class="option-title">Microphone</div>
-          <div class="option-desc" id="micOptionDesc">Sing or play an acoustic instrument · Pitch detected live</div>
+          <div class="option-desc" id="micOptionDesc">Sing or play an acoustic instrument · Pitch detected live · Adjust sensitivity below</div>
           <div id="micPermStatus" style="display:none;font-family:'DM Mono',monospace;font-size:.68rem;margin-top:.35rem"></div>
           <div class="mic-test-bar" id="micTestBar" style="display:none"><div class="mic-test-fill" id="micTestFill"></div></div>
 
@@ -1551,11 +1551,12 @@ window.musicableUserId   = null;
     <!-- Instructions -->
     <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem;margin-bottom:1.5rem;font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);line-height:1.6">
       <strong style="color:var(--off-white)">How to test:</strong><br>
-      1. Adjust sensitivity if needed (left = catch more notes)<br>
+      1. Start with sensitivity on the LEFT (less sensitive = catch more)<br>
       2. Click "Start Test" below<br>
-      3. Sing or play a note into your microphone<br>
+      3. Sing or play a note at normal volume into your microphone<br>
       4. Watch for detected frequency in real-time<br>
-      5. The note name should match what you're singing
+      5. Adjust sensitivity right if you get false detections<br>
+      <br><strong style="color:var(--pink)">💡 Tip:</strong> If nothing is detected, slide all the way left (0%)
     </div>
 
     <!-- Controls -->
@@ -6135,10 +6136,13 @@ function autoCorrelate(buffer, sampleRate) {
   }
   rms = Math.sqrt(rms / MAX_SAMPLES);
 
-  // Sensitivity adjustment (0-100): lower sensitivity = lower threshold = more detections
-  // At 0% sensitivity: very permissive, at 100%: very strict
+  // Sensitivity adjustment (0-100): lower value = lower threshold = more detections
+  // 0% = most permissive (catch quiet notes), 100% = most strict (only loud notes)
   const sensitivityFactor = (100 - audioSensitivity) / 100;
-  const rmsThreshold = 0.001 + (sensitivityFactor * 0.02); // 0.001 to 0.021
+
+  // RMS Threshold: ranges from 0.0001 (very permissive) to 0.005 (strict)
+  // This detects even whisper-level input at 0% sensitivity
+  const rmsThreshold = 0.0001 + (sensitivityFactor * 0.005);
 
   if (rms < rmsThreshold) return -1;
 
@@ -6156,8 +6160,8 @@ function autoCorrelate(buffer, sampleRate) {
     lastCorrelation = correlation;
   }
 
-  // Correlation threshold: lower sensitivity = lower threshold = more detections
-  const correlationThreshold = 0.01 + (sensitivityFactor * 0.15); // 0.01 to 0.16
+  // Correlation threshold: 0% = very permissive (0.02), 100% = strict (0.25)
+  const correlationThreshold = 0.02 + (sensitivityFactor * 0.23);
 
   if (best_correlation > correlationThreshold) return sampleRate / best_offset;
   return -1;
