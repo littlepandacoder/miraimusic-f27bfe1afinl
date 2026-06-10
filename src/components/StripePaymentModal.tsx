@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export const StripePaymentModal = ({
   const [subscriptionId, setSubscriptionId] = useState("");
 
   // Request payment intent when modal opens
-  useState(() => {
+  useEffect(() => {
     if (!isOpen || clientSecret) return;
 
     (async () => {
@@ -47,7 +47,7 @@ export const StripePaymentModal = ({
         setError(err.message ?? "Failed to initialize payment");
       }
     })();
-  });
+  }, [isOpen, clientSecret, userId, email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +87,11 @@ export const StripePaymentModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-2xl max-w-md w-full shadow-xl">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-background rounded-2xl max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border/30">
-          <h2 className="text-xl font-bold">Complete Payment</h2>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/30 sticky top-0 bg-background">
+          <h2 className="text-lg sm:text-xl font-bold">Complete Payment</h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -101,11 +101,11 @@ export const StripePaymentModal = ({
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Pricing info */}
-          <div className="bg-pink/10 border border-pink/30 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">First month</p>
-            <p className="text-3xl font-black text-pink">$8</p>
+          <div className="bg-pink/10 border border-pink/30 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-1">First month</p>
+            <p className="text-2xl sm:text-3xl font-black text-pink">$8</p>
             <p className="text-xs text-muted-foreground mt-1">Then $17/month after</p>
           </div>
 
@@ -119,7 +119,7 @@ export const StripePaymentModal = ({
           )}
 
           {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+            <div className="p-2 sm:p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs sm:text-sm">
               {error}
             </div>
           )}
@@ -128,7 +128,7 @@ export const StripePaymentModal = ({
           <Button
             type="submit"
             disabled={!stripe || !elements || loading || !clientSecret}
-            className="w-full h-12 font-bold bg-pink hover:bg-pink/90"
+            className="w-full h-10 sm:h-12 font-bold text-sm sm:text-base bg-pink hover:bg-pink/90"
           >
             {loading ? (
               <>
@@ -141,7 +141,7 @@ export const StripePaymentModal = ({
           </Button>
 
           {/* Footer text */}
-          <p className="text-xs text-center text-muted-foreground">
+          <p className="text-xs text-center text-muted-foreground leading-snug">
             Your card is charged $8 today. You'll be billed $17/month on day 30.
             Cancel anytime from your account settings.
           </p>

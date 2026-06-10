@@ -157,7 +157,7 @@ const HeroSection = () => {
       <MusicNotesBackground />
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-foreground mb-6 animate-slide-up leading-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-foreground mb-6 animate-slide-up leading-tight">
             {t("hero.line1")}<br />
             {/* "SMARTER" — spectrum colours + wave animation */}
             {t("hero.line2").split("").map((char, i) => (
@@ -174,7 +174,7 @@ const HeroSection = () => {
               </span>
             ))}
           </h1>
-          <p className="text-xl md:text-2xl font-semibold mb-8 leading-snug">
+          <p className="text-sm sm:text-base md:text-xl lg:text-2xl font-semibold mb-8 leading-snug">
             {/* "100% GUARANTEED" — letter-by-letter blur-in + shimmer */}
             {t("hero.guarantee").split("").map((char, i) => (
               <span
