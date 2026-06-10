@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Loader2, Pencil, Trash2 } from "lucide-react";
+import { UserPlus, Loader2, Pencil, Trash2, Pause, Play } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface UserWithRole {
   id: string;
@@ -18,8 +19,16 @@ interface UserWithRole {
   created_at: string;
 }
 
+interface SubscriptionInfo {
+  id: string;
+  status: string;
+  paused_at: string | null;
+  pause_reason: string | null;
+}
+
 const ManageUsers = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Record<string, SubscriptionInfo>>({});
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: "", full_name: "", password: "", role: "student" });
@@ -33,6 +42,11 @@ const ManageUsers = () => {
   // Delete dialog state
   const [deleteTarget, setDeleteTarget] = useState<UserWithRole | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Pause/Resume dialog state
+  const [pauseTarget, setPauseTarget] = useState<UserWithRole | null>(null);
+  const [pauseReason, setPauseReason] = useState("");
+  const [isPauseLoading, setIsPauseLoading] = useState(false);
 
   const { toast } = useToast();
 
@@ -57,6 +71,15 @@ const ManageUsers = () => {
 
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+
+      // Fetch subscriptions
+      const { data: subs } = await (supabase as any)
+        .from("user_subscriptions")
+        .select("id, user_id, status, paused_at, pause_reason");
+
+      const subsMap: Record<string, SubscriptionInfo> = {};
+      (subs || []).forEach((s: any) => { subsMap[s.user_id] = s; });
+      setSubscriptions(subsMap);
 
       // Merge roles with profile info
       const merged: UserWithRole[] = (roleRows || []).map((r: any) => {
@@ -173,6 +196,31 @@ const ManageUsers = () => {
     }
   };
 
+  const handlePauseMembership = async () => {
+    if (!pauseTarget) return;
+    setIsPauseLoading(true);
+    try {
+      const isPaused = subscriptions[pauseTarget.id]?.paused_at !== null;
+      const { data, error } = await (supabase as any).rpc("admin_pause_membership", {
+        _user_id: pauseTarget.id,
+        _pause: !isPaused,
+        _reason: pauseReason || null,
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: data.message || (isPaused ? "Membership resumed" : "Membership paused") });
+      setPauseTarget(null);
+      setPauseReason("");
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error updating membership", description: error.message, variant: "destructive" });
+    } finally {
+      setIsPauseLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 justify-between items-center">
@@ -259,54 +307,85 @@ const ManageUsers = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Membership</TableHead>
                       <TableHead>Joined</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id} className="border-border">
-                        <TableCell className="font-medium">{user.full_name}</TableCell>
-                        <TableCell className="max-w-[160px] truncate">{user.email}</TableCell>
-                        <TableCell>
-                          <Select value={user.role} onValueChange={(v) => handleChangeRole(user.id, v)}>
-                            <SelectTrigger className="w-28 bg-secondary border-border">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="student">Student</SelectItem>
-                              <SelectItem value="teacher">Teacher</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              onClick={() => openEdit(user)}
-                              title="Edit user"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget(user)}
-                              title="Delete user"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {users.map((user) => {
+                      const sub = subscriptions[user.id];
+                      const isPaused = sub?.paused_at !== null;
+                      return (
+                        <TableRow key={user.id} className="border-border">
+                          <TableCell className="font-medium">{user.full_name}</TableCell>
+                          <TableCell className="max-w-[160px] truncate">{user.email}</TableCell>
+                          <TableCell>
+                            <Select value={user.role} onValueChange={(v) => handleChangeRole(user.id, v)}>
+                              <SelectTrigger className="w-28 bg-secondary border-border">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="student">Student</SelectItem>
+                                <SelectItem value="teacher">Teacher</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            {!sub ? (
+                              <span className="text-xs text-muted-foreground">No subscription</span>
+                            ) : isPaused ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 rounded text-xs font-medium">
+                                <Pause className="w-3 h-3" />
+                                Paused
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100 rounded text-xs font-medium">
+                                <Play className="w-3 h-3" />
+                                Active
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground whitespace-nowrap">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {sub && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className={`h-8 w-8 ${isPaused ? "text-green-600 hover:text-green-700" : "text-yellow-600 hover:text-yellow-700"}`}
+                                  onClick={() => setPauseTarget(user)}
+                                  title={isPaused ? "Resume membership" : "Pause membership"}
+                                >
+                                  {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                                </Button>
+                              )}
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => openEdit(user)}
+                                title="Edit user"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => setDeleteTarget(user)}
+                                title="Delete user"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -381,6 +460,53 @@ const ManageUsers = () => {
                 {isDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Delete User"}
               </Button>
               <Button variant="outline" onClick={() => setDeleteTarget(null)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pause/Resume Membership Dialog */}
+      <Dialog open={!!pauseTarget} onOpenChange={(open) => { if (!open) { setPauseTarget(null); setPauseReason(""); } }}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>
+              {subscriptions[pauseTarget?.id!]?.paused_at ? "Resume Membership" : "Pause Membership"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <p className="text-sm text-muted-foreground">
+              {subscriptions[pauseTarget?.id!]?.paused_at
+                ? `Resume membership for ${pauseTarget?.email}? They will regain access to courses.`
+                : `Pause membership for ${pauseTarget?.email}? They will lose access to courses.`}
+            </p>
+            {!subscriptions[pauseTarget?.id!]?.paused_at && (
+              <div className="space-y-2">
+                <Label htmlFor="pauseReason">Pause Reason (optional)</Label>
+                <Textarea
+                  id="pauseReason"
+                  value={pauseReason}
+                  onChange={(e) => setPauseReason(e.target.value)}
+                  placeholder="e.g., Student requested, Temporary freeze..."
+                  className="bg-secondary border-border"
+                  rows={3}
+                />
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button
+                onClick={handlePauseMembership}
+                disabled={isPauseLoading}
+                className={subscriptions[pauseTarget?.id!]?.paused_at ? "flex-1 bg-green-600 hover:bg-green-700" : "flex-1 btn-primary"}
+              >
+                {isPauseLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating...</>
+                ) : subscriptions[pauseTarget?.id!]?.paused_at ? (
+                  <>Resume Membership</>
+                ) : (
+                  <>Pause Membership</>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => { setPauseTarget(null); setPauseReason(""); }} className="flex-1">Cancel</Button>
             </div>
           </div>
         </DialogContent>

@@ -39,6 +39,26 @@ const SubscriptionGate = () => {
   );
 };
 
+const PausedMembershipGate = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="max-w-md text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mx-auto">
+          <Lock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+        </div>
+        <h1 className="text-2xl font-bold">Membership Paused</h1>
+        <p className="text-muted-foreground">
+          Your membership has been paused by the admin. Please contact support to resume your access.
+        </p>
+        <Button asChild size="lg" className="w-full" variant="outline">
+          <a href="mailto:support@musicable.com">Contact Support</a>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const SUB_CACHE_KEY = (uid: string) => `musicable_sub_v1_${uid}`;
 
 function readSubCache(uid: string): boolean | null {
@@ -67,6 +87,7 @@ const Dashboard = () => {
   const [checkingSubscription, setCheckingSubscription] = useState(() =>
     user?.id ? readSubCache(user.id) === null : true
   );
+  const [isPaused, setIsPaused] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
@@ -115,10 +136,11 @@ const Dashboard = () => {
         log("[dashboard] querying user_subscriptions for user:", user.id);
         const { data, error } = await (supabase as any)
           .from("user_subscriptions")
-          .select("id, status")
+          .select("id, status, paused_at")
           .eq("user_id", user.id)
-          // Accept both active subscriptions and active trials
+          // Accept both active subscriptions and active trials, but exclude paused
           .in("status", ["active", "trialing"])
+          .is("paused_at", null)
           .limit(1)
           .maybeSingle();
 
@@ -129,11 +151,30 @@ const Dashboard = () => {
           const result = roles.length > 0;
           writeSubCache(user.id, result);
           setSubscribed(result);
+          setIsPaused(false);
         } else {
           const result = !!data;
           log("[dashboard] subscribed:", result);
           writeSubCache(user.id, result);
           setSubscribed(result);
+          setIsPaused(false);
+        }
+
+        // Check if subscription exists but is paused
+        if (!data) {
+          const { data: pausedData } = await (supabase as any)
+            .from("user_subscriptions")
+            .select("id")
+            .eq("user_id", user.id)
+            .not("paused_at", "is", null)
+            .limit(1)
+            .maybeSingle();
+
+          if (!cancelled && pausedData) {
+            log("[dashboard] subscription is paused");
+            setSubscribed(false);
+            setIsPaused(true);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -197,7 +238,7 @@ const Dashboard = () => {
     setShowOnboarding(false);
   };
 
-  log("[dashboard] RENDER — loading:", loading, "checkingSubscription:", checkingSubscription, "subscribed:", subscribed, "roles:", roles, "user:", user?.email ?? "null");
+  log("[dashboard] RENDER — loading:", loading, "checkingSubscription:", checkingSubscription, "subscribed:", subscribed, "isPaused:", isPaused, "roles:", roles, "user:", user?.email ?? "null");
 
   if (loading || checkingSubscription) {
     return (
@@ -208,6 +249,8 @@ const Dashboard = () => {
   }
 
   if (!user) return null;
+
+  if (isPaused) return <PausedMembershipGate />;
 
   if (!subscribed) return <SubscriptionGate />;
 
