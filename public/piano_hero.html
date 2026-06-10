@@ -5993,8 +5993,124 @@ function stopMicPreview() {
     micPreviewCtx.actx.close().catch(()=>{});
     micPreviewCtx = null;
   }
+  stopPitchDetection();
   const fill = document.getElementById('micTestFill');
   if (fill) fill.style.width = '0%';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PITCH DETECTION FOR MICROPHONE INPUT
+   ════════════════════════════════════════════════════════════════ */
+let pitchDetectorRaf = null;
+let detectionBuffer = new Float32Array(4096);
+let lastDetectedMidi = -1;
+let detectionConfidence = 0;
+
+function autoCorrelate(buffer, sampleRate) {
+  const MAX_SAMPLES = Math.floor(buffer.length / 2);
+  let best_offset = -1;
+  let best_correlation = 0;
+  let rms = 0;
+
+  for (let i = 0; i < MAX_SAMPLES; i++) {
+    const val = buffer[i];
+    rms += val * val;
+  }
+  rms = Math.sqrt(rms / MAX_SAMPLES);
+  if (rms < 0.01) return -1;
+
+  let lastCorrelation = 1;
+  for (let offset = 1; offset < MAX_SAMPLES; offset++) {
+    let correlation = 0;
+    for (let i = 0; i < MAX_SAMPLES; i++) {
+      correlation += Math.abs(buffer[i] - buffer[i + offset]);
+    }
+    correlation = 1 - correlation / MAX_SAMPLES;
+    if (correlation > 0.9 && correlation > lastCorrelation && correlation > best_correlation) {
+      best_correlation = correlation;
+      best_offset = offset;
+    }
+    lastCorrelation = correlation;
+  }
+
+  if (best_correlation > 0.1) return sampleRate / best_offset;
+  return -1;
+}
+
+function frequencyToMidi(frequency) {
+  const A4 = 440;
+  const C0 = A4 * Math.pow(2, -4.75);
+  const h = 12 * Math.log2(frequency / C0);
+  const nearestMidi = Math.round(h);
+  return Math.max(0, Math.min(127, nearestMidi + 12));
+}
+
+function startPitchDetection() {
+  if (!micPreviewCtx || pitchDetectorRaf) return;
+
+  const { analyser, actx } = micPreviewCtx;
+  const sampleRate = actx.sampleRate;
+
+  const detectLoop = () => {
+    if (!micPreviewCtx) { pitchDetectorRaf = null; return; }
+    pitchDetectorRaf = requestAnimationFrame(detectLoop);
+
+    analyser.getFloatTimeDomainData(detectionBuffer);
+    const frequency = autoCorrelate(detectionBuffer, sampleRate);
+
+    if (frequency > 0) {
+      const midi = frequencyToMidi(frequency);
+      detectionConfidence = 0.85; // High confidence for autocorrelation
+
+      if (midi !== lastDetectedMidi) {
+        // Note changed
+        if (lastDetectedMidi >= 0) {
+          // Release old note
+          const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+          const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+          if (isRoom) roomHandleMidiNoteOff(lastDetectedMidi);
+          else if (isPlay) noteRelease(lastDetectedMidi);
+        }
+
+        // Play new note
+        lastDetectedMidi = midi;
+        const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+        const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+
+        if (isRoom) roomHandleMidiNoteOn(midi);
+        else if (isPlay && game.inputMode === 'mic') {
+          startAudio().then(() => noteAttack(midi));
+        }
+      }
+    } else {
+      // No pitch detected
+      if (lastDetectedMidi >= 0) {
+        const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+        const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+        if (isRoom) roomHandleMidiNoteOff(lastDetectedMidi);
+        else if (isPlay) noteRelease(lastDetectedMidi);
+        lastDetectedMidi = -1;
+        detectionConfidence = 0;
+      }
+    }
+  };
+
+  detectLoop();
+}
+
+function stopPitchDetection() {
+  if (pitchDetectorRaf) {
+    cancelAnimationFrame(pitchDetectorRaf);
+    pitchDetectorRaf = null;
+  }
+  if (lastDetectedMidi >= 0) {
+    const isRoom = document.getElementById('screen-room')?.classList.contains('active');
+    const isPlay = document.getElementById('screen-play')?.classList.contains('active');
+    if (isRoom) roomHandleMidiNoteOff(lastDetectedMidi);
+    else if (isPlay) noteRelease(lastDetectedMidi);
+  }
+  lastDetectedMidi = -1;
+  detectionConfidence = 0;
 }
 
 function closeInputModal() {
@@ -6095,6 +6211,11 @@ function launchGame(song, waitMode = false) {
 
   // Show/hide wait indicator
   document.getElementById('waitIndicator').classList.toggle('show', false);
+
+  // Start pitch detection if using microphone
+  if (game.inputMode === 'mic' && micPreviewCtx) {
+    startPitchDetection();
+  }
 
   cancelAnimationFrame(game.gameRAF);
   gameLoop();
@@ -6587,6 +6708,7 @@ function pauseGame() {
 function endGame(completed) {
   game.active = false;
   cancelAnimationFrame(game.gameRAF);
+  stopPitchDetection(); // Stop audio pitch detection when game ends
 
   const acc  = game.totalNotes > 0 ? Math.round((game.hitNotes / game.totalNotes) * 100) : 0;
   const grade = acc >= 95 ? 'S' : acc >= 85 ? 'A' : acc >= 70 ? 'B' : acc >= 55 ? 'C' : acc >= 40 ? 'D' : 'F';
@@ -10723,7 +10845,16 @@ function roomShowFeedback(elId, text) {
 const _origShowScreen = showScreen;
 showScreen = function(id) {
   _origShowScreen(id);
-  if (id === 'room') roomOnShow();
+  if (id === 'room') {
+    roomOnShow();
+    // Auto-start pitch detection if mic is already set up
+    if (modal.selectedInput === 'mic' && micPreviewCtx) {
+      startPitchDetection();
+    }
+  } else if (id !== 'room') {
+    // Stop pitch detection when leaving room
+    stopPitchDetection();
+  }
 };
 
 /* ── Computer keyboard → room piano ─────────────────────────── */
