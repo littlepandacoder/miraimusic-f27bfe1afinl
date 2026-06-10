@@ -88,47 +88,47 @@ const PianoKeyboard = () => {
   ];
 
   return (
-    <div className="relative bg-card rounded-2xl p-4 piano-shadow max-w-4xl mx-auto">
+    <div className="relative bg-card rounded-xl sm:rounded-2xl p-2 sm:p-4 piano-shadow max-w-full sm:max-w-4xl mx-auto">
       {/* Top bar with controls */}
-      <div className="flex items-center gap-3 mb-4 bg-secondary/50 rounded-lg p-2">
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <div className="flex items-center gap-1 sm:gap-3 mb-2 sm:mb-4 bg-secondary/50 rounded-lg p-1.5 sm:p-2 text-xs sm:text-sm">
+        <button className="p-1 sm:p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
           </svg>
         </button>
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <button className="p-1 sm:p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
           </svg>
         </button>
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <button className="p-1 sm:p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
           </svg>
         </button>
-        
-        <div className="flex-1 flex items-center gap-2 bg-secondary rounded-lg px-3 py-1.5">
-          <span className="text-pink">🎵</span>
-          <span className="text-sm text-muted-foreground">Yiruma - River Flows in You</span>
+
+        <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-secondary rounded-lg px-2 sm:px-3 py-1">
+          <span className="text-pink text-sm sm:text-base">🎵</span>
+          <span className="text-xs sm:text-sm text-muted-foreground truncate">Yiruma - River Flows in You</span>
         </div>
-        
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+
+        <button className="p-1 sm:p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
           </svg>
         </button>
-        <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <button className="p-1 sm:p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
           </svg>
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-          <div className="w-3 h-3 rounded-full bg-foreground"></div>
+        <div className="w-6 sm:w-8 h-6 sm:h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+          <div className="w-2 sm:w-3 h-2 sm:h-3 rounded-full bg-foreground"></div>
         </div>
       </div>
 
       {/* Falling notes area */}
-      <div className="relative h-40 bg-secondary/30 rounded-lg mb-2 overflow-hidden">
+      <div className="relative h-20 sm:h-32 md:h-40 bg-secondary/30 rounded-lg mb-1 sm:mb-2 overflow-hidden">
         {noteColors.map((note, index) => (
           <div
             key={index}
@@ -153,22 +153,22 @@ const PianoKeyboard = () => {
               key={note}
               onClick={() => playNote(note)}
               onTouchStart={() => playNote(note)}
-              className="flex-1 h-32 bg-foreground rounded-b-md border border-muted-foreground/20 hover:bg-muted-foreground/90 active:bg-muted-foreground/80 active:transform active:translate-y-0.5 transition-all cursor-pointer shadow-md"
+              className="flex-1 h-16 sm:h-24 md:h-32 bg-foreground rounded-b-md border border-muted-foreground/20 hover:bg-muted-foreground/90 active:bg-muted-foreground/80 active:transform active:translate-y-0.5 transition-all cursor-pointer shadow-md"
             />
           ))}
         </div>
-        
+
         {/* Black keys - absolutely positioned */}
         {blackKeys.map(({ note, afterWhite }) => {
           const keyWidth = 100 / 14;
           const leftPos = (afterWhite + 1) * keyWidth - (keyWidth * 0.3);
-          
+
           return (
             <button
               key={note}
               onClick={() => playNote(note)}
               onTouchStart={() => playNote(note)}
-              className="absolute top-0 w-[5%] h-20 bg-navy-dark rounded-b-md hover:bg-navy active:bg-navy-dark/80 active:transform active:translate-y-0.5 transition-all cursor-pointer z-10 shadow-lg"
+              className="absolute top-0 w-[5%] h-10 sm:h-14 md:h-20 bg-navy-dark rounded-b-md hover:bg-navy active:bg-navy-dark/80 active:transform active:translate-y-0.5 transition-all cursor-pointer z-10 shadow-lg"
               style={{ left: `${leftPos}%` }}
             />
           );

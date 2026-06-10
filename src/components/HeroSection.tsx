@@ -153,11 +153,11 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section id="home" className="relative min-h-screen pt-24 pb-16 flex flex-col justify-center overflow-hidden">
+    <section id="home" className="relative min-h-screen pt-16 sm:pt-24 pb-8 sm:pb-16 flex flex-col justify-center overflow-hidden">
       <MusicNotesBackground />
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-foreground mb-6 animate-slide-up leading-tight">
+      <div className="container mx-auto px-3 sm:px-4 relative z-10">
+        <div className="text-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-foreground mb-3 sm:mb-6 animate-slide-up leading-tight">
             {t("hero.line1")}<br />
             {/* "SMARTER" — spectrum colours + wave animation */}
             {t("hero.line2").split("").map((char, i) => (
@@ -174,7 +174,7 @@ const HeroSection = () => {
               </span>
             ))}
           </h1>
-          <p className="text-sm sm:text-base md:text-xl lg:text-2xl font-semibold mb-8 leading-snug">
+          <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-semibold mb-4 sm:mb-6 leading-snug">
             {/* "100% GUARANTEED" — letter-by-letter blur-in + shimmer */}
             {t("hero.guarantee").split("").map((char, i) => (
               <span
@@ -198,16 +198,16 @@ const HeroSection = () => {
               </span>
             ))}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-4 sm:mb-6">
             {/* Magnetic zone — smaller on mobile to avoid overflow */}
             <div
               ref={zoneRef}
-              style={{ padding: "clamp(16px, 4vw, 40px)", margin: "calc(-1 * clamp(16px, 4vw, 40px))", display: "inline-block" }}
+              style={{ padding: "clamp(12px, 3vw, 40px)", margin: "calc(-1 * clamp(12px, 3vw, 40px))", display: "inline-block" }}
             >
               <a
                 ref={btnRef}
                 href="/signup"
-                className="btn-hero inline-block animate-slide-up animate-pulse-glow"
+                className="btn-hero inline-block animate-slide-up animate-pulse-glow text-sm sm:text-base"
                 style={{ animationDelay: "0.2s" }}
               >
                 {t("hero.cta")}
