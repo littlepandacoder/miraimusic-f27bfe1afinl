@@ -45,7 +45,7 @@ const AffiliateRegister = () => {
         payoutEmail.trim() || email.trim()
       );
 
-      navigate("/affiliate/dashboard");
+      navigate("/affiliate-dashboard");
     } catch (err: any) {
       setError(err.message ?? "Something went wrong");
       // If affiliate insert failed, clean up auth user
