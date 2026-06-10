@@ -400,15 +400,16 @@ const ManageUsers = () => {
                                   {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                                 </Button>
                               )}
-                              {!sub && user.role === "student" && (
+                              {user.role === "student" && (
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   className="h-7 text-xs"
                                   onClick={() => handleGrantSubscription(user.id)}
-                                  title="Grant subscription"
+                                  disabled={!!sub}
+                                  title={sub ? "Subscription already exists" : "Grant subscription"}
                                 >
-                                  Grant
+                                  {sub ? "Granted" : "Grant"}
                                 </Button>
                               )}
                               <Button
