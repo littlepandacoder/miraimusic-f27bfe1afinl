@@ -46,6 +46,15 @@ body {
   background: #db2777;
 }
 
+/* Brighten cursor when dialog/modal is open */
+body[data-modal-open="true"] .music-cursor-trail {
+  opacity: 1 !important;
+}
+
+[role="dialog"]:not([open="false"]) ~ * .music-cursor-trail {
+  opacity: 1 !important;
+}
+
 /* Google Font (correct placement: AFTER tailwind or better moved to index.html) */
 
 @layer base {

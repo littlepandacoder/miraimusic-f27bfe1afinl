@@ -28,10 +28,30 @@ const MusicCursor = () => {
   const pos = useRef({ x: -100, y: -100 });
   const last = useRef({ x: -100, y: -100 });
   const raf = useRef<number>();
+  const isModalOpen = useRef(false);
 
   useEffect(() => {
     const cursor = cursorRef.current;
     if (!cursor) return;
+
+    // Check if modal is open and update cursor style
+    const updateCursorForModal = () => {
+      const modals = document.querySelectorAll('[role="dialog"][open], [role="dialog"]');
+      isModalOpen.current = modals.length > 0;
+      if (isModalOpen.current) {
+        cursor.style.filter = "drop-shadow(0 0 10px #ff1493) drop-shadow(0 0 20px #ff69b4) drop-shadow(0 0 30px #c084fc)";
+        cursor.style.fontSize = "32px";
+      } else {
+        cursor.style.filter = "drop-shadow(0 0 6px #ff69b4) drop-shadow(0 0 12px #c084fc)";
+        cursor.style.fontSize = "28px";
+      }
+    };
+
+    updateCursorForModal();
+    const observer = new MutationObserver(updateCursorForModal);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
 
     // Main cursor — smooth rAF follow
     const tick = () => {
@@ -121,6 +141,7 @@ const MusicCursor = () => {
       {Array.from({ length: TRAIL_COUNT }).map((_, i) => (
         <div
           key={i}
+          className="music-cursor-trail"
           ref={(el) => { trailRefs.current[i] = el; }}
           style={{
             position: "fixed",
@@ -135,6 +156,7 @@ const MusicCursor = () => {
             zIndex: 9998,
             boxShadow: `0 0 ${TRAIL_SIZES[i] * 2}px ${TRAIL_COLORS[i]}`,
             willChange: "transform",
+            transition: "opacity 200ms ease-out",
           }}
           aria-hidden="true"
         />
