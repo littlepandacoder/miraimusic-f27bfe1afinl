@@ -73,18 +73,18 @@ const PianoKeyboard = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [playNote]);
 
-  // Colors for the falling notes
+  // Colors for the falling notes - thinner on mobile, thicker on desktop
   const noteColors = [
-    { color: "bg-pink", left: "8%", delay: "0s", height: "60px" },
-    { color: "bg-pink", left: "12%", delay: "0.2s", height: "45px" },
-    { color: "bg-purple", left: "25%", delay: "0.4s", height: "55px" },
-    { color: "bg-purple", left: "30%", delay: "0.1s", height: "40px" },
-    { color: "bg-lime", left: "45%", delay: "0.3s", height: "65px" },
-    { color: "bg-cyan", left: "55%", delay: "0.5s", height: "50px" },
-    { color: "bg-cyan", left: "60%", delay: "0.2s", height: "45px" },
-    { color: "bg-lime", left: "72%", delay: "0.4s", height: "55px" },
-    { color: "bg-lime", left: "78%", delay: "0.1s", height: "60px" },
-    { color: "bg-yellow", left: "88%", delay: "0.3s", height: "70px" },
+    { color: "bg-pink", left: "8%", delay: "0s", height: "60px", mobileWidth: "2px", desktopWidth: "24px" },
+    { color: "bg-pink", left: "12%", delay: "0.2s", height: "45px", mobileWidth: "2.5px", desktopWidth: "24px" },
+    { color: "bg-blue-400", left: "25%", delay: "0.4s", height: "55px", mobileWidth: "2px", desktopWidth: "24px" },
+    { color: "bg-purple", left: "30%", delay: "0.1s", height: "40px", mobileWidth: "2.5px", desktopWidth: "24px" },
+    { color: "bg-lime", left: "45%", delay: "0.3s", height: "65px", mobileWidth: "2px", desktopWidth: "24px" },
+    { color: "bg-cyan", left: "55%", delay: "0.5s", height: "50px", mobileWidth: "2.5px", desktopWidth: "24px" },
+    { color: "bg-indigo-400", left: "60%", delay: "0.2s", height: "45px", mobileWidth: "2px", desktopWidth: "24px" },
+    { color: "bg-lime", left: "72%", delay: "0.4s", height: "55px", mobileWidth: "2.5px", desktopWidth: "24px" },
+    { color: "bg-orange-400", left: "78%", delay: "0.1s", height: "60px", mobileWidth: "2px", desktopWidth: "24px" },
+    { color: "bg-yellow", left: "88%", delay: "0.3s", height: "70px", mobileWidth: "2.5px", desktopWidth: "24px" },
   ];
 
   return (
@@ -132,11 +132,12 @@ const PianoKeyboard = () => {
         {noteColors.map((note, index) => (
           <div
             key={index}
-            className={`absolute w-6 ${note.color} rounded-sm animate-float`}
+            className={`absolute ${note.color} rounded-sm animate-float`}
             style={{
               left: note.left,
               top: "20%",
               height: note.height,
+              width: `clamp(${note.mobileWidth}, 3vw, ${note.desktopWidth})`,
               animationDelay: note.delay,
               opacity: 0.9,
             }}
