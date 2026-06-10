@@ -221,6 +221,24 @@ const ManageUsers = () => {
     }
   };
 
+  const handleGrantSubscription = async (userId: string) => {
+    try {
+      const { error } = await (supabase as any).from("user_subscriptions").insert({
+        user_id: userId,
+        subscription_id: "admin-granted",
+        plan_id: "admin-granted",
+        status: "active",
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Subscription granted", description: "Student now has active membership" });
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error granting subscription", description: error.message, variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 justify-between items-center">
@@ -333,17 +351,22 @@ const ManageUsers = () => {
                             </Select>
                           </TableCell>
                           <TableCell>
-                            {!sub ? (
-                              <span className="text-xs text-muted-foreground">No subscription</span>
-                            ) : isPaused ? (
+                            {isPaused ? (
                               <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 rounded text-xs font-medium">
                                 <Pause className="w-3 h-3" />
                                 Paused
                               </span>
-                            ) : (
+                            ) : sub ? (
                               <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100 rounded text-xs font-medium">
                                 <Play className="w-3 h-3" />
                                 Active
+                              </span>
+                            ) : user.role === "student" ? (
+                              <span className="text-xs text-muted-foreground">Pending subscription</span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded text-xs font-medium">
+                                <Play className="w-3 h-3" />
+                                Staff Access
                               </span>
                             )}
                           </TableCell>
@@ -361,6 +384,17 @@ const ManageUsers = () => {
                                   title={isPaused ? "Resume membership" : "Pause membership"}
                                 >
                                   {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                                </Button>
+                              )}
+                              {!sub && user.role === "student" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  onClick={() => handleGrantSubscription(user.id)}
+                                  title="Grant subscription"
+                                >
+                                  Grant
                                 </Button>
                               )}
                               <Button
