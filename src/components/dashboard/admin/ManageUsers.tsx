@@ -223,6 +223,18 @@ const ManageUsers = () => {
 
   const handleGrantSubscription = async (userId: string) => {
     try {
+      // Check if subscription already exists
+      const { data: existing } = await (supabase as any)
+        .from("user_subscriptions")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        toast({ title: "Subscription exists", description: "This student already has a subscription", variant: "default" });
+        return;
+      }
+
       const { error } = await (supabase as any).from("user_subscriptions").insert({
         user_id: userId,
         subscription_id: "admin-granted",
