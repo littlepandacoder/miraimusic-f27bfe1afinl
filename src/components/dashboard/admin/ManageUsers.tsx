@@ -72,13 +72,20 @@ const ManageUsers = () => {
       const profileMap: Record<string, any> = {};
       (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
 
-      // Fetch subscriptions
+      // Fetch subscriptions - prioritize active (not paused) ones
       const { data: subs } = await (supabase as any)
         .from("user_subscriptions")
-        .select("id, user_id, status, paused_at, pause_reason");
+        .select("id, user_id, status, paused_at, pause_reason")
+        .order("paused_at", { ascending: true }) // null values (active) come first
+        .order("created_at", { ascending: false }); // then most recent
 
       const subsMap: Record<string, SubscriptionInfo> = {};
-      (subs || []).forEach((s: any) => { subsMap[s.user_id] = s; });
+      (subs || []).forEach((s: any) => {
+        // Only set if not already set, so we keep the first (active) one
+        if (!subsMap[s.user_id]) {
+          subsMap[s.user_id] = s;
+        }
+      });
       setSubscriptions(subsMap);
 
       // Merge roles with profile info
