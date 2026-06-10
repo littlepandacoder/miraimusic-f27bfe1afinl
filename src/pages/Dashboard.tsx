@@ -47,12 +47,14 @@ const PausedMembershipGate = () => {
         <div className="w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mx-auto">
           <Lock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
         </div>
-        <h1 className="text-2xl font-bold">Membership Paused</h1>
-        <p className="text-muted-foreground">
-          Your membership has been paused by the admin. Please contact support to resume your access.
-        </p>
-        <Button asChild size="lg" className="w-full" variant="outline">
-          <a href="mailto:support@musicable.com">Contact Support</a>
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Membership Paused</h1>
+          <p className="text-muted-foreground text-sm">
+            Your membership access has been paused. Reactivate your subscription to continue learning.
+          </p>
+        </div>
+        <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/90">
+          <Link to="/pricing">Reactivate Membership</Link>
         </Button>
       </div>
     </div>
