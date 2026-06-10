@@ -2,18 +2,18 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
 const COLORS = [
-  "#ff69b4", "#ffd700", "#ff1493", "#c084fc",
-  "#60a5fa", "#f9a8d4", "#facc15", "#e879f9", "#ffffff",
+  "#ffffff", "#ffff99", "#fffacd", "#e6e6fa",
+  "#fff0f5", "#f0ffff", "#fffaf0", "#fff8dc", "#ffffff",
 ];
-const SHAPES = ["✦", "✧", "⋆", "✺", "✩", "★", "·", "✶"];
+const SHAPES = ["✦", "✧", "⋆", "✺", "✩", "★", "·", "✶", "✨"];
 
 // Trail configuration — each index is one dot behind the cursor
 const TRAIL_COUNT = 14;
 const TRAIL_COLORS = [
-  "#ec4899", "#d946ef", "#a855f7", "#8b5cf6",
-  "#6366f1", "#818cf8", "#22d3ee", "#60a5fa",
-  "#818cf8", "#6366f1", "#8b5cf6", "#a855f7",
-  "#d946ef", "#ec4899",
+  "#ffffff", "#fffacd", "#ffff99", "#f0ffff",
+  "#fffaf0", "#fff8dc", "#fff0f5", "#e6e6fa",
+  "#fff0f5", "#fff8dc", "#fffaf0", "#f0ffff",
+  "#ffff99", "#ffffff",
 ];
 const TRAIL_SIZES = Array.from({ length: TRAIL_COUNT }, (_, i) =>
   Math.max(Math.round(10 - (i / (TRAIL_COUNT - 1)) * 8), 2)
@@ -161,7 +161,7 @@ const MusicCursor = () => {
         />
       ))}
 
-      {/* Main ♪ cursor */}
+      {/* Main ♪ cursor - white with glitter glow */}
       <div
         ref={cursorRef}
         style={{
@@ -173,9 +173,11 @@ const MusicCursor = () => {
           fontSize: "28px",
           lineHeight: 1,
           userSelect: "none",
-          filter: "drop-shadow(0 0 6px #ff69b4) drop-shadow(0 0 12px #c084fc)",
+          color: "#ffffff",
+          filter: "drop-shadow(0 0 8px #ffff99) drop-shadow(0 0 16px #fffacd) drop-shadow(0 0 24px rgba(255,255,255,0.6))",
           marginLeft: "-4px",
           marginTop: "-28px",
+          textShadow: "0 0 10px #ffff99, 0 0 20px #fffacd",
         }}
         aria-hidden="true"
       >
