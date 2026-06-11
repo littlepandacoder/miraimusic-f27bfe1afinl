@@ -28,6 +28,10 @@ import AffiliateLanding from "./pages/AffiliateLanding";
 import AffiliateSignup from "./pages/AffiliateSignup";
 import AffiliateRegister from "./pages/AffiliateRegister";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
+import PianoHeroPage from "./pages/PianoHeroPage";
+import PianoRoomPage from "./pages/PianoRoomPage";
+import RhythmQuizPage from "./pages/RhythmQuizPage";
+import PianoTheoryPage from "./pages/PianoTheoryPage";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +62,11 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            {/* Premium Feature Routes */}
+            <Route path="/piano-hero" element={<PianoHeroPage />} />
+            <Route path="/piano-room" element={<PianoRoomPage />} />
+            <Route path="/rhythm-quiz" element={<RhythmQuizPage />} />
+            <Route path="/piano-theory-game" element={<PianoTheoryPage />} />
             {/* Affiliate program */}
             <Route path="/affiliate" element={<AffiliateLanding />} />
             <Route path="/affiliate-signup" element={<AffiliateSignup />} />
