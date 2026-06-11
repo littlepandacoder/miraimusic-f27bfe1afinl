@@ -18,6 +18,7 @@ import ManagePianoHero from "./admin/ManagePianoHero";
 import ManageAssignments from "./admin/ManageAssignments";
 import ManageAffiliates from "./admin/ManageAffiliates";
 import ManageStudentVideos from "./admin/ManageStudentVideos";
+import ManageDistricts from "./admin/ManageDistricts";
 import { CalibrationTool } from "./admin/CalibrationTool";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
@@ -459,6 +460,13 @@ const AdminHome = () => {
               <p className="text-sm text-muted-foreground">Test pitch detection</p>
             </div>
           </a>
+          <a href="/dashboard/districts" className="feature-card flex items-center gap-4 p-4">
+            <Users className="w-8 h-8 text-cyan" />
+            <div>
+              <p className="font-semibold">Manage Districts</p>
+              <p className="text-sm text-muted-foreground">Organize teachers and students</p>
+            </div>
+          </a>
         </CardContent>
       </Card>
 
@@ -489,7 +497,8 @@ const AdminDashboard = () => {
 
         <Route path="/courses" element={<ManageCourses />} />
         <Route path="/piano-hero" element={<ManagePianoHero />} />
-        <Route path="/districts"  element={<ManageAssignments />} />
+        <Route path="/districts"  element={<ManageDistricts />} />
+        <Route path="/assignments" element={<ManageAssignments />} />
         <Route path="/affiliates" element={<ManageAffiliates />} />
         <Route path="/student-videos" element={<ManageStudentVideos />} />
         <Route path="/calibration" element={<CalibrationTool />} />
