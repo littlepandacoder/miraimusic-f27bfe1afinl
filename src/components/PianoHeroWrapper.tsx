@@ -1,6 +1,9 @@
 import { useRef, useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useGameAudioInput } from "@/hooks/useGameAudioInput";
 import { Button } from "@/components/ui/button";
+import { FeaturePaywallModal } from "./FeaturePaywallModal";
 import { Mic, MicOff } from "lucide-react";
 
 /**
@@ -10,6 +13,9 @@ import { Mic, MicOff } from "lucide-react";
 export function PianoHeroWrapper() {
   const gameFrameRef = useRef<HTMLIFrameElement>(null);
   const [showAudioControls, setShowAudioControls] = useState(false);
+  const { user } = useAuth();
+  const subscription = useSubscriptionStatus();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const {
     isListening,
@@ -22,8 +28,17 @@ export function PianoHeroWrapper() {
     gameWindowRef: gameFrameRef,
   });
 
+  // Check subscription and show paywall if needed
+  useEffect(() => {
+    if (!subscription.loading && !subscription.hasActiveSubscription) {
+      setShowPaywall(true);
+    }
+  }, [subscription.loading, subscription.hasActiveSubscription]);
+
   // Message listener to handle two-way communication with game
   useEffect(() => {
+    if (!subscription.hasActiveSubscription) return;
+
     const handleMessage = (event: MessageEvent) => {
       // Only accept messages from our game frame
       if (event.source !== gameFrameRef.current?.contentWindow) return;
@@ -43,7 +58,41 @@ export function PianoHeroWrapper() {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [startAudioInput]);
+  }, [startAudioInput, subscription.hasActiveSubscription]);
+
+  if (!subscription.hasActiveSubscription && !subscription.loading) {
+    return (
+      <>
+        <div className="w-full h-full bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Mic className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Piano Hero Locked</h2>
+            <p className="text-muted-foreground mb-6">Subscribe to unlock this feature</p>
+            <Button
+              onClick={() => setShowPaywall(true)}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Upgrade to Piano Hero
+            </Button>
+          </div>
+        </div>
+        <FeaturePaywallModal
+          isOpen={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          featureName="Piano Hero"
+          isTrialPlan={subscription.isTrialPlan}
+          userId={user?.id}
+          email={user?.email}
+          onUpgradeSuccess={() => {
+            // Refresh subscription status
+            window.location.reload();
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="w-full h-full relative">
@@ -105,6 +154,20 @@ export function PianoHeroWrapper() {
           )}
         </div>
       )}
+
+      {/* Paywall Modal */}
+      <FeaturePaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureName="Piano Hero"
+        isTrialPlan={subscription.isTrialPlan}
+        userId={user?.id}
+        email={user?.email}
+        onUpgradeSuccess={() => {
+          setShowPaywall(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { Button } from "@/components/ui/button";
+import { FeaturePaywallModal } from "@/components/FeaturePaywallModal";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -19,6 +21,7 @@ import {
   X,
   MessageSquare,
   Film,
+  Lock,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -34,6 +37,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
+  const subscription = useSubscriptionStatus();
+  const [paywall, setPaywall] = useState<{ feature: "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory"; isOpen: boolean }>({ feature: "Piano Hero", isOpen: false });
 
   const [teacherNote, setTeacherNote] = useState<{ note_text: string; teacher_name: string; updated_at: string } | null>(null);
   const [noteExpanded, setNoteExpanded] = useState(false);
@@ -61,22 +66,22 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   };
 
   const gameItems = [
-    { href: "/piano_hero.html#room", icon: KeyboardMusic, label: "Piano Room",    external: true },
-    { href: "/piano_hero.html",      icon: Gamepad2,      label: "Piano Hero",    external: true },
-    { href: "/rhythm-quiz.html",     icon: Gamepad2,      label: "Rhythm Quiz",   external: true },
+    { href: "/piano_hero.html#room", icon: KeyboardMusic, label: "Piano Room",    external: true, locked: true },
+    { href: "/piano_hero.html",      icon: Gamepad2,      label: "Piano Hero",    external: true, locked: true },
+    { href: "/rhythm-quiz.html",     icon: Gamepad2,      label: "Rhythm Quiz",   external: true, locked: true },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
-    { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true },
+    { href: "/piano-theory.html",    icon: Gamepad2,      label: "Piano Theory",  external: true, locked: true },
     { href: "/note-quiz.html",       icon: Gamepad2,      label: "Note Quiz",     external: true },
   ];
 
   const studentGameIcons = [
-    { href: "/piano_hero.html#room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
-    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
+    { href: "/piano_hero.html#room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)", locked: true },
+    { href: "/piano_hero.html",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)", locked: true },
     { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
-    { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)"  },
-    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
+    { href: "/piano-theory.html",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)", locked: true  },
+    { href: "/rhythm-quiz.html",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)", locked: true },
   ];
 
   const getNavItems = () => {
@@ -121,21 +126,66 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
 
   const navItems = getNavItems();
 
+  const featureMap: { [key: string]: "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory" } = {
+    "piano_hero.html#room": "Piano Room",
+    "piano_hero.html": "Piano Hero",
+    "rhythm-quiz.html": "Rhythm Quiz",
+    "piano-theory.html": "Piano Theory",
+  };
+
+  const isProtectedFeature = (href: string) => {
+    return href.includes("piano_hero.html") || href.includes("rhythm-quiz") || href.includes("piano-theory");
+  };
+
+  const getFeatureName = (href: string): "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory" | null => {
+    for (const [key, value] of Object.entries(featureMap)) {
+      if (href.includes(key)) return value;
+    }
+    return null;
+  };
+
+  const handleProtectedNavClick = (href: string, feature: "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory", e: React.MouseEvent) => {
+    if (!subscription.hasActiveSubscription) {
+      e.preventDefault();
+      setPaywall({ feature, isOpen: true });
+    }
+  };
+
   const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => {
     const isActive = !(item as any).external && location.pathname === item.href;
     const baseClass = isActive
       ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.35)]"
       : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
 
+    const isProtected = (item as any).locked && isProtectedFeature(item.href);
+    const isLocked = isProtected && !subscription.hasActiveSubscription;
+    const lockClass = isLocked ? "opacity-50 cursor-not-allowed" : "";
+
+    const handleClick = (e: React.MouseEvent) => {
+      const featureName = getFeatureName(item.href);
+      if (isLocked && featureName) {
+        e.preventDefault();
+        handleProtectedNavClick(item.href, featureName, e);
+      }
+      onClick?.();
+    };
+
     return (item as any).external ? (
-      <a href={item.href} onClick={onClick} className={baseClass}>
+      <a
+        href={item.href}
+        onClick={handleClick}
+        className={`${baseClass} ${lockClass}`}
+        {...(isLocked && { onClick: (e) => { e.preventDefault(); handleClick(e); } })}
+      >
         <item.icon className="w-5 h-5 shrink-0" />
-        <span className="truncate">{item.label}</span>
+        <span className="truncate flex-1">{item.label}</span>
+        {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </a>
     ) : (
-      <Link to={item.href} onClick={onClick} className={baseClass}>
+      <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`}>
         <item.icon className="w-5 h-5 shrink-0" />
-        <span className="truncate">{item.label}</span>
+        <span className="truncate flex-1">{item.label}</span>
+        {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </Link>
     );
   };
@@ -292,22 +342,47 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
               <div className="grid grid-cols-2 gap-y-5">
-                {studentGameIcons.map(({ href, img, labelKey, shadow }) => (
-                  <div key={labelKey} className="flex justify-center">
-                    <a href={href} title={t(labelKey)} onClick={() => setMobileOpen(false)} className="group flex flex-col items-center gap-1.5 w-[68px]">
-                      <div className="relative w-[64px] h-[64px] shrink-0">
-                        <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
-                        <img
-                          src={img}
-                          alt={t(labelKey)}
-                          className="relative w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
-                          style={{ filter: `drop-shadow(0 0 5px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})` }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight w-full">{t(labelKey)}</span>
-                    </a>
-                  </div>
-                ))}
+                {studentGameIcons.map(({ href, img, labelKey, shadow, locked }) => {
+                  const isLocked = locked && !subscription.hasActiveSubscription;
+                  const featureName = getFeatureName(href);
+
+                  const handleGameClick = (e: React.MouseEvent) => {
+                    if (isLocked && featureName) {
+                      e.preventDefault();
+                      handleProtectedNavClick(href, featureName, e);
+                    }
+                  };
+
+                  return (
+                    <div key={labelKey} className="flex justify-center">
+                      <a
+                        href={isLocked ? "#" : href}
+                        title={t(labelKey)}
+                        onClick={(e) => {
+                          handleGameClick(e);
+                          if (!isLocked) setMobileOpen(false);
+                        }}
+                        className={`group flex flex-col items-center gap-1.5 w-[68px] ${isLocked ? "cursor-not-allowed" : ""}`}
+                      >
+                        <div className="relative w-[64px] h-[64px] shrink-0">
+                          <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: isLocked ? 0.2 : 0.6 }} />
+                          <img
+                            src={img}
+                            alt={t(labelKey)}
+                            className={`relative w-full h-full object-contain transition-transform duration-200 ${isLocked ? "opacity-40" : "group-hover:scale-110"}`}
+                            style={{ filter: `drop-shadow(0 0 5px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})${isLocked ? " brightness(0.6)" : ""}` }}
+                          />
+                          {isLocked && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Lock className="w-5 h-5 text-primary" />
+                            </div>
+                          )}
+                        </div>
+                        <span className={`text-[10px] transition-colors text-center leading-tight w-full ${isLocked ? "text-muted-foreground/50" : "text-muted-foreground group-hover:text-foreground"}`}>{t(labelKey)}</span>
+                      </a>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -400,6 +475,20 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
           {children}
         </div>
       </main>
+
+      {/* Feature Paywall Modal */}
+      <FeaturePaywallModal
+        isOpen={paywall.isOpen}
+        onClose={() => setPaywall({ ...paywall, isOpen: false })}
+        featureName={paywall.feature}
+        isTrialPlan={subscription.isTrialPlan}
+        userId={user?.id}
+        email={user?.email}
+        onUpgradeSuccess={() => {
+          setPaywall({ ...paywall, isOpen: false });
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
