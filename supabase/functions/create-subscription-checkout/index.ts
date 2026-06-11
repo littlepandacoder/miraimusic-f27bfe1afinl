@@ -18,7 +18,13 @@ serve(async (req) => {
       throw new Error("userId and email are required");
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      console.error("[create-subscription-checkout] STRIPE_SECRET_KEY not configured");
+      throw new Error("Stripe is not configured. Please contact support.");
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2024-06-20",
     });
 
