@@ -40,6 +40,17 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   const subscription = useSubscriptionStatus();
   const [paywall, setPaywall] = useState<{ feature: "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory"; isOpen: boolean }>({ feature: "Piano Hero", isOpen: false });
 
+  // Debug logging
+  useEffect(() => {
+    console.log("[DashboardLayout] Subscription status:", {
+      hasActiveSubscription: subscription.hasActiveSubscription,
+      isTrialPlan: subscription.isTrialPlan,
+      loading: subscription.loading,
+      status: subscription.status,
+      userId: user?.id,
+    });
+  }, [subscription, user?.id]);
+
   const [teacherNote, setTeacherNote] = useState<{ note_text: string; teacher_name: string; updated_at: string } | null>(null);
   const [noteExpanded, setNoteExpanded] = useState(false);
 
@@ -160,7 +171,11 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
 
     const isProtected = (item as any).locked && isProtectedFeature(item.href);
     const isLocked = isProtected && !subscription.hasActiveSubscription;
-    const lockClass = isLocked ? "opacity-50 cursor-not-allowed" : "";
+    const lockClass = isLocked ? "opacity-30 cursor-not-allowed grayscale" : "";
+
+    if (isLocked) {
+      console.log("[NavLink] Locked item:", item.label);
+    }
 
     const handleClick = (e: React.MouseEvent) => {
       const featureName = getFeatureName(item.href);
@@ -347,6 +362,10 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                   const isLocked = locked && !subscription.hasActiveSubscription;
                   const featureName = getFeatureName(href);
 
+                  if (isLocked) {
+                    console.log("[GameIcon] Locked game:", labelKey);
+                  }
+
                   const handleGameClick = (e: React.MouseEvent) => {
                     if (isLocked && featureName) {
                       e.preventDefault();
@@ -363,23 +382,23 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                           handleGameClick(e);
                           if (!isLocked) setMobileOpen(false);
                         }}
-                        className={`group flex flex-col items-center gap-1.5 w-[68px] ${isLocked ? "cursor-not-allowed" : ""}`}
+                        className={`group flex flex-col items-center gap-1.5 w-[68px] ${isLocked ? "cursor-not-allowed opacity-40" : ""}`}
                       >
                         <div className="relative w-[64px] h-[64px] shrink-0">
-                          <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: isLocked ? 0.2 : 0.6 }} />
+                          <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: isLocked ? 0.1 : 0.6 }} />
                           <img
                             src={img}
                             alt={t(labelKey)}
-                            className={`relative w-full h-full object-contain transition-transform duration-200 ${isLocked ? "opacity-40" : "group-hover:scale-110"}`}
-                            style={{ filter: `drop-shadow(0 0 5px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})${isLocked ? " brightness(0.6)" : ""}` }}
+                            className={`relative w-full h-full object-contain transition-transform duration-200 ${isLocked ? "opacity-30 grayscale" : "group-hover:scale-110"}`}
+                            style={{ filter: `drop-shadow(0 0 5px ${shadow.match(/rgba\([^)]+\)/)?.[0] ?? "rgba(139,92,246,0.5)"})${isLocked ? " brightness(0.4) contrast(0.8)" : ""}` }}
                           />
                           {isLocked && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <Lock className="w-5 h-5 text-primary" />
+                              <Lock className="w-6 h-6 text-primary drop-shadow-lg" />
                             </div>
                           )}
                         </div>
-                        <span className={`text-[10px] transition-colors text-center leading-tight w-full ${isLocked ? "text-muted-foreground/50" : "text-muted-foreground group-hover:text-foreground"}`}>{t(labelKey)}</span>
+                        <span className={`text-[10px] transition-colors text-center leading-tight w-full ${isLocked ? "text-muted-foreground/30 grayscale" : "text-muted-foreground group-hover:text-foreground"}`}>{t(labelKey)}</span>
                       </a>
                     </div>
                   );

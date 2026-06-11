@@ -26,7 +26,8 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
 
   useEffect(() => {
     if (!user?.id) {
-      setSubscriptionData((prev) => ({ ...prev, loading: false }));
+      console.log("[useSubscriptionStatus] No user logged in");
+      setSubscriptionData((prev) => ({ ...prev, loading: false, hasActiveSubscription: false }));
       return;
     }
 
@@ -40,10 +41,12 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
           .maybeSingle();
 
         if (error) {
+          console.error("[useSubscriptionStatus] Query error:", error);
           throw error;
         }
 
         if (!data) {
+          console.log("[useSubscriptionStatus] No subscription found for user", user.id);
           setSubscriptionData((prev) => ({
             ...prev,
             hasActiveSubscription: false,
@@ -54,6 +57,7 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
         }
 
         const isActive = data.status === "active";
+        console.log("[useSubscriptionStatus] Subscription found:", { isActive, status: data.status, planId: data.plan_id });
 
         // Check Stripe subscription to determine if on trial or regular plan
         let isTrialPlan = false;
@@ -66,6 +70,7 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
 
             if (response.data) {
               isTrialPlan = response.data.isTrialPlan || false;
+              console.log("[useSubscriptionStatus] Trial plan check:", isTrialPlan);
             }
           } catch (err) {
             console.error("Error checking subscription details:", err);
@@ -83,10 +88,11 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
           error: null,
         });
       } catch (err: any) {
-        console.error("Error fetching subscription:", err);
+        console.error("[useSubscriptionStatus] Fetch error:", err);
         setSubscriptionData((prev) => ({
           ...prev,
           loading: false,
+          hasActiveSubscription: false,
           error: err.message || "Failed to fetch subscription status",
         }));
       }
