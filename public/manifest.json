@@ -1,0 +1,26 @@
+{
+  "name": "Musicable",
+  "short_name": "Musicable",
+  "description": "Learn Piano Smarter — Trinity Exam Prep, Sight Reading & Games",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#FF2D78",
+  "categories": ["education", "music"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

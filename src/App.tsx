@@ -23,6 +23,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
 import MusicCursor from "./components/MusicCursor";
+import { IOSInstallBanner } from "./components/IOSInstallBanner";
 import NotFound from "./pages/NotFound";
 import AffiliateLanding from "./pages/AffiliateLanding";
 import AffiliateSignup from "./pages/AffiliateSignup";
@@ -38,6 +39,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <>
     {!Capacitor.isNativePlatform() && <MusicCursor />}
+    {!Capacitor.isNativePlatform() && <IOSInstallBanner />}
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
