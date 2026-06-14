@@ -188,6 +188,19 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
 .hp-fill.danger{animation:hp-danger .8s infinite}
 
 @media(max-width:380px){.wk{width:34px}.char-wrap{width:85px;height:105px}.vs-badge{font-size:.9rem}}
+
+/* MIDI STATUS PILL */
+.midi-pill{display:inline-flex;align-items:center;gap:.38rem;padding:.28rem .72rem;border-radius:20px;
+  font-family:'DM Mono',monospace;font-size:.64rem;font-weight:700;letter-spacing:.07em;
+  border:1px solid;transition:all .4s;cursor:default;flex-shrink:0}
+.midi-pill.unknown{background:rgba(107,114,128,.08);border-color:rgba(107,114,128,.25);color:var(--muted)}
+.midi-pill.connected{background:rgba(57,217,138,.1);border-color:rgba(57,217,138,.4);color:var(--green)}
+.midi-pill.disconnected{background:rgba(107,114,128,.06);border-color:rgba(107,114,128,.2);color:var(--muted)}
+.midi-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.midi-pill.connected .midi-dot{animation:midi-blink 1.4s ease-in-out infinite}
+@keyframes midi-blink{0%,100%{opacity:1}50%{opacity:.25}}
+.piano-header{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px}
+.piano-lbl{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -306,6 +319,12 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
 
   <!-- PIANO -->
   <div class="piano-section">
+    <div class="piano-header">
+      <span class="piano-lbl">🎹 Piano</span>
+      <span class="midi-pill unknown" id="midiPill" title="MIDI keyboard status">
+        <span class="midi-dot"></span><span id="midiPillTxt">MIDI: checking…</span>
+      </span>
+    </div>
     <div class="piano-scroll"><div id="pianoEl" class="piano"></div></div>
     <div class="selected-display" id="selectedDisp">No keys selected</div>
   </div>
@@ -568,6 +587,7 @@ function drawDragon(svgEl){
 let bossIdx=0, bossHp=0, playerHp=350, playerMaxHp=350;
 let currentChord=null, selectedKeys=new Set(), locked=false;
 let score=0, correctCount=0, wrongCount=0;
+let midiHeldNoteNames=new Set(); // tracks physically-held MIDI keys by note name
 
 // ─── PIANO BUILDER ───────────────────────────────────────────────────────────
 function buildPiano(){
@@ -613,6 +633,16 @@ function buildPiano(){
   }
 }
 
+function getCombinedNotes(){
+  const click=new Set([...selectedKeys].map(id=>id.replace(/\d/g,'')));
+  return new Set([...click,...midiHeldNoteNames]);
+}
+
+function checkAutoDetect(){
+  const all=getCombinedNotes();
+  if(all.size===currentChord.notes.length) setTimeout(checkChord,120);
+}
+
 function toggleKey(id, note, el){
   if(locked) return;
   if(selectedKeys.has(id)){
@@ -624,22 +654,21 @@ function toggleKey(id, note, el){
     synthNote(id, 1.4, 0.24);
   }
   updateSelectedDisp();
-  // Auto-detect when enough keys selected
-  if(selectedKeys.size===currentChord.notes.length) setTimeout(checkChord,120);
+  checkAutoDetect();
 }
 
 function updateSelectedDisp(){
   const disp=document.getElementById('selectedDisp');
-  if(selectedKeys.size===0){disp.textContent='No keys selected';return;}
-  const notes=[...selectedKeys].map(id=>id.replace(/\d/g,''));
-  disp.innerHTML='Playing: '+notes.map(n=>`<span class="sn">${n}</span>`).join(' + ');
+  const all=getCombinedNotes();
+  if(all.size===0){disp.textContent='No keys selected';return;}
+  disp.innerHTML='Playing: '+[...all].map(n=>`<span class="sn">${n}</span>`).join(' + ');
 }
 
 // ─── CHORD LOGIC ─────────────────────────────────────────────────────────────
 function checkChord(){
   if(locked) return;
   locked=true;
-  const pressedNotes=new Set([...selectedKeys].map(id=>id.replace(/\d/g,'')));
+  const pressedNotes=getCombinedNotes();
   const required=new Set(currentChord.notes);
   const correct=pressedNotes.size===required.size&&[...required].every(n=>pressedNotes.has(n));
   if(correct) handleCorrect();
@@ -731,11 +760,13 @@ function nextChord(){
   currentChord=next;
   document.getElementById('chordNameDisp').textContent=next.name.toUpperCase();
   document.getElementById('chordNotesDisp').textContent=next.display;
-  setStatus('Select the chord notes on the piano below','color:var(--muted)');
+  const midiOn=document.getElementById('midiPill')?.classList.contains('connected');
+  setStatus(midiOn?'Play the chord on your MIDI keyboard or click below':'Click the chord notes on the piano below','color:var(--muted)');
 }
 
 function clearKeys(){
   selectedKeys.clear();
+  midiHeldNoteNames.clear();
   document.querySelectorAll('.key.sel').forEach(k=>k.classList.remove('sel'));
   updateSelectedDisp();
 }
@@ -865,7 +896,7 @@ function initBoss(){
     void el.offsetWidth; // reflow
     el.classList.add('idle');
   });
-  setStatus('Select the chord notes on the piano below','color:var(--muted)');
+  setStatus('Click the chord notes on the piano below','color:var(--muted)');
 }
 
 function setStatus(msg,style=''){
@@ -876,11 +907,78 @@ function setStatus(msg,style=''){
 
 function startGame(){
   bossIdx=0; playerHp=350; playerMaxHp=350; score=0; correctCount=0; wrongCount=0; locked=false;
-  selectedKeys.clear();
+  selectedKeys.clear(); midiHeldNoteNames.clear();
   buildPiano();
+  midiSetup(); // request MIDI access (non-blocking)
   initBoss();
   showScreen('battle');
   nextChord();
+}
+
+// ─── MIDI ENGINE ─────────────────────────────────────────────────────────────
+const MIDI_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+let _midiAccess=null;
+
+function setMidiStatus(state){
+  const pill=document.getElementById('midiPill');
+  const txt=document.getElementById('midiPillTxt');
+  if(!pill) return;
+  pill.className='midi-pill '+state;
+  if(state==='connected') txt.textContent='MIDI: Connected ●';
+  else if(state==='disconnected') txt.textContent='MIDI: No keyboard';
+  else txt.textContent='MIDI: Not supported';
+}
+
+function setupMidiInputs(){
+  if(!_midiAccess) return;
+  let count=0;
+  _midiAccess.inputs.forEach(inp=>{inp.onmidimessage=handleMidiMessage;count++;});
+  setMidiStatus(count>0?'connected':'disconnected');
+}
+
+function handleMidiMessage(e){
+  const [status,note,vel]=e.data;
+  const cmd=status&0xf0;
+  if(cmd===0x90&&vel>0) midiNoteOn(note);
+  else if(cmd===0x80||(cmd===0x90&&vel===0)) midiNoteOff(note);
+}
+
+function midiNoteOn(midiNum){
+  if(locked||!currentChord) return;
+  const noteName=MIDI_NAMES[midiNum%12];
+  if(midiHeldNoteNames.has(noteName)) return;
+  midiHeldNoteNames.add(noteName);
+
+  // Highlight all matching on-screen keys
+  document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.add('sel'));
+
+  // Play sound — clamp octave to our piano range
+  const oct=Math.max(3,Math.min(5,Math.floor(midiNum/12)-1));
+  synthNote(`${noteName}${oct}`,1.4,0.24);
+
+  updateSelectedDisp();
+  checkAutoDetect();
+}
+
+function midiNoteOff(midiNum){
+  const noteName=MIDI_NAMES[midiNum%12];
+  midiHeldNoteNames.delete(noteName);
+
+  // Un-highlight matching keys only if not also click-selected
+  const clickHasNote=[...selectedKeys].some(id=>id.replace(/\d/g,'')===noteName);
+  if(!clickHasNote){
+    document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.remove('sel'));
+  }
+  updateSelectedDisp();
+}
+
+async function midiSetup(){
+  if(!navigator.requestMIDIAccess){setMidiStatus('unknown');return;}
+  try{
+    _midiAccess=await navigator.requestMIDIAccess();
+    setupMidiInputs();
+    _midiAccess.onstatechange=()=>setupMidiInputs();
+  }catch(_){setMidiStatus('disconnected');}
 }
 
 // ─── CONFETTI ─────────────────────────────────────────────────────────────────
