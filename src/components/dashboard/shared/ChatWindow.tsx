@@ -11,6 +11,7 @@ interface Message {
   content: string;
   created_at: string;
   read_at: string | null;
+  pending?: boolean;
 }
 
 interface ChatWindowProps {
@@ -25,6 +26,7 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const markIncomingRead = async (msgs: Message[]) => {
     const unreadIds = msgs
@@ -66,16 +68,31 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
           filter: `teacher_id=eq.${teacherId}`,
         },
         async (payload: any) => {
-          const msg = payload.new as Message;
-          if (msg.student_id !== studentId) return;
-          setMessages((prev) => [...prev, msg]);
-          if (msg.sender_id !== currentUserId) {
+          const row = payload.new;
+          if (row.student_id !== studentId) return;
+
+          setMessages((prev) => {
+            // Skip if we already have this id (optimistic insert replaced it)
+            if (prev.some((m) => m.id === row.id)) return prev;
+            // Replace any pending message with the same content sent by us
+            const pendingIdx = prev.findIndex(
+              (m) => m.pending && m.sender_id === row.sender_id && m.content === row.content
+            );
+            if (pendingIdx !== -1) {
+              const next = [...prev];
+              next[pendingIdx] = { ...row, pending: false };
+              return next;
+            }
+            return [...prev, { ...row, pending: false }];
+          });
+
+          if (row.sender_id !== currentUserId) {
             await (supabase as any)
               .from("chat_messages")
               .update({ read_at: new Date().toISOString() })
-              .eq("id", msg.id);
+              .eq("id", row.id);
             setMessages((prev) =>
-              prev.map((m) => (m.id === msg.id ? { ...m, read_at: new Date().toISOString() } : m))
+              prev.map((m) => (m.id === row.id ? { ...m, read_at: new Date().toISOString() } : m))
             );
           }
         }
@@ -89,7 +106,7 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
           filter: `teacher_id=eq.${teacherId}`,
         },
         (payload: any) => {
-          const updated = payload.new as Message;
+          const updated = payload.new;
           if (updated.student_id !== studentId) return;
           setMessages((prev) =>
             prev.map((m) => (m.id === updated.id ? { ...m, read_at: updated.read_at } : m))
@@ -108,17 +125,36 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!input.trim() || sending) return;
-    setSending(true);
     const content = input.trim();
+    if (!content || sending) return;
+    setSending(true);
     setInput("");
-    await (supabase as any).from("chat_messages").insert({
-      teacher_id: teacherId,
-      student_id: studentId,
+
+    // Optimistic: show the message immediately on the right side
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
       sender_id: currentUserId,
       content,
-    });
+      created_at: new Date().toISOString(),
+      read_at: null,
+      pending: true,
+    };
+    setMessages((prev) => [...prev, optimistic]);
+
+    const { data } = await (supabase as any)
+      .from("chat_messages")
+      .insert({ teacher_id: teacherId, student_id: studentId, sender_id: currentUserId, content })
+      .select("id, sender_id, content, created_at, read_at")
+      .single();
+
+    if (data) {
+      // Swap the temp message for the real one
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...data, pending: false } : m)));
+    }
+
     setSending(false);
+    inputRef.current?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -141,7 +177,6 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  // Group by date
   const groups: { date: string; msgs: Message[] }[] = [];
   for (const msg of messages) {
     const label = fmtDateLabel(msg.created_at);
@@ -153,7 +188,14 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border bg-card/60 shrink-0">
-        <p className="font-semibold text-sm">{recipientName}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <span className="text-sm font-bold text-primary">
+              {recipientName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <p className="font-semibold text-sm">{recipientName}</p>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 px-4 py-2">
@@ -174,16 +216,20 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
               return (
                 <div key={msg.id} className={`flex mb-2.5 ${mine ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[72%] rounded-2xl px-4 py-2.5 ${
+                    className={`max-w-[72%] rounded-2xl px-4 py-2.5 transition-opacity ${
                       mine
                         ? "bg-primary text-primary-foreground rounded-br-sm"
                         : "bg-secondary text-foreground rounded-bl-sm"
-                    }`}
+                    } ${msg.pending ? "opacity-60" : "opacity-100"}`}
                   >
                     <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>
-                    <p className={`text-[10px] mt-1 ${mine ? "text-primary-foreground/60" : "text-muted-foreground"} text-right`}>
-                      {fmtTime(msg.created_at)}
-                      {mine && msg.read_at && <span className="ml-1">✓</span>}
+                    <p
+                      className={`text-[10px] mt-1 ${
+                        mine ? "text-primary-foreground/60" : "text-muted-foreground"
+                      } text-right`}
+                    >
+                      {msg.pending ? "Sending…" : fmtTime(msg.created_at)}
+                      {mine && !msg.pending && msg.read_at && <span className="ml-1">✓</span>}
                     </p>
                   </div>
                 </div>
@@ -197,12 +243,13 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
       <div className="px-4 py-3 border-t border-border bg-card/60 shrink-0">
         <div className="flex gap-2">
           <Input
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message…"
             className="flex-1 bg-secondary/50 border-secondary"
-            disabled={sending}
+            autoComplete="off"
           />
           <Button
             size="icon"

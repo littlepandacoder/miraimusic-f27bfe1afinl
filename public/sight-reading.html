@@ -249,7 +249,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 
       <!-- Staff display -->
       <div class="staff-area">
-        <canvas id="staffCanvas" width="900" height="270"></canvas>
+        <canvas id="staffCanvas" width="900" height="300"></canvas>
         <div class="idle-overlay" id="idleOverlay">
           <div class="idle-icon">🎼</div>
           <div class="idle-text">Configure settings and press<br/><strong style="color:var(--pink)">Start Session</strong></div>
@@ -1465,7 +1465,7 @@ function resetNoteButtons() {
 ═══════════════════════════════════════════════════════════ */
 const staffCanvas = document.getElementById('staffCanvas');
 const sCtx        = staffCanvas.getContext('2d');
-const SW = 900, SH = 270;
+const SW = 900, SH = 300;
 
 function drawStaff(noteInput, clef) {
   const noteList = Array.isArray(noteInput) ? noteInput : (noteInput ? [noteInput] : []);
@@ -1478,7 +1478,7 @@ function drawStaff(noteInput, clef) {
 
   const isTreble = clef === 'treble';
   const lineGap  = 22;
-  const staffTop = isTreble ? 70 : 105;
+  const staffTop = isTreble ? 70 : 115;
   const staffLeft = 90;
   const staffW    = SW - 130;
   const stepSize  = lineGap / 2;
