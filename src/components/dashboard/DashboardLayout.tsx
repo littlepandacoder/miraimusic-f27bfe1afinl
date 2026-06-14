@@ -208,10 +208,13 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   };
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden">
+    <div
+      className="bg-background flex overflow-hidden"
+      style={{ height: "calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))" }}
+    >
 
       {/* ── Desktop sidebar ─────────────────────────────────── */}
-      <aside className="hidden md:flex h-screen w-64 shrink-0 bg-card border-r border-border flex-col">
+      <aside className="hidden md:flex h-full w-64 shrink-0 bg-card border-r border-border flex-col">
         <div className="p-4 border-b border-border">
           <Link to="/" className="flex items-center gap-2">
             <Music className="w-8 h-8 text-primary" />
@@ -331,7 +334,10 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div
+          className="flex items-center justify-between p-4 border-b border-border"
+          style={{ paddingTop: "calc(1rem + env(safe-area-inset-top, 0px))" }}
+        >
           <Link to="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-2">
             <Music className="w-7 h-7 text-primary" />
             <span className="text-lg font-bold">Musicable</span>
@@ -450,7 +456,10 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         )}
 
         {/* Drawer footer */}
-        <div className="p-4 border-t border-border shrink-0">
+        <div
+          className="p-4 border-t border-border shrink-0"
+          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+        >
           <div className="flex items-center gap-3 px-2 py-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
               <span className="text-sm font-bold text-primary">
@@ -474,7 +483,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
       </div>
 
       {/* ── Main content ─────────────────────────────────────── */}
-      <main className="flex-1 min-w-0 h-screen overflow-y-auto">
+      <main className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden">
         <header className="bg-card border-b border-border px-4 py-3 md:px-8 md:py-5 sticky top-0 z-30">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -492,7 +501,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
           </div>
         </header>
 
-        <div className="p-4 md:p-8">
+        <div className="p-4 md:p-8" style={{ paddingBottom: "max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))" }}>
           {children}
         </div>
       </main>

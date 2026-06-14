@@ -25,9 +25,11 @@ body {
   }
 }
 
-/* Hide the default cursor globally so the custom music cursor shows everywhere */
-*, *::before, *::after {
-  cursor: none !important;
+/* Hide the default cursor globally so the custom music cursor shows everywhere (desktop only) */
+@media (pointer: fine) {
+  *, *::before, *::after {
+    cursor: none !important;
+  }
 }
 
 /* Pink scrollbar */
