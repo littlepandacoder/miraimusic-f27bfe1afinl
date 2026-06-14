@@ -9908,6 +9908,7 @@ const FIREBASE_CONFIG = {
 let _fbApp  = null;
 let _fbDb   = null;
 let _fbRef  = null;   // /rooms/<CODE>
+let _fbConnectKey = null; // push key at connect-time — events before this are ignored
 let _fbListeners = []; // { ref, type, fn } for cleanup
 
 function fbInit() {
@@ -9930,6 +9931,11 @@ function fbInit() {
 function fbConnect(code) {
   if (!fbInit()) return false;
   _fbRef = _fbDb.ref('rooms/' + code);
+  // Generate a time-ordered key for "right now" using Firebase's server ordering.
+  // push().key without .set() creates no DB write — it just gives us a key.
+  // All child_added listeners use startAfter(this key) so pre-existing events
+  // (from previous sessions) are never delivered, regardless of device clock skew.
+  _fbConnectKey = _fbRef.child('events').push().key;
   return true;
 }
 
@@ -9955,7 +9961,11 @@ function fbPush(data) {
 
 function fbOn(eventType, cb) {
   if (!_fbRef) return;
-  const evRef = _fbRef.child('events');
+  // Use startAfter(connectKey) so only events pushed after we joined are delivered.
+  // This replaces the old client-side timestamp filter which broke across time zones.
+  const evRef = _fbConnectKey
+    ? _fbRef.child('events').orderByKey().startAfter(_fbConnectKey)
+    : _fbRef.child('events');
   const fn = evRef.on(eventType, cb);
   _fbListeners.push({ ref: evRef, type: eventType, fn: cb });
 }
@@ -10125,13 +10135,10 @@ function roomStartTeacherSession(code) {
     fbSetPresence({ role: 'teacher', name: 'Teacher', id: ROOM.myId });
 
     // Listen for incoming events from students
-    let lastEventKey = null;
+    // (startAfter filtering in fbOn() means no stale events arrive here)
     fbOn('child_added', (snap) => {
-      const key  = snap.key;
       const data = snap.val();
       if (!data || data.sender === ROOM.myId) return;
-      // Ignore events older than 10s (stale from previous session)
-      if (Date.now() - (data.ts || 0) > 10000) return;
       roomTeacherHandleMsg({ data });
     });
 
@@ -10375,14 +10382,14 @@ function roomStudentJoin() {
     fbPush(joinMsg);
 
     // Listen for teacher events
-    let seenKeys = new Set();
+    // (startAfter filtering in fbOn() means no stale events arrive here)
+    const seenKeys = new Set();
     fbOn('child_added', (snap) => {
-      const key  = snap.key;
+      const key = snap.key;
       if (seenKeys.has(key)) return;
       seenKeys.add(key);
       const data = snap.val();
       if (!data || data.sender === ROOM.myId) return;
-      if (Date.now() - (data.ts || 0) > 10000) return;
       roomStudentHandleTeacher({ data });
     });
 
