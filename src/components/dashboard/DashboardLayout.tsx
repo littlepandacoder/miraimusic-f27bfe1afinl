@@ -170,7 +170,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
       : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
 
     const isProtected = (item as any).locked && isProtectedFeature(item.href);
-    const isLocked = isProtected && !subscription.hasActiveSubscription;
+    const isLocked = isProtected && !subscription.hasActiveSubscription && role === "student";
     const lockClass = isLocked ? "opacity-30 cursor-not-allowed grayscale" : "";
 
     if (isLocked) {
