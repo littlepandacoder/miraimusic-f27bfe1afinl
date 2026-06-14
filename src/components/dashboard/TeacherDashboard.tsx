@@ -10,7 +10,7 @@ import LessonPlans from "./teacher/LessonPlans";
 import TeacherSchedule from "./teacher/TeacherSchedule";
 import TeacherSlots from "./teacher/TeacherSlots";
 import ManageFoundation from "./admin/ManageFoundation";
-
+import TeacherChat from "./teacher/TeacherChat";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
 
@@ -139,6 +139,7 @@ const TeacherDashboard = () => {
 
         <Route path="/foundation/lesson-editor/:moduleId/:lessonId" element={<LessonEditor />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
+        <Route path="/chat" element={<TeacherChat />} />
       </Routes>
     </DashboardLayout>
   );

@@ -119,19 +119,21 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     if (role === "teacher") {
       return [
         ...baseItems,
-        { href: "/dashboard/my-students",  icon: Users,         label: t("dashboard.nav.myStudents") },
-        { href: "/dashboard/lesson-plans", icon: BookOpen,      label: t("dashboard.nav.lessonPlans") },
-        { href: "/dashboard/schedule",     icon: Calendar,      label: t("dashboard.nav.schedule") },
-        { href: "/dashboard/slots",        icon: ClipboardList, label: t("dashboard.nav.mySlots") },
-        { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
+        { href: "/dashboard/my-students",  icon: Users,           label: t("dashboard.nav.myStudents") },
+        { href: "/dashboard/lesson-plans", icon: BookOpen,        label: t("dashboard.nav.lessonPlans") },
+        { href: "/dashboard/schedule",     icon: Calendar,        label: t("dashboard.nav.schedule") },
+        { href: "/dashboard/slots",        icon: ClipboardList,   label: t("dashboard.nav.mySlots") },
+        { href: "/dashboard/foundation",   icon: Gamepad2,        label: t("dashboard.nav.foundationModules") },
+        { href: "/dashboard/chat",         icon: MessageSquare,   label: "Chat" },
         ...gameItems,
       ];
     }
 
     return [
       ...baseItems,
-      { href: "/dashboard/foundation", icon: Gamepad2, label: t("dashboard.nav.foundation") },
-      { href: "/dashboard/resources",  icon: BookOpen, label: t("dashboard.nav.aiTeacher") },
+      { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundation") },
+      { href: "/dashboard/resources",  icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
+      { href: "/dashboard/chat",       icon: MessageSquare, label: "Chat with Teacher" },
     ];
   };
 

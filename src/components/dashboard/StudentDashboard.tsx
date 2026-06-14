@@ -18,6 +18,7 @@ import BookLesson from "./student/BookLesson";
 import ModuleMap from "./student/ModuleMap";
 import FoundationLessonPlan from "./student/FoundationLessonPlan";
 import LessonViewer from "./student/LessonViewer";
+import StudentChat from "./student/StudentChat";
 
 
 interface GameScoreSummary {
@@ -554,6 +555,7 @@ const StudentDashboard = () => {
         <Route path="/foundation/lesson-plan/:moduleId" element={<FoundationLessonPlan />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
         <Route path="/review-quiz" element={<DailyReviewQuiz />} />
+        <Route path="/chat" element={<StudentChat />} />
       </Routes>
     </DashboardLayout>
   );
