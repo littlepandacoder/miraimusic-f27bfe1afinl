@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Musical Rest Quiz — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0812;--bg2:#0f0d1a;--card:#151228;--border:rgba(255,255,255,0.07);
+  --pink:#FF2D78;--sky:#00D4FF;--green:#39D98A;--amber:#F59E0B;--purple:#A855F7;--red:#EF4444;--off-white:#E8ECF0;--muted:#6B7280}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;background:var(--bg);overflow-y:auto}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:200;height:52px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 1.5rem;background:rgba(10,8,18,.92);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--pink);
+  letter-spacing:.08em;text-decoration:none}
+.nav-back{font-size:.78rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.4rem;transition:color .2s}
+.nav-back:hover{color:var(--pink)}
+
+.screen{min-height:100vh;padding-top:52px;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── INTRO ── */
+#intro{align-items:center;justify-content:center;padding:2.5rem 1rem;gap:2rem}
+.intro-box{width:100%;max-width:520px;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+.intro-header{padding:2.5rem 2rem;text-align:center;background:linear-gradient(135deg,rgba(255,45,120,.12),rgba(168,85,247,.12));border-bottom:1px solid var(--border)}
+.intro-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.9rem;
+  background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.intro-sub{color:var(--muted);font-size:.92rem;line-height:1.6}
+.intro-body{padding:1.75rem 2rem}
+.phase-list{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.75rem}
+.phase-item{display:flex;align-items:center;gap:.85rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem}
+.ph-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-weight:700;font-size:.8rem;flex-shrink:0}
+.c1{background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);color:var(--sky)}
+.c2{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber)}
+.c3{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:var(--purple)}
+.ph-info h4{font-weight:700;font-size:.86rem;color:var(--off-white);margin-bottom:.1rem}
+.ph-info p{font-size:.74rem;color:var(--muted);font-family:'DM Mono',monospace}
+.start-btn{width:100%;padding:1rem;background:linear-gradient(135deg,var(--pink),var(--purple));
+  color:#fff;font-family:'Orbitron',monospace;font-weight:700;font-size:.9rem;border:none;border-radius:12px;
+  cursor:pointer;letter-spacing:.06em;transition:opacity .2s,transform .15s}
+.start-btn:hover{opacity:.88;transform:scale(1.01)}
+
+/* ── GAME ── */
+#game{align-items:center;padding:1rem 1rem 3rem;gap:.9rem}
+.game-inner{width:100%;max-width:580px;display:flex;flex-direction:column;gap:.9rem}
+.phase-row{display:flex;align-items:center;justify-content:space-between}
+.phase-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.24rem .8rem;
+  border-radius:100px;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.q-count{font-family:'DM Mono',monospace;font-size:.84rem;color:var(--muted)}
+.prog-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--purple));transition:width .4s ease;width:0}
+.hud{display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+.hud-score{font-family:'Orbitron',monospace;font-weight:700;font-size:1.5rem;color:var(--pink)}
+.hud-streak{font-family:'DM Mono',monospace;font-size:.92rem;color:var(--amber);display:none;align-items:center;gap:.3rem}
+
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.4rem;display:flex;flex-direction:column;align-items:center;gap:.85rem;min-height:200px;justify-content:center}
+.q-label{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+canvas.main-cv{width:100%;height:auto;display:block}
+.rest-name-lbl{font-size:1.05rem;font-weight:700;color:var(--amber);font-family:'Orbitron',monospace;letter-spacing:.04em;display:none}
+.name-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;
+  padding:1rem 2.5rem;text-align:center;display:none;width:100%}
+.name-card-eyebrow{font-family:'DM Mono',monospace;font-size:.66rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
+.name-card-text{font-size:1.2rem;font-weight:800;color:var(--off-white)}
+
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.ans-btn{padding:.85rem .7rem;background:var(--bg2);border:2px solid var(--border);color:var(--off-white);
+  font-weight:600;font-size:.9rem;border-radius:12px;cursor:pointer;transition:all .15s;text-align:center;line-height:1.3}
+.ans-btn:hover:not(.disabled){border-color:var(--sky);color:var(--sky);background:rgba(0,212,255,.06)}
+.ans-btn.correct{border-color:var(--green)!important;background:rgba(57,217,138,.14)!important;color:var(--green)!important;animation:pg .4s}
+.ans-btn.wrong{border-color:var(--red)!important;background:rgba(239,68,68,.1)!important;color:var(--red)!important;animation:shk .3s}
+.ans-btn.disabled{opacity:.45;cursor:not-allowed}
+
+.sym-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;display:none}
+.sym-btn{background:var(--bg2);border:2px solid var(--border);border-radius:12px;
+  cursor:pointer;transition:all .2s;overflow:hidden;padding:.4rem;user-select:none}
+.sym-btn:hover:not(.disabled){border-color:var(--purple);background:rgba(168,85,247,.07)}
+.sym-btn.correct{border-color:var(--green)!important;background:rgba(57,217,138,.12)!important;animation:pg .4s}
+.sym-btn.wrong{border-color:var(--red)!important;background:rgba(239,68,68,.1)!important;animation:shk .3s}
+.sym-btn.disabled{opacity:.45;cursor:not-allowed}
+.sym-btn canvas{display:block;width:100%;height:auto}
+
+@keyframes pg{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+.feedback{min-height:40px;border-radius:10px;display:flex;align-items:center;gap:.65rem;
+  padding:.65rem .9rem;font-weight:600;font-size:.84rem;
+  opacity:0;transform:translateY(-5px);transition:all .25s}
+.feedback.show{opacity:1;transform:translateY(0)}
+.feedback.correct{background:rgba(57,217,138,.1);border:1px solid rgba(57,217,138,.28);color:var(--green)}
+.feedback.wrong{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.22);color:var(--red)}
+.explanation{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+  padding:.7rem 1rem;font-size:.82rem;color:var(--muted);line-height:1.55;display:none}
+.explanation.show{display:block}
+
+/* ── TRANSITION ── */
+#trans{align-items:center;justify-content:center;padding:3rem 1.5rem}
+.trans-card{width:100%;max-width:460px;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:2.5rem 2rem;text-align:center}
+.trans-phase-lbl{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.5rem}
+.trans-title{font-size:1.6rem;font-weight:900;color:var(--off-white);margin-bottom:.25rem}
+.trans-sub{font-size:.85rem;color:var(--muted);margin-bottom:1.6rem}
+.trans-score-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1rem 3rem;display:inline-block;margin-bottom:1.4rem}
+.trans-pct{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;line-height:1}
+.trans-frac{font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.trans-next{background:rgba(255,45,120,.06);border:1px solid rgba(255,45,120,.18);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1.4rem;text-align:left}
+.trans-next h4{font-weight:700;font-size:.86rem;color:var(--off-white);margin-bottom:.15rem}
+.trans-next p{font-size:.74rem;color:var(--muted);font-family:'DM Mono',monospace}
+.cont-btn{width:100%;padding:1rem;background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;
+  font-family:'Orbitron',monospace;font-weight:700;font-size:.88rem;border:none;border-radius:12px;cursor:pointer;letter-spacing:.06em;transition:opacity .2s}
+.cont-btn:hover{opacity:.88}
+
+/* ── RESULTS ── */
+#results{align-items:center;justify-content:center;padding:3rem 1.5rem}
+.res-card{width:100%;max-width:500px;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+.res-header{background:linear-gradient(135deg,rgba(255,45,120,.12),rgba(168,85,247,.12));border-bottom:1px solid var(--border);padding:2rem;text-align:center}
+.grade-lbl{font-family:'Orbitron',monospace;font-weight:900;font-size:3.5rem;line-height:1;margin-bottom:.4rem}
+.res-title{font-size:1.4rem;font-weight:900;color:var(--off-white);margin-bottom:.2rem}
+.res-sub{font-size:.85rem;color:var(--muted)}
+.res-body{padding:1.6rem 1.75rem;display:flex;flex-direction:column;gap:.9rem}
+.ph-results{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.ph-res-card{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:.8rem .6rem;text-align:center}
+.phr-label{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.35rem}
+.phr-pct{font-family:'Orbitron',monospace;font-weight:700;font-size:1.1rem}
+.stat-row{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:.72rem 1rem}
+.stat-lbl{font-size:.83rem;color:var(--muted)}
+.stat-val{font-family:'Orbitron',monospace;font-weight:700;font-size:.93rem}
+.act-row{display:flex;gap:.75rem}
+.retry-btn{flex:1;padding:.9rem;background:var(--bg2);border:1px solid var(--border);color:var(--off-white);
+  font-weight:700;font-size:.88rem;border-radius:12px;cursor:pointer;transition:all .2s}
+.retry-btn:hover{border-color:var(--pink);color:var(--pink)}
+.home-btn{flex:1;padding:.9rem;background:linear-gradient(135deg,var(--pink),var(--purple));border:none;
+  color:#fff;font-family:'Orbitron',monospace;font-weight:700;font-size:.78rem;border-radius:12px;
+  cursor:pointer;letter-spacing:.05em;transition:opacity .2s}
+.home-btn:hover{opacity:.88}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9999}
+
+@media(max-width:440px){.ans-grid{grid-template-columns:1fr 1fr}.intro-title{font-size:1.5rem}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="/dashboard">♩ Musicable</a>
+  <a class="nav-back" href="/dashboard">← Dashboard</a>
+</nav>
+
+<canvas id="confetti"></canvas>
+
+<!-- ── INTRO ─────────────────────────────────────────────────── -->
+<div id="intro" class="screen active">
+  <div class="intro-box">
+    <div class="intro-header">
+      <div class="intro-title">Musical Rests</div>
+      <div class="intro-sub">Learn all 5 rest symbols — semibreve, minim, crotchet, quaver and semiquaver</div>
+    </div>
+    <div class="intro-body">
+      <div class="phase-list">
+        <div class="phase-item">
+          <div class="ph-num c1">1</div>
+          <div class="ph-info"><h4>Name That Rest</h4><p>See a symbol → identify its name · 8 questions</p></div>
+        </div>
+        <div class="phase-item">
+          <div class="ph-num c2">2</div>
+          <div class="ph-info"><h4>Beat Value</h4><p>How many beats does this rest last? · 6 questions</p></div>
+        </div>
+        <div class="phase-item">
+          <div class="ph-num c3">3</div>
+          <div class="ph-info"><h4>Spot the Rest</h4><p>See the name → choose the correct symbol · 6 questions</p></div>
+        </div>
+      </div>
+      <button class="start-btn" onclick="startGame()">START QUIZ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GAME ──────────────────────────────────────────────────── -->
+<div id="game" class="screen">
+  <div class="game-inner">
+    <div class="phase-row">
+      <div id="phaseBadge" class="phase-badge c1">Phase 1 · Name That Rest</div>
+      <span id="qCount" class="q-count">1 / 8</span>
+    </div>
+    <div class="prog-track"><div id="progFill" class="prog-fill"></div></div>
+    <div class="hud">
+      <span class="hud-score" id="scoreDisp">0</span>
+      <span class="hud-streak" id="streakDisp">🔥 <span id="streakNum">0</span></span>
+    </div>
+
+    <div class="q-card" id="qCard">
+      <div class="q-label" id="qLabel">Identify this rest symbol</div>
+      <canvas id="mainCv" class="main-cv" width="400" height="160"></canvas>
+      <div id="restNameLbl" class="rest-name-lbl"></div>
+      <div id="nameCard" class="name-card">
+        <div class="name-card-eyebrow">Find this rest</div>
+        <div id="nameCardText" class="name-card-text"></div>
+      </div>
+    </div>
+
+    <div id="ansGrid" class="ans-grid"></div>
+    <div id="symGrid" class="sym-grid"></div>
+    <div id="feedback" class="feedback"></div>
+    <div id="explanation" class="explanation"></div>
+  </div>
+</div>
+
+<!-- ── TRANSITION ─────────────────────────────────────────────── -->
+<div id="trans" class="screen">
+  <div class="trans-card">
+    <div id="transLbl" class="trans-phase-lbl" style="color:var(--sky)">Phase 1 Complete</div>
+    <div id="transTitle" class="trans-title">Nice Work!</div>
+    <div id="transSub" class="trans-sub">You got 0 / 0 correct</div>
+    <div class="trans-score-box">
+      <div id="transPct" class="trans-pct" style="color:var(--sky)">0%</div>
+      <div id="transFrac" class="trans-frac">0 / 0 correct</div>
+    </div>
+    <div class="trans-next">
+      <h4 id="transNextTitle">Up Next: Beat Value</h4>
+      <p id="transNextDesc">How many beats does each rest last?</p>
+    </div>
+    <button class="cont-btn" onclick="nextPhase()">CONTINUE →</button>
+  </div>
+</div>
+
+<!-- ── RESULTS ────────────────────────────────────────────────── -->
+<div id="results" class="screen">
+  <div class="res-card">
+    <div class="res-header">
+      <div id="gradeLbl" class="grade-lbl">A</div>
+      <div id="resTitle" class="res-title">Outstanding!</div>
+      <div id="resSub" class="res-sub">0 / 20 correct · 0%</div>
+    </div>
+    <div class="res-body">
+      <div class="ph-results">
+        <div class="ph-res-card"><div class="phr-label">Name That Rest</div><div id="pr1" class="phr-pct" style="color:var(--sky)">-</div></div>
+        <div class="ph-res-card"><div class="phr-label">Beat Value</div><div id="pr2" class="phr-pct" style="color:var(--amber)">-</div></div>
+        <div class="ph-res-card"><div class="phr-label">Spot the Rest</div><div id="pr3" class="phr-pct" style="color:var(--purple)">-</div></div>
+      </div>
+      <div class="stat-row"><span class="stat-lbl">Total Score</span><span id="totalScore" class="stat-val" style="color:var(--pink)">0</span></div>
+      <div class="stat-row"><span class="stat-lbl">Accuracy</span><span id="accuracy" class="stat-val">0%</span></div>
+      <div class="stat-row"><span class="stat-lbl">Best Streak</span><span id="bestStreak" class="stat-val" style="color:var(--amber)">0 🔥</span></div>
+      <div class="act-row">
+        <button class="retry-btn" onclick="startGame()">↺ Try Again</button>
+        <button class="home-btn" onclick="window.location.href='/dashboard'">DASHBOARD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── REST DATA ────────────────────────────────────────────────────────────────
+const RESTS = [
+  { id:'semibreve',  name:'Semibreve Rest',  beats:'4 beats',  hint:'A semibreve rest lasts 4 beats — it fills a whole bar in 4/4 time. It hangs BELOW the 4th line.' },
+  { id:'minim',      name:'Minim Rest',       beats:'2 beats',  hint:'A minim rest lasts 2 beats — half a bar in 4/4. It sits ON TOP of the middle (3rd) line.' },
+  { id:'crotchet',   name:'Crotchet Rest',    beats:'1 beat',   hint:'A crotchet rest lasts 1 beat. It has a distinctive zigzag shape.' },
+  { id:'quaver',     name:'Quaver Rest',      beats:'½ beat',   hint:'A quaver rest lasts half a beat (½). It has a diagonal stem, a filled dot, and one curved flag.' },
+  { id:'semiquaver', name:'Semiquaver Rest',  beats:'¼ beat',   hint:'A semiquaver rest lasts a quarter of a beat (¼). Like the quaver rest but with TWO flags.' },
+];
+const BEAT_OPTIONS = ['4 beats','2 beats','1 beat','½ beat','¼ beat'];
+const PHASE_SIZES  = [8, 6, 6];
+
+// ─── AUDIO ───────────────────────────────────────────────────────────────────
+let _ac = null;
+const ac = () => { if(!_ac||_ac.state==='closed') _ac=new(window.AudioContext||window.webkitAudioContext)(); return _ac; };
+function tone(f,t,d,vol=0.26,type='sine'){try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=type;const s=c.currentTime+t;o.frequency.setValueAtTime(f,s);g.gain.setValueAtTime(vol,s);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.start(s);o.stop(s+d+.01);}catch(_){}}
+const SFX = {
+  correct(){ tone(523,.0,.2); tone(659,.1,.22); },
+  wrong(){   tone(220,.0,.04,.14,'sawtooth'); tone(165,.06,.18,.12,'sawtooth'); },
+  streak(){  [523,659,784].forEach((f,i)=>tone(f,i*.09,.3,.24)); },
+  next(){    tone(880,.0,.07,.14); },
+  victory(){ const n=[523,659,784,659,1047],d=[.13,.13,.13,.1,.4];let t=0;n.forEach((f,i)=>{tone(f,t,d[i]+.04,.26);t+=d[i]*.8;}); },
+};
+
+// ─── CANVAS DRAWING ───────────────────────────────────────────────────────────
+function drawRest(canvas, restId, mini=false) {
+  const W=canvas.width, H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0f0d1a'; ctx.fillRect(0,0,W,H);
+
+  const sp = H * (mini ? 0.16 : 0.148);
+  const topY = H * (mini ? 0.22 : 0.25);
+  const x0 = W*0.09, x1 = W*0.91;
+
+  // Draw staff
+  ctx.strokeStyle='rgba(170,170,200,0.45)'; ctx.lineWidth = mini ? 1 : 1.4;
+  for(let i=0;i<5;i++){
+    const y=topY+i*sp;
+    ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+  }
+
+  // Line helpers: l(0)=top(5th), l(4)=bottom(1st)
+  const l = i => topY + i*sp;
+  const cx = W/2;
+  ctx.fillStyle='#E8ECF0'; ctx.strokeStyle='#E8ECF0';
+
+  if(restId==='semibreve'){
+    // Solid rectangle hanging BELOW 4th line (l(1))
+    const rw=sp*2.5, rh=sp*0.72;
+    ctx.fillRect(cx-rw/2, l(1), rw, rh);
+  }
+  else if(restId==='minim'){
+    // Solid rectangle sitting ON TOP of middle/3rd line (l(2))
+    const rw=sp*2.5, rh=sp*0.72;
+    ctx.fillRect(cx-rw/2, l(2)-rh, rw, rh);
+  }
+  else if(restId==='crotchet'){
+    // Zigzag Z-shape spanning ~l(1) to just below l(4)
+    const t=l(1)-sp*0.1, b=l(4)+sp*0.12;
+    const h=b-t;
+    ctx.lineWidth=mini?2:3; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(cx+sp*.62, t);
+    ctx.lineTo(cx-sp*.52, t+h*.28);
+    ctx.bezierCurveTo(cx+sp*.88, t+h*.37, cx+sp*.88, t+h*.50, cx-sp*.22, t+h*.56);
+    ctx.bezierCurveTo(cx-sp*.95, t+h*.65, cx-sp*.68, t+h*.81, cx+sp*.44, b);
+    ctx.stroke();
+  }
+  else if(restId==='quaver'){
+    // Diagonal stem + filled dot at bottom + 1 curved flag at top
+    const tX=cx+sp*.62, tY=l(1);
+    const bX=cx-sp*.62, bY=l(3);
+    ctx.lineWidth=mini?1.8:2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(bX,bY); ctx.lineTo(tX,tY); ctx.stroke();
+    ctx.beginPath(); ctx.arc(bX,bY,mini?3.5:5.5,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=mini?1.5:2;
+    ctx.beginPath(); ctx.moveTo(tX,tY);
+    ctx.bezierCurveTo(tX+sp,tY+sp*.3, tX+sp*.85,tY+sp*1.05, tX+sp*.15,tY+sp*1.5);
+    ctx.stroke();
+  }
+  else if(restId==='semiquaver'){
+    // Diagonal stem + filled dot + 2 flags
+    const tX=cx+sp*.62, tY=l(0)+sp*.35;
+    const bX=cx-sp*.62, bY=l(3);
+    ctx.lineWidth=mini?1.8:2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(bX,bY); ctx.lineTo(tX,tY); ctx.stroke();
+    ctx.beginPath(); ctx.arc(bX,bY,mini?3.5:5.5,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=mini?1.5:2;
+    [0, sp*0.82].forEach(off=>{
+      ctx.beginPath(); ctx.moveTo(tX,tY+off);
+      ctx.bezierCurveTo(tX+sp,tY+off+sp*.3, tX+sp*.85,tY+off+sp*.95, tX+sp*.15,tY+off+sp*1.35);
+      ctx.stroke();
+    });
+  }
+}
+
+// ─── GAME STATE ───────────────────────────────────────────────────────────────
+let phase=1, phaseIdx=0, score=0, streak=0, maxStreak=0, answered=false;
+let phaseCorrect=[0,0,0], phaseTotal=[0,0,0];
+let phaseQs=[[],[],[]];
+
+const PHASE_BADGE = ['Phase 1 · Name That Rest','Phase 2 · Beat Value','Phase 3 · Spot the Rest'];
+const PHASE_COLOR = ['var(--sky)','var(--amber)','var(--purple)'];
+const PHASE_QLABEL = ['What is this rest called?','How many beats does this rest last? (4/4 time)','Find the correct rest symbol'];
+
+// ─── UTILITY ─────────────────────────────────────────────────────────────────
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function buildQuestions(){
+  phaseQs=[[],[],[]];
+
+  // Phase 1: see symbol → pick name (8 q, each rest ~1-2 times)
+  const pool1 = shuffle([...RESTS,...RESTS]);
+  for(let i=0;i<PHASE_SIZES[0];i++){
+    const rest=pool1[i % pool1.length];
+    const wrongs=shuffle(RESTS.filter(r=>r.id!==rest.id)).slice(0,3);
+    phaseQs[0].push({rest, opts:shuffle([rest,...wrongs]), type:'name'});
+  }
+
+  // Phase 2: see symbol + name → pick beat value (6 q)
+  const pool2=shuffle([...RESTS,...RESTS]);
+  for(let i=0;i<PHASE_SIZES[1];i++){
+    const rest=pool2[i % pool2.length];
+    const wrongs=shuffle(BEAT_OPTIONS.filter(b=>b!==rest.beats)).slice(0,3);
+    phaseQs[1].push({rest, opts:shuffle([rest.beats,...wrongs]), type:'beat'});
+  }
+
+  // Phase 3: see name → pick symbol (6 q)
+  const pool3=shuffle([...RESTS,...RESTS]);
+  for(let i=0;i<PHASE_SIZES[2];i++){
+    const rest=pool3[i % pool3.length];
+    const wrongs=shuffle(RESTS.filter(r=>r.id!==rest.id)).slice(0,3);
+    phaseQs[2].push({rest, opts:shuffle([rest,...wrongs]), type:'symbol'});
+  }
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────────
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function setPhase(p){
+  const badge=document.getElementById('phaseBadge');
+  badge.textContent=PHASE_BADGE[p-1];
+  badge.style.background=PHASE_COLOR[p-1]+'22';
+  badge.style.border=`1px solid ${PHASE_COLOR[p-1]}55`;
+  badge.style.color=PHASE_COLOR[p-1];
+}
+
+// ─── START ────────────────────────────────────────────────────────────────────
+function startGame(){
+  phase=1; phaseIdx=0; score=0; streak=0; maxStreak=0; answered=false;
+  phaseCorrect=[0,0,0]; phaseTotal=[0,0,0];
+  buildQuestions();
+  setPhase(1);
+  show('game');
+  renderQ();
+}
+
+// ─── RENDER QUESTION ─────────────────────────────────────────────────────────
+function renderQ(){
+  answered=false;
+  const q=phaseQs[phase-1][phaseIdx];
+  const totalQs=PHASE_SIZES.reduce((a,b)=>a+b,0);
+  const done=PHASE_SIZES.slice(0,phase-1).reduce((a,b)=>a+b,0)+phaseIdx;
+
+  // Progress
+  document.getElementById('progFill').style.width=`${(done/totalQs)*100}%`;
+  document.getElementById('qCount').textContent=`${phaseIdx+1} / ${PHASE_SIZES[phase-1]}`;
+
+  // HUD
+  document.getElementById('scoreDisp').textContent=score.toLocaleString();
+  const sd=document.getElementById('streakDisp');
+  if(streak>=2){ sd.style.display='flex'; document.getElementById('streakNum').textContent=streak; }
+  else sd.style.display='none';
+
+  // Clear feedback
+  const fb=document.getElementById('feedback'); fb.className='feedback'; fb.textContent='';
+  const ex=document.getElementById('explanation'); ex.className='explanation'; ex.textContent='';
+
+  document.getElementById('qLabel').textContent=PHASE_QLABEL[phase-1];
+
+  const mainCv=document.getElementById('mainCv');
+  const rnl=document.getElementById('restNameLbl');
+  const nc=document.getElementById('nameCard');
+  const ag=document.getElementById('ansGrid');
+  const sg=document.getElementById('symGrid');
+
+  if(q.type==='name'){
+    mainCv.style.display='block'; rnl.style.display='none'; nc.style.display='none';
+    ag.style.display='grid'; sg.style.display='none';
+    drawRest(mainCv, q.rest.id);
+    ag.innerHTML='';
+    q.opts.forEach(opt=>{
+      const btn=document.createElement('button');
+      btn.className='ans-btn'; btn.textContent=opt.name;
+      btn.onclick=()=>pick(btn, opt.id===q.rest.id, q, 'name');
+      ag.appendChild(btn);
+    });
+  }
+  else if(q.type==='beat'){
+    mainCv.style.display='block';
+    rnl.style.display='block'; rnl.textContent=q.rest.name;
+    nc.style.display='none';
+    ag.style.display='grid'; sg.style.display='none';
+    drawRest(mainCv, q.rest.id);
+    ag.innerHTML='';
+    q.opts.forEach(opt=>{
+      const btn=document.createElement('button');
+      btn.className='ans-btn'; btn.textContent=opt;
+      btn.onclick=()=>pick(btn, opt===q.rest.beats, q, 'beat');
+      ag.appendChild(btn);
+    });
+  }
+  else{ // symbol
+    mainCv.style.display='none'; rnl.style.display='none';
+    nc.style.display='block'; document.getElementById('nameCardText').textContent=q.rest.name;
+    ag.style.display='none'; sg.style.display='grid';
+    sg.innerHTML='';
+    q.opts.forEach((opt,i)=>{
+      const div=document.createElement('div'); div.className='sym-btn';
+      const cv=document.createElement('canvas'); cv.width=200; cv.height=100;
+      cv.style.display='block'; cv.style.width='100%'; cv.style.height='auto';
+      div.appendChild(cv);
+      div.onclick=()=>pickSym(div, opt.id===q.rest.id, q, i);
+      sg.appendChild(div);
+      drawRest(cv, opt.id, true);
+    });
+  }
+}
+
+// ─── ANSWER HANDLERS ─────────────────────────────────────────────────────────
+function pick(btn, correct, q, type){
+  if(answered) return; answered=true;
+  document.querySelectorAll('.ans-btn').forEach(b=>{b.classList.add('disabled');b.disabled=true;});
+  const fb=document.getElementById('feedback');
+  const ex=document.getElementById('explanation');
+
+  if(correct){
+    btn.classList.add('correct');
+    score+=100; streak++; if(streak>maxStreak) maxStreak=streak;
+    phaseCorrect[phase-1]++;
+    if(streak>=5){score+=150;SFX.streak();}
+    else if(streak>=3){score+=50;SFX.streak();}
+    else SFX.correct();
+    fb.className='feedback correct show';
+    fb.innerHTML=`<span>✓</span> Correct!${streak>=3?' 🔥 '+streak+' streak!':''}`;
+  } else {
+    btn.classList.add('wrong');
+    const correctText=type==='name'?q.rest.name:q.rest.beats;
+    document.querySelectorAll('.ans-btn').forEach(b=>{if(b.textContent===correctText)b.classList.add('correct');});
+    streak=0; SFX.wrong();
+    fb.className='feedback wrong show';
+    fb.textContent='✗ Not quite — the correct answer is highlighted.';
+  }
+  phaseTotal[phase-1]++;
+  document.getElementById('scoreDisp').textContent=score.toLocaleString();
+  const sd=document.getElementById('streakDisp');
+  if(streak>=2){sd.style.display='flex';document.getElementById('streakNum').textContent=streak;}
+  else sd.style.display='none';
+  ex.textContent=q.rest.hint; ex.className='explanation show';
+  setTimeout(advance, 1700);
+}
+
+function pickSym(div, correct, q, idx){
+  if(answered) return; answered=true;
+  document.querySelectorAll('.sym-btn').forEach(d=>d.classList.add('disabled'));
+  const fb=document.getElementById('feedback');
+  const ex=document.getElementById('explanation');
+
+  if(correct){
+    div.classList.add('correct');
+    score+=100; streak++; if(streak>maxStreak) maxStreak=streak;
+    phaseCorrect[phase-1]++;
+    if(streak>=3){score+=50;SFX.streak();}
+    else SFX.correct();
+    fb.className='feedback correct show';
+    fb.innerHTML=`<span>✓</span> Correct!${streak>=3?' 🔥 '+streak+' streak!':''}`;
+  } else {
+    div.classList.add('wrong');
+    const cIdx=phaseQs[phase-1][phaseIdx].opts.findIndex(r=>r.id===q.rest.id);
+    const all=document.querySelectorAll('.sym-btn');
+    if(all[cIdx]) all[cIdx].classList.add('correct');
+    streak=0; SFX.wrong();
+    fb.className='feedback wrong show';
+    fb.textContent='✗ Not quite — the correct symbol is highlighted.';
+  }
+  phaseTotal[phase-1]++;
+  document.getElementById('scoreDisp').textContent=score.toLocaleString();
+  const sd=document.getElementById('streakDisp');
+  if(streak>=2){sd.style.display='flex';document.getElementById('streakNum').textContent=streak;}
+  else sd.style.display='none';
+  ex.textContent=q.rest.hint; ex.className='explanation show';
+  setTimeout(advance, 1800);
+}
+
+function advance(){
+  phaseIdx++;
+  if(phaseIdx>=PHASE_SIZES[phase-1]){
+    if(phase<3) showTrans();
+    else showResults();
+  } else {
+    SFX.next(); renderQ();
+  }
+}
+
+// ─── TRANSITION ───────────────────────────────────────────────────────────────
+const NEXT_TITLES=['','Up Next: Beat Value','Up Next: Spot the Rest'];
+const NEXT_DESCS=['','How many beats does each rest last in 4/4 time?','Match the rest name to the correct symbol'];
+
+function showTrans(){
+  const c=phaseCorrect[phase-1], tot=phaseTotal[phase-1];
+  const pct=tot>0?Math.round(c/tot*100):0;
+  document.getElementById('transLbl').textContent=`Phase ${phase} Complete`;
+  document.getElementById('transTitle').textContent=pct>=80?'Excellent! 🎉':pct>=60?'Good Work!':'Keep Practising!';
+  document.getElementById('transSub').textContent=`${c} out of ${tot} correct`;
+  document.getElementById('transPct').textContent=pct+'%';
+  document.getElementById('transPct').style.color=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  document.getElementById('transFrac').textContent=`${c} / ${tot} correct`;
+  document.getElementById('transNextTitle').textContent=NEXT_TITLES[phase];
+  document.getElementById('transNextDesc').textContent=NEXT_DESCS[phase];
+  show('trans');
+}
+
+function nextPhase(){
+  phase++; phaseIdx=0; setPhase(phase); show('game'); renderQ();
+}
+
+// ─── RESULTS ─────────────────────────────────────────────────────────────────
+const GRADE_COLORS={S:'#39D98A',A:'#00D4FF',B:'#A855F7',C:'#F59E0B',D:'#FF6B35',F:'#EF4444'};
+const GRADE_TITLES={S:'Perfect Score!',A:'Outstanding!',B:'Well Done!',C:'Good Effort!',D:'Keep Practising!',F:'Try Again!'};
+
+function showResults(){
+  const totalQ=PHASE_SIZES.reduce((a,b)=>a+b,0);
+  const totalC=phaseCorrect.reduce((a,b)=>a+b,0);
+  const pct=Math.round(totalC/totalQ*100);
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+
+  document.getElementById('gradeLbl').textContent=grade;
+  document.getElementById('gradeLbl').style.color=GRADE_COLORS[grade];
+  document.getElementById('resTitle').textContent=GRADE_TITLES[grade];
+  document.getElementById('resSub').textContent=`${totalC} / ${totalQ} correct · ${pct}%`;
+
+  [0,1,2].forEach(i=>{
+    const el=document.getElementById('pr'+(i+1));
+    el.textContent=phaseTotal[i]>0?Math.round(phaseCorrect[i]/phaseTotal[i]*100)+'%':'—';
+  });
+  document.getElementById('totalScore').textContent=score.toLocaleString();
+  document.getElementById('accuracy').textContent=pct+'%';
+  document.getElementById('bestStreak').textContent=maxStreak+' 🔥';
+
+  if(pct>=85) SFX.victory();
+  if(pct>=80) confetti();
+  show('results');
+}
+
+// ─── CONFETTI ─────────────────────────────────────────────────────────────────
+function confetti(){
+  const cv=document.getElementById('confetti');
+  const ctx=cv.getContext('2d');
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const cols=['#FF2D78','#39D98A','#00D4FF','#F59E0B','#A855F7','#fff'];
+  const ps=Array.from({length:140},()=>({
+    x:Math.random()*cv.width, y:-20,
+    vx:(Math.random()-.5)*6, vy:2+Math.random()*5,
+    c:cols[Math.floor(Math.random()*cols.length)],
+    w:6+Math.random()*8, h:4+Math.random()*6,
+    r:Math.random()*Math.PI*2, rv:(Math.random()-.5)*.2, life:1
+  }));
+  let raf;
+  const draw=()=>{
+    ctx.clearRect(0,0,cv.width,cv.height);
+    let alive=false;
+    ps.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.07; p.r+=p.rv;
+      if(p.y>cv.height*.75) p.life-=.02;
+      if(p.life<=0)return; alive=true;
+      ctx.save(); ctx.globalAlpha=p.life; ctx.translate(p.x,p.y); ctx.rotate(p.r);
+      ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+    });
+    if(alive) raf=requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  };
+  raf=requestAnimationFrame(draw);
+}
+</script>
+</body>
+</html>

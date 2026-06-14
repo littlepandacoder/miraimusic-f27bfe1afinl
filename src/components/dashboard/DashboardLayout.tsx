@@ -83,7 +83,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
     { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false },
-    { href: "/note-quiz.html",       icon: Gamepad2,      label: "Note Quiz",     external: true },
+    { href: "/note-quiz.html",          icon: Gamepad2,      label: "Note Quiz",     external: true },
+    { href: "/musical-rest-quiz.html",  icon: Gamepad2,      label: "Rest Quiz",     external: true },
   ];
 
   const studentGameIcons = [
@@ -93,6 +94,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)" },
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
+    { href: "/musical-rest-quiz.html", img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz", shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
   ];
 
   const getNavItems = () => {
@@ -133,7 +135,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     return [
       ...baseItems,
       { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundation") },
-      { href: "/dashboard/review-quiz",  icon: Music,         label: "Theory Review Quiz" },
       { href: "/dashboard/resources",    icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
       { href: "/dashboard/chat",         icon: MessageSquare, label: "Chat with Teacher" },
     ];

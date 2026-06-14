@@ -69,7 +69,8 @@
       "sightReading": "Sight Reading",
       "pianoTheory": "Piano Theory",
       "tapRhythm": "Tap the Rhythm",
-      "noteQuiz": "Note Quiz"
+      "noteQuiz": "Note Quiz",
+      "restQuiz": "Rest Quiz"
     },
     "signOut": "Sign Out",
     "games": "Play a Game"
