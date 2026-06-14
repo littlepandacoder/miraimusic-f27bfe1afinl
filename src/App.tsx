@@ -41,12 +41,12 @@ const App = () => (
   <>
     {!Capacitor.isNativePlatform() && <MusicCursor />}
     {!Capacitor.isNativePlatform() && <IOSInstallBanner />}
-    {!Capacitor.isNativePlatform() && <NotificationSetup />}
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        {!Capacitor.isNativePlatform() && <NotificationSetup />}
         <BrowserRouter>
           <PageTracking />
           <OAuthRedirectHandler />
