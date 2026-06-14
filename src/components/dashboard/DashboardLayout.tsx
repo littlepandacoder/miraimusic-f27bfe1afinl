@@ -110,7 +110,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
-        { href: "/dashboard/districts",       icon: Settings,      label: "Assignments" },
+        { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },
+        { href: "/dashboard/assignments",     icon: Users,         label: "Teacher Assignment" },
         { href: "/dashboard/affiliates",      icon: Users,         label: "Affiliates" },
         ...gameItems,
       ];
@@ -131,9 +132,10 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
 
     return [
       ...baseItems,
-      { href: "/dashboard/foundation", icon: Gamepad2,      label: t("dashboard.nav.foundation") },
-      { href: "/dashboard/resources",  icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
-      { href: "/dashboard/chat",       icon: MessageSquare, label: "Chat with Teacher" },
+      { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundation") },
+      { href: "/dashboard/review-quiz",  icon: Music,         label: "Theory Review Quiz" },
+      { href: "/dashboard/resources",    icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
+      { href: "/dashboard/chat",         icon: MessageSquare, label: "Chat with Teacher" },
     ];
   };
 
