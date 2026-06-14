@@ -1,15 +1,9 @@
-const CACHE = 'musicable-v1';
+const CACHE = 'musicable-v2';
 
-const PRECACHE = [
-  '/',
-  '/index.html',
-  '/logo.png',
-];
+const PRECACHE = ['/', '/index.html', '/logo.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE))
-  );
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
   self.skipWaiting();
 });
 
@@ -23,21 +17,50 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Only handle GET requests; skip cross-origin analytics/tracking
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== self.location.origin) return;
-
   e.respondWith(
     fetch(e.request)
-      .then((response) => {
-        // Cache successful responses
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(e.request, clone));
+      .then((res) => {
+        if (res && res.status === 200) {
+          caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
         }
-        return response;
+        return res;
       })
       .catch(() => caches.match(e.request))
+  );
+});
+
+// ── Push notifications ───────────────────────────────────────────────────────
+
+self.addEventListener('push', (e) => {
+  const data = e.data?.json() ?? {};
+  e.waitUntil(
+    self.registration.showNotification(data.title || 'Musicable', {
+      body: data.body || 'Time to practise! 🎹',
+      icon: data.icon || '/logo.png',
+      badge: data.badge || '/logo.png',
+      data: { url: data.url || '/login' },
+      vibrate: [200, 100, 200],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const target = e.notification.data?.url || '/login';
+  e.waitUntil(
+    clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((wins) => {
+        const existing = wins.find((w) => w.url.includes(self.location.origin));
+        if (existing) {
+          existing.focus();
+          existing.navigate(target);
+        } else {
+          clients.openWindow(target);
+        }
+      })
   );
 });

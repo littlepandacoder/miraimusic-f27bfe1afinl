@@ -24,6 +24,7 @@ import Privacy from "./pages/Privacy";
 import OAuthRedirectHandler from "./components/OAuthRedirectHandler";
 import MusicCursor from "./components/MusicCursor";
 import { IOSInstallBanner } from "./components/IOSInstallBanner";
+import { NotificationSetup } from "./components/NotificationSetup";
 import NotFound from "./pages/NotFound";
 import AffiliateLanding from "./pages/AffiliateLanding";
 import AffiliateSignup from "./pages/AffiliateSignup";
@@ -40,6 +41,7 @@ const App = () => (
   <>
     {!Capacitor.isNativePlatform() && <MusicCursor />}
     {!Capacitor.isNativePlatform() && <IOSInstallBanner />}
+    {!Capacitor.isNativePlatform() && <NotificationSetup />}
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
