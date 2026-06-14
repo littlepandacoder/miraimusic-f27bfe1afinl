@@ -44,10 +44,16 @@ export const NotificationSetup = () => {
     if (!user) return;
     try {
       const reg = await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      if (existing) {
-        await saveSub(existing, user.id);
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        // Permission granted but no subscription (e.g. reinstalled PWA on this device
+        // or new device) — re-subscribe silently without prompting the user again.
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
       }
+      if (sub) await saveSub(sub, user.id);
     } catch (_) {}
   };
 
