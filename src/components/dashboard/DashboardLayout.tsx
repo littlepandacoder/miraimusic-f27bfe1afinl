@@ -77,7 +77,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   };
 
   const gameItems = [
-    { href: "/piano-room", icon: KeyboardMusic, label: "Piano Room",    external: false, locked: true },
+    { href: "/piano-room", icon: KeyboardMusic, label: "Piano Room",    external: false },
     { href: "/piano-hero", icon: Gamepad2,      label: "Piano Hero",    external: false, locked: true },
     { href: "/rhythm-quiz", icon: Gamepad2,      label: "Rhythm Quiz",   external: false, locked: true },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
@@ -87,7 +87,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   ];
 
   const studentGameIcons = [
-    { href: "/piano-room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)", locked: true },
+    { href: "/piano-room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/piano-hero",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)", locked: true },
     { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
@@ -145,11 +145,10 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   };
 
   const isProtectedFeature = (href: string) => {
-    return href.includes("/piano-hero") || href.includes("/rhythm-quiz") || href.includes("/piano-theory-game") || href.includes("/piano-room");
+    return href.includes("/piano-hero") || href.includes("/rhythm-quiz") || href.includes("/piano-theory-game");
   };
 
   const getFeatureName = (href: string): "Piano Hero" | "Piano Room" | "Rhythm Quiz" | "Piano Theory" | null => {
-    if (href.includes("/piano-room")) return "Piano Room";
     if (href.includes("/piano-hero")) return "Piano Hero";
     if (href.includes("/rhythm-quiz")) return "Rhythm Quiz";
     if (href.includes("/piano-theory-game")) return "Piano Theory";
