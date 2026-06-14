@@ -124,20 +124,18 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   min-height:36px;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .3s}
 
 /* PIANO */
-.piano-section{padding:.75rem 1rem 1rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;flex:1}
-.piano-scroll{overflow-x:auto;width:100%;-webkit-overflow-scrolling:touch;padding-bottom:4px}
-.piano-scroll::-webkit-scrollbar{height:3px}
-.piano-scroll::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px}
-.piano{position:relative;height:125px;display:inline-flex;align-items:flex-start;user-select:none;touch-action:manipulation}
-.wk{width:38px;height:125px;background:#f5f0ff;border:1px solid #9090c0;border-radius:0 0 6px 6px;
-  cursor:pointer;position:relative;display:flex;align-items:flex-end;justify-content:center;
-  padding-bottom:5px;flex-shrink:0;transition:background .07s}
+.piano-section{padding:.6rem 0 .9rem;display:flex;flex-direction:column;align-items:center;gap:.6rem;flex:1}
+.piano-scroll{width:100%;overflow:hidden}
+.piano{position:relative;display:block;width:100%;user-select:none;touch-action:manipulation}
+.wk{background:#f5f0ff;border:1px solid #9090c0;border-radius:0 0 6px 6px;
+  cursor:pointer;position:absolute;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:5px;transition:background .07s;box-sizing:border-box}
 .wk:hover{background:#e0d0f8}
 .wk.sel{background:linear-gradient(180deg,#A855F7,#6D28D9)!important;border-color:#A855F7!important;box-shadow:0 0 14px rgba(168,85,247,.6)!important}
 .wk.hint{background:linear-gradient(180deg,#39D98A,#16a34a)!important;border-color:#39D98A!important}
 .wk.wrong{background:linear-gradient(180deg,#EF4444,#991B1B)!important;border-color:#EF4444!important}
-.bk{width:24px;height:78px;background:#1a1030;border:1px solid #443366;border-top:none;
-  position:absolute;z-index:2;top:0;border-radius:0 0 4px 4px;cursor:pointer;flex-shrink:0;transition:background .07s}
+.bk{background:#1a1030;border:1px solid #443366;border-top:none;
+  position:absolute;z-index:2;top:0;border-radius:0 0 4px 4px;cursor:pointer;transition:background .07s}
 .bk:hover{background:#2a1a50}
 .bk.sel{background:linear-gradient(180deg,#A855F7,#3b0764)!important;border-color:#A855F7!important;box-shadow:0 0 10px rgba(168,85,247,.6)!important}
 .bk.hint{background:linear-gradient(180deg,#39D98A,#14532d)!important;border-color:#39D98A!important}
@@ -187,7 +185,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
 @keyframes hp-danger{0%,100%{opacity:1}50%{opacity:.5}}
 .hp-fill.danger{animation:hp-danger .8s infinite}
 
-@media(max-width:380px){.wk{width:34px}.char-wrap{width:85px;height:105px}.vs-badge{font-size:.9rem}}
+@media(max-width:380px){.char-wrap{width:85px;height:105px}.vs-badge{font-size:.9rem}}
 
 /* MIDI STATUS PILL */
 .midi-pill{display:inline-flex;align-items:center;gap:.38rem;padding:.28rem .72rem;border-radius:20px;
@@ -450,10 +448,7 @@ const BOSSES = [
 ];
 
 // ─── PIANO LAYOUT ──────────────────────────────────────────────────────────────
-// C3 to C5: 2 octaves + final C
-const WK_W = 38, WK_H = 125, BK_W = 24, BK_H = 78;
-const BLACK_OFF = {'C#':26,'D#':64,'F#':144,'G#':182,'A#':220}; // from octave start
-const OC_W = 7 * WK_W; // width per octave = 266px
+// C3 to C5: 2 octaves + final C (key sizes computed dynamically in buildPiano)
 
 // All notes in order
 const ALL_NOTES = [];
@@ -590,43 +585,50 @@ let score=0, correctCount=0, wrongCount=0;
 let midiHeldNoteNames=new Set(); // tracks physically-held MIDI keys by note name
 
 // ─── PIANO BUILDER ───────────────────────────────────────────────────────────
+// Black key offsets as ratios of one white-key width (derived from original 38px layout)
+const BK_RATIOS={'C#':26/38,'D#':64/38,'F#':144/38,'G#':182/38,'A#':220/38};
+
 function buildPiano(){
   const el=document.getElementById('pianoEl');
+  const scroll=document.querySelector('.piano-scroll');
   el.innerHTML='';
+
   const whites=ALL_NOTES.filter(n=>!n.black);
-  let wIdx=0, totalW=whites.length;
-  el.style.width=(totalW*WK_W)+'px';
-  el.style.height=WK_H+'px';
-  el.style.position='relative';
+  const numW=whites.length; // 15 white keys
+
+  // Fill the available container width exactly
+  const cw=(scroll?scroll.clientWidth:window.innerWidth)||window.innerWidth;
+  const kw=Math.floor(cw/numW);          // white key width
+  const kh=Math.min(140,Math.max(90,Math.round(kw*3.1))); // proportional height
+  const bw=Math.max(12,Math.round(kw*0.63));              // black key width
+  const bh=Math.round(kh*0.624);                          // black key height
+
+  el.style.cssText=`position:relative;width:${numW*kw}px;height:${kh}px`;
 
   // White keys
   whites.forEach((n,i)=>{
     const d=document.createElement('div');
     d.className='wk key';
-    d.dataset.id=n.id;
-    d.dataset.note=n.name;
-    d.dataset.oct=n.oct;
-    d.style.cssText=`position:absolute;left:${i*WK_W}px;top:0`;
+    d.dataset.id=n.id; d.dataset.note=n.name; d.dataset.oct=n.oct;
+    d.style.cssText=`left:${i*kw}px;top:0;width:${kw}px;height:${kh}px`;
     const lbl=document.createElement('span');
     lbl.className='key-lbl';
+    lbl.style.fontSize=Math.max(8,Math.round(kw*0.38))+'px';
     lbl.textContent=n.name==='C'?`${n.name}${n.oct}`:n.name;
     d.appendChild(lbl);
     d.addEventListener('pointerdown',e=>{e.preventDefault();toggleKey(n.id,n.name,d);});
     el.appendChild(d);
   });
 
-  // Black keys: for each octave 3 and 4
+  // Black keys
   for(let oct=3;oct<=4;oct++){
-    const octStartIdx=(oct-3)*7; // white key index start for this octave
-    const octX=octStartIdx*WK_W;
-    Object.entries(BLACK_OFF).forEach(([note,off])=>{
+    const ox=(oct-3)*7*kw;
+    Object.entries(BK_RATIOS).forEach(([note,r])=>{
       const id=`${note}${oct}`;
       const d=document.createElement('div');
       d.className='bk key';
-      d.dataset.id=id;
-      d.dataset.note=note;
-      d.dataset.oct=oct;
-      d.style.cssText=`position:absolute;left:${octX+off}px;top:0;width:${BK_W}px;height:${BK_H}px`;
+      d.dataset.id=id; d.dataset.note=note; d.dataset.oct=oct;
+      d.style.cssText=`left:${Math.round(ox+r*kw)}px;top:0;width:${bw}px;height:${bh}px`;
       d.addEventListener('pointerdown',e=>{e.preventDefault();toggleKey(id,note,d);});
       el.appendChild(d);
     });
@@ -909,11 +911,16 @@ function startGame(){
   bossIdx=0; playerHp=350; playerMaxHp=350; score=0; correctCount=0; wrongCount=0; locked=false;
   selectedKeys.clear(); midiHeldNoteNames.clear();
   buildPiano();
-  midiSetup(); // request MIDI access (non-blocking)
+  midiSetup();
   initBoss();
   showScreen('battle');
   nextChord();
 }
+
+// Rebuild piano on resize so keys always fill full width
+window.addEventListener('resize',()=>{
+  if(document.getElementById('battle').classList.contains('active')) buildPiano();
+});
 
 // ─── MIDI ENGINE ─────────────────────────────────────────────────────────────
 const MIDI_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
