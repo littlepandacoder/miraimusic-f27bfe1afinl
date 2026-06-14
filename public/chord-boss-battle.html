@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Chord Boss Battle — Musicable</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080614;--bg2:#0f0d1a;--card:#140f26;--border:rgba(255,255,255,0.07);
+  --pink:#FF2D78;--sky:#00D4FF;--green:#39D98A;--amber:#F59E0B;
+  --purple:#A855F7;--red:#EF4444;--off-white:#E8ECF0;--muted:#6B7280;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;background:var(--bg)}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:hidden}
+
+.screen{min-height:100vh;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* NAV */
+#topnav{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;
+  background:rgba(8,6,20,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.95rem;color:var(--pink);letter-spacing:.08em;text-decoration:none}
+.nav-back{font-size:.75rem;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-back:hover{color:var(--pink)}
+
+/* ── INTRO ── */
+#intro{align-items:center;justify-content:center;padding:2rem 1rem}
+.intro-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:1.5rem}
+.intro-title-card{background:linear-gradient(145deg,#1a0a2e,#0f0d1a);border:1px solid rgba(239,68,68,.25);border-radius:22px;padding:2.5rem 2rem;text-align:center;position:relative;overflow:hidden}
+.intro-title-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% -20%,rgba(239,68,68,.15) 0%,transparent 70%)}
+.game-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.65rem;letter-spacing:.06em;
+  background:linear-gradient(135deg,#EF4444,#FF2D78,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem;position:relative}
+.game-tagline{font-size:.88rem;color:var(--muted);line-height:1.6;position:relative}
+.boss-row{display:flex;justify-content:center;gap:1rem;position:relative}
+.boss-preview{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:1rem;text-align:center;flex:1;max-width:150px}
+.boss-preview .emoji{font-size:2.2rem;display:block;margin-bottom:.4rem}
+.boss-preview .bname{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--red);font-weight:700;margin-bottom:.2rem}
+.boss-preview .bhp{font-size:.64rem;color:var(--muted)}
+.start-btn{width:100%;padding:1.1rem;background:linear-gradient(135deg,#EF4444,#FF2D78);
+  color:#fff;font-family:'Orbitron',monospace;font-weight:700;font-size:.95rem;border:none;border-radius:14px;
+  cursor:pointer;letter-spacing:.08em;box-shadow:0 0 30px rgba(239,68,68,.35);transition:all .2s}
+.start-btn:hover{opacity:.88;transform:scale(1.01);box-shadow:0 0 45px rgba(239,68,68,.5)}
+
+/* ── BATTLE ── */
+#battle{flex-direction:column;background:radial-gradient(ellipse at 50% 0%,#1a0828 0%,#080614 60%)}
+
+/* HP BARS */
+.hp-section{padding:.75rem 1rem;display:flex;flex-direction:column;gap:.55rem;position:relative;z-index:10;
+  background:rgba(8,6,20,.7);border-bottom:1px solid var(--border)}
+.hp-row{display:flex;align-items:center;gap:.75rem}
+.hp-label{font-family:'DM Mono',monospace;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;min-width:72px;flex-shrink:0}
+.hp-label.boss-lbl{color:var(--red)}
+.hp-label.player-lbl{color:var(--purple)}
+.hp-track{flex:1;height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+.hp-fill{height:100%;border-radius:6px;transition:width .5s ease;position:relative}
+.hp-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.2);border-radius:3px}
+.hp-fill.boss-fill{background:linear-gradient(90deg,#7f1d1d,#EF4444,#FF6B35)}
+.hp-fill.player-fill{background:linear-gradient(90deg,#4c1d95,#A855F7,#00D4FF)}
+.hp-num{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);min-width:68px;text-align:right;flex-shrink:0}
+
+/* ARENA */
+.arena{display:flex;align-items:center;justify-content:center;padding:1.25rem .75rem;gap:.75rem;position:relative;flex-shrink:0}
+.combatant{display:flex;flex-direction:column;align-items:center;gap:.5rem;flex:1;max-width:160px;position:relative}
+.char-name{font-family:'DM Mono',monospace;font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-align:center}
+.char-name.boss-name{color:var(--red)}
+.char-name.player-name{color:var(--purple)}
+.char-wrap{position:relative;width:100px;height:120px}
+@media(min-width:480px){.char-wrap{width:120px;height:140px}}
+.char-svg{width:100%;height:100%;display:block}
+
+/* Character animations */
+@keyframes idle-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes atk-right{0%{transform:translateX(0) scaleX(1)}35%{transform:translateX(55px) scaleX(1)}65%{transform:translateX(55px) scaleX(1)}100%{transform:translateX(0) scaleX(1)}}
+@keyframes atk-left{0%{transform:translateX(0)}35%{transform:translateX(-55px)}65%{transform:translateX(-55px)}100%{transform:translateX(0)}}
+@keyframes take-dmg{0%,100%{filter:none;transform:translateX(0)}15%{filter:brightness(4) saturate(0) sepia(1) hue-rotate(0deg);transform:translateX(-10px)}35%{filter:brightness(4) saturate(0);transform:translateX(10px)}55%{filter:brightness(2) saturate(0);transform:translateX(-7px)}75%{transform:translateX(7px)}90%{filter:none;transform:translateX(0)}}
+@keyframes boss-die{0%{opacity:1;transform:scale(1) rotate(0)}30%{opacity:.8;transform:scale(1.15) rotate(-8deg)}60%{opacity:.4;transform:scale(.9) rotate(15deg)}100%{opacity:0;transform:scale(0) rotate(30deg) translateY(30px)}}
+@keyframes float-up{0%{transform:translateX(-50%) translateY(0);opacity:1}100%{transform:translateX(-50%) translateY(-70px);opacity:0}}
+
+.char-wrap.idle{animation:idle-float 2.8s ease-in-out infinite}
+.char-wrap.atk-r{animation:atk-right .55s ease-in-out;animation-fill-mode:both}
+.char-wrap.atk-l{animation:atk-left .55s ease-in-out;animation-fill-mode:both}
+.char-wrap.hurt{animation:take-dmg .45s ease-in-out}
+.char-wrap.dying{animation:boss-die .9s ease-in-out forwards}
+
+/* Damage float numbers */
+.dmg-num{position:absolute;top:0;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',monospace;font-weight:900;font-size:1.15rem;
+  pointer-events:none;animation:float-up 1.1s ease-out forwards;z-index:20;white-space:nowrap}
+.dmg-num.hit{color:#ff4444;text-shadow:0 0 12px #ff0000}
+.dmg-num.hit.crit{color:#FFD700;font-size:1.4rem;text-shadow:0 0 16px #FFD700}
+.dmg-num.heal{color:var(--green);text-shadow:0 0 12px var(--green)}
+
+/* Projectile animation */
+.projectile{position:absolute;font-size:1.6rem;pointer-events:none;top:40%;z-index:30}
+@keyframes proj-right{from{left:30%;opacity:1;transform:scale(1)}to{left:75%;opacity:0;transform:scale(0.5)}}
+@keyframes proj-left{from{right:30%;opacity:1;transform:scale(1)}to{right:75%;opacity:0;transform:scale(0.5)}}
+.projectile.pr{animation:proj-right .38s ease-in forwards}
+.projectile.pl{animation:proj-left .38s ease-in forwards}
+
+/* VS badge */
+.vs-badge{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--red);
+  text-shadow:0 0 16px rgba(239,68,68,.7);flex-shrink:0;padding:.5rem;
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px}
+
+/* CHORD DISPLAY */
+.chord-zone{padding:.9rem 1rem;text-align:center;background:rgba(8,6,20,.5);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.chord-eyebrow{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.3rem}
+.chord-name{font-family:'Orbitron',monospace;font-weight:900;font-size:1.5rem;
+  background:linear-gradient(135deg,var(--pink),var(--purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.04em;margin-bottom:.25rem}
+.chord-notes-row{font-family:'DM Mono',monospace;font-size:.88rem;color:var(--sky);letter-spacing:.12em;margin-bottom:.6rem}
+.chord-actions{display:flex;gap:.65rem;justify-content:center}
+.hint-btn,.skip-btn{padding:.42rem .9rem;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid;font-family:'DM Mono',monospace}
+.hint-btn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--amber)}
+.hint-btn:hover:not(:disabled){background:rgba(245,158,11,.16)}
+.skip-btn{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.28);color:var(--red)}
+.skip-btn:hover:not(:disabled){background:rgba(239,68,68,.15)}
+.hint-btn:disabled,.skip-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* STATUS MSG */
+.battle-status{text-align:center;padding:.5rem 1rem;font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700;
+  min-height:36px;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .3s}
+
+/* PIANO */
+.piano-section{padding:.75rem 1rem 1rem;display:flex;flex-direction:column;align-items:center;gap:.65rem;flex:1}
+.piano-scroll{overflow-x:auto;width:100%;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.piano-scroll::-webkit-scrollbar{height:3px}
+.piano-scroll::-webkit-scrollbar-thumb{background:rgba(168,85,247,.4);border-radius:2px}
+.piano{position:relative;height:125px;display:inline-flex;align-items:flex-start;user-select:none;touch-action:manipulation}
+.wk{width:38px;height:125px;background:#f5f0ff;border:1px solid #9090c0;border-radius:0 0 6px 6px;
+  cursor:pointer;position:relative;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:5px;flex-shrink:0;transition:background .07s}
+.wk:hover{background:#e0d0f8}
+.wk.sel{background:linear-gradient(180deg,#A855F7,#6D28D9)!important;border-color:#A855F7!important;box-shadow:0 0 14px rgba(168,85,247,.6)!important}
+.wk.hint{background:linear-gradient(180deg,#39D98A,#16a34a)!important;border-color:#39D98A!important}
+.wk.wrong{background:linear-gradient(180deg,#EF4444,#991B1B)!important;border-color:#EF4444!important}
+.bk{width:24px;height:78px;background:#1a1030;border:1px solid #443366;border-top:none;
+  position:absolute;z-index:2;top:0;border-radius:0 0 4px 4px;cursor:pointer;flex-shrink:0;transition:background .07s}
+.bk:hover{background:#2a1a50}
+.bk.sel{background:linear-gradient(180deg,#A855F7,#3b0764)!important;border-color:#A855F7!important;box-shadow:0 0 10px rgba(168,85,247,.6)!important}
+.bk.hint{background:linear-gradient(180deg,#39D98A,#14532d)!important;border-color:#39D98A!important}
+.bk.wrong{background:linear-gradient(180deg,#EF4444,#7f1d1d)!important;border-color:#EF4444!important}
+.key-lbl{font-size:.56rem;font-weight:700;color:rgba(80,60,120,.9);pointer-events:none;letter-spacing:-.01em;line-height:1}
+.wk.sel .key-lbl,.wk.hint .key-lbl,.wk.wrong .key-lbl{color:rgba(255,255,255,.75)}
+
+.selected-display{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted);text-align:center}
+.selected-display .sn{color:var(--purple);font-weight:700}
+
+/* ── OVERLAYS ── */
+.overlay{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(10px)}
+.overlay.active{display:flex}
+.ov-box{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:2.5rem 2rem;text-align:center;max-width:400px;width:90%;position:relative}
+.ov-emoji{font-size:3.5rem;display:block;margin-bottom:.75rem}
+.ov-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.4rem;margin-bottom:.4rem;letter-spacing:.04em}
+.ov-sub{font-size:.88rem;color:var(--muted);margin-bottom:1.6rem;line-height:1.65}
+.ov-score{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--amber);margin-bottom:1.2rem}
+.ov-btn{width:100%;padding:.9rem;border:none;border-radius:12px;cursor:pointer;font-family:'Orbitron',monospace;font-weight:700;font-size:.88rem;letter-spacing:.06em;transition:all .2s}
+.ov-btn.primary{background:linear-gradient(135deg,var(--red),var(--pink));color:#fff;box-shadow:0 0 20px rgba(239,68,68,.3)}
+.ov-btn.primary:hover{opacity:.88}
+.ov-btn.secondary{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--off-white);margin-top:.65rem}
+.ov-btn.secondary:hover{border-color:var(--pink);color:var(--pink)}
+
+/* ── VICTORY / DEFEAT ── */
+#victory,#defeat{align-items:center;justify-content:center;padding:3rem 1.5rem;min-height:100vh}
+.end-card{width:100%;max-width:480px;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+.end-head{padding:2.5rem 2rem;text-align:center;border-bottom:1px solid var(--border)}
+.end-emoji{font-size:4rem;display:block;margin-bottom:.75rem}
+.end-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.7rem;letter-spacing:.05em;margin-bottom:.35rem}
+.end-sub{font-size:.88rem;color:var(--muted);line-height:1.65}
+.end-body{padding:1.6rem 1.75rem;display:flex;flex-direction:column;gap:.8rem}
+.stat-r{display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:.7rem 1rem}
+.stat-l{font-size:.83rem;color:var(--muted)}
+.stat-v{font-family:'Orbitron',monospace;font-weight:700;font-size:.92rem}
+.end-act{display:flex;gap:.75rem}
+.ebtn{flex:1;padding:.9rem;border-radius:12px;cursor:pointer;font-weight:700;font-size:.86rem;transition:all .2s;border:none}
+.ebtn.retry{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--off-white)}
+.ebtn.retry:hover{border-color:var(--pink);color:var(--pink)}
+.ebtn.home{background:linear-gradient(135deg,var(--red),var(--pink));color:#fff;font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:.05em}
+
+#confetti-cv{position:fixed;inset:0;pointer-events:none;z-index:9999}
+
+/* Health bar pulse when low */
+@keyframes hp-danger{0%,100%{opacity:1}50%{opacity:.5}}
+.hp-fill.danger{animation:hp-danger .8s infinite}
+
+@media(max-width:380px){.wk{width:34px}.char-wrap{width:85px;height:105px}.vs-badge{font-size:.9rem}}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-cv"></canvas>
+
+<!-- ── INTRO ────────────────────────────────────────────────── -->
+<div id="intro" class="screen active">
+  <div id="topnav">
+    <a class="nav-logo" href="/dashboard">♩ Musicable</a>
+    <a class="nav-back" href="/dashboard">← Dashboard</a>
+  </div>
+  <div class="intro-wrap">
+    <div class="intro-title-card">
+      <div class="game-logo">⚔ CHORD BOSS BATTLE</div>
+      <div class="game-tagline">Play the correct chord to attack the villain.<br>Wrong notes hit you instead. Defeat all 3 bosses!</div>
+    </div>
+    <div class="boss-row">
+      <div class="boss-preview"><span class="emoji">👹</span><div class="bname">DISCORDUS</div><div class="bhp">400 HP · Natural chords</div></div>
+      <div class="boss-preview"><span class="emoji">💀</span><div class="bname">SHADOW WRAITH</div><div class="bhp">600 HP · Sharps &amp; flats</div></div>
+      <div class="boss-preview"><span class="emoji">🐲</span><div class="bname">CHORD DRAGON</div><div class="bhp">800 HP · Full challenge</div></div>
+    </div>
+    <button class="start-btn" onclick="startGame()">⚔ ENTER BATTLE</button>
+  </div>
+</div>
+
+<!-- ── BATTLE ────────────────────────────────────────────────── -->
+<div id="battle" class="screen">
+  <div id="topnav">
+    <a class="nav-logo" href="/dashboard">♩ Musicable</a>
+    <a class="nav-back" href="#" onclick="confirmQuit();return false;">✕ Quit</a>
+  </div>
+
+  <!-- HP BARS -->
+  <div class="hp-section">
+    <div class="hp-row">
+      <div class="hp-label boss-lbl" id="bossHpLabel">DISCORDUS</div>
+      <div class="hp-track"><div class="hp-fill boss-fill" id="bossHpFill" style="width:100%"></div></div>
+      <div class="hp-num" id="bossHpNum">400 / 400</div>
+    </div>
+    <div class="hp-row">
+      <div class="hp-label player-lbl">YOU</div>
+      <div class="hp-track"><div class="hp-fill player-fill" id="playerHpFill" style="width:100%"></div></div>
+      <div class="hp-num" id="playerHpNum">350 / 350</div>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena" id="arenaEl">
+    <div class="combatant">
+      <div class="char-name boss-name" id="bossName">DISCORDUS</div>
+      <div class="char-wrap idle" id="bossWrap">
+        <svg id="bossSvg" class="char-svg" viewBox="0 0 80 110"></svg>
+      </div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="combatant">
+      <div class="char-wrap idle" id="playerWrap">
+        <svg class="char-svg" viewBox="0 0 80 110">
+          <!-- Player: Music Mage -->
+          <!-- Staff/wand -->
+          <line x1="63" y1="20" x2="69" y2="58" stroke="#7C3AED" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="63" cy="17" r="7" fill="#FF2D78" opacity=".95"/>
+          <circle cx="63" cy="17" r="4" fill="#FF69B4" opacity=".7"/>
+          <text x="59.5" y="21" font-size="7" fill="white" font-weight="bold">♪</text>
+          <!-- Head -->
+          <circle cx="35" cy="26" r="16" fill="#FBBF24"/>
+          <!-- Hair -->
+          <path d="M20 22 Q21 9 35 7 Q49 9 50 22" fill="#92400E"/>
+          <rect x="20" y="22" width="4" height="8" rx="2" fill="#92400E"/>
+          <!-- Eyes -->
+          <circle cx="29" cy="23" r="3.5" fill="white"/>
+          <circle cx="41" cy="23" r="3.5" fill="white"/>
+          <circle cx="30" cy="24" r="2" fill="#1E40AF"/>
+          <circle cx="42" cy="24" r="2" fill="#1E40AF"/>
+          <circle cx="30.7" cy="23.3" r=".9" fill="white"/>
+          <circle cx="42.7" cy="23.3" r=".9" fill="white"/>
+          <!-- Smile -->
+          <path d="M29 32 Q35 37 41 32" stroke="#92400E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <!-- Robe body -->
+          <path d="M19 44 Q14 82 16 108 L54 108 Q56 82 61 44 Z" fill="#4C1D95"/>
+          <rect x="23" y="42" width="24" height="36" rx="4" fill="#5B21B6"/>
+          <!-- Chest symbol -->
+          <circle cx="35" cy="62" r="9" fill="rgba(255,45,120,.15)" stroke="#FF2D78" stroke-width="1.2"/>
+          <text x="30.5" y="66" font-size="9" fill="#FF2D78">♩</text>
+          <!-- Belt -->
+          <rect x="22" y="76" width="34" height="5" rx="2.5" fill="#6D28D9"/>
+          <circle cx="35" cy="78" r="2.5" fill="#A855F7"/>
+          <!-- Shoulders -->
+          <ellipse cx="17" cy="48" rx="8" ry="5" fill="#6D28D9"/>
+          <ellipse cx="57" cy="48" rx="8" ry="5" fill="#6D28D9"/>
+          <!-- Legs -->
+          <rect x="21" y="90" width="14" height="18" rx="3" fill="#4C1D95"/>
+          <rect x="39" y="90" width="14" height="18" rx="3" fill="#4C1D95"/>
+          <!-- Boots -->
+          <rect x="19" y="103" width="16" height="7" rx="2" fill="#2D1B69"/>
+          <rect x="39" y="103" width="16" height="7" rx="2" fill="#2D1B69"/>
+        </svg>
+      </div>
+      <div class="char-name player-name">YOU</div>
+    </div>
+  </div>
+
+  <!-- CHORD DISPLAY -->
+  <div class="chord-zone">
+    <div class="chord-eyebrow">⚔ Play this chord to attack</div>
+    <div class="chord-name" id="chordNameDisp">C MAJOR</div>
+    <div class="chord-notes-row" id="chordNotesDisp">C · E · G</div>
+    <div class="chord-actions">
+      <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 Hint <span style="opacity:.7">(-10 HP)</span></button>
+      <button class="skip-btn" id="skipBtn" onclick="skipChord()">⏭ Skip <span style="opacity:.7">(-30 HP)</span></button>
+    </div>
+  </div>
+
+  <div class="battle-status" id="battleStatus">Select the chord notes on the piano below</div>
+
+  <!-- PIANO -->
+  <div class="piano-section">
+    <div class="piano-scroll"><div id="pianoEl" class="piano"></div></div>
+    <div class="selected-display" id="selectedDisp">No keys selected</div>
+  </div>
+</div>
+
+<!-- ── BOSS DEFEATED OVERLAY ──────────────────────────────── -->
+<div class="overlay" id="bossDefeatedOv">
+  <div class="ov-box">
+    <span class="ov-emoji" id="ovEmoji">💥</span>
+    <div class="ov-title" id="ovTitle">BOSS DEFEATED!</div>
+    <div class="ov-sub" id="ovSub">The goblin is vanquished. The next challenge awaits...</div>
+    <div class="ov-score" id="ovScore">+500 pts</div>
+    <button class="ov-btn primary" id="ovNextBtn" onclick="nextBoss()">NEXT BOSS →</button>
+  </div>
+</div>
+
+<!-- ── QUIT OVERLAY ───────────────────────────────────────── -->
+<div class="overlay" id="quitOv">
+  <div class="ov-box">
+    <span class="ov-emoji">🏳️</span>
+    <div class="ov-title">RETREAT?</div>
+    <div class="ov-sub">Your progress will be lost. Are you sure you want to quit?</div>
+    <button class="ov-btn primary" onclick="window.location.href='/dashboard'">YES, QUIT</button>
+    <button class="ov-btn secondary" onclick="closeOverlay('quitOv')">KEEP FIGHTING</button>
+  </div>
+</div>
+
+<!-- ── VICTORY ────────────────────────────────────────────── -->
+<div id="victory" class="screen">
+  <div id="topnav"><a class="nav-logo" href="/dashboard">♩ Musicable</a></div>
+  <div class="end-card">
+    <div class="end-head" style="background:linear-gradient(135deg,rgba(57,217,138,.12),rgba(245,158,11,.1));border-bottom:1px solid var(--border)">
+      <span class="end-emoji">🏆</span>
+      <div class="end-title" style="background:linear-gradient(135deg,var(--amber),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">VICTORY!</div>
+      <div class="end-sub">You defeated all 3 bosses! The realm of music is saved.</div>
+    </div>
+    <div class="end-body">
+      <div class="stat-r"><span class="stat-l">Total Score</span><span class="stat-v" id="vScore" style="color:var(--amber)">0</span></div>
+      <div class="stat-r"><span class="stat-l">Correct Chords</span><span class="stat-v" id="vCorrect" style="color:var(--green)">0</span></div>
+      <div class="stat-r"><span class="stat-l">Wrong Attempts</span><span class="stat-v" id="vWrong" style="color:var(--red)">0</span></div>
+      <div class="stat-r"><span class="stat-l">HP Remaining</span><span class="stat-v" id="vHp" style="color:var(--purple)">0</span></div>
+      <div class="end-act">
+        <button class="ebtn retry" onclick="startGame()">↺ Play Again</button>
+        <button class="ebtn home" onclick="window.location.href='/dashboard'">DASHBOARD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DEFEAT ─────────────────────────────────────────────── -->
+<div id="defeat" class="screen">
+  <div id="topnav"><a class="nav-logo" href="/dashboard">♩ Musicable</a></div>
+  <div class="end-card">
+    <div class="end-head" style="background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(255,45,120,.08));border-bottom:1px solid var(--border)">
+      <span class="end-emoji">💀</span>
+      <div class="end-title" style="color:var(--red)">DEFEATED...</div>
+      <div class="end-sub" id="defeatSub">The boss was too powerful this time. Study the chords and try again!</div>
+    </div>
+    <div class="end-body">
+      <div class="stat-r"><span class="stat-l">Boss Reached</span><span class="stat-v" id="dBoss" style="color:var(--red)">1</span></div>
+      <div class="stat-r"><span class="stat-l">Score</span><span class="stat-v" id="dScore" style="color:var(--amber)">0</span></div>
+      <div class="stat-r"><span class="stat-l">Correct Chords</span><span class="stat-v" id="dCorrect" style="color:var(--green)">0</span></div>
+      <div class="stat-r"><span class="stat-l">Wrong Attempts</span><span class="stat-v" id="dWrong" style="color:var(--red)">0</span></div>
+      <div class="end-act">
+        <button class="ebtn retry" onclick="startGame()">↺ Try Again</button>
+        <button class="ebtn home" onclick="window.location.href='/dashboard'">DASHBOARD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── BOSS DEFINITIONS ─────────────────────────────────────────────────────────
+const BOSSES = [
+  {
+    id:0, name:'DISCORDUS', title:'Chord Goblin', emoji:'👹', maxHp:400,
+    atk:'⚡', projHit:'🎵', projMiss:'💥',
+    chords:[
+      {name:'C Major',  display:'C · E · G',     notes:['C','E','G']},
+      {name:'G Major',  display:'G · B · D',     notes:['G','B','D']},
+      {name:'F Major',  display:'F · A · C',     notes:['F','A','C']},
+      {name:'A Minor',  display:'A · C · E',     notes:['A','C','E']},
+      {name:'E Minor',  display:'E · G · B',     notes:['E','G','B']},
+      {name:'D Minor',  display:'D · F · A',     notes:['D','F','A']},
+    ],
+    svgBody: drawGoblin,
+    defeatMsg:'The goblin shrieks and dissolves into a cloud of broken notes!',
+    nextMsg:'A shadowy figure rises from the darkness...',
+  },
+  {
+    id:1, name:'SHADOW WRAITH', title:'Wraith of Discord', emoji:'💀', maxHp:600,
+    atk:'🌑', projHit:'⚡', projMiss:'🔥',
+    chords:[
+      {name:'C Major',  display:'C · E · G',     notes:['C','E','G']},
+      {name:'D Major',  display:'D · F♯ · A',    notes:['D','F#','A']},
+      {name:'A Major',  display:'A · C♯ · E',    notes:['A','C#','E']},
+      {name:'E Minor',  display:'E · G · B',     notes:['E','G','B']},
+      {name:'B Minor',  display:'B · D · F♯',    notes:['B','D','F#']},
+      {name:'G Minor',  display:'G · B♭ · D',    notes:['G','A#','D']},
+      {name:'C Minor',  display:'C · E♭ · G',    notes:['C','D#','G']},
+    ],
+    svgBody: drawWraith,
+    defeatMsg:'The wraith lets out a haunting wail and fades into silence!',
+    nextMsg:'The ground shakes. A dragon awakens...',
+  },
+  {
+    id:2, name:'CHORD DRAGON', title:'Dragon of Discord', emoji:'🐲', maxHp:800,
+    atk:'🔥', projHit:'🎸', projMiss:'💢',
+    chords:[
+      {name:'D Major',  display:'D · F♯ · A',    notes:['D','F#','A']},
+      {name:'E Major',  display:'E · G♯ · B',    notes:['E','G#','B']},
+      {name:'A Major',  display:'A · C♯ · E',    notes:['A','C#','E']},
+      {name:'F Major',  display:'F · A · C',     notes:['F','A','C']},
+      {name:'B Minor',  display:'B · D · F♯',    notes:['B','D','F#']},
+      {name:'D Minor',  display:'D · F · A',     notes:['D','F','A']},
+      {name:'G Minor',  display:'G · B♭ · D',    notes:['G','A#','D']},
+      {name:'A Minor',  display:'A · C · E',     notes:['A','C','E']},
+    ],
+    svgBody: drawDragon,
+    defeatMsg:'The dragon roars and crashes down, defeated by the power of harmony!',
+    nextMsg:'',
+  },
+];
+
+// ─── PIANO LAYOUT ──────────────────────────────────────────────────────────────
+// C3 to C5: 2 octaves + final C
+const WK_W = 38, WK_H = 125, BK_W = 24, BK_H = 78;
+const BLACK_OFF = {'C#':26,'D#':64,'F#':144,'G#':182,'A#':220}; // from octave start
+const OC_W = 7 * WK_W; // width per octave = 266px
+
+// All notes in order
+const ALL_NOTES = [];
+function buildNoteList(){
+  for(let oct=3;oct<=5;oct++){
+    const chromatic=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    for(const n of chromatic){
+      if(oct===5 && n!=='C') break;
+      ALL_NOTES.push({name:n, oct, black:n.includes('#'), id:`${n}${oct}`});
+    }
+  }
+}
+buildNoteList();
+
+// ─── AUDIO ────────────────────────────────────────────────────────────────────
+let _ac=null;
+const getAC=()=>{if(!_ac||_ac.state==='closed') _ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;};
+const NOTE_MAP={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+function freq(noteId){
+  const m=noteId.match(/^([A-G]#?)(\d)$/);if(!m)return 440;
+  const midi=(parseInt(m[2])+1)*12+NOTE_MAP[m[1]];
+  return 440*Math.pow(2,(midi-69)/12);
+}
+function synthNote(noteId,dur=1.8,vol=0.22){
+  try{
+    const c=getAC(),f=freq(noteId),now=c.currentTime;
+    [[1,.28,'triangle'],[2,.14,'sine'],[3,.08,'sine'],[4,.04,'sine']].forEach(([h,v,t])=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type=t;
+      o.frequency.setValueAtTime(f*h,now);
+      g.gain.setValueAtTime(v*vol,now);
+      g.gain.exponentialRampToValueAtTime(.0001,now+dur);
+      o.start(now);o.stop(now+dur+.01);
+    });
+  }catch(_){}
+}
+function sfx(type){
+  try{
+    const c=getAC(),now=c.currentTime;
+    if(type==='correct'){
+      [[523,.0],[659,.1],[784,.2],[1046,.35]].forEach(([f,t])=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.connect(g);g.connect(c.destination);o.type='sine';
+        o.frequency.setValueAtTime(f,now+t);g.gain.setValueAtTime(.25,now+t);
+        g.gain.exponentialRampToValueAtTime(.0001,now+t+.35);
+        o.start(now+t);o.stop(now+t+.4);
+      });
+    } else if(type==='wrong'){
+      [[180,.0],[140,.08],[110,.16]].forEach(([f,t])=>{
+        const o=c.createOscillator(),g=c.createGain();
+        o.connect(g);g.connect(c.destination);o.type='sawtooth';
+        o.frequency.setValueAtTime(f,now+t);g.gain.setValueAtTime(.18,now+t);
+        g.gain.exponentialRampToValueAtTime(.0001,now+t+.22);
+        o.start(now+t);o.stop(now+t+.25);
+      });
+    } else if(type==='victory'){
+      const n=[523,659,784,659,1046,784,1568],d=[.12,.12,.12,.1,.2,.12,.45];let t=0;
+      n.forEach((f,i)=>{const o=getAC().createOscillator(),g=getAC().createGain();o.connect(g);g.connect(getAC().destination);o.type='sine';o.frequency.setValueAtTime(f,now+t);g.gain.setValueAtTime(.25,now+t);g.gain.exponentialRampToValueAtTime(.0001,now+t+d[i]+.08);o.start(now+t);o.stop(now+t+d[i]+.1);t+=d[i]*.85;});
+    } else if(type==='defeat'){
+      [[200,.0,.5],[170,.2,.5],[140,.45,.6]].forEach(([f,t,d])=>{const o=getAC().createOscillator(),g=getAC().createGain();o.connect(g);g.connect(getAC().destination);o.type='sawtooth';o.frequency.setValueAtTime(f,now+t);o.frequency.exponentialRampToValueAtTime(f*.7,now+t+d);g.gain.setValueAtTime(.2,now+t);g.gain.exponentialRampToValueAtTime(.0001,now+t+d);o.start(now+t);o.stop(now+t+d+.05);});
+    }
+  }catch(_){}
+}
+
+// ─── BOSS SVG ARTISTS ─────────────────────────────────────────────────────────
+function drawGoblin(svgEl){
+  svgEl.innerHTML=`
+  <ellipse cx="40" cy="80" rx="28" ry="28" fill="#991B1B"/>
+  <polygon points="14,90 8,80 20,78" fill="#7F1D1D"/>
+  <polygon points="66,90 72,80 60,78" fill="#7F1D1D"/>
+  <circle cx="40" cy="36" r="25" fill="#DC2626"/>
+  <polygon points="22,14 14,0 30,11" fill="#7F1D1D"/>
+  <polygon points="58,14 66,0 50,11" fill="#7F1D1D"/>
+  <ellipse cx="30" cy="32" rx="7" ry="7.5" fill="#FEF08A"/>
+  <ellipse cx="50" cy="32" rx="7" ry="7.5" fill="#FEF08A"/>
+  <circle cx="31" cy="33" r="4" fill="#111"/>
+  <circle cx="51" cy="33" r="4" fill="#111"/>
+  <circle cx="33" cy="31" r="1.5" fill="white"/>
+  <circle cx="53" cy="31" r="1.5" fill="white"/>
+  <path d="M22 22 L30 28" stroke="#7F1D1D" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M58 22 L50 28" stroke="#7F1D1D" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M24 48 L29 54 L34 47 L39 54 L44 48 L49 54 L56 48" stroke="#7F1D1D" stroke-width="2.5" fill="#B91C1C" stroke-linejoin="round"/>
+  <text x="6" y="72" font-size="18" fill="#FF6B6B" opacity=".75" transform="rotate(-20 14 68)">♩</text>
+  <text x="54" y="60" font-size="14" fill="#FF6B6B" opacity=".6" transform="rotate(15 61 56)">♪</text>`;
+}
+function drawWraith(svgEl){
+  svgEl.innerHTML=`
+  <ellipse cx="40" cy="85" rx="28" ry="22" fill="rgba(30,20,60,.6)" opacity=".5"/>
+  <path d="M12 95 Q15 70 18 55 Q22 35 40 28 Q58 35 62 55 Q65 70 68 95 Q60 88 52 92 Q46 86 40 91 Q34 86 28 92 Q20 88 12 95Z" fill="#1E1040"/>
+  <path d="M15 97 Q18 82 20 68" stroke="#2D1B60" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M65 97 Q62 82 60 68" stroke="#2D1B60" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <ellipse cx="40" cy="40" rx="22" ry="24" fill="#1E1040"/>
+  <ellipse cx="30" cy="37" rx="7" ry="8" fill="#0D0720"/>
+  <ellipse cx="50" cy="37" rx="7" ry="8" fill="#0D0720"/>
+  <ellipse cx="30" cy="37" rx="5" ry="5.5" fill="#A855F7" opacity=".9"/>
+  <ellipse cx="50" cy="37" rx="5" ry="5.5" fill="#A855F7" opacity=".9"/>
+  <circle cx="30" cy="37" r="3" fill="#7C3AED"/>
+  <circle cx="50" cy="37" r="3" fill="#7C3AED"/>
+  <circle cx="31.2" cy="36" r="1.2" fill="rgba(200,180,255,.5)"/>
+  <circle cx="51.2" cy="36" r="1.2" fill="rgba(200,180,255,.5)"/>
+  <path d="M30 52 Q35 58 40 52 Q45 58 50 52" stroke="#4C1D95" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="40" cy="25" rx="6" ry="8" fill="#110a2a"/>
+  <path d="M28 18 Q30 8 35 14" stroke="#2D1B60" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M52 18 Q50 8 45 14" stroke="#2D1B60" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+}
+function drawDragon(svgEl){
+  svgEl.innerHTML=`
+  <path d="M10 108 Q14 75 18 60 Q22 40 40 30 Q58 40 62 60 Q66 75 70 108 Z" fill="#15803D"/>
+  <path d="M10 108 Q8 80 6 60 Q4 40 15 28 Q20 36 18 60 Z" fill="#14532D"/>
+  <path d="M70 108 Q72 80 74 60 Q76 40 65 28 Q60 36 62 60 Z" fill="#14532D"/>
+  <path d="M6 60 Q0 44 4 28 Q10 36 15 28" fill="#166534" stroke="none"/>
+  <path d="M74 60 Q80 44 76 28 Q70 36 65 28" fill="#166534" stroke="none"/>
+  <circle cx="40" cy="34" r="24" fill="#16a34a"/>
+  <polygon points="30,12 24,0 36,8" fill="#14532D"/>
+  <polygon points="50,12 56,0 44,8" fill="#14532D"/>
+  <polygon points="40,8 34,0 46,0" fill="#15803D"/>
+  <ellipse cx="29" cy="30" rx="7.5" ry="8" fill="#ca8a04"/>
+  <ellipse cx="51" cy="30" rx="7.5" ry="8" fill="#ca8a04"/>
+  <ellipse cx="29" cy="31" rx="4" ry="5.5" fill="#1a2e10"/>
+  <ellipse cx="51" cy="31" rx="4" ry="5.5" fill="#1a2e10"/>
+  <circle cx="30.5" cy="29" r="1.5" fill="rgba(250,220,100,.4)"/>
+  <circle cx="52.5" cy="29" r="1.5" fill="rgba(250,220,100,.4)"/>
+  <path d="M22 20 L30 26" stroke="#14532D" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M58 20 L50 26" stroke="#14532D" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M25 44 L29 50 L33 44 L37 50 L40 44 L43 50 L47 44 L51 50 L55 44" stroke="#14532D" stroke-width="2.5" fill="#15803D" stroke-linejoin="round"/>
+  <ellipse cx="40" cy="68" rx="12" ry="8" fill="#14532D"/>
+  <text x="31" y="73" font-size="10" fill="#ca8a04" opacity=".8">🔥</text>`;
+}
+
+// ─── GAME STATE ───────────────────────────────────────────────────────────────
+let bossIdx=0, bossHp=0, playerHp=350, playerMaxHp=350;
+let currentChord=null, selectedKeys=new Set(), locked=false;
+let score=0, correctCount=0, wrongCount=0;
+
+// ─── PIANO BUILDER ───────────────────────────────────────────────────────────
+function buildPiano(){
+  const el=document.getElementById('pianoEl');
+  el.innerHTML='';
+  const whites=ALL_NOTES.filter(n=>!n.black);
+  let wIdx=0, totalW=whites.length;
+  el.style.width=(totalW*WK_W)+'px';
+  el.style.height=WK_H+'px';
+  el.style.position='relative';
+
+  // White keys
+  whites.forEach((n,i)=>{
+    const d=document.createElement('div');
+    d.className='wk key';
+    d.dataset.id=n.id;
+    d.dataset.note=n.name;
+    d.dataset.oct=n.oct;
+    d.style.cssText=`position:absolute;left:${i*WK_W}px;top:0`;
+    const lbl=document.createElement('span');
+    lbl.className='key-lbl';
+    lbl.textContent=n.name==='C'?`${n.name}${n.oct}`:n.name;
+    d.appendChild(lbl);
+    d.addEventListener('pointerdown',e=>{e.preventDefault();toggleKey(n.id,n.name,d);});
+    el.appendChild(d);
+  });
+
+  // Black keys: for each octave 3 and 4
+  for(let oct=3;oct<=4;oct++){
+    const octStartIdx=(oct-3)*7; // white key index start for this octave
+    const octX=octStartIdx*WK_W;
+    Object.entries(BLACK_OFF).forEach(([note,off])=>{
+      const id=`${note}${oct}`;
+      const d=document.createElement('div');
+      d.className='bk key';
+      d.dataset.id=id;
+      d.dataset.note=note;
+      d.dataset.oct=oct;
+      d.style.cssText=`position:absolute;left:${octX+off}px;top:0;width:${BK_W}px;height:${BK_H}px`;
+      d.addEventListener('pointerdown',e=>{e.preventDefault();toggleKey(id,note,d);});
+      el.appendChild(d);
+    });
+  }
+}
+
+function toggleKey(id, note, el){
+  if(locked) return;
+  if(selectedKeys.has(id)){
+    selectedKeys.delete(id);
+    el.classList.remove('sel');
+  } else {
+    selectedKeys.add(id);
+    el.classList.add('sel');
+    synthNote(id, 1.4, 0.24);
+  }
+  updateSelectedDisp();
+  // Auto-detect when enough keys selected
+  if(selectedKeys.size===currentChord.notes.length) setTimeout(checkChord,120);
+}
+
+function updateSelectedDisp(){
+  const disp=document.getElementById('selectedDisp');
+  if(selectedKeys.size===0){disp.textContent='No keys selected';return;}
+  const notes=[...selectedKeys].map(id=>id.replace(/\d/g,''));
+  disp.innerHTML='Playing: '+notes.map(n=>`<span class="sn">${n}</span>`).join(' + ');
+}
+
+// ─── CHORD LOGIC ─────────────────────────────────────────────────────────────
+function checkChord(){
+  if(locked) return;
+  locked=true;
+  const pressedNotes=new Set([...selectedKeys].map(id=>id.replace(/\d/g,'')));
+  const required=new Set(currentChord.notes);
+  const correct=pressedNotes.size===required.size&&[...required].every(n=>pressedNotes.has(n));
+  if(correct) handleCorrect();
+  else handleWrong(pressedNotes);
+}
+
+function handleCorrect(){
+  correctCount++;
+  const dmg=Math.floor(Math.random()*41)+60; // 60-100
+  bossHp=Math.max(0,bossHp-dmg);
+  const isCrit=dmg>=95;
+  sfx('correct');
+  setStatus(`⚔️ ${isCrit?'CRITICAL HIT! ':''}${currentChord.name}! Boss takes ${dmg} damage!`,'color:var(--green)');
+  score+=isCrit?200:100;
+  launchProjectile('player','hit');
+  setTimeout(()=>{
+    animChar('playerWrap','atk-r');
+    animChar('bossWrap','hurt');
+    showDmgNum('bossWrap',`-${dmg}${isCrit?' 💥':''}`,isCrit?'crit':'hit');
+    updateBossHp();
+    clearKeys();
+    setTimeout(()=>{
+      if(bossHp<=0) bossDied();
+      else{locked=false;nextChord();}
+    },900);
+  },200);
+}
+
+function handleWrong(pressed){
+  wrongCount++;
+  const dmg=Math.floor(Math.random()*21)+25; // 25-45
+  playerHp=Math.max(0,playerHp-dmg);
+  sfx('wrong');
+  // Flash wrong keys red
+  document.querySelectorAll('.key.sel').forEach(k=>{
+    k.classList.remove('sel'); k.classList.add('wrong');
+    setTimeout(()=>k.classList.remove('wrong'),700);
+  });
+  const missing=[...currentChord.notes].filter(n=>!pressed.has(n));
+  const extra=[...pressed].filter(n=>!currentChord.notes.includes(n));
+  let msg='❌ Wrong chord! ';
+  if(missing.length) msg+=`Missing: ${missing.join(', ')}. `;
+  if(extra.length) msg+=`Extra: ${extra.join(', ')}.`;
+  setStatus(msg,'color:var(--red)');
+  launchProjectile('boss','miss');
+  setTimeout(()=>{
+    animChar('bossWrap','atk-l');
+    animChar('playerWrap','hurt');
+    showDmgNum('playerWrap',`-${dmg}`,'hit');
+    updatePlayerHp();
+    setTimeout(()=>{
+      selectedKeys.clear();
+      updateSelectedDisp();
+      if(playerHp<=0) playerDied();
+      else{locked=false;}
+    },900);
+  },200);
+}
+
+function showHint(){
+  if(locked) return;
+  playerHp=Math.max(1,playerHp-10);
+  updatePlayerHp();
+  setStatus(`💡 Hint: Play ${currentChord.display}`,'color:var(--amber)');
+  // Highlight correct keys in green
+  document.querySelectorAll('.key').forEach(k=>{
+    const n=k.dataset.note;
+    if(currentChord.notes.includes(n)){
+      k.classList.add('hint');
+      setTimeout(()=>k.classList.remove('hint'),2200);
+    }
+  });
+}
+
+function skipChord(){
+  if(locked) return;
+  playerHp=Math.max(1,playerHp-30);
+  updatePlayerHp();
+  setStatus('⏭ Chord skipped (−30 HP)','color:var(--muted)');
+  clearKeys();
+  setTimeout(nextChord,500);
+}
+
+function nextChord(){
+  const pool=BOSSES[bossIdx].chords;
+  let next;
+  do{next=pool[Math.floor(Math.random()*pool.length)];}
+  while(next===currentChord&&pool.length>1);
+  currentChord=next;
+  document.getElementById('chordNameDisp').textContent=next.name.toUpperCase();
+  document.getElementById('chordNotesDisp').textContent=next.display;
+  setStatus('Select the chord notes on the piano below','color:var(--muted)');
+}
+
+function clearKeys(){
+  selectedKeys.clear();
+  document.querySelectorAll('.key.sel').forEach(k=>k.classList.remove('sel'));
+  updateSelectedDisp();
+}
+
+// ─── HEALTH UPDATES ───────────────────────────────────────────────────────────
+function updateBossHp(){
+  const boss=BOSSES[bossIdx];
+  const pct=Math.max(0,(bossHp/boss.maxHp)*100);
+  const fill=document.getElementById('bossHpFill');
+  fill.style.width=pct+'%';
+  fill.classList.toggle('danger',pct<20);
+  document.getElementById('bossHpNum').textContent=`${bossHp} / ${boss.maxHp}`;
+}
+function updatePlayerHp(){
+  const pct=Math.max(0,(playerHp/playerMaxHp)*100);
+  const fill=document.getElementById('playerHpFill');
+  fill.style.width=pct+'%';
+  fill.classList.toggle('danger',pct<20);
+  document.getElementById('playerHpNum').textContent=`${playerHp} / ${playerMaxHp}`;
+}
+
+// ─── ANIMATIONS ───────────────────────────────────────────────────────────────
+function animChar(wrapperId,cls){
+  const el=document.getElementById(wrapperId);
+  el.classList.remove('idle','atk-r','atk-l','hurt','dying');
+  el.classList.add(cls);
+  const dur=cls==='hurt'?450:cls.startsWith('atk')?560:900;
+  setTimeout(()=>{el.classList.remove(cls);if(cls!=='dying')el.classList.add('idle');},dur);
+}
+
+function showDmgNum(wrapperId,text,type){
+  const el=document.getElementById(wrapperId);
+  const d=document.createElement('div');
+  d.className=`dmg-num ${type}`;
+  d.textContent=text;
+  el.parentElement.style.position='relative';
+  el.parentElement.appendChild(d);
+  setTimeout(()=>d.remove(),1100);
+}
+
+function launchProjectile(from,result){
+  const arena=document.getElementById('arenaEl');
+  const p=document.createElement('div');
+  p.className='projectile';
+  const boss=BOSSES[bossIdx];
+  if(from==='player'){p.textContent=boss.projHit;p.classList.add('pr');}
+  else{p.textContent=boss.projMiss;p.classList.add('pl');}
+  arena.appendChild(p);
+  setTimeout(()=>p.remove(),400);
+}
+
+// ─── BOSS EVENTS ─────────────────────────────────────────────────────────────
+function bossDied(){
+  const boss=BOSSES[bossIdx];
+  locked=true;
+  animChar('bossWrap','dying');
+  sfx('victory');
+  score+=500+(Math.floor(playerHp/10)*10);
+  setTimeout(()=>{
+    const ov=document.getElementById('bossDefeatedOv');
+    document.getElementById('ovEmoji').textContent=boss.emoji;
+    document.getElementById('ovTitle').textContent=`${boss.name} DEFEATED!`;
+    document.getElementById('ovSub').textContent=boss.defeatMsg+(boss.nextMsg?' '+boss.nextMsg:'');
+    document.getElementById('ovScore').textContent=`Score: ${score.toLocaleString()}`;
+    const isLast=bossIdx>=BOSSES.length-1;
+    document.getElementById('ovNextBtn').textContent=isLast?'🏆 VICTORY! →':'NEXT BOSS →';
+    ov.classList.add('active');
+  },1000);
+}
+
+function playerDied(){
+  locked=true;
+  sfx('defeat');
+  animChar('playerWrap','hurt');
+  setTimeout(()=>{
+    document.getElementById('dBoss').textContent=`Boss ${bossIdx+1} - ${BOSSES[bossIdx].name}`;
+    document.getElementById('dScore').textContent=score.toLocaleString();
+    document.getElementById('dCorrect').textContent=correctCount;
+    document.getElementById('dWrong').textContent=wrongCount;
+    document.getElementById('defeatSub').textContent=`Defeated by ${BOSSES[bossIdx].name}. Study the chords and try again!`;
+    showScreen('defeat');
+  },800);
+}
+
+function nextBoss(){
+  closeOverlay('bossDefeatedOv');
+  bossIdx++;
+  if(bossIdx>=BOSSES.length){showVictory();return;}
+  // Restore some player HP between bosses
+  playerHp=Math.min(playerMaxHp, playerHp+80);
+  initBoss();
+  locked=false;
+  nextChord();
+}
+
+function showVictory(){
+  sfx('victory'); sfx('victory');
+  document.getElementById('vScore').textContent=score.toLocaleString();
+  document.getElementById('vCorrect').textContent=correctCount;
+  document.getElementById('vWrong').textContent=wrongCount;
+  document.getElementById('vHp').textContent=playerHp+' HP';
+  launchConfetti();
+  showScreen('victory');
+}
+
+// ─── INIT / SCREEN ────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function closeOverlay(id){document.getElementById(id).classList.remove('active');}
+function confirmQuit(){document.getElementById('quitOv').classList.add('active');}
+
+function initBoss(){
+  const boss=BOSSES[bossIdx];
+  bossHp=boss.maxHp;
+  drawGoblin==boss.svgBody; // just in case
+  boss.svgBody(document.getElementById('bossSvg'));
+  document.getElementById('bossHpLabel').textContent=boss.name;
+  document.getElementById('bossName').textContent=boss.name;
+  updateBossHp();
+  updatePlayerHp();
+  // Restart idle anim on both chars
+  ['bossWrap','playerWrap'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('idle','atk-r','atk-l','hurt','dying');
+    void el.offsetWidth; // reflow
+    el.classList.add('idle');
+  });
+  setStatus('Select the chord notes on the piano below','color:var(--muted)');
+}
+
+function setStatus(msg,style=''){
+  const el=document.getElementById('battleStatus');
+  el.innerHTML=msg;
+  el.style.cssText=style;
+}
+
+function startGame(){
+  bossIdx=0; playerHp=350; playerMaxHp=350; score=0; correctCount=0; wrongCount=0; locked=false;
+  selectedKeys.clear();
+  buildPiano();
+  initBoss();
+  showScreen('battle');
+  nextChord();
+}
+
+// ─── CONFETTI ─────────────────────────────────────────────────────────────────
+function launchConfetti(){
+  const cv=document.getElementById('confetti-cv'),ctx=cv.getContext('2d');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const cols=['#FF2D78','#39D98A','#00D4FF','#F59E0B','#A855F7','#EF4444','#fff'];
+  const ps=Array.from({length:200},()=>({x:Math.random()*cv.width,y:-20,
+    vx:(Math.random()-.5)*8,vy:3+Math.random()*6,c:cols[Math.floor(Math.random()*cols.length)],
+    w:7+Math.random()*9,h:4+Math.random()*6,r:Math.random()*Math.PI*2,rv:(Math.random()-.5)*.25,life:1}));
+  let raf;
+  const draw=()=>{ctx.clearRect(0,0,cv.width,cv.height);let alive=false;
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.r+=p.rv;
+      if(p.y>cv.height*.8)p.life-=.025;if(p.life<=0)return;alive=true;
+      ctx.save();ctx.globalAlpha=p.life;ctx.translate(p.x,p.y);ctx.rotate(p.r);
+      ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    if(alive)raf=requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);};
+  raf=requestAnimationFrame(draw);
+}
+</script>
+</body>
+</html>

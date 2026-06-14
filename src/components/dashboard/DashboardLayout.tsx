@@ -84,7 +84,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
     { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false },
     { href: "/note-quiz.html",          icon: Gamepad2,      label: "Note Quiz",     external: true },
-    { href: "/musical-rest-quiz.html",  icon: Gamepad2,      label: "Rest Quiz",     external: true },
+    { href: "/musical-rest-quiz.html",  icon: Gamepad2,      label: "Rest Quiz",          external: true },
+    { href: "/chord-boss-battle.html",  icon: Gamepad2,      label: "Chord Boss Battle",  external: true },
   ];
 
   const studentGameIcons = [
@@ -94,7 +95,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)" },
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
-    { href: "/musical-rest-quiz.html", img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz", shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
+    { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
+    { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",   labelKey: "dashboard.nav.chordBoss",      shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
   ];
 
   const getNavItems = () => {
