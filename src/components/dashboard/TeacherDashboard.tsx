@@ -30,16 +30,14 @@ const TeacherHome = () => {
       const today = new Date().toISOString().split("T")[0];
       
       const [studentsRes, lessonsRes, plansRes, slotsRes] = await Promise.all([
-        supabase.from("lessons").select("student_id").eq("teacher_id", user.id),
+        (supabase as any).from("teacher_students").select("*", { count: "exact" }).eq("teacher_id", user.id),
         supabase.from("lessons").select("*", { count: "exact" }).eq("teacher_id", user.id).eq("status", "scheduled").gte("scheduled_date", today),
         supabase.from("lesson_plans").select("*", { count: "exact" }).eq("teacher_id", user.id),
         supabase.from("available_slots").select("*", { count: "exact" }).eq("teacher_id", user.id).eq("is_active", true),
       ]);
 
-      const uniqueStudents = new Set(studentsRes.data?.map(l => l.student_id) || []);
-
       setStats({
-        totalStudents: uniqueStudents.size,
+        totalStudents: studentsRes.count || 0,
         upcomingLessons: lessonsRes.count || 0,
         lessonPlans: plansRes.count || 0,
         activeSlots: slotsRes.count || 0,
