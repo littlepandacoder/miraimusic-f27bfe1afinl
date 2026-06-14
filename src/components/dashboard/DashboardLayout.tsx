@@ -78,21 +78,21 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
 
   const gameItems = [
     { href: "/piano-room", icon: KeyboardMusic, label: "Piano Room",    external: false },
-    { href: "/piano-hero", icon: Gamepad2,      label: "Piano Hero",    external: false, locked: true },
-    { href: "/rhythm-quiz", icon: Gamepad2,      label: "Rhythm Quiz",   external: false, locked: true },
+    { href: "/piano-hero", icon: Gamepad2,      label: "Piano Hero",    external: false },
+    { href: "/rhythm-quiz", icon: Gamepad2,      label: "Rhythm Quiz",   external: false },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
-    { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false, locked: true },
+    { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false },
     { href: "/note-quiz.html",       icon: Gamepad2,      label: "Note Quiz",     external: true },
   ];
 
   const studentGameIcons = [
     { href: "/piano-room",img: "/game-icons/piano_room.png",    labelKey: "dashboard.nav.pianoRoom",    shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
-    { href: "/piano-hero",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)", locked: true },
+    { href: "/piano-hero",     img: "/game-icons/piano_hero.png",    labelKey: "dashboard.nav.pianoHero",    shadow: "0 0 14px 4px rgba(14,165,233,0.55)" },
     { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
-    { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)", locked: true  },
-    { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)", locked: true },
+    { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)" },
+    { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
   ];
 
   const getNavItems = () => {
