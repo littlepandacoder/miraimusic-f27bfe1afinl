@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Chord Boss Battle — Musicable</title>
+<title>Boss Battle — Musicable</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -199,6 +199,51 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
 @keyframes midi-blink{0%,100%{opacity:1}50%{opacity:.25}}
 .piano-header{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 2px}
 .piano-lbl{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+
+/* ── DIFFICULTY SELECT ── */
+#difficulty{align-items:center;justify-content:center;padding:2rem 1rem;
+  background:radial-gradient(ellipse at 50% 0%,rgba(120,20,20,.15) 0%,transparent 60%)}
+.diff-wrap{width:100%;max-width:520px;display:flex;flex-direction:column;gap:1.1rem}
+.diff-title{font-family:'Orbitron',monospace;font-weight:900;font-size:1.35rem;
+  background:linear-gradient(135deg,#EF4444,#FF2D78,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-align:center;letter-spacing:.05em}
+.diff-sub{text-align:center;font-size:.85rem;color:var(--muted)}
+.diff-cards{display:flex;flex-direction:column;gap:.6rem}
+.diff-card{border-radius:14px;padding:.95rem 1.1rem;cursor:pointer;transition:all .22s;
+  border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);
+  display:flex;align-items:center;gap:.85rem;text-align:left}
+.diff-card:hover{background:rgba(255,255,255,.07);transform:translateX(5px)}
+.diff-stars{font-size:1.25rem;min-width:52px;flex-shrink:0;line-height:1}
+.diff-info{flex:1}
+.diff-name{font-family:'Orbitron',monospace;font-weight:700;font-size:.82rem;letter-spacing:.04em;margin-bottom:.12rem}
+.diff-desc{font-size:.74rem;color:var(--muted);line-height:1.45}
+.diff-arrow{font-size:1.1rem;color:rgba(255,255,255,.25);flex-shrink:0;transition:all .22s}
+.diff-card:hover .diff-arrow{color:rgba(255,255,255,.6);transform:translateX(3px)}
+
+/* ── MODE BUTTONS ── */
+.mode-btns{display:flex;gap:.75rem}
+.mode-btn{flex:1;padding:1.05rem;border:none;border-radius:14px;cursor:pointer;
+  font-family:'Orbitron',monospace;font-weight:700;font-size:.85rem;letter-spacing:.07em;transition:all .2s}
+.mode-btn.chord{background:linear-gradient(135deg,#EF4444,#FF2D78);color:#fff;box-shadow:0 0 28px rgba(239,68,68,.35)}
+.mode-btn.chord:hover{opacity:.88;transform:scale(1.01)}
+.mode-btn.scale{background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;box-shadow:0 0 28px rgba(20,184,166,.35)}
+.mode-btn.scale:hover{opacity:.88;transform:scale(1.01)}
+
+/* ── SCALE ZONE (inside battle screen) ── */
+.scale-zone{padding:.85rem 1rem;text-align:center;background:rgba(8,6,20,.5);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.scale-eyebrow-d{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.25rem}
+.scale-name-d{font-family:'Orbitron',monospace;font-weight:900;font-size:1.38rem;
+  background:linear-gradient(135deg,#14b8a6,#00D4FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:.04em;margin-bottom:.2rem}
+.scale-notes-d{font-family:'DM Mono',monospace;font-size:.75rem;color:#67e8f9;letter-spacing:.07em;margin-bottom:.42rem;line-height:1.5}
+.hint-text-s{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--amber);margin-bottom:.42rem;min-height:1em}
+.prog-row{display:flex;justify-content:center;gap:.35rem;margin-bottom:.38rem}
+.prog-dot{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);transition:all .25s}
+.prog-dot.found{background:#14b8a6!important;border-color:#14b8a6!important;box-shadow:0 0 7px rgba(20,184,166,.6)}
+.prog-label-s{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;margin-bottom:.42rem}
+.scale-actions{display:flex;gap:.6rem;justify-content:center}
+.clear-btn{padding:.4rem .82rem;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid;font-family:'DM Mono',monospace;background:rgba(107,114,128,.08);border-color:rgba(107,114,128,.28);color:var(--muted)}
+.clear-btn:hover{background:rgba(107,114,128,.16)}
 </style>
 </head>
 <body>
@@ -213,15 +258,64 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   </div>
   <div class="intro-wrap">
     <div class="intro-title-card">
-      <div class="game-logo">⚔ CHORD BOSS BATTLE</div>
-      <div class="game-tagline">Play the correct chord to attack the villain.<br>Wrong notes hit you instead. Defeat all 3 bosses!</div>
+      <div class="game-logo">⚔ BOSS BATTLE</div>
+      <div class="game-tagline">Defeat all 3 bosses with chords or scales.<br>Wrong notes hit you instead. Choose your mode!</div>
     </div>
     <div class="boss-row">
       <div class="boss-preview"><span class="emoji">👹</span><div class="bname">DISCORDUS</div><div class="bhp">400 HP · Natural chords</div></div>
       <div class="boss-preview"><span class="emoji">💀</span><div class="bname">SHADOW WRAITH</div><div class="bhp">600 HP · Sharps &amp; flats</div></div>
       <div class="boss-preview"><span class="emoji">🐲</span><div class="bname">CHORD DRAGON</div><div class="bhp">800 HP · Full challenge</div></div>
     </div>
-    <button class="start-btn" onclick="startGame()">⚔ ENTER BATTLE</button>
+    <div class="mode-btns">
+      <button class="mode-btn chord" onclick="selectMode('chord')">⚔ CHORD BOSS</button>
+      <button class="mode-btn scale" onclick="selectMode('scale')">🎵 SCALE BOSS</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DIFFICULTY SELECT ──────────────────────────────────── -->
+<div id="difficulty" class="screen">
+  <div id="topnav">
+    <a class="nav-logo" href="/dashboard">♩ Musicable</a>
+    <a class="nav-back" href="#" onclick="showScreen('intro');return false">← Back</a>
+  </div>
+  <div class="diff-wrap">
+    <div class="diff-title">CHOOSE DIFFICULTY</div>
+    <div class="diff-sub">Select your challenge before the battle begins</div>
+    <div class="diff-cards">
+      <div class="diff-card" onclick="selectDifficulty('beginner')" style="border-color:rgba(57,217,138,.3)">
+        <div class="diff-stars">⭐</div>
+        <div class="diff-info">
+          <div class="diff-name" style="color:#39D98A">BEGINNER</div>
+          <div class="diff-desc">Major &amp; minor triads (3 notes) · Natural keys · Beginner-friendly bosses</div>
+        </div>
+        <div class="diff-arrow">→</div>
+      </div>
+      <div class="diff-card" onclick="selectDifficulty('intermediate')" style="border-color:rgba(245,158,11,.3)">
+        <div class="diff-stars">⭐⭐</div>
+        <div class="diff-info">
+          <div class="diff-name" style="color:#F59E0B">INTERMEDIATE</div>
+          <div class="diff-desc">7th chords (4 notes): maj7, min7, dom7 · Sharps &amp; flats · Stronger bosses</div>
+        </div>
+        <div class="diff-arrow">→</div>
+      </div>
+      <div class="diff-card" onclick="selectDifficulty('advanced')" style="border-color:rgba(239,68,68,.3)">
+        <div class="diff-stars">⭐⭐⭐</div>
+        <div class="diff-info">
+          <div class="diff-name" style="color:#EF4444">ADVANCED</div>
+          <div class="diff-desc">Sus2, sus4, dim, aug, add9 · Mixed note counts (3–4) · Intense bosses</div>
+        </div>
+        <div class="diff-arrow">→</div>
+      </div>
+      <div class="diff-card" onclick="selectDifficulty('expert')" style="border-color:rgba(168,85,247,.3)">
+        <div class="diff-stars">💀</div>
+        <div class="diff-info">
+          <div class="diff-name" style="color:#A855F7">EXPERT</div>
+          <div class="diff-desc">All 12 keys · Extended chords incl. D♭ E♭ A♭ G♭ · Maximum boss damage</div>
+        </div>
+        <div class="diff-arrow">→</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -303,13 +397,33 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   </div>
 
   <!-- CHORD DISPLAY -->
-  <div class="chord-zone">
+  <div class="chord-zone" id="chordZone">
     <div class="chord-eyebrow">⚔ Play this chord to attack</div>
     <div class="chord-name" id="chordNameDisp">C MAJOR</div>
     <div class="chord-notes-row" id="chordNotesDisp">C · E · G</div>
     <div class="chord-actions">
       <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 Hint <span style="opacity:.7">(-10 HP)</span></button>
       <button class="skip-btn" id="skipBtn" onclick="skipChord()">⏭ Skip <span style="opacity:.7">(-30 HP)</span></button>
+    </div>
+  </div>
+
+  <!-- SCALE DISPLAY -->
+  <div class="scale-zone" id="scaleZone" style="display:none">
+    <div class="scale-eyebrow-d">🎵 Find all 7 notes of this scale</div>
+    <div class="scale-name-d" id="scaleNameDisp">C MAJOR</div>
+    <div class="scale-notes-d" id="scaleNotesDisp">C · D · E · F · G · A · B</div>
+    <div class="hint-text-s" id="hintTextScale"></div>
+    <div class="prog-row">
+      <div class="prog-dot" id="p0"></div><div class="prog-dot" id="p1"></div>
+      <div class="prog-dot" id="p2"></div><div class="prog-dot" id="p3"></div>
+      <div class="prog-dot" id="p4"></div><div class="prog-dot" id="p5"></div>
+      <div class="prog-dot" id="p6"></div><div class="prog-dot" id="p7"></div>
+    </div>
+    <div class="prog-label-s" id="progLabel">0 / 8 notes selected</div>
+    <div class="scale-actions">
+      <button class="clear-btn" onclick="clearKeys()">✕ Clear</button>
+      <button class="hint-btn" onclick="showScaleHint()">💡 Hint <span style="opacity:.7">(-10 HP)</span></button>
+      <button class="skip-btn" onclick="skipScale()">⏭ Skip <span style="opacity:.7">(-30 HP)</span></button>
     </div>
   </div>
 
@@ -396,7 +510,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
 
 <script>
 // ─── BOSS DEFINITIONS ─────────────────────────────────────────────────────────
-const BOSSES = [
+const BOSSES_BEGINNER = [
   {
     id:0, name:'DISCORDUS', title:'Chord Goblin', emoji:'👹', maxHp:400,
     atk:'⚡', projHit:'🎵', projMiss:'💥',
@@ -446,6 +560,223 @@ const BOSSES = [
     nextMsg:'',
   },
 ];
+
+// ─── INTERMEDIATE: 7th chords ─────────────────────────────────────────────────
+const BOSSES_INTERMEDIATE = [
+  {
+    id:0, name:'THE SEVENTH SAGE', title:'Chord Goblin', emoji:'👹', maxHp:500,
+    atk:'⚡', projHit:'🎵', projMiss:'💥',
+    chords:[
+      {name:'C Major 7',  display:'C · E · G · B',        notes:['C','E','G','B']},
+      {name:'G Dom 7',    display:'G · B · D · F',        notes:['G','B','D','F']},
+      {name:'F Major 7',  display:'F · A · C · E',        notes:['F','A','C','E']},
+      {name:'A Minor 7',  display:'A · C · E · G',        notes:['A','C','E','G']},
+      {name:'E Minor 7',  display:'E · G · B · D',        notes:['E','G','B','D']},
+      {name:'D Minor 7',  display:'D · F · A · C',        notes:['D','F','A','C']},
+    ],
+    svgBody: drawGoblin,
+    defeatMsg:'The Seventh Sage dissolves — harmonies shattered!',
+    nextMsg:'A shadowy wraith emerges, wreathed in dissonance...',
+  },
+  {
+    id:1, name:'SHADOW 7TH', title:'Wraith of Discord', emoji:'💀', maxHp:700,
+    atk:'🌑', projHit:'⚡', projMiss:'🔥',
+    chords:[
+      {name:'G Major 7',  display:'G · B · D · F♯',      notes:['G','B','D','F#']},
+      {name:'D Dom 7',    display:'D · F♯ · A · C',      notes:['D','F#','A','C']},
+      {name:'A Dom 7',    display:'A · C♯ · E · G',      notes:['A','C#','E','G']},
+      {name:'B Minor 7',  display:'B · D · F♯ · A',      notes:['B','D','F#','A']},
+      {name:'E Dom 7',    display:'E · G♯ · B · D',      notes:['E','G#','B','D']},
+      {name:'C Major 7',  display:'C · E · G · B',        notes:['C','E','G','B']},
+      {name:'F Major 7',  display:'F · A · C · E',        notes:['F','A','C','E']},
+    ],
+    svgBody: drawWraith,
+    defeatMsg:'The Shadow 7th wails as its dissonance resolves!',
+    nextMsg:'The ground shakes. A fiercer dragon awakens...',
+  },
+  {
+    id:2, name:'SEVENTH DRAGON', title:'Dragon of Dissonance', emoji:'🐲', maxHp:900,
+    atk:'🔥', projHit:'🎸', projMiss:'💢',
+    chords:[
+      {name:'E Major 7',   display:'E · G♯ · B · D♯',     notes:['E','G#','B','D#']},
+      {name:'B Minor 7',   display:'B · D · F♯ · A',       notes:['B','D','F#','A']},
+      {name:'B♭ Major 7',  display:'B♭ · D · F · A',      notes:['A#','D','F','A']},
+      {name:'B♭ Min 7',    display:'B♭ · D♭ · F · A♭',   notes:['A#','C#','F','G#']},
+      {name:'C Minor 7',   display:'C · E♭ · G · B♭',     notes:['C','D#','G','A#']},
+      {name:'G Minor 7',   display:'G · B♭ · D · F',      notes:['G','A#','D','F']},
+      {name:'F♯ Minor 7',  display:'F♯ · A · C♯ · E',     notes:['F#','A','C#','E']},
+    ],
+    svgBody: drawDragon,
+    defeatMsg:'The Seventh Dragon roars as its complex harmonies collapse!',
+    nextMsg:'',
+  },
+];
+
+// ─── ADVANCED: Sus, Dim, Aug, Add9 ────────────────────────────────────────────
+const BOSSES_ADVANCED = [
+  {
+    id:0, name:'SUS MONSTER', title:'The Suspended', emoji:'👹', maxHp:600,
+    atk:'⚡', projHit:'🎵', projMiss:'💥',
+    chords:[
+      {name:'C Sus2',   display:'C · D · G',   notes:['C','D','G']},
+      {name:'C Sus4',   display:'C · F · G',   notes:['C','F','G']},
+      {name:'G Sus2',   display:'G · A · D',   notes:['G','A','D']},
+      {name:'G Sus4',   display:'G · C · D',   notes:['G','C','D']},
+      {name:'D Sus4',   display:'D · G · A',   notes:['D','G','A']},
+      {name:'F Sus2',   display:'F · G · C',   notes:['F','G','C']},
+      {name:'A Sus4',   display:'A · D · E',   notes:['A','D','E']},
+    ],
+    svgBody: drawGoblin,
+    defeatMsg:'The Sus Monster loses its suspension and crashes down!',
+    nextMsg:'A diminished wraith materializes from the shadows...',
+  },
+  {
+    id:1, name:'DIM WRAITH', title:'Wraith of Diminishment', emoji:'💀', maxHp:800,
+    atk:'🌑', projHit:'⚡', projMiss:'🔥',
+    chords:[
+      {name:'B Dim',     display:'B · D · F',          notes:['B','D','F']},
+      {name:'D Dim',     display:'D · F · A♭',         notes:['D','F','G#']},
+      {name:'E Dim',     display:'E · G · B♭',         notes:['E','G','A#']},
+      {name:'C Dim7',    display:'C · E♭ · F♯ · A',   notes:['C','D#','F#','A']},
+      {name:'D Dim7',    display:'D · F · A♭ · B',    notes:['D','F','G#','B']},
+      {name:'G Aug',     display:'G · B · D♯',         notes:['G','B','D#']},
+      {name:'C Aug',     display:'C · E · G♯',         notes:['C','E','G#']},
+    ],
+    svgBody: drawWraith,
+    defeatMsg:'The Dim Wraith implodes into a pile of tritones!',
+    nextMsg:'The augmented dragon rises from the ashes...',
+  },
+  {
+    id:2, name:'AUG DRAGON', title:'Dragon of Augmentation', emoji:'🐲', maxHp:1000,
+    atk:'🔥', projHit:'🎸', projMiss:'💢',
+    chords:[
+      {name:'F Aug',     display:'F · A · C♯',          notes:['F','A','C#']},
+      {name:'D Aug',     display:'D · F♯ · A♯',         notes:['D','F#','A#']},
+      {name:'C Add9',    display:'C · D · E · G',        notes:['C','D','E','G']},
+      {name:'G Add9',    display:'G · A · B · D',        notes:['G','A','B','D']},
+      {name:'D Add9',    display:'D · E · F♯ · A',       notes:['D','E','F#','A']},
+      {name:'B Dim7',    display:'B · D · F · A♭',       notes:['B','D','F','G#']},
+      {name:'A Dim7',    display:'A · C · E♭ · F♯',      notes:['A','C','D#','F#']},
+    ],
+    svgBody: drawDragon,
+    defeatMsg:'The Aug Dragon shatters as your perfect intervals pierce its core!',
+    nextMsg:'',
+  },
+];
+
+// ─── EXPERT: All 12 keys, extended chords ─────────────────────────────────────
+const BOSSES_EXPERT = [
+  {
+    id:0, name:'CHROMATIC BEAST', title:'The Accidental', emoji:'👹', maxHp:700,
+    atk:'⚡', projHit:'🎵', projMiss:'💥',
+    chords:[
+      {name:'E♭ Major',  display:'E♭ · G · B♭',    notes:['D#','G','A#']},
+      {name:'A♭ Major',  display:'A♭ · C · E♭',    notes:['G#','C','D#']},
+      {name:'B♭ Major',  display:'B♭ · D · F',     notes:['A#','D','F']},
+      {name:'D♭ Major',  display:'D♭ · F · A♭',    notes:['C#','F','G#']},
+      {name:'G♭ Major',  display:'G♭ · B♭ · D♭',  notes:['F#','A#','C#']},
+      {name:'B Major',   display:'B · D♯ · F♯',     notes:['B','D#','F#']},
+      {name:'E♭ Minor',  display:'E♭ · G♭ · B♭',  notes:['D#','F#','A#']},
+      {name:'A♭ Minor',  display:'A♭ · B · E♭',    notes:['G#','B','D#']},
+    ],
+    svgBody: drawGoblin,
+    defeatMsg:'The Chromatic Beast howls as all its accidentals cancel out!',
+    nextMsg:'The Dissonance Wraith materializes from pure noise...',
+  },
+  {
+    id:1, name:'DISSONANCE WRAITH', title:'Wraith of All Keys', emoji:'💀', maxHp:1000,
+    atk:'🌑', projHit:'⚡', projMiss:'🔥',
+    chords:[
+      {name:'E♭ Maj7',   display:'E♭ · G · B♭ · D',      notes:['D#','G','A#','D']},
+      {name:'A♭ Maj7',   display:'A♭ · C · E♭ · G',      notes:['G#','C','D#','G']},
+      {name:'B♭ Min7',   display:'B♭ · D♭ · F · A♭',    notes:['A#','C#','F','G#']},
+      {name:'D♭ Maj7',   display:'D♭ · F · A♭ · C',      notes:['C#','F','G#','C']},
+      {name:'A♭ Dom7',   display:'A♭ · C · E♭ · G♭',    notes:['G#','C','D#','F#']},
+      {name:'E♭ Min7',   display:'E♭ · G♭ · B♭ · D♭',  notes:['D#','F#','A#','C#']},
+      {name:'D♭ Dom7',   display:'D♭ · F · A♭ · B',      notes:['C#','F','G#','B']},
+      {name:'G♭ Maj7',   display:'G♭ · B♭ · D♭ · F',    notes:['F#','A#','C#','F']},
+    ],
+    svgBody: drawWraith,
+    defeatMsg:'The Dissonance Wraith screams as its chaos resolves into silence!',
+    nextMsg:'The Chord Overlord descends — final boss!',
+  },
+  {
+    id:2, name:'CHORD OVERLORD', title:'Ultimate Enemy', emoji:'🐲', maxHp:1300,
+    atk:'🔥', projHit:'🎸', projMiss:'💢',
+    chords:[
+      {name:'E♭ Dim7',   display:'E♭ · F♯ · A · C',       notes:['D#','F#','A','C']},
+      {name:'C♯ Dim7',   display:'C♯ · E · G · B♭',       notes:['C#','E','G','A#']},
+      {name:'F♯ Min7',   display:'F♯ · A · C♯ · E',       notes:['F#','A','C#','E']},
+      {name:'B Aug',     display:'B · D♯ · G',              notes:['B','D#','G']},
+      {name:'E Aug',     display:'E · G♯ · C',              notes:['E','G#','C']},
+      {name:'B♭ Dom7',   display:'B♭ · D · F · A♭',       notes:['A#','D','F','G#']},
+      {name:'F♯ Dom7',   display:'F♯ · A♯ · C♯ · E',      notes:['F#','A#','C#','E']},
+      {name:'A♭ Aug',    display:'A♭ · C · E',              notes:['G#','C','E']},
+      {name:'B♭ Add9',   display:'B♭ · C · D · F',         notes:['A#','C','D','F']},
+    ],
+    svgBody: drawDragon,
+    defeatMsg:'THE CHORD OVERLORD IS DEFEATED! You have mastered all 12 keys!',
+    nextMsg:'',
+  },
+];
+
+const DIFFICULTY_BOSSES = {
+  beginner: BOSSES_BEGINNER,
+  intermediate: BOSSES_INTERMEDIATE,
+  advanced: BOSSES_ADVANCED,
+  expert: BOSSES_EXPERT,
+};
+
+// ─── SCALE BOSSES ─────────────────────────────────────────────────────────────
+const SCALE_BOSSES = [
+  {
+    id:0, name:'SOUR NOTE TROLL', emoji:'🧌', maxHp:500,
+    atk:'🎵', projHit:'🎵', projMiss:'💥',
+    scales:[
+      {name:'C Major',  display:'C · D · E · F · G · A · B · C',       notes:['C3','D3','E3','F3','G3','A3','B3','C4'],         hint:'No sharps or flats'},
+      {name:'A Minor',  display:'A · B · C · D · E · F · G · A',       notes:['A3','B3','C4','D4','E4','F4','G4','A4'],         hint:'Relative minor of C Major'},
+      {name:'G Major',  display:'G · A · B · C · D · E · F♯ · G',     notes:['G3','A3','B3','C4','D4','E4','F#4','G4'],        hint:'1 sharp: F♯'},
+      {name:'E Minor',  display:'E · F♯ · G · A · B · C · D · E',     notes:['E3','F#3','G3','A3','B3','C4','D4','E4'],        hint:'1 sharp: F♯'},
+      {name:'F Major',  display:'F · G · A · B♭ · C · D · E · F',     notes:['F3','G3','A3','A#3','C4','D4','E4','F4'],        hint:'1 flat: B♭'},
+      {name:'D Minor',  display:'D · E · F · G · A · B♭ · C · D',     notes:['D3','E3','F3','G3','A3','A#3','C4','D4'],        hint:'1 flat: B♭'},
+    ],
+    svgBody: drawGoblin,
+    defeatMsg:'The troll howls as its sour notes dissolve into harmony!',
+    nextMsg:'A shadowy wraith sharpens its chromatic claws...',
+  },
+  {
+    id:1, name:'SHARP WRAITH', emoji:'💀', maxHp:700,
+    atk:'⚡', projHit:'⚡', projMiss:'🔥',
+    scales:[
+      {name:'D Major',  display:'D · E · F♯ · G · A · B · C♯ · D',   notes:['D3','E3','F#3','G3','A3','B3','C#4','D4'],       hint:'2 sharps: F♯ C♯'},
+      {name:'B Minor',  display:'B · C♯ · D · E · F♯ · G · A · B',   notes:['B3','C#4','D4','E4','F#4','G4','A4','B4'],       hint:'2 sharps: F♯ C♯'},
+      {name:'A Major',  display:'A · B · C♯ · D · E · F♯ · G♯ · A', notes:['A3','B3','C#4','D4','E4','F#4','G#4','A4'],      hint:'3 sharps: F♯ C♯ G♯'},
+      {name:'B♭ Major', display:'B♭ · C · D · E♭ · F · G · A · B♭', notes:['A#3','C4','D4','D#4','F4','G4','A4','A#4'],      hint:'2 flats: B♭ E♭'},
+      {name:'G Minor',  display:'G · A · B♭ · C · D · E♭ · F · G',   notes:['G3','A3','A#3','C4','D4','D#4','F4','G4'],       hint:'2 flats: B♭ E♭'},
+      {name:'C Minor',  display:'C · D · E♭ · F · G · A♭ · B♭ · C', notes:['C3','D3','D#3','F3','G3','G#3','A#3','C4'],      hint:'3 flats: B♭ E♭ A♭'},
+    ],
+    svgBody: drawWraith,
+    defeatMsg:'The Sharp Wraith shrieks as its dissonances resolve!',
+    nextMsg:'The earth trembles. The Chromatic Dragon awakens...',
+  },
+  {
+    id:2, name:'CHROMATIC DRAGON', emoji:'🐲', maxHp:900,
+    atk:'🔥', projHit:'🎸', projMiss:'💢',
+    scales:[
+      {name:'E Major',  display:'E · F♯ · G♯ · A · B · C♯ · D♯ · E', notes:['E3','F#3','G#3','A3','B3','C#4','D#4','E4'],     hint:'4 sharps: F♯ C♯ G♯ D♯'},
+      {name:'E♭ Major', display:'E♭ · F · G · A♭ · B♭ · C · D · E♭', notes:['D#3','F3','G3','G#3','A#3','C4','D4','D#4'],     hint:'3 flats: B♭ E♭ A♭'},
+      {name:'A♭ Major', display:'A♭ · B♭ · C · D♭ · E♭ · F · G · A♭',notes:['G#3','A#3','C4','C#4','D#4','F4','G4','G#4'],    hint:'4 flats: B♭ E♭ A♭ D♭'},
+      {name:'F Minor',  display:'F · G · A♭ · B♭ · C · D♭ · E♭ · F', notes:['F3','G3','G#3','A#3','C4','C#4','D#4','F4'],     hint:'4 flats: B♭ E♭ A♭ D♭'},
+      {name:'B Major',  display:'B · C♯ · D♯ · E · F♯ · G♯ · A♯ · B',notes:['B3','C#4','D#4','E4','F#4','G#4','A#4','B4'],   hint:'5 sharps: F♯ C♯ G♯ D♯ A♯'},
+      {name:'C# Minor', display:'C♯ · D♯ · E · F♯ · G♯ · A · B · C♯',notes:['C#3','D#3','E3','F#3','G#3','A3','B3','C#4'],   hint:'4 sharps: F♯ C♯ G♯ D♯'},
+    ],
+    svgBody: drawDragon,
+    defeatMsg:'The Chromatic Dragon falls, defeated by the power of perfect scales!',
+    nextMsg:'',
+  },
+];
+
+let BOSSES = BOSSES_BEGINNER;
 
 // ─── PIANO LAYOUT ──────────────────────────────────────────────────────────────
 // C3 to C5: 2 octaves + final C (key sizes computed dynamically in buildPiano)
@@ -580,9 +911,11 @@ function drawDragon(svgEl){
 
 // ─── GAME STATE ───────────────────────────────────────────────────────────────
 let bossIdx=0, bossHp=0, playerHp=350, playerMaxHp=350;
-let currentChord=null, selectedKeys=new Set(), locked=false;
+let currentChord=null, currentScale=null, selectedKeys=new Set(), locked=false;
 let score=0, correctCount=0, wrongCount=0;
-let midiHeldNoteNames=new Set(); // tracks physically-held MIDI keys by note name
+let midiHeldNoteNames=new Set();  // chord mode: note names
+let midiScaleNoteIds=new Set();   // scale mode: note IDs (with octave)
+let gameMode='chord'; // 'chord' | 'scale'
 
 // ─── PIANO BUILDER ───────────────────────────────────────────────────────────
 // Black key offsets as ratios of one white-key width (derived from original 38px layout)
@@ -639,10 +972,16 @@ function getCombinedNotes(){
   const click=new Set([...selectedKeys].map(id=>id.replace(/\d/g,'')));
   return new Set([...click,...midiHeldNoteNames]);
 }
+function getCombinedScaleNotes(){
+  return new Set([...selectedKeys,...midiScaleNoteIds]);
+}
 
 function checkAutoDetect(){
-  const all=getCombinedNotes();
-  if(all.size===currentChord.notes.length) setTimeout(checkChord,120);
+  if(gameMode==='scale'&&currentScale){
+    if(getCombinedScaleNotes().size===currentScale.notes.length) setTimeout(checkScale,120);
+  } else if(gameMode==='chord'&&currentChord){
+    if(getCombinedNotes().size===currentChord.notes.length) setTimeout(checkChord,120);
+  }
 }
 
 function toggleKey(id, note, el){
@@ -661,6 +1000,14 @@ function toggleKey(id, note, el){
 
 function updateSelectedDisp(){
   const disp=document.getElementById('selectedDisp');
+  if(gameMode==='scale'){
+    const scNotes=getCombinedScaleNotes();
+    for(let i=0;i<8;i++){const d=document.getElementById('p'+i);if(d)d.className='prog-dot'+(i<scNotes.size?' found':'');}
+    const pl=document.getElementById('progLabel');if(pl)pl.textContent=`${scNotes.size} / 8 notes selected`;
+    if(scNotes.size===0){disp.textContent='No keys selected';return;}
+    disp.innerHTML='Playing: '+[...scNotes].map(id=>`<span class="sn">${id.replace(/\d/g,'')}</span>`).join(' + ');
+    return;
+  }
   const all=getCombinedNotes();
   if(all.size===0){disp.textContent='No keys selected';return;}
   disp.innerHTML='Playing: '+[...all].map(n=>`<span class="sn">${n}</span>`).join(' + ');
@@ -769,8 +1116,95 @@ function nextChord(){
 function clearKeys(){
   selectedKeys.clear();
   midiHeldNoteNames.clear();
+  midiScaleNoteIds.clear();
   document.querySelectorAll('.key.sel').forEach(k=>k.classList.remove('sel'));
   updateSelectedDisp();
+}
+
+// ─── SCALE LOGIC ─────────────────────────────────────────────────────────────
+function nextScaleItem(){
+  const pool=BOSSES[bossIdx].scales;
+  let next;
+  do{next=pool[Math.floor(Math.random()*pool.length)];}
+  while(next===currentScale&&pool.length>1);
+  currentScale=next;
+  document.getElementById('scaleNameDisp').textContent=next.name.toUpperCase();
+  document.getElementById('scaleNotesDisp').textContent=next.display;
+  const ht=document.getElementById('hintTextScale');if(ht)ht.textContent='';
+  for(let i=0;i<8;i++){const d=document.getElementById('p'+i);if(d)d.className='prog-dot';}
+  const pl=document.getElementById('progLabel');if(pl)pl.textContent='0 / 8 notes selected';
+  const midiOn=document.getElementById('midiPill')?.classList.contains('connected');
+  setStatus(midiOn?'Play all 8 scale notes on your MIDI keyboard or click below':'Select all 8 notes of the scale on the piano below','color:var(--muted)');
+}
+
+function checkScale(){
+  if(locked) return;
+  locked=true;
+  const pressed=getCombinedScaleNotes();
+  const required=new Set(currentScale.notes);
+  const correct=pressed.size===required.size&&[...required].every(n=>pressed.has(n));
+  if(correct) handleScaleCorrect();
+  else handleScaleWrong(pressed);
+}
+
+function handleScaleCorrect(){
+  correctCount++;
+  const dmg=Math.floor(Math.random()*51)+70;
+  bossHp=Math.max(0,bossHp-dmg);
+  const isCrit=dmg>=115;
+  sfx('correct');
+  setStatus(`🎵 ${isCrit?'PERFECT SCALE! ':''}${currentScale.name}! Boss takes ${dmg} damage!`,'color:var(--green)');
+  score+=isCrit?250:120;
+  launchProjectile('player','hit');
+  setTimeout(()=>{
+    animChar('playerWrap','atk-r');animChar('bossWrap','hurt');
+    showDmgNum('bossWrap',`-${dmg}${isCrit?' ✨':''}`,isCrit?'crit':'hit');
+    updateBossHp();clearKeys();
+    setTimeout(()=>{if(bossHp<=0) bossDied();else{locked=false;nextScaleItem();}},900);
+  },200);
+}
+
+function handleScaleWrong(pressed){
+  wrongCount++;
+  const dmg=Math.floor(Math.random()*26)+30;
+  playerHp=Math.max(0,playerHp-dmg);
+  sfx('wrong');
+  document.querySelectorAll('.key.sel').forEach(k=>{k.classList.remove('sel');k.classList.add('wrong');setTimeout(()=>k.classList.remove('wrong'),700);});
+  const missing=[...currentScale.notes].filter(n=>!pressed.has(n));
+  const extra=[...pressed].filter(n=>!currentScale.notes.includes(n));
+  const toName=id=>id.replace(/\d/g,'');
+  let msg='❌ Wrong notes! ';
+  if(missing.length) msg+=`Missing: ${missing.map(toName).join(' ')}. `;
+  if(extra.length) msg+=`Wrong: ${extra.map(toName).join(' ')}.`;
+  setStatus(msg,'color:var(--red)');
+  launchProjectile('boss','miss');
+  setTimeout(()=>{
+    animChar('bossWrap','atk-l');animChar('playerWrap','hurt');
+    showDmgNum('playerWrap',`-${dmg}`,'hit');
+    updatePlayerHp();
+    setTimeout(()=>{selectedKeys.clear();midiHeldNoteNames.clear();midiScaleNoteIds.clear();
+      document.querySelectorAll('.key.sel').forEach(k=>k.classList.remove('sel'));
+      updateSelectedDisp();
+      if(playerHp<=0) playerDied();else{locked=false;}
+    },900);
+  },200);
+}
+
+function showScaleHint(){
+  if(locked) return;
+  playerHp=Math.max(1,playerHp-10);updatePlayerHp();
+  const ht=document.getElementById('hintTextScale');if(ht)ht.textContent='💡 '+currentScale.hint;
+  setStatus(`💡 ${currentScale.name}: ${currentScale.display}`,'color:var(--amber)');
+  document.querySelectorAll('.key').forEach(k=>{
+    if(currentScale.notes.includes(k.dataset.id)){k.classList.add('hint');setTimeout(()=>k.classList.remove('hint'),2200);}
+  });
+}
+
+function skipScale(){
+  if(locked) return;
+  playerHp=Math.max(1,playerHp-30);updatePlayerHp();
+  setStatus('⏭ Scale skipped (−30 HP)','color:var(--muted)');
+  clearKeys();setTimeout(nextScaleItem,500);
 }
 
 // ─── HEALTH UPDATES ───────────────────────────────────────────────────────────
@@ -857,11 +1291,11 @@ function nextBoss(){
   closeOverlay('bossDefeatedOv');
   bossIdx++;
   if(bossIdx>=BOSSES.length){showVictory();return;}
-  // Restore some player HP between bosses
   playerHp=Math.min(playerMaxHp, playerHp+80);
   initBoss();
   locked=false;
-  nextChord();
+  if(gameMode==='scale') nextScaleItem();
+  else nextChord();
 }
 
 function showVictory(){
@@ -898,7 +1332,7 @@ function initBoss(){
     void el.offsetWidth; // reflow
     el.classList.add('idle');
   });
-  setStatus('Click the chord notes on the piano below','color:var(--muted)');
+  setStatus(gameMode==='scale'?'Select all 7 notes of the scale on the piano below':'Click the chord notes on the piano below','color:var(--muted)');
 }
 
 function setStatus(msg,style=''){
@@ -908,8 +1342,32 @@ function setStatus(msg,style=''){
 }
 
 function startGame(){
+  showScreen('intro');
+}
+
+function selectMode(mode){
+  gameMode=mode;
+  if(mode==='chord'){
+    showScreen('difficulty');
+  } else {
+    BOSSES=SCALE_BOSSES;
+    bossIdx=0;playerHp=350;playerMaxHp=350;score=0;correctCount=0;wrongCount=0;locked=false;
+    selectedKeys.clear();midiHeldNoteNames.clear();
+    buildPiano();midiSetup();initBoss();
+    document.getElementById('chordZone').style.display='none';
+    document.getElementById('scaleZone').style.display='';
+    showScreen('battle');
+    nextScaleItem();
+  }
+}
+
+function selectDifficulty(key){
+  BOSSES = DIFFICULTY_BOSSES[key] || BOSSES_BEGINNER;
+  gameMode='chord';
   bossIdx=0; playerHp=350; playerMaxHp=350; score=0; correctCount=0; wrongCount=0; locked=false;
   selectedKeys.clear(); midiHeldNoteNames.clear();
+  document.getElementById('chordZone').style.display='';
+  document.getElementById('scaleZone').style.display='none';
   buildPiano();
   midiSetup();
   initBoss();
@@ -951,30 +1409,36 @@ function handleMidiMessage(e){
 }
 
 function midiNoteOn(midiNum){
-  if(locked||!currentChord) return;
+  if(locked) return;
   const noteName=MIDI_NAMES[midiNum%12];
-  if(midiHeldNoteNames.has(noteName)) return;
-  midiHeldNoteNames.add(noteName);
-
-  // Highlight all matching on-screen keys
-  document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.add('sel'));
-
-  // Play sound — clamp octave to our piano range
   const oct=Math.max(3,Math.min(5,Math.floor(midiNum/12)-1));
-  synthNote(`${noteName}${oct}`,1.4,0.24);
-
+  const noteId=`${noteName}${oct}`;
+  if(gameMode==='scale'){
+    if(!currentScale||midiScaleNoteIds.has(noteId)) return;
+    midiScaleNoteIds.add(noteId);
+    document.querySelector(`.key[data-id="${noteId}"]`)?.classList.add('sel');
+    synthNote(noteId,1.4,0.24);
+  } else {
+    if(!currentChord||midiHeldNoteNames.has(noteName)) return;
+    midiHeldNoteNames.add(noteName);
+    document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.add('sel'));
+    synthNote(noteId,1.4,0.24);
+  }
   updateSelectedDisp();
   checkAutoDetect();
 }
 
 function midiNoteOff(midiNum){
   const noteName=MIDI_NAMES[midiNum%12];
-  midiHeldNoteNames.delete(noteName);
-
-  // Un-highlight matching keys only if not also click-selected
-  const clickHasNote=[...selectedKeys].some(id=>id.replace(/\d/g,'')===noteName);
-  if(!clickHasNote){
-    document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.remove('sel'));
+  const oct=Math.max(3,Math.min(5,Math.floor(midiNum/12)-1));
+  const noteId=`${noteName}${oct}`;
+  if(gameMode==='scale'){
+    midiScaleNoteIds.delete(noteId);
+    if(!selectedKeys.has(noteId)) document.querySelector(`.key[data-id="${noteId}"]`)?.classList.remove('sel');
+  } else {
+    midiHeldNoteNames.delete(noteName);
+    const clickHasNote=[...selectedKeys].some(id=>id.replace(/\d/g,'')===noteName);
+    if(!clickHasNote) document.querySelectorAll(`.key[data-note="${noteName}"]`).forEach(k=>k.classList.remove('sel'));
   }
   updateSelectedDisp();
 }

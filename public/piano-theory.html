@@ -252,6 +252,105 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   font-family:'Inter',sans-serif;display:none}
 .sb-next-btn.vis{display:block}
 .sb-next-btn:hover{background:rgba(57,217,138,.26)}
+
+/* ── STAFF NOTE NAMING ── */
+.sn-clef-toggle{display:flex;gap:.6rem;margin-bottom:1.25rem;justify-content:center;flex-wrap:wrap}
+.sn-clef-btn{padding:.5rem 1.2rem;border-radius:100px;font-size:.85rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border);background:rgba(255,255,255,.04);
+  color:var(--muted);transition:all .18s;font-family:'Inter',sans-serif}
+.sn-clef-btn.act{background:rgba(255,45,120,.15);border-color:var(--pink);color:var(--pink)}
+.sn-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
+  margin-bottom:1.25rem;display:flex;justify-content:center;padding:.5rem .25rem;overflow:hidden}
+.sn-cards{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.sn-card{width:58px;height:68px;display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;font-weight:800;font-family:'Orbitron',monospace;
+  background:var(--card2);border:2px solid var(--border);border-radius:14px;
+  cursor:pointer;transition:all .18s;color:var(--off-white);user-select:none}
+.sn-card:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);transform:translateY(-3px)}
+.sn-card.sn-correct{background:rgba(57,217,138,.2);border-color:var(--green);color:var(--green);
+  transform:translateY(-3px) scale(1.08)}
+.sn-card.sn-wrong{background:rgba(255,45,120,.15);border-color:var(--pink);color:var(--pink)}
+.sn-position-label{text-align:center;font-size:.8rem;color:var(--muted);margin-bottom:.65rem;
+  font-family:'DM Mono',monospace;letter-spacing:.04em}
+.sn-score-row{display:flex;gap:.55rem;margin-bottom:.9rem}
+.sn-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem .4rem;text-align:center;font-size:.76rem;font-family:'DM Mono',monospace}
+.sn-feedback{min-height:1.7rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.5rem}
+.sn-mnemonic{background:rgba(255,45,120,.06);border:1px solid rgba(255,45,120,.18);
+  border-radius:10px;padding:.65rem 1rem;font-size:.8rem;color:var(--muted);
+  text-align:center;line-height:1.75;margin-top:.4rem}
+.sn-mnemonic strong{color:var(--pink)}
+
+/* ── INTERVAL QUIZ ── */
+.iv-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
+  margin-bottom:1.25rem;display:flex;justify-content:center;padding:.5rem;overflow:hidden}
+.iv-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.75rem}
+.iv-choice-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;
+  padding:.75rem;font-size:.95rem;font-weight:700;color:var(--off-white);cursor:pointer;
+  transition:all .15s;font-family:'Orbitron',monospace;letter-spacing:.06em}
+.iv-choice-btn:hover:not(:disabled){background:var(--card2);border-color:rgba(255,255,255,.2)}
+.iv-choice-btn.iv-correct{background:rgba(57,217,138,.18);border-color:var(--green);color:var(--green)}
+.iv-choice-btn.iv-wrong{background:rgba(255,45,120,.12);border-color:var(--pink);color:var(--pink)}
+.iv-choice-btn:disabled{cursor:default}
+.iv-feedback{min-height:1.8rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.5rem}
+.iv-score-row{display:flex;gap:.55rem;margin-bottom:.9rem}
+.iv-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem .4rem;text-align:center;font-size:.76rem;font-family:'DM Mono',monospace}
+.iv-hint-box{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);border-radius:10px;
+  padding:.7rem 1rem;font-size:.8rem;color:var(--muted);text-align:center;margin:.6rem 0;line-height:1.65}
+.iv-hint-box strong{color:var(--sky)}
+
+/* ── LINE OR SPACE ── */
+.ls-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
+  margin-bottom:1.4rem;display:flex;justify-content:center;padding:.5rem;overflow:hidden}
+.ls-btns{display:flex;gap:1rem;justify-content:center;margin-bottom:1rem}
+.ls-btn{width:145px;height:76px;border-radius:16px;font-size:1.1rem;font-weight:800;
+  font-family:'Orbitron',monospace;letter-spacing:.08em;border:2.5px solid;cursor:pointer;
+  transition:all .18s;background:transparent}
+.ls-btn-line{border-color:var(--sky);color:var(--sky);background:rgba(0,212,255,.08)}
+.ls-btn-line:hover:not(:disabled){background:rgba(0,212,255,.2);transform:scale(1.04)}
+.ls-btn-space{border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.08)}
+.ls-btn-space:hover:not(:disabled){background:rgba(168,85,247,.2);transform:scale(1.04)}
+.ls-btn.ls-correct{background:rgba(57,217,138,.22);border-color:var(--green);color:var(--green);transform:scale(1.05)}
+.ls-btn.ls-wrong{background:rgba(255,45,120,.18);border-color:var(--pink);color:var(--pink)}
+.ls-btn:disabled{cursor:default}
+.ls-score-row{display:flex;gap:.55rem;margin-bottom:.9rem}
+.ls-score-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem .4rem;text-align:center;font-size:.76rem;font-family:'DM Mono',monospace}
+.ls-feedback{min-height:1.8rem;font-size:1rem;font-weight:700;text-align:center;margin-bottom:.8rem}
+
+/* ── FALLING NOTES ── */
+.fn-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem}
+.fn-lives{font-size:1.25rem;letter-spacing:.1em}
+.fn-score-label{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700}
+.fn-score-label span{color:var(--pink)}
+.fn-level-label{font-size:.72rem;font-family:'DM Mono',monospace;color:var(--muted)}
+.fn-canvas-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
+  margin-bottom:1rem;overflow:hidden}
+#fn-canvas{display:block;width:100%;height:auto}
+.fn-note-btns{display:flex;gap:.45rem;justify-content:center;flex-wrap:wrap;margin-bottom:.65rem}
+.fn-note-btn{width:50px;height:54px;display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:800;font-family:'Orbitron',monospace;
+  background:var(--card2);border:2px solid var(--border);border-radius:12px;
+  cursor:pointer;transition:all .15s;color:var(--off-white)}
+.fn-note-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);transform:scale(1.06)}
+.fn-note-btn.fn-ok{background:rgba(57,217,138,.28);border-color:var(--green);color:var(--green)}
+.fn-note-btn.fn-bad{background:rgba(255,45,120,.2);border-color:var(--pink);color:var(--pink)}
+.fn-feedback{min-height:1.6rem;font-size:.95rem;font-weight:700;text-align:center;margin-bottom:.35rem}
+.fn-diff-hint{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:10px;
+  padding:.65rem 1rem;font-size:.8rem;color:var(--muted);text-align:center;margin:.75rem 0;line-height:1.65}
+.fn-diff-hint strong{color:var(--sky)}
+.fn-end-hi{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem}
+.fn-end-hi span{color:var(--amber);font-weight:700;font-family:'DM Mono',monospace}
+/* MIDI pill (shared) */
+.midi-pill{display:inline-flex;align-items:center;gap:.38rem;padding:.28rem .72rem;border-radius:20px;
+  font-size:.67rem;font-weight:600;font-family:'DM Mono',monospace;border:1px solid;letter-spacing:.04em;transition:all .3s}
+.midi-pill.unknown{background:rgba(107,114,128,.08);border-color:rgba(107,114,128,.25);color:var(--muted)}
+.midi-pill.connected{background:rgba(57,217,138,.1);border-color:rgba(57,217,138,.4);color:var(--green)}
+.midi-pill.disconnected{background:rgba(107,114,128,.06);border-color:rgba(107,114,128,.2);color:var(--muted)}
+.midi-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.midi-pill.connected .midi-dot{animation:midi-blink 1.4s ease-in-out infinite}
+@keyframes midi-blink{0%,100%{opacity:1}50%{opacity:.25}}
 </style>
 </head>
 <body>
@@ -279,6 +378,30 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <span class="mode-icon">🎵</span>
       <div class="mode-name">Create the Scale</div>
       <p class="mode-desc">Eight natural notes are shown on the staff. Click each note head to add ♯ or ♭ until the interval pattern W W H W W W H is correct for the chosen major scale.</p>
+      <span class="diff diff-med">Intermediate</span>
+    </div>
+    <div class="mode-card" onclick="startStaffNaming()">
+      <span class="mode-icon">🎼</span>
+      <div class="mode-name">Staff Note Names</div>
+      <p class="mode-desc">A note appears on a line or space of the treble or bass clef staff. Tap the correct letter name card to identify it. Master Every Good Boy Does Fine and FACE!</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
+    </div>
+    <div class="mode-card" onclick="startIntervalQuiz()">
+      <span class="mode-icon">📏</span>
+      <div class="mode-name">Interval Quiz</div>
+      <p class="mode-desc">Two notes appear on the treble clef staff. Count lines and spaces to identify the interval — 2nd, 3rd, 4th, 5th and beyond. Essential music theory!</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
+    </div>
+    <div class="mode-card" onclick="startLineSpace()">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-name">Line or Space?</div>
+      <p class="mode-desc">A note flashes on the treble or bass clef staff — is it sitting on a LINE or floating in a SPACE? Build lightning-fast recognition skills.</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
+    </div>
+    <div class="mode-card" onclick="startFallingNotes()">
+      <span class="mode-icon">🎮</span>
+      <div class="mode-name">Falling Notes</div>
+      <p class="mode-desc">Notes slide across the staff from right to left. Name each one before it passes the hit line! Speed increases as you level up. 3 lives — don't miss!</p>
       <span class="diff diff-med">Intermediate</span>
     </div>
   </div>
@@ -450,6 +573,251 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ STAFF NOTE NAMING SCREEN ══ -->
+<div class="screen" id="staff-naming-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="sn-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--pink),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Staff Note Names</div>
+      <p class="game-sub">A note appears on the staff — tap the correct letter name card to identify it.</p>
+      <div class="sn-clef-toggle">
+        <button class="sn-clef-btn act" onclick="snSetClef('treble',this)">Treble Clef</button>
+        <button class="sn-clef-btn" onclick="snSetClef('bass',this)">Bass Clef</button>
+        <button class="sn-clef-btn" onclick="snSetClef('both',this)">Both Clefs</button>
+      </div>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="sn-qlen-pills">
+          <div class="ks-qlen-pill" onclick="snSetQLen(9,this)">9</div>
+          <div class="ks-qlen-pill sel" onclick="snSetQLen(18,this)">18</div>
+          <div class="ks-qlen-pill" onclick="snSetQLen(27,this)">27</div>
+        </div>
+      </div>
+      <button class="btn-start-ks" onclick="snBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="sn-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="sn-progress-fill" class="ks-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="sn-q-num">1</span>&nbsp;/&nbsp;<span id="sn-q-total">18</span></div>
+      </div>
+      <div class="sn-score-row">
+        <div class="sn-score-box"><span id="sn-correct">0</span>/<span id="sn-total">0</span>&nbsp;✓</div>
+        <div class="sn-score-box"><span id="sn-pct">—</span></div>
+        <div class="sn-score-box">🔥&nbsp;<span id="sn-streak">0</span></div>
+        <div class="sn-score-box" style="background:rgba(255,45,120,.07);border-color:rgba(255,45,120,.25)">🎼&nbsp;<span id="sn-clef-label">Treble</span></div>
+      </div>
+      <div class="sn-position-label" id="sn-position-label">Identify the highlighted note</div>
+      <div class="sn-staff-wrap">
+        <svg id="sn-staff" viewBox="0 0 340 130" width="100%" style="max-width:480px;display:block;margin:0 auto"></svg>
+      </div>
+      <div id="sn-feedback" class="sn-feedback"></div>
+      <div id="sn-cards" class="sn-cards"></div>
+      <div id="sn-mnemonic" class="sn-mnemonic" style="display:none"></div>
+      <button class="gs-end-early" onclick="snEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="sn-end">
+      <div class="gs-end-card">
+        <span id="sn-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="sn-end-grade" class="gs-end-grade">A</div>
+        <div id="sn-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="sn-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="sn-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="sn-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-ks" style="flex:1;margin-top:0" onclick="snPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INTERVAL QUIZ SCREEN ══ -->
+<div class="screen" id="interval-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="iv-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Interval Quiz</div>
+      <p class="game-sub">Two notes appear on the treble clef — identify the interval between them.</p>
+      <div class="iv-hint-box">
+        <strong>How to count:</strong> Start on the bottom note (count it as 1), then count up each line and space until you reach the top note.
+      </div>
+      <div class="ks-session-config" style="margin-top:.85rem">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="iv-qlen-pills">
+          <div class="ks-qlen-pill" onclick="ivSetQLen(5,this)">5</div>
+          <div class="ks-qlen-pill sel" onclick="ivSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill" onclick="ivSetQLen(15,this)">15</div>
+        </div>
+      </div>
+      <button class="btn-start-ks" style="background:linear-gradient(135deg,var(--sky),var(--purple));margin-top:.5rem" onclick="ivBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="iv-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="iv-progress-fill" class="ks-progress-fill" style="background:linear-gradient(90deg,var(--sky),var(--purple))"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="iv-q-num">1</span>&nbsp;/&nbsp;<span id="iv-q-total">10</span></div>
+      </div>
+      <div class="iv-score-row">
+        <div class="iv-score-box"><span id="iv-correct">0</span>/<span id="iv-total">0</span>&nbsp;✓</div>
+        <div class="iv-score-box"><span id="iv-pct">—</span></div>
+        <div class="iv-score-box">🔥&nbsp;<span id="iv-streak">0</span></div>
+      </div>
+      <div class="iv-staff-wrap">
+        <svg id="iv-staff" viewBox="0 0 340 150" width="100%" style="max-width:480px;display:block;margin:0 auto"></svg>
+      </div>
+      <div id="iv-feedback" class="iv-feedback"></div>
+      <div id="iv-choices" class="iv-choices"></div>
+      <button class="gs-end-early" onclick="ivEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="iv-end">
+      <div class="gs-end-card">
+        <span id="iv-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="iv-end-grade" class="gs-end-grade" style="color:var(--sky)">A</div>
+        <div id="iv-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="iv-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="iv-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="iv-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-ks" style="flex:1;margin-top:0;background:linear-gradient(135deg,var(--sky),var(--purple))" onclick="ivPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LINE OR SPACE SCREEN ══ -->
+<div class="screen" id="line-space-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="ls-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Line or Space?</div>
+      <p class="game-sub">Is the note sitting on a LINE or floating in a SPACE? Answer fast!</p>
+      <div class="sn-clef-toggle">
+        <button class="sn-clef-btn act" onclick="lsSetClef('treble',this)">Treble Clef</button>
+        <button class="sn-clef-btn" onclick="lsSetClef('bass',this)">Bass Clef</button>
+        <button class="sn-clef-btn" onclick="lsSetClef('both',this)">Both Clefs</button>
+      </div>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="ls-qlen-pills">
+          <div class="ks-qlen-pill" onclick="lsSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill sel" onclick="lsSetQLen(20,this)">20</div>
+          <div class="ks-qlen-pill" onclick="lsSetQLen(30,this)">30</div>
+        </div>
+      </div>
+      <button class="btn-start-sb" onclick="lsBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="ls-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="ls-progress-fill" class="sb-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="ls-q-num">1</span>&nbsp;/&nbsp;<span id="ls-q-total">20</span></div>
+      </div>
+      <div class="ls-score-row">
+        <div class="ls-score-box"><span id="ls-correct">0</span>/<span id="ls-total">0</span>&nbsp;✓</div>
+        <div class="ls-score-box"><span id="ls-pct">—</span></div>
+        <div class="ls-score-box">🔥&nbsp;<span id="ls-streak">0</span></div>
+        <div class="ls-score-box" style="background:rgba(57,217,138,.07);border-color:rgba(57,217,138,.25)">🎼&nbsp;<span id="ls-clef-label">Treble</span></div>
+      </div>
+      <div class="ls-staff-wrap">
+        <svg id="ls-staff" viewBox="0 0 340 130" width="100%" style="max-width:480px;display:block;margin:0 auto"></svg>
+      </div>
+      <div id="ls-feedback" class="ls-feedback"></div>
+      <div class="ls-btns">
+        <button class="ls-btn ls-btn-line" id="ls-btn-line" onclick="lsGuess('line')">LINE</button>
+        <button class="ls-btn ls-btn-space" id="ls-btn-space" onclick="lsGuess('space')">SPACE</button>
+      </div>
+      <button class="gs-end-early" onclick="lsEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="ls-end">
+      <div class="gs-end-card">
+        <span id="ls-end-emoji" class="gs-end-emoji">⚡</span>
+        <div id="ls-end-grade" class="gs-end-grade" style="color:var(--green)">A</div>
+        <div id="ls-end-msg" class="gs-end-msg">Session complete!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="ls-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="ls-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="ls-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="lsPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FALLING NOTES SCREEN ══ -->
+<div class="screen" id="falling-notes-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="fnStop();goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="fn-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--pink),var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Falling Notes</div>
+      <p class="game-sub">Notes slide across the staff — name each one before it passes the hit line!</p>
+      <div class="sn-clef-toggle">
+        <button class="sn-clef-btn act" onclick="fnSetClef('treble',this)">Treble Clef</button>
+        <button class="sn-clef-btn" onclick="fnSetClef('bass',this)">Bass Clef</button>
+        <button class="sn-clef-btn" onclick="fnSetClef('both',this)">Both Clefs</button>
+      </div>
+      <div class="fn-diff-hint">
+        <strong>How to play:</strong> Tap the correct letter (A–G) when a note approaches the <span style="color:var(--pink)">pink hit line</span>. You have 3 lives — each missed note costs one. Speed increases every 5 correct answers!
+      </div>
+      <button class="btn-start-ks" style="background:linear-gradient(135deg,var(--pink),var(--sky))" onclick="fnBeginSession()">▶ Start Game</button>
+    </div>
+
+    <div class="gs-panel" id="fn-play">
+      <div class="fn-header">
+        <div class="fn-lives" id="fn-lives">❤️❤️❤️</div>
+        <div class="fn-score-label">Score:&nbsp;<span id="fn-score">0</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem">
+          <div class="fn-level-label">Level&nbsp;<span id="fn-level">1</span></div>
+          <span class="midi-pill unknown" id="fn-midiPill" title="MIDI keyboard — press white keys to answer">
+            <span class="midi-dot"></span><span id="fn-midiPillTxt">MIDI…</span>
+          </span>
+        </div>
+      </div>
+      <div class="fn-canvas-wrap">
+        <canvas id="fn-canvas" width="480" height="130"></canvas>
+      </div>
+      <div id="fn-feedback" class="fn-feedback"></div>
+      <div class="fn-note-btns" id="fn-note-btns"></div>
+      <button class="gs-end-early" onclick="fnStop();fnShowEnd()">✕ End Game</button>
+    </div>
+
+    <div class="gs-panel" id="fn-end">
+      <div class="gs-end-card">
+        <span id="fn-end-emoji" class="gs-end-emoji">🎵</span>
+        <div id="fn-end-grade" class="gs-end-grade">A</div>
+        <div id="fn-end-msg" class="gs-end-msg">Game over!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="fn-end-score" class="gs-end-stat-val">0</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="fn-end-level" class="gs-end-stat-val">1</div><div class="gs-end-stat-lbl">Level Reached</div></div>
+          <div class="gs-end-stat"><div id="fn-end-correct" class="gs-end-stat-val">0</div><div class="gs-end-stat-lbl">Correct</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-ks" style="flex:1;margin-top:0;background:linear-gradient(135deg,var(--pink),var(--sky))" onclick="fnPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Supabase creds (same pattern as other games) ──────────
 const _SUPA_URL=(()=>{const k=Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k));if(!k)return'';try{const u=JSON.parse(localStorage.getItem(k)||'{}');return u.token_type?window.__SUPA_URL||'':''}catch{return''};})();
@@ -495,7 +863,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -506,7 +874,7 @@ function gsPanel(group,id){
   const el=document.getElementById(id);if(el)el.classList.add('active');
   window.scrollTo(0,0);
 }
-function goMenu(){ ksStopTimer(); showScreen('mode-select'); }
+function goMenu(){ ksStopTimer(); fnStop(); showScreen('mode-select'); }
 function startKeyQuiz(){ showScreen('key-sig-screen'); ksInit(); }
 function startScaleBuilder(){ showScreen('scale-screen'); gsPanel(['sb-start','sb-play','sb-end'],'sb-start'); }
 
@@ -1025,6 +1393,577 @@ function sbToggleNote(idx){
   document.getElementById('sb-feedback').innerHTML='';
   document.getElementById('sb-intervals').innerHTML='';
   document.getElementById('sb-interval-labels').innerHTML='';
+}
+
+function startStaffNaming(){ showScreen('staff-naming-screen'); gsPanel(['sn-start','sn-play','sn-end'],'sn-start'); }
+function startIntervalQuiz(){ showScreen('interval-screen'); gsPanel(['iv-start','iv-play','iv-end'],'iv-start'); }
+function startLineSpace(){ showScreen('line-space-screen'); gsPanel(['ls-start','ls-play','ls-end'],'ls-start'); }
+
+// ══════════════════════════════════════════════════════════
+// STAFF NOTE NAMING
+// ══════════════════════════════════════════════════════════
+const SN_TREBLE=[
+  {step:0,name:'E',type:'line',num:1},{step:1,name:'F',type:'space',num:1},
+  {step:2,name:'G',type:'line',num:2},{step:3,name:'A',type:'space',num:2},
+  {step:4,name:'B',type:'line',num:3},{step:5,name:'C',type:'space',num:3},
+  {step:6,name:'D',type:'line',num:4},{step:7,name:'E',type:'space',num:4},
+  {step:8,name:'F',type:'line',num:5}
+];
+const SN_BASS=[
+  {step:0,name:'G',type:'line',num:1},{step:1,name:'A',type:'space',num:1},
+  {step:2,name:'B',type:'line',num:2},{step:3,name:'C',type:'space',num:2},
+  {step:4,name:'D',type:'line',num:3},{step:5,name:'E',type:'space',num:3},
+  {step:6,name:'F',type:'line',num:4},{step:7,name:'G',type:'space',num:4},
+  {step:8,name:'A',type:'line',num:5}
+];
+function snMnemonic(pos){
+  if(pos.clef==='treble') return pos.type==='line'
+    ?'Lines ↑: <strong>E</strong>very <strong>G</strong>ood <strong>B</strong>oy <strong>D</strong>oes <strong>F</strong>ine'
+    :'Spaces ↑: <strong>F</strong> · <strong>A</strong> · <strong>C</strong> · <strong>E</strong> = FACE';
+  return pos.type==='line'
+    ?'Lines ↑: <strong>G</strong>ood <strong>B</strong>oys <strong>D</strong>o <strong>F</strong>ine <strong>A</strong>lways'
+    :'Spaces ↑: <strong>A</strong>ll <strong>C</strong>ows <strong>E</strong>at <strong>G</strong>rass';
+}
+
+let snClef='treble',snSessionLen=18,snCurrent=null;
+let snScore={correct:0,total:0,streak:0,bestStreak:0};
+let snAnswered=false,snQNum=0,snPool=[];
+
+function snSetClef(clef,el){
+  snClef=clef;
+  document.querySelectorAll('#sn-start .sn-clef-btn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+function snSetQLen(n,el){
+  snSessionLen=n;
+  document.querySelectorAll('#sn-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function snBeginSession(){
+  snScore={correct:0,total:0,streak:0,bestStreak:0};snQNum=0;
+  let base=[];
+  if(snClef==='treble') base=SN_TREBLE.map(p=>({...p,clef:'treble'}));
+  else if(snClef==='bass') base=SN_BASS.map(p=>({...p,clef:'bass'}));
+  else base=[...SN_TREBLE.map(p=>({...p,clef:'treble'})),...SN_BASS.map(p=>({...p,clef:'bass'}))];
+  snPool=[];
+  while(snPool.length<snSessionLen){snPool.push(...[...base].sort(()=>Math.random()-.5));}
+  snPool=snPool.slice(0,snSessionLen);
+  gsPanel(['sn-start','sn-play','sn-end'],'sn-play');
+  snNextQuestion();
+}
+function snNextQuestion(){
+  if(snQNum>=snSessionLen){snEndSession();return;}
+  snCurrent=snPool[snQNum];snAnswered=false;snQNum++;
+  document.getElementById('sn-q-num').textContent=snQNum;
+  document.getElementById('sn-q-total').textContent=snSessionLen;
+  document.getElementById('sn-progress-fill').style.width=Math.round(((snQNum-1)/snSessionLen)*100)+'%';
+  document.getElementById('sn-feedback').textContent='';
+  document.getElementById('sn-mnemonic').style.display='none';
+  const isLine=snCurrent.type==='line';
+  const clefLbl=snCurrent.clef==='treble'?'Treble':'Bass';
+  document.getElementById('sn-clef-label').textContent=clefLbl;
+  document.getElementById('sn-position-label').textContent=`${clefLbl} Clef — ${isLine?'Line':'Space'} ${snCurrent.num} (from bottom)`;
+  snDrawStaff();snBuildCards();
+}
+function snDrawStaff(){
+  const svg=document.getElementById('sn-staff');if(!svg)return;
+  const W=340,H=130,lg=14,halfStep=7,staffTop=28,bottomLine=staffTop+4*lg;
+  const noteY=s=>bottomLine-s*halfStep;
+  let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
+  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
+  if(snCurrent.clef==='treble'){
+    s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+  } else {
+    s+=`<text x="8" y="${bottomLine-lg+4}" font-family="serif" font-size="40" fill="#00D4FF" dominant-baseline="alphabetic">𝄢</text>`;
+  }
+  const ny=noteY(snCurrent.step);
+  s+=`<ellipse cx="200" cy="${ny}" rx="32" ry="24" fill="rgba(255,45,120,0.07)"/>`;
+  s+=`<ellipse cx="200" cy="${ny}" rx="11" ry="7.5" fill="#FF2D78" stroke="#FF2D78" stroke-width="1.5" opacity="0.92"/>`;
+  s+=`<ellipse cx="201" cy="${ny}" rx="5" ry="3.5" fill="#0f0d1a" stroke="none" transform="rotate(-15,200,${ny})"/>`;
+  s+=`<line x1="211" y1="${ny}" x2="211" y2="${ny-36}" stroke="rgba(255,45,120,0.6)" stroke-width="1.5"/>`;
+  svg.innerHTML=s;
+}
+function snBuildCards(){
+  const container=document.getElementById('sn-cards');
+  const letters=['A','B','C','D','E','F','G'];
+  const correct=snCurrent.name;
+  const wrong=letters.filter(l=>l!==correct).sort(()=>Math.random()-.5).slice(0,3);
+  const choices=[correct,...wrong].sort(()=>Math.random()-.5);
+  container.innerHTML='';
+  choices.forEach(letter=>{
+    const btn=document.createElement('button');
+    btn.className='sn-card';btn.textContent=letter;
+    btn.onclick=()=>snGuess(letter,btn);
+    container.appendChild(btn);
+  });
+}
+function snGuess(letter,btn){
+  if(snAnswered)return;snAnswered=true;
+  const correct=letter===snCurrent.name;
+  snScore.total++;
+  document.querySelectorAll('.sn-card').forEach(b=>b.style.pointerEvents='none');
+  const fb=document.getElementById('sn-feedback');
+  const mnemEl=document.getElementById('sn-mnemonic');
+  mnemEl.innerHTML=snMnemonic(snCurrent);mnemEl.style.display='block';
+  if(correct){
+    snScore.correct++;snScore.streak++;snScore.bestStreak=Math.max(snScore.bestStreak,snScore.streak);
+    btn.classList.add('sn-correct');fb.textContent='✓ Correct!';fb.style.color='var(--green)';ksSndCorrect();
+  }else{
+    snScore.streak=0;btn.classList.add('sn-wrong');
+    document.querySelectorAll('.sn-card').forEach(b=>{if(b.textContent===snCurrent.name)b.classList.add('sn-correct');});
+    fb.textContent=`✗ That's ${snCurrent.name}`;fb.style.color='var(--pink)';ksSndWrong();
+  }
+  snUpdateScoreUI();
+  if(snQNum>=snSessionLen)setTimeout(snEndSession,2200);else setTimeout(snNextQuestion,2200);
+}
+function snUpdateScoreUI(){
+  document.getElementById('sn-correct').textContent=snScore.correct;
+  document.getElementById('sn-total').textContent=snScore.total;
+  document.getElementById('sn-pct').textContent=snScore.total>0?Math.round(snScore.correct/snScore.total*100)+'%':'—';
+  document.getElementById('sn-streak').textContent=snScore.streak;
+}
+function snEndSession(){
+  const pct=snScore.total>0?Math.round(snScore.correct/snScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  document.getElementById('sn-end-emoji').textContent=emoji;
+  document.getElementById('sn-end-grade').textContent=grade;
+  document.getElementById('sn-end-grade').style.color=gradeCols[grade];
+  document.getElementById('sn-end-msg').textContent=pct>=95?'Outstanding!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep practising!';
+  document.getElementById('sn-end-score').textContent=`${snScore.correct}/${snScore.total}`;
+  document.getElementById('sn-end-pct').textContent=pct+'%';
+  document.getElementById('sn-end-streak').textContent=snScore.bestStreak;
+  gsPanel(['sn-start','sn-play','sn-end'],'sn-end');
+  ptSaveScore('staff_naming',snScore.correct*100,snScore.correct,snScore.total,snScore.bestStreak);
+}
+function snPlayAgain(){gsPanel(['sn-start','sn-play','sn-end'],'sn-start');}
+
+// ══════════════════════════════════════════════════════════
+// INTERVAL QUIZ
+// ══════════════════════════════════════════════════════════
+const IV_NAMES=['Unison','2nd','3rd','4th','5th','6th','7th','Octave'];
+const IV_TREBLE_NAMES=['E','F','G','A','B','C','D','E','F'];
+
+let ivSessionLen=10,ivCurrent=null;
+let ivScore={correct:0,total:0,streak:0,bestStreak:0};
+let ivAnswered=false,ivQNum=0;
+
+function ivSetQLen(n,el){
+  ivSessionLen=n;
+  document.querySelectorAll('#iv-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function ivBeginSession(){
+  ivScore={correct:0,total:0,streak:0,bestStreak:0};ivQNum=0;
+  gsPanel(['iv-start','iv-play','iv-end'],'iv-play');ivNextQuestion();
+}
+function ivNextQuestion(){
+  if(ivQNum>=ivSessionLen){ivEndSession();return;}
+  ivAnswered=false;ivQNum++;
+  document.getElementById('iv-q-num').textContent=ivQNum;
+  document.getElementById('iv-q-total').textContent=ivSessionLen;
+  document.getElementById('iv-progress-fill').style.width=Math.round(((ivQNum-1)/ivSessionLen)*100)+'%';
+  document.getElementById('iv-feedback').textContent='';
+  const intervalIdx=Math.floor(Math.random()*7)+1;
+  const maxLower=8-intervalIdx;
+  const lower=Math.floor(Math.random()*(maxLower+1));
+  ivCurrent={lower,upper:lower+intervalIdx,interval:intervalIdx};
+  ivDrawStaff();ivBuildChoices();
+}
+function ivDrawStaff(){
+  const svg=document.getElementById('iv-staff');if(!svg)return;
+  const W=340,H=150,lg=14,halfStep=7,staffTop=35,bottomLine=staffTop+4*lg;
+  const noteY=s=>bottomLine-s*halfStep;
+  let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
+  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
+  s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+  const lx=145,ux=215;
+  const ly=noteY(ivCurrent.lower),uy=noteY(ivCurrent.upper);
+  // Bracket hint line between notes
+  s+=`<line x1="${(lx+ux)/2}" y1="${ly}" x2="${(lx+ux)/2}" y2="${uy}" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  // Lower note (sky blue)
+  s+=`<ellipse cx="${lx}" cy="${ly}" rx="11" ry="7.5" fill="#00D4FF" stroke="#00D4FF" stroke-width="1" opacity="0.9"/>`;
+  s+=`<ellipse cx="${lx+1}" cy="${ly}" rx="5" ry="3.5" fill="#0f0d1a" stroke="none" transform="rotate(-15,${lx},${ly})"/>`;
+  s+=`<line x1="${lx+11}" y1="${ly}" x2="${lx+11}" y2="${Math.min(ly,bottomLine-56)}" stroke="rgba(0,212,255,0.65)" stroke-width="1.5"/>`;
+  // Upper note (purple)
+  s+=`<ellipse cx="${ux}" cy="${uy}" rx="11" ry="7.5" fill="#A855F7" stroke="#A855F7" stroke-width="1" opacity="0.9"/>`;
+  s+=`<ellipse cx="${ux+1}" cy="${uy}" rx="5" ry="3.5" fill="#0f0d1a" stroke="none" transform="rotate(-15,${ux},${uy})"/>`;
+  s+=`<line x1="${ux+11}" y1="${uy}" x2="${ux+11}" y2="${Math.min(uy,bottomLine-56)}" stroke="rgba(168,85,247,0.65)" stroke-width="1.5"/>`;
+  // Note name labels below staff
+  s+=`<text x="${lx}" y="${bottomLine+20}" font-family="Inter,sans-serif" font-size="11" fill="rgba(0,212,255,0.65)" text-anchor="middle">${IV_TREBLE_NAMES[ivCurrent.lower]}</text>`;
+  s+=`<text x="${ux}" y="${bottomLine+20}" font-family="Inter,sans-serif" font-size="11" fill="rgba(168,85,247,0.65)" text-anchor="middle">${IV_TREBLE_NAMES[ivCurrent.upper]}</text>`;
+  svg.innerHTML=s;
+}
+function ivBuildChoices(){
+  const container=document.getElementById('iv-choices');
+  const correct=ivCurrent.interval;
+  const pool=[1,2,3,4,5,6,7].filter(i=>i!==correct).sort(()=>Math.random()-.5).slice(0,3);
+  const choices=[correct,...pool].sort(()=>Math.random()-.5);
+  container.innerHTML='';
+  choices.forEach(iv=>{
+    const btn=document.createElement('button');
+    btn.className='iv-choice-btn';btn.textContent=IV_NAMES[iv];
+    btn.onclick=()=>ivGuess(iv,btn);container.appendChild(btn);
+  });
+}
+function ivGuess(iv,btn){
+  if(ivAnswered)return;ivAnswered=true;
+  const correct=iv===ivCurrent.interval;
+  ivScore.total++;
+  document.querySelectorAll('.iv-choice-btn').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('iv-feedback');
+  if(correct){
+    ivScore.correct++;ivScore.streak++;ivScore.bestStreak=Math.max(ivScore.bestStreak,ivScore.streak);
+    btn.classList.add('iv-correct');fb.textContent='✓ Correct!';fb.style.color='var(--green)';ksSndCorrect();
+  }else{
+    ivScore.streak=0;btn.classList.add('iv-wrong');
+    document.querySelectorAll('.iv-choice-btn').forEach(b=>{if(b.textContent===IV_NAMES[ivCurrent.interval])b.classList.add('iv-correct');});
+    fb.textContent=`✗ That's a ${IV_NAMES[ivCurrent.interval]}`;fb.style.color='var(--pink)';ksSndWrong();
+  }
+  ivUpdateScoreUI();
+  if(ivQNum>=ivSessionLen)setTimeout(ivEndSession,2000);else setTimeout(ivNextQuestion,2000);
+}
+function ivUpdateScoreUI(){
+  document.getElementById('iv-correct').textContent=ivScore.correct;
+  document.getElementById('iv-total').textContent=ivScore.total;
+  document.getElementById('iv-pct').textContent=ivScore.total>0?Math.round(ivScore.correct/ivScore.total*100)+'%':'—';
+  document.getElementById('iv-streak').textContent=ivScore.streak;
+}
+function ivEndSession(){
+  const pct=ivScore.total>0?Math.round(ivScore.correct/ivScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('iv-end-emoji').textContent=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  document.getElementById('iv-end-grade').textContent=grade;
+  document.getElementById('iv-end-grade').style.color=gradeCols[grade];
+  document.getElementById('iv-end-msg').textContent=pct>=95?'Outstanding!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep practising!';
+  document.getElementById('iv-end-score').textContent=`${ivScore.correct}/${ivScore.total}`;
+  document.getElementById('iv-end-pct').textContent=pct+'%';
+  document.getElementById('iv-end-streak').textContent=ivScore.bestStreak;
+  gsPanel(['iv-start','iv-play','iv-end'],'iv-end');
+  ptSaveScore('interval_quiz',ivScore.correct*100,ivScore.correct,ivScore.total,ivScore.bestStreak);
+}
+function ivPlayAgain(){gsPanel(['iv-start','iv-play','iv-end'],'iv-start');}
+
+// ══════════════════════════════════════════════════════════
+// LINE OR SPACE
+// ══════════════════════════════════════════════════════════
+let lsClef='treble',lsSessionLen=20,lsCurrent=null;
+let lsScore={correct:0,total:0,streak:0,bestStreak:0};
+let lsAnswered=false,lsQNum=0;
+
+function lsSetClef(clef,el){
+  lsClef=clef;
+  document.querySelectorAll('#ls-start .sn-clef-btn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+function lsSetQLen(n,el){
+  lsSessionLen=n;
+  document.querySelectorAll('#ls-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function lsBeginSession(){
+  lsScore={correct:0,total:0,streak:0,bestStreak:0};lsQNum=0;
+  gsPanel(['ls-start','ls-play','ls-end'],'ls-play');lsNextQuestion();
+}
+function lsNextQuestion(){
+  if(lsQNum>=lsSessionLen){lsEndSession();return;}
+  lsAnswered=false;lsQNum++;
+  document.getElementById('ls-q-num').textContent=lsQNum;
+  document.getElementById('ls-q-total').textContent=lsSessionLen;
+  document.getElementById('ls-progress-fill').style.width=Math.round(((lsQNum-1)/lsSessionLen)*100)+'%';
+  document.getElementById('ls-feedback').textContent='';
+  document.getElementById('ls-btn-line').className='ls-btn ls-btn-line';
+  document.getElementById('ls-btn-space').className='ls-btn ls-btn-space';
+  document.getElementById('ls-btn-line').disabled=false;
+  document.getElementById('ls-btn-space').disabled=false;
+  const step=Math.floor(Math.random()*9);
+  let clef=lsClef==='both'?(Math.random()<.5?'treble':'bass'):lsClef;
+  document.getElementById('ls-clef-label').textContent=clef==='treble'?'Treble':'Bass';
+  lsCurrent={step,type:step%2===0?'line':'space',clef};
+  lsDrawStaff();
+}
+function lsDrawStaff(){
+  const svg=document.getElementById('ls-staff');if(!svg)return;
+  const W=340,H=130,lg=14,halfStep=7,staffTop=28,bottomLine=staffTop+4*lg;
+  const noteY=s=>bottomLine-s*halfStep;
+  let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
+  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
+  if(lsCurrent.clef==='treble'){
+    s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+  }else{
+    s+=`<text x="8" y="${bottomLine-lg+4}" font-family="serif" font-size="40" fill="#00D4FF" dominant-baseline="alphabetic">𝄢</text>`;
+  }
+  const ny=noteY(lsCurrent.step);
+  s+=`<ellipse cx="200" cy="${ny}" rx="30" ry="22" fill="rgba(57,217,138,0.09)"/>`;
+  s+=`<ellipse cx="200" cy="${ny}" rx="11" ry="7.5" fill="#39D98A" stroke="#39D98A" stroke-width="1.5" opacity="0.92"/>`;
+  s+=`<ellipse cx="201" cy="${ny}" rx="5" ry="3.5" fill="#0f0d1a" stroke="none" transform="rotate(-15,200,${ny})"/>`;
+  s+=`<line x1="211" y1="${ny}" x2="211" y2="${ny-36}" stroke="rgba(57,217,138,0.65)" stroke-width="1.5"/>`;
+  svg.innerHTML=s;
+}
+function lsGuess(type){
+  if(lsAnswered)return;lsAnswered=true;
+  const correct=type===lsCurrent.type;
+  lsScore.total++;
+  document.getElementById('ls-btn-line').disabled=true;
+  document.getElementById('ls-btn-space').disabled=true;
+  const clickedBtn=document.getElementById(type==='line'?'ls-btn-line':'ls-btn-space');
+  const otherBtn=document.getElementById(lsCurrent.type==='line'?'ls-btn-line':'ls-btn-space');
+  const fb=document.getElementById('ls-feedback');
+  if(correct){
+    lsScore.correct++;lsScore.streak++;lsScore.bestStreak=Math.max(lsScore.bestStreak,lsScore.streak);
+    clickedBtn.classList.add('ls-correct');
+    fb.textContent=`✓ Correct! That note is on a ${lsCurrent.type}.`;fb.style.color='var(--green)';ksSndCorrect();
+  }else{
+    lsScore.streak=0;clickedBtn.classList.add('ls-wrong');otherBtn.classList.add('ls-correct');
+    fb.textContent=`✗ That's a ${lsCurrent.type}!`;fb.style.color='var(--pink)';ksSndWrong();
+  }
+  lsUpdateScoreUI();
+  if(lsQNum>=lsSessionLen)setTimeout(lsEndSession,1600);else setTimeout(lsNextQuestion,1600);
+}
+function lsUpdateScoreUI(){
+  document.getElementById('ls-correct').textContent=lsScore.correct;
+  document.getElementById('ls-total').textContent=lsScore.total;
+  document.getElementById('ls-pct').textContent=lsScore.total>0?Math.round(lsScore.correct/lsScore.total*100)+'%':'—';
+  document.getElementById('ls-streak').textContent=lsScore.streak;
+}
+function lsEndSession(){
+  const pct=lsScore.total>0?Math.round(lsScore.correct/lsScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('ls-end-emoji').textContent=pct>=85?'⚡':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  document.getElementById('ls-end-grade').textContent=grade;
+  document.getElementById('ls-end-grade').style.color=gradeCols[grade];
+  document.getElementById('ls-end-msg').textContent=pct>=95?'Lightning fast!':pct>=85?'Excellent!':pct>=70?'Well done!':pct>=55?'Keep going!':'Keep practising!';
+  document.getElementById('ls-end-score').textContent=`${lsScore.correct}/${lsScore.total}`;
+  document.getElementById('ls-end-pct').textContent=pct+'%';
+  document.getElementById('ls-end-streak').textContent=lsScore.bestStreak;
+  gsPanel(['ls-start','ls-play','ls-end'],'ls-end');
+  ptSaveScore('line_space',lsScore.correct*100,lsScore.correct,lsScore.total,lsScore.bestStreak);
+}
+function lsPlayAgain(){gsPanel(['ls-start','ls-play','ls-end'],'ls-start');}
+
+function startFallingNotes(){ showScreen('falling-notes-screen'); gsPanel(['fn-start','fn-play','fn-end'],'fn-start'); }
+
+// ══════════════════════════════════════════════════════════
+// FALLING NOTES
+// ══════════════════════════════════════════════════════════
+const FN_TREBLE_NAMES=['E','F','G','A','B','C','D','E','F'];
+const FN_BASS_NAMES=['G','A','B','C','D','E','F','G','A'];
+// Staff layout inside canvas (height=130)
+const FN_STAFF_TOP=18,FN_LG=14,FN_HS=7;
+const FN_BOTTOM=FN_STAFF_TOP+4*FN_LG; // 74
+const FN_HIT_X=90;  // target line
+const FN_MISS_X=35; // miss threshold
+
+function fnNoteY(step){return FN_BOTTOM-step*FN_HS;}
+
+let fnClef='treble',fnLives=3,fnScore=0,fnLevel=1,fnCorrectCount=0;
+let fnNotes=[],fnNextId=0,fnRaf=null,fnLastTs=0,fnRunning=false;
+let fnAutoSpawn=false,fnAutoSpawnTimer=0;
+
+function fnGetSpeed(){return 55+(fnLevel-1)*14;}   // px/s
+function fnGetSpawnDelay(){return Math.max(800,1200-(fnLevel-1)*60);} // ms after answer/miss
+
+function fnSetClef(clef,el){
+  fnClef=clef;
+  document.querySelectorAll('#fn-start .sn-clef-btn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+}
+
+function fnBeginSession(){
+  fnLives=3;fnScore=0;fnLevel=1;fnCorrectCount=0;
+  fnNotes=[];fnNextId=0;fnRaf=null;fnLastTs=0;fnRunning=true;
+  fnAutoSpawn=true;fnAutoSpawnTimer=0;
+  gsPanel(['fn-start','fn-play','fn-end'],'fn-play');
+  fnUpdateHeader();
+  document.getElementById('fn-feedback').textContent='';
+  fnBuildButtons();fnMidiSetup();
+  const canvas=document.getElementById('fn-canvas');
+  if(canvas.offsetWidth>0)canvas.width=canvas.offsetWidth;
+  fnRaf=requestAnimationFrame(fnLoop);
+}
+
+function fnBuildButtons(){
+  const c=document.getElementById('fn-note-btns');c.innerHTML='';
+  ['A','B','C','D','E','F','G'].forEach(l=>{
+    const btn=document.createElement('button');
+    btn.className='fn-note-btn';btn.textContent=l;btn.id='fn-btn-'+l;
+    btn.onclick=()=>fnAnswer(l,btn);c.appendChild(btn);
+  });
+}
+
+function fnLoop(ts){
+  if(!fnRunning)return;
+  const dt=fnLastTs?Math.min((ts-fnLastTs)/1000,.1):0;
+  fnLastTs=ts;
+  const canvas=document.getElementById('fn-canvas');
+  if(!canvas)return;
+  // Resize canvas if needed
+  if(canvas.offsetWidth>0&&Math.abs(canvas.width-canvas.offsetWidth)>10){
+    canvas.width=canvas.offsetWidth;
+  }
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  const speed=fnGetSpeed();
+  // Spawn logic
+  if(fnAutoSpawn&&!fnNotes.some(n=>n.state==='falling')){
+    if(fnAutoSpawnTimer<=0){fnSpawnNote(W);fnAutoSpawn=false;}
+    else fnAutoSpawnTimer-=dt*1000;
+  }
+  // Move notes
+  let missedThisFrame=false;
+  fnNotes.forEach(n=>{
+    if(n.state==='falling'){
+      n.x-=speed*dt;
+      if(n.x<FN_MISS_X){n.state='missed';fnOnMiss(n);missedThisFrame=true;}
+    }else{
+      n.alpha=Math.max(0,n.alpha-dt*2.5);
+    }
+  });
+  fnNotes=fnNotes.filter(n=>n.alpha>0);
+  if(missedThisFrame&&!fnRunning)return; // game over triggered
+  fnDrawCanvas(ctx,W,H);
+  fnRaf=requestAnimationFrame(fnLoop);
+}
+
+function fnSpawnNote(W){
+  const step=Math.floor(Math.random()*9);
+  const names=fnClef==='both'?(Math.random()<.5?FN_TREBLE_NAMES:FN_BASS_NAMES)
+    :(fnClef==='treble'?FN_TREBLE_NAMES:FN_BASS_NAMES);
+  const clef=fnClef==='both'?(names===FN_TREBLE_NAMES?'treble':'bass'):fnClef;
+  fnNotes.push({id:fnNextId++,step,name:names[step],clef,x:W+20,state:'falling',alpha:1});
+}
+
+function fnOnMiss(n){
+  fnLives--;
+  ksSndWrong();
+  const fb=document.getElementById('fn-feedback');
+  fb.textContent=`✗ Missed — that was ${n.name}!`;fb.style.color='var(--pink)';
+  n.alpha=1;
+  fnUpdateHeader();
+  if(fnLives<=0){fnRunning=false;setTimeout(fnShowEnd,900);return;}
+  fnAutoSpawnTimer=fnGetSpawnDelay();fnAutoSpawn=true;
+}
+
+function fnAnswer(letter,btn){
+  const active=fnNotes.filter(n=>n.state==='falling').sort((a,b)=>a.x-b.x)[0];
+  if(!active)return;
+  const correct=letter===active.name;
+  btn.classList.add(correct?'fn-ok':'fn-bad');
+  setTimeout(()=>btn.classList.remove('fn-ok','fn-bad'),300);
+  const fb=document.getElementById('fn-feedback');
+  if(correct){
+    active.state='correct';active.alpha=1;
+    fnScore+=10+(fnLevel-1)*3;fnCorrectCount++;
+    if(fnCorrectCount%5===0)fnLevel=Math.min(fnLevel+1,10);
+    fb.textContent=`✓ ${active.name}!`;fb.style.color='var(--green)';
+    ksSndCorrect();
+    fnUpdateHeader();
+    fnAutoSpawnTimer=fnGetSpawnDelay();fnAutoSpawn=true;
+  }else{
+    fb.textContent='Try again…';fb.style.color='var(--amber)';
+    ksSndWrong();
+  }
+}
+
+function fnUpdateHeader(){
+  document.getElementById('fn-score').textContent=fnScore;
+  document.getElementById('fn-level').textContent=fnLevel;
+  const hearts=['❤️','🤍'];
+  document.getElementById('fn-lives').textContent='❤️'.repeat(Math.max(0,fnLives))+'🤍'.repeat(Math.max(0,3-fnLives));
+}
+
+function fnDrawCanvas(ctx,W,H){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0f0d1a';ctx.fillRect(0,0,W,H);
+  // Hit zone
+  const hg=ctx.createLinearGradient(FN_HIT_X-18,0,FN_HIT_X+18,0);
+  hg.addColorStop(0,'rgba(255,45,120,0)');hg.addColorStop(.5,'rgba(255,45,120,0.14)');hg.addColorStop(1,'rgba(255,45,120,0)');
+  ctx.fillStyle=hg;ctx.fillRect(FN_HIT_X-18,0,36,H);
+  ctx.strokeStyle='rgba(255,45,120,0.55)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(FN_HIT_X,0);ctx.lineTo(FN_HIT_X,H);ctx.stroke();
+  // Staff
+  ctx.strokeStyle='rgba(232,236,240,0.35)';ctx.lineWidth=1.2;
+  for(let i=0;i<5;i++){const y=FN_STAFF_TOP+i*FN_LG;ctx.beginPath();ctx.moveTo(42,y);ctx.lineTo(W-6,y);ctx.stroke();}
+  // Clef (drawn for the note currently on screen, or default)
+  const activeNote=fnNotes.find(n=>n.state==='falling');
+  const clefToShow=activeNote?activeNote.clef:fnClef==='both'?'treble':fnClef;
+  ctx.font='54px serif';ctx.fillStyle='rgba(0,212,255,0.75)';ctx.textBaseline='alphabetic';
+  if(clefToShow==='treble')ctx.fillText('𝄞',2,FN_BOTTOM+8);
+  else{ctx.font='34px serif';ctx.fillText('𝄢',4,FN_BOTTOM-FN_LG+2);}
+  // Notes
+  fnNotes.forEach(n=>{
+    const ny=fnNoteY(n.step);
+    const a=n.alpha;
+    const col=n.state==='correct'?'#39D98A':n.state==='missed'?'#FF2D78':'#E8ECF0';
+    ctx.globalAlpha=a;
+    // Note head oval
+    ctx.save();
+    ctx.translate(n.x,ny);ctx.rotate(-0.22);
+    ctx.beginPath();ctx.ellipse(0,0,11,7,0,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.beginPath();ctx.ellipse(1.5,0,5.5,3.5,0,0,Math.PI*2);
+    ctx.fillStyle='#0f0d1a';ctx.fill();
+    ctx.restore();
+    // Stem up
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(n.x+11,ny);ctx.lineTo(n.x+11,Math.max(0,ny-38));ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+  ctx.textAlign='left';
+}
+
+function fnStop(){fnRunning=false;if(fnRaf){cancelAnimationFrame(fnRaf);fnRaf=null;}}
+
+function fnShowEnd(){
+  const pct=fnCorrectCount>0?Math.round(fnScore/(fnCorrectCount*10+(fnLevel-1)*3*fnCorrectCount||1)*100):0;
+  const grade=fnLevel>=8?'S':fnLevel>=6?'A':fnLevel>=4?'B':fnLevel>=3?'C':fnLevel>=2?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('fn-end-emoji').textContent=fnLevel>=6?'🏆':fnLevel>=4?'🎉':fnLevel>=3?'💪':'🎵';
+  document.getElementById('fn-end-grade').textContent=grade;
+  document.getElementById('fn-end-grade').style.color=gradeCols[grade];
+  document.getElementById('fn-end-msg').textContent=fnLevel>=6?'Incredible reading!':fnLevel>=4?'Great job!':fnLevel>=3?'Well done!':'Keep practising!';
+  document.getElementById('fn-end-score').textContent=fnScore;
+  document.getElementById('fn-end-level').textContent=fnLevel;
+  document.getElementById('fn-end-correct').textContent=fnCorrectCount;
+  gsPanel(['fn-start','fn-play','fn-end'],'fn-end');
+  ptSaveScore('falling_notes',fnScore,fnCorrectCount,0,0);
+}
+function fnPlayAgain(){fnStop();gsPanel(['fn-start','fn-play','fn-end'],'fn-start');}
+
+// ── Falling Notes MIDI engine ─────────────────────────────
+const FN_MIDI_NATURAL={0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+let _fnMidiAccess=null;
+function fnSetMidiStatus(s){
+  const pill=document.getElementById('fn-midiPill'),txt=document.getElementById('fn-midiPillTxt');
+  if(!pill)return;pill.className='midi-pill '+s;
+  txt.textContent=s==='connected'?'MIDI ●':s==='disconnected'?'No MIDI kbd':'MIDI N/A';
+}
+function fnSetupMidiInputs(){
+  if(!_fnMidiAccess)return;let n=0;
+  _fnMidiAccess.inputs.forEach(inp=>{inp.onmidimessage=fnHandleMidi;n++;});
+  fnSetMidiStatus(n>0?'connected':'disconnected');
+}
+function fnHandleMidi(e){
+  const[status,note,vel]=e.data,cmd=status&0xf0;
+  if(cmd===0x90&&vel>0) fnMidiNoteOn(note);
+}
+function fnMidiNoteOn(num){
+  if(!fnRunning)return;
+  const letter=FN_MIDI_NATURAL[num%12];
+  if(!letter)return; // black key — ignore
+  const btn=document.getElementById('fn-btn-'+letter);
+  if(btn)fnAnswer(letter,btn);
+}
+async function fnMidiSetup(){
+  if(!navigator.requestMIDIAccess){fnSetMidiStatus('unknown');return;}
+  try{
+    _fnMidiAccess=await navigator.requestMIDIAccess();
+    fnSetupMidiInputs();
+    _fnMidiAccess.onstatechange=()=>fnSetupMidiInputs();
+  }catch(_){fnSetMidiStatus('disconnected');}
 }
 
 function sbDrawStaff(checkResults){
