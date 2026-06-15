@@ -1199,7 +1199,7 @@ function ksDrawStaff(){
     ctx.beginPath();ctx.moveTo(14,y);ctx.lineTo(W-10,y);ctx.stroke();
   }
   ctx.font='74px serif';ctx.fillStyle='#00D4FF';
-  ctx.textBaseline='alphabetic';ctx.fillText('𝄞',5,bottomLine+11);
+  ctx.textBaseline='alphabetic';ctx.fillText('𝄞',5,bottomLine+25);
   const sharpSteps=[8,5,9,6,3,7,4];
   const flatSteps=[4,7,3,6,2,5,1];
   const accX=82,accSpacing=17;
@@ -1508,7 +1508,7 @@ function snDrawStaff(){
   let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
   for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
   if(snCurrent.clef==='treble'){
-    s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+    s+=`<text x="3" y="${bottomLine+24}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
   } else {
     s+=`<text x="8" y="${bottomLine-lg+4}" font-family="serif" font-size="40" fill="#00D4FF" dominant-baseline="alphabetic">𝄢</text>`;
   }
@@ -1639,7 +1639,7 @@ function ivDrawStaff(){
   const noteY=s=>bottomLine-s*halfStep;
   let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
   for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
-  s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+  s+=`<text x="3" y="${bottomLine+24}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
   const lx=145,ux=215;
   const ly=noteY(ivCurrent.lower),uy=noteY(ivCurrent.upper);
   // Bracket hint line between notes
@@ -1778,9 +1778,12 @@ function lsDrawStaff(){
   let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
   for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="8" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
   const ny=noteY(lsCurrent.step);
-  s+=`<ellipse cx="200" cy="${ny}" rx="30" ry="22" fill="rgba(57,217,138,0.09)"/>`;
-  s+=`<ellipse cx="200" cy="${ny}" rx="11" ry="7.5" fill="#39D98A" stroke="#39D98A" stroke-width="1.5" opacity="0.92"/>`;
-  s+=`<ellipse cx="200" cy="${ny}" rx="5.5" ry="3.8" fill="#0f0d1a" stroke="none" transform="rotate(-20,200,${ny})"/>`;
+  if(lsCurrent.type==='line'){
+    s+=`<rect x="10" y="${ny-5}" width="${W-18}" height="10" rx="5" fill="rgba(57,217,138,0.18)"><animate attributeName="opacity" values="0.35;1;0.35" dur="1s" repeatCount="indefinite"/></rect>`;
+    s+=`<line x1="10" y1="${ny}" x2="${W-8}" y2="${ny}" stroke="#39D98A" stroke-width="2.8"><animate attributeName="stroke-opacity" values="0.45;1;0.45" dur="1s" repeatCount="indefinite"/></line>`;
+  }else{
+    s+=`<rect x="10" y="${ny-halfStep+2}" width="${W-18}" height="${(halfStep-2)*2}" rx="3" fill="rgba(57,217,138,0.3)"><animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/></rect>`;
+  }
   svg.innerHTML=s;
 }
 function lsGuess(type){
@@ -2013,7 +2016,7 @@ function fnDrawCanvas(ctx,W,H){
   const activeNote=fnNotes.find(n=>n.state==='falling');
   const clefToShow=activeNote?activeNote.clef:fnClef==='both'?'treble':fnClef;
   ctx.font='54px serif';ctx.fillStyle='rgba(0,212,255,0.75)';ctx.textBaseline='alphabetic';
-  if(clefToShow==='treble')ctx.fillText('𝄞',2,FN_BOTTOM+8);
+  if(clefToShow==='treble')ctx.fillText('𝄞',2,FN_BOTTOM+18);
   else{ctx.font='34px serif';ctx.fillText('𝄢',4,FN_BOTTOM-FN_LG+2);}
   // Notes
   fnNotes.forEach(n=>{
@@ -2104,7 +2107,7 @@ function sbDrawStaff(checkResults){
     const y=staffTop+i*lg;
     s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1"/>`;
   }
-  s+=`<text x="4" y="${bottomLine+10}" font-family="serif" font-size="62" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
+  s+=`<text x="4" y="${bottomLine+25}" font-family="serif" font-size="62" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
   sbScale.notes.forEach((note,i)=>{
     const x=noteXs[i],y=noteY(note.step);
     const acc=sbState[i];
