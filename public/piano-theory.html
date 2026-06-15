@@ -1689,12 +1689,7 @@ function lsDrawStaff(){
   const W=340,H=130,lg=14,halfStep=7,staffTop=28,bottomLine=staffTop+4*lg;
   const noteY=s=>bottomLine-s*halfStep;
   let s=`<rect x="0" y="0" width="${W}" height="${H}" fill="#0f0d1a" rx="10"/>`;
-  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="10" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
-  if(lsCurrent.clef==='treble'){
-    s+=`<text x="3" y="${bottomLine+10}" font-family="serif" font-size="60" fill="#00D4FF" dominant-baseline="alphabetic">𝄞</text>`;
-  }else{
-    s+=`<text x="8" y="${bottomLine-lg+4}" font-family="serif" font-size="40" fill="#00D4FF" dominant-baseline="alphabetic">𝄢</text>`;
-  }
+  for(let i=0;i<5;i++){const y=staffTop+i*lg;s+=`<line x1="8" y1="${y}" x2="${W-8}" y2="${y}" stroke="rgba(232,236,240,0.35)" stroke-width="1.2"/>`;}
   const ny=noteY(lsCurrent.step);
   s+=`<ellipse cx="200" cy="${ny}" rx="30" ry="22" fill="rgba(57,217,138,0.09)"/>`;
   s+=`<ellipse cx="200" cy="${ny}" rx="11" ry="7.5" fill="#39D98A" stroke="#39D98A" stroke-width="1.5" opacity="0.92"/>`;
