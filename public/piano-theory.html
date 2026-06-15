@@ -1733,8 +1733,7 @@ function lsDrawStaff(){
   const ny=noteY(lsCurrent.step);
   s+=`<ellipse cx="200" cy="${ny}" rx="30" ry="22" fill="rgba(57,217,138,0.09)"/>`;
   s+=`<ellipse cx="200" cy="${ny}" rx="11" ry="7.5" fill="#39D98A" stroke="#39D98A" stroke-width="1.5" opacity="0.92"/>`;
-  s+=`<ellipse cx="201" cy="${ny}" rx="5" ry="3.5" fill="#0f0d1a" stroke="none" transform="rotate(-15,200,${ny})"/>`;
-  s+=`<line x1="211" y1="${ny}" x2="211" y2="${ny-36}" stroke="rgba(57,217,138,0.65)" stroke-width="1.5"/>`;
+  s+=`<ellipse cx="200" cy="${ny}" rx="5.5" ry="3.8" fill="#0f0d1a" stroke="none" transform="rotate(-20,200,${ny})"/>`;
   svg.innerHTML=s;
 }
 function lsGuess(type){
