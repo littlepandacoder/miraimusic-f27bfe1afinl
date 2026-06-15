@@ -1756,10 +1756,12 @@ function fnNoteY(step){return FN_BOTTOM-step*FN_HS;}
 
 let fnClef='treble',fnLives=3,fnScore=0,fnLevel=1,fnCorrectCount=0;
 let fnNotes=[],fnNextId=0,fnRaf=null,fnLastTs=0,fnRunning=false;
-let fnAutoSpawn=false,fnAutoSpawnTimer=0;
+let fnSpawnTimer=0;
+const FN_MAX_NOTES=4;
 
 function fnGetSpeed(){return 55+(fnLevel-1)*14;}   // px/s
-function fnGetSpawnDelay(){return Math.max(800,1200-(fnLevel-1)*60);} // ms after answer/miss
+// Gap between note spawns: keeps ~90px visual spacing at current speed
+function fnGetSpawnInterval(){return Math.round(90/fnGetSpeed()*1000);}
 
 function fnSetClef(clef,el){
   fnClef=clef;
@@ -1770,7 +1772,7 @@ function fnSetClef(clef,el){
 function fnBeginSession(){
   fnLives=3;fnScore=0;fnLevel=1;fnCorrectCount=0;
   fnNotes=[];fnNextId=0;fnRaf=null;fnLastTs=0;fnRunning=true;
-  fnAutoSpawn=true;fnAutoSpawnTimer=0;
+  fnSpawnTimer=0;
   gsPanel(['fn-start','fn-play','fn-end'],'fn-play');
   fnUpdateHeader();
   document.getElementById('fn-feedback').textContent='';
@@ -1802,10 +1804,10 @@ function fnLoop(ts){
   const W=canvas.width,H=canvas.height;
   const ctx=canvas.getContext('2d');
   const speed=fnGetSpeed();
-  // Spawn logic
-  if(fnAutoSpawn&&!fnNotes.some(n=>n.state==='falling')){
-    if(fnAutoSpawnTimer<=0){fnSpawnNote(W);fnAutoSpawn=false;}
-    else fnAutoSpawnTimer-=dt*1000;
+  // Spawn up to 4 notes at a time on a rolling interval
+  fnSpawnTimer-=dt*1000;
+  if(fnSpawnTimer<=0&&fnNotes.filter(n=>n.state==='falling').length<FN_MAX_NOTES){
+    fnSpawnNote(W);fnSpawnTimer=fnGetSpawnInterval();
   }
   // Move notes
   let missedThisFrame=false;
@@ -1839,7 +1841,6 @@ function fnOnMiss(n){
   n.alpha=1;
   fnUpdateHeader();
   if(fnLives<=0){fnRunning=false;setTimeout(fnShowEnd,900);return;}
-  fnAutoSpawnTimer=fnGetSpawnDelay();fnAutoSpawn=true;
 }
 
 function fnAnswer(letter,btn){
@@ -1856,7 +1857,6 @@ function fnAnswer(letter,btn){
     fb.textContent=`✓ ${active.name}!`;fb.style.color='var(--green)';
     ksSndCorrect();
     fnUpdateHeader();
-    fnAutoSpawnTimer=fnGetSpawnDelay();fnAutoSpawn=true;
   }else{
     fb.textContent='Try again…';fb.style.color='var(--amber)';
     ksSndWrong();
