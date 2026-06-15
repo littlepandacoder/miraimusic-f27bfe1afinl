@@ -319,6 +319,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .dta-btn.dta-correct{background:rgba(57,217,138,.18);border-color:var(--green);color:var(--green)}
 .dta-btn.dta-wrong{background:rgba(255,45,120,.12);border-color:var(--pink);color:var(--pink)}
 .dta-btn:disabled{cursor:default}
+.dta-grade-pill{display:inline-block;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--amber);letter-spacing:.03em;margin-bottom:.55rem}
 
 /* ── LINE OR SPACE ── */
 .ls-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
@@ -880,11 +881,25 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <p class="game-sub">Dynamics, tempo and articulation — symbol to meaning, and back.</p>
       <div class="ks-session-config">
         <div class="ks-session-config-title">Category</div>
-        <div class="ks-qlen-pills" id="dta-cat-pills">
+        <div class="ks-qlen-pills" id="dta-cat-pills" style="flex-wrap:wrap">
           <div class="ks-qlen-pill sel" onclick="dtaSetCat('all',this)">All</div>
           <div class="ks-qlen-pill" onclick="dtaSetCat('dynamics',this)">Dynamics</div>
           <div class="ks-qlen-pill" onclick="dtaSetCat('tempo',this)">Tempo</div>
           <div class="ks-qlen-pill" onclick="dtaSetCat('articulation',this)">Articulation</div>
+          <div class="ks-qlen-pill" onclick="dtaSetCat('expression',this)">Expression</div>
+        </div>
+      </div>
+      <div class="ks-session-config" style="margin-top:.7rem">
+        <div class="ks-session-config-title">Trinity Grade (cumulative)</div>
+        <div class="ks-qlen-pills" id="dta-grade-pills" style="flex-wrap:wrap">
+          <div class="ks-qlen-pill sel" onclick="dtaSetGrade('all',this)">All</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(1,this)">Gr.1</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(2,this)">Gr.2</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(3,this)">Gr.3</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(4,this)">Gr.4</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(5,this)">Gr.5</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(6,this)">Gr.6</div>
+          <div class="ks-qlen-pill" onclick="dtaSetGrade(8,this)">Gr.7-8</div>
         </div>
       </div>
       <div class="ks-session-config" style="margin-top:.7rem">
@@ -910,6 +925,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
         <div class="iv-score-box" id="dta-cat-badge-box">📚&nbsp;<span id="dta-cur-cat">—</span></div>
       </div>
       <div class="dta-card">
+        <div class="dta-grade-pill" id="dta-grade-pill">Grade 1</div>
         <div class="dta-prompt" id="dta-prompt">What is this marking called?</div>
         <div class="dta-symbol" id="dta-symbol" style="font-size:3.5rem">ff</div>
       </div>
@@ -2185,44 +2201,131 @@ async function fnMidiSetup(){
 // MUSIC VOCABULARY (Dynamics / Tempo / Articulation)
 // ══════════════════════════════════════════════════════════
 const DTA_DATA=[
-  // Dynamics
-  {sym:'pp',term:'Pianissimo',meaning:'Very soft',cat:'dynamics'},
-  {sym:'p',term:'Piano',meaning:'Soft',cat:'dynamics'},
-  {sym:'mp',term:'Mezzo-piano',meaning:'Moderately soft',cat:'dynamics'},
-  {sym:'mf',term:'Mezzo-forte',meaning:'Moderately loud',cat:'dynamics'},
-  {sym:'f',term:'Forte',meaning:'Loud',cat:'dynamics'},
-  {sym:'ff',term:'Fortissimo',meaning:'Very loud',cat:'dynamics'},
-  {sym:'sfz',term:'Sforzando',meaning:'Sudden strong accent on one note',cat:'dynamics'},
-  {sym:'cresc.',term:'Crescendo',meaning:'Gradually getting louder',cat:'dynamics'},
-  {sym:'dim.',term:'Diminuendo',meaning:'Gradually getting softer',cat:'dynamics'},
-  // Tempo
-  {sym:'Grave',term:'Grave',meaning:'Very slow and solemn',cat:'tempo',st:1},
-  {sym:'Largo',term:'Largo',meaning:'Very slow and broad',cat:'tempo',st:1},
-  {sym:'Adagio',term:'Adagio',meaning:'Slow and stately',cat:'tempo',st:1},
-  {sym:'Andante',term:'Andante',meaning:'At a walking pace',cat:'tempo',st:1},
-  {sym:'Moderato',term:'Moderato',meaning:'At a moderate pace',cat:'tempo',st:1},
-  {sym:'Allegro',term:'Allegro',meaning:'Fast and lively',cat:'tempo',st:1},
-  {sym:'Vivace',term:'Vivace',meaning:'Lively and quick',cat:'tempo',st:1},
-  {sym:'Presto',term:'Presto',meaning:'Very fast',cat:'tempo',st:1},
-  {sym:'rit.',term:'Ritardando',meaning:'Gradually slowing down',cat:'tempo'},
-  {sym:'accel.',term:'Accelerando',meaning:'Gradually speeding up',cat:'tempo'},
-  {sym:'a tempo',term:'A tempo',meaning:'Return to the original tempo',cat:'tempo',st:1},
-  // Articulation
-  {sym:'●',term:'Staccato',meaning:'Short and detached',cat:'articulation'},
-  {sym:'—',term:'Tenuto',meaning:'Hold the note for its full value',cat:'articulation'},
-  {sym:'>',term:'Accent',meaning:'Emphasize — play louder than surrounding notes',cat:'articulation'},
-  {sym:'𝄐',term:'Fermata',meaning:'Hold until the conductor signals',cat:'articulation'},
-  {sym:'tr',term:'Trill',meaning:'Rapidly alternate between two adjacent notes',cat:'articulation'},
-  {sym:'legato',term:'Legato',meaning:'Play notes smoothly and connected',cat:'articulation',st:1},
+  // ── Grade 1 ──
+  {sym:'p',   term:'Piano',       meaning:'Soft',                                      cat:'dynamics',   grade:1},
+  {sym:'mp',  term:'Mezzo-piano', meaning:'Moderately soft',                           cat:'dynamics',   grade:1},
+  {sym:'mf',  term:'Mezzo-forte', meaning:'Moderately loud',                           cat:'dynamics',   grade:1},
+  {sym:'f',   term:'Forte',       meaning:'Loud',                                      cat:'dynamics',   grade:1},
+  {sym:'Andante', term:'Andante', meaning:'At a walking pace',                         cat:'tempo',      grade:1,st:1},
+  {sym:'Moderato',term:'Moderato',meaning:'At a moderate pace',                        cat:'tempo',      grade:1,st:1},
+  {sym:'Allegro', term:'Allegro', meaning:'Fast and lively',                           cat:'tempo',      grade:1,st:1},
+  {sym:'●',   term:'Staccato',    meaning:'Short and detached',                        cat:'articulation',grade:1},
+  {sym:'legato',term:'Legato',    meaning:'Play notes smoothly and connected',         cat:'articulation',grade:1,st:1},
+  // ── Grade 2 ──
+  {sym:'pp',  term:'Pianissimo',  meaning:'Very soft',                                 cat:'dynamics',   grade:2},
+  {sym:'ff',  term:'Fortissimo',  meaning:'Very loud',                                 cat:'dynamics',   grade:2},
+  {sym:'cresc.',term:'Crescendo', meaning:'Gradually getting louder',                  cat:'dynamics',   grade:2},
+  {sym:'dim.',term:'Diminuendo',  meaning:'Gradually getting softer',                  cat:'dynamics',   grade:2},
+  {sym:'Allegretto',term:'Allegretto',meaning:'Moderately fast — slightly slower than Allegro',cat:'tempo',grade:2,st:1},
+  {sym:'Andantino',term:'Andantino',meaning:'Slightly faster than Andante',            cat:'tempo',      grade:2,st:1},
+  {sym:'Vivace',term:'Vivace',    meaning:'Lively and quick',                          cat:'tempo',      grade:2,st:1},
+  {sym:'rit.',term:'Ritardando',  meaning:'Gradually slowing down',                    cat:'tempo',      grade:2},
+  {sym:'D.C.',term:'Da Capo',     meaning:'Repeat from the beginning',                 cat:'expression', grade:2},
+  {sym:'D.S.',term:'Dal Segno',   meaning:'Repeat from the sign (𝄋)',                 cat:'expression', grade:2},
+  {sym:'Fine',term:'Fine',        meaning:'The end',                                   cat:'expression', grade:2,st:1},
+  // ── Grade 3 ──
+  {sym:'>',   term:'Accent',      meaning:'Emphasize — play that note louder',         cat:'articulation',grade:3},
+  {sym:'Adagio',term:'Adagio',    meaning:'Slow and stately',                          cat:'tempo',      grade:3,st:1},
+  {sym:'con', term:'Con',         meaning:'With (e.g. con moto = with movement)',       cat:'expression', grade:3,st:1},
+  {sym:'espress.',term:'Espressivo',meaning:'Expressively',                            cat:'expression', grade:3},
+  {sym:'𝄐',  term:'Fermata',     meaning:'Hold the note until the conductor signals', cat:'articulation',grade:3},
+  {sym:'Largo',term:'Largo',      meaning:'Very slow and broad',                       cat:'tempo',      grade:3,st:1},
+  {sym:'ma non troppo',term:'Ma non troppo',meaning:'But not too much',               cat:'expression', grade:3,st:1},
+  {sym:'molto',term:'Molto',      meaning:'Very, much (e.g. molto allegro = very fast)',cat:'expression',grade:3,st:1},
+  {sym:'poco',term:'Poco',        meaning:'A little (e.g. poco a poco = little by little)',cat:'expression',grade:3,st:1},
+  {sym:'Presto',term:'Presto',    meaning:'Very fast',                                 cat:'tempo',      grade:3,st:1},
+  {sym:'rall.',term:'Rallentando',meaning:'Gradually slowing down',                    cat:'tempo',      grade:3},
+  {sym:'sfz', term:'Sforzando',   meaning:'Sudden forced accent on one note',          cat:'dynamics',   grade:3},
+  {sym:'senza',term:'Senza',      meaning:'Without (e.g. senza sordino = without mute)',cat:'expression',grade:3,st:1},
+  {sym:'subito',term:'Subito',    meaning:'Suddenly (e.g. subito piano = suddenly soft)',cat:'expression',grade:3,st:1},
+  // ── Grade 4 ──
+  {sym:'a tempo',term:'A tempo',  meaning:'Return to the original tempo',              cat:'tempo',      grade:4,st:1},
+  {sym:'accel.',term:'Accelerando',meaning:'Gradually speeding up',                   cat:'tempo',      grade:4},
+  {sym:'cantabile',term:'Cantabile',meaning:'In a singing, lyrical style',            cat:'expression', grade:4,st:1},
+  {sym:'dolce',term:'Dolce',      meaning:'Sweetly',                                  cat:'expression', grade:4,st:1},
+  {sym:'fp',  term:'Fortepiano',  meaning:'Loud, then immediately soft',              cat:'dynamics',   grade:4},
+  {sym:'grazioso',term:'Grazioso',meaning:'Gracefully',                               cat:'expression', grade:4,st:1},
+  {sym:'Lento',term:'Lento',      meaning:'Slow',                                     cat:'tempo',      grade:4,st:1},
+  {sym:'maestoso',term:'Maestoso',meaning:'Majestically',                             cat:'expression', grade:4,st:1},
+  {sym:'marcato',term:'Marcato',  meaning:'Marked and emphatic',                      cat:'articulation',grade:4,st:1},
+  {sym:'pesante',term:'Pesante',  meaning:'Heavily',                                  cat:'expression', grade:4,st:1},
+  {sym:'scherzando',term:'Scherzando',meaning:'Playfully and jokingly',               cat:'expression', grade:4,st:1},
+  {sym:'sostenuto',term:'Sostenuto',meaning:'Sustained',                              cat:'expression', grade:4,st:1},
+  {sym:'tranquillo',term:'Tranquillo',meaning:'Calmly and quietly',                   cat:'expression', grade:4,st:1},
+  // ── Grade 5 ──
+  {sym:'agitato',term:'Agitato',  meaning:'Agitated and restless',                    cat:'expression', grade:5,st:1},
+  {sym:'animato',term:'Animato',  meaning:'Animated and lively',                      cat:'expression', grade:5,st:1},
+  {sym:'brillante',term:'Brillante',meaning:'Brilliantly, with sparkle',              cat:'expression', grade:5,st:1},
+  {sym:'con brio',term:'Con brio',meaning:'With vigour and spirit',                   cat:'expression', grade:5,st:1},
+  {sym:'con fuoco',term:'Con fuoco',meaning:'With fire',                              cat:'expression', grade:5,st:1},
+  {sym:'con moto',term:'Con moto',meaning:'With movement',                            cat:'expression', grade:5,st:1},
+  {sym:'giocoso',term:'Giocoso',  meaning:'Playful and merry',                        cat:'expression', grade:5,st:1},
+  {sym:'Grave', term:'Grave',     meaning:'Very slow and solemn',                     cat:'tempo',      grade:5,st:1},
+  {sym:'Larghetto',term:'Larghetto',meaning:'Slightly faster than Largo',             cat:'tempo',      grade:5,st:1},
+  {sym:'leggiero',term:'Leggiero',meaning:'Light and nimble',                         cat:'expression', grade:5,st:1},
+  {sym:'mesto', term:'Mesto',     meaning:'Sad and mournful',                         cat:'expression', grade:5,st:1},
+  {sym:'misterioso',term:'Misterioso',meaning:'Mysteriously',                         cat:'expression', grade:5,st:1},
+  {sym:'morendo',term:'Morendo',  meaning:'Dying away — softer and slower',           cat:'expression', grade:5,st:1},
+  {sym:'Prestissimo',term:'Prestissimo',meaning:'Extremely fast',                     cat:'tempo',      grade:5,st:1},
+  {sym:'risoluto',term:'Risoluto',meaning:'Resolutely, with determination',           cat:'expression', grade:5,st:1},
+  // ── Grade 6 ──
+  {sym:'affettuoso',term:'Affettuoso',meaning:'Tenderly and affectionately',          cat:'expression', grade:6,st:1},
+  {sym:'appassionato',term:'Appassionato',meaning:'Passionately',                     cat:'expression', grade:6,st:1},
+  {sym:'capriccioso',term:'Capriccioso',meaning:'Capriciously and whimsically',       cat:'expression', grade:6,st:1},
+  {sym:'con spirito',term:'Con spirito',meaning:'With spirit and energy',             cat:'expression', grade:6,st:1},
+  {sym:'deciso',term:'Deciso',    meaning:'Decisively',                               cat:'expression', grade:6,st:1},
+  {sym:'dolcissimo',term:'Dolcissimo',meaning:'Very sweetly',                         cat:'expression', grade:6,st:1},
+  {sym:'furioso',term:'Furioso',  meaning:'Furiously',                                cat:'expression', grade:6,st:1},
+  {sym:'impetuoso',term:'Impetuoso',meaning:'Impetuously and forcefully',             cat:'expression', grade:6,st:1},
+  {sym:'languido',term:'Languido',meaning:'Languid, lacking energy',                  cat:'expression', grade:6,st:1},
+  {sym:'nobilmente',term:'Nobilmente',meaning:'Nobly',                                cat:'expression', grade:6,st:1},
+  {sym:'pensieroso',term:'Pensieroso',meaning:'Thoughtfully and pensively',           cat:'expression', grade:6,st:1},
+  {sym:'rubato',term:'Rubato',    meaning:'Flexible tempo — time stolen and returned',cat:'expression', grade:6,st:1},
+  {sym:'semplice',term:'Semplice',meaning:'Simply and plainly',                       cat:'expression', grade:6,st:1},
+  {sym:'smorzando',term:'Smorzando',meaning:'Dying away — fading out completely',     cat:'expression', grade:6,st:1},
+  {sym:'sotto voce',term:'Sotto voce',meaning:'In a soft, hushed voice',              cat:'expression', grade:6,st:1},
+  {sym:'stringendo',term:'Stringendo',meaning:'Pressing forward — getting faster',    cat:'tempo',      grade:6,st:1},
+  {sym:'tr',  term:'Trill',       meaning:'Rapidly alternate between two adjacent notes',cat:'articulation',grade:6},
+  // ── Grade 7 ──
+  {sym:'allargando',term:'Allargando',meaning:'Broadening — getting slower and grander',cat:'tempo',   grade:7,st:1},
+  {sym:'ardente',term:'Ardente',  meaning:'Ardently and passionately',                cat:'expression', grade:7,st:1},
+  {sym:'ben marcato',term:'Ben marcato',meaning:'Well marked — strongly emphasized',  cat:'articulation',grade:7,st:1},
+  {sym:'con anima',term:'Con anima',meaning:'With soul and feeling',                  cat:'expression', grade:7,st:1},
+  {sym:'con forza',term:'Con forza',meaning:'With force',                             cat:'expression', grade:7,st:1},
+  {sym:'con tenerezza',term:'Con tenerezza',meaning:'With tenderness',                cat:'expression', grade:7,st:1},
+  {sym:'delicato',term:'Delicato',meaning:'Delicately',                               cat:'expression', grade:7,st:1},
+  {sym:'drammatico',term:'Drammatico',meaning:'Dramatically',                         cat:'expression', grade:7,st:1},
+  {sym:'energico',term:'Energico',meaning:'Energetically',                            cat:'expression', grade:7,st:1},
+  {sym:'eroico',term:'Eroico',    meaning:'Heroically',                               cat:'expression', grade:7,st:1},
+  {sym:'feroce',term:'Feroce',    meaning:'Ferociously',                              cat:'expression', grade:7,st:1},
+  {sym:'lamentoso',term:'Lamentoso',meaning:'Mournfully and sorrowfully',             cat:'expression', grade:7,st:1},
+  {sym:'lusingando',term:'Lusingando',meaning:'Coaxingly and flatteringly',           cat:'expression', grade:7,st:1},
+  {sym:'marziale',term:'Marziale',meaning:'In a march-like style',                   cat:'expression', grade:7,st:1},
+  {sym:'patetico',term:'Patetico',meaning:'With deep, soulful feeling',               cat:'expression', grade:7,st:1},
+  {sym:'pomposo',term:'Pomposo',  meaning:'In a stately, pompous manner',             cat:'expression', grade:7,st:1},
+  {sym:'serenamente',term:'Serenamente',meaning:'Serenely and peacefully',            cat:'expression', grade:7,st:1},
+  {sym:'teneramente',term:'Teneramente',meaning:'Tenderly',                           cat:'expression', grade:7,st:1},
+  // ── Grade 8 ──
+  {sym:'—',   term:'Tenuto',      meaning:'Hold the note for its full value',         cat:'articulation',grade:8},
+  {sym:'grandioso',term:'Grandioso',meaning:'In a grand, imposing manner',            cat:'expression', grade:8,st:1},
+  {sym:'vivo', term:'Vivo',       meaning:'Lively and vivacious',                     cat:'expression', grade:8,st:1},
+  {sym:'volante',term:'Volante',  meaning:'Flying — fast and light',                  cat:'expression', grade:8,st:1},
+  {sym:'precipitando',term:'Precipitando',meaning:'Rushing headlong — urgent and fast',cat:'expression',grade:8,st:1},
+  {sym:'niente',term:'Niente',    meaning:'Nothing — fade to complete silence',       cat:'dynamics',   grade:8,st:1},
 ];
 
-let dtaCat='all',dtaSessionLen=15,dtaCurrent=null,dtaQType='symbol';
+let dtaCat='all',dtaGrade='all',dtaSessionLen=15,dtaCurrent=null,dtaQType='symbol';
 let dtaScore={correct:0,total:0,streak:0,bestStreak:0};
 let dtaAnswered=false,dtaQNum=0;
 
 function dtaSetCat(cat,el){
   dtaCat=cat;
   document.querySelectorAll('#dta-cat-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function dtaSetGrade(g,el){
+  dtaGrade=g;
+  document.querySelectorAll('#dta-grade-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
   el.classList.add('sel');
 }
 function dtaSetQLen(n,el){
@@ -2242,32 +2345,44 @@ function dtaNextQuestion(){
   document.getElementById('dta-q-total').textContent=dtaSessionLen;
   document.getElementById('dta-progress-fill').style.width=Math.round(((dtaQNum-1)/dtaSessionLen)*100)+'%';
   document.getElementById('dta-feedback').textContent='';
-  const pool=dtaCat==='all'?DTA_DATA:DTA_DATA.filter(d=>d.cat===dtaCat);
-  if(!pool.length)return;
+  let pool=DTA_DATA;
+  if(dtaCat!=='all')pool=pool.filter(d=>d.cat===dtaCat);
+  if(dtaGrade!=='all')pool=pool.filter(d=>d.grade<=dtaGrade);
+  if(!pool.length){document.getElementById('dta-feedback').textContent='No terms match — adjust filters.';return;}
   dtaCurrent=pool[Math.floor(Math.random()*pool.length)];
-  // sym===term means no distinct symbol: always ask name→meaning
   dtaQType=dtaCurrent.st||Math.random()<0.5?'meaning':'symbol';
-  // Category badge
-  const catCols={dynamics:'var(--sky)',tempo:'var(--green)',articulation:'var(--purple)'};
+  // Grade badge
+  document.getElementById('dta-grade-pill').textContent='Grade '+dtaCurrent.grade;
+  // Category colour
+  const catCols={dynamics:'var(--sky)',tempo:'var(--green)',articulation:'var(--purple)',expression:'var(--amber)'};
   document.getElementById('dta-cur-cat').textContent=dtaCurrent.cat.charAt(0).toUpperCase()+dtaCurrent.cat.slice(1);
   document.getElementById('dta-cat-badge-box').style.borderColor=catCols[dtaCurrent.cat]||'var(--border)';
   document.getElementById('dta-cur-cat').style.color=catCols[dtaCurrent.cat]||'var(--muted)';
   // Symbol / term display
   const symEl=document.getElementById('dta-symbol');
-  const promptEl=document.getElementById('dta-prompt');
   const txt=dtaQType==='symbol'?dtaCurrent.sym:dtaCurrent.term;
   symEl.textContent=txt;
-  symEl.style.fontSize=txt.length<=3?'4rem':txt.length<=7?'3rem':'2rem';
-  promptEl.textContent=dtaQType==='symbol'?'What is this marking called?':'What does this mean?';
+  symEl.style.fontSize=txt.length<=3?'4rem':txt.length<=8?'2.8rem':txt.length<=14?'2rem':'1.5rem';
+  document.getElementById('dta-prompt').textContent=dtaQType==='symbol'?'What is this marking called?':'What does this mean?';
   dtaBuildChoices(pool);
 }
 function dtaBuildChoices(pool){
   const container=document.getElementById('dta-choices');
   const isSym=dtaQType==='symbol';
   const correctAns=isSym?dtaCurrent.term:dtaCurrent.meaning;
-  const wrong=pool.filter(d=>d!==dtaCurrent)
-    .sort(()=>Math.random()-.5).slice(0,3)
-    .map(d=>isSym?d.term:d.meaning);
+  // Prefer same-category distractors, fall back to any
+  const sameCat=pool.filter(d=>d!==dtaCurrent&&d.cat===dtaCurrent.cat);
+  const other=pool.filter(d=>d!==dtaCurrent&&d.cat!==dtaCurrent.cat);
+  const wrongPool=[...sameCat,...other].sort(()=>Math.random()-.5);
+  // Dedupe meanings/terms (some share similar wording)
+  const seen=new Set([correctAns]);
+  const wrong=[];
+  for(const d of wrongPool){
+    const ans=isSym?d.term:d.meaning;
+    if(!seen.has(ans)){seen.add(ans);wrong.push(ans);}
+    if(wrong.length===3)break;
+  }
+  while(wrong.length<3)wrong.push('—');
   const choices=[correctAns,...wrong].sort(()=>Math.random()-.5);
   container.innerHTML='';
   choices.forEach(ch=>{
