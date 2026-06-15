@@ -309,6 +309,16 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .iv-hear-btn{padding:.6rem 1.6rem;border-radius:12px;border:2px solid var(--purple);background:rgba(168,85,247,.12);color:var(--purple);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .15s}
 .iv-hear-btn:hover{background:rgba(168,85,247,.25);transform:scale(1.04)}
 .iv-hear-btn:active{transform:scale(.97)}
+/* ── Music Vocabulary (DTA) ── */
+.dta-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem 1rem 1.2rem;text-align:center;margin-bottom:.8rem}
+.dta-prompt{font-size:.75rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:.7rem}
+.dta-symbol{font-style:italic;font-family:'Georgia',Times,serif;color:#fff;line-height:1.15;min-height:3rem;display:flex;align-items:center;justify-content:center}
+.dta-choices{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.75rem}
+.dta-btn{background:var(--card);border:2px solid var(--border);border-radius:10px;color:#fff;font-size:.82rem;font-weight:600;padding:.7rem .5rem;cursor:pointer;text-align:center;line-height:1.35;transition:all .15s}
+.dta-btn:hover:not(:disabled){background:var(--card2);border-color:rgba(255,255,255,.2)}
+.dta-btn.dta-correct{background:rgba(57,217,138,.18);border-color:var(--green);color:var(--green)}
+.dta-btn.dta-wrong{background:rgba(255,45,120,.12);border-color:var(--pink);color:var(--pink)}
+.dta-btn:disabled{cursor:default}
 
 /* ── LINE OR SPACE ── */
 .ls-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
@@ -420,6 +430,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <div class="mode-name">Falling Notes</div>
       <p class="mode-desc">Notes slide across the staff from right to left. Name each one before it passes the hit line! Speed increases as you level up. 3 lives — don't miss!</p>
       <span class="diff diff-med">Intermediate</span>
+    </div>
+    <div class="mode-card" onclick="startDTA()">
+      <span class="mode-icon">🎭</span>
+      <div class="mode-name">Music Vocabulary</div>
+      <p class="mode-desc">Test your knowledge of dynamics (pp, ff, cresc.), tempo markings (Allegro, Adagio) and articulation (staccato, fermata, accent). Symbol ↔ meaning flashcard quiz.</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
     </div>
   </div>
 </div>
@@ -854,6 +870,73 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ MUSIC VOCABULARY SCREEN ══ -->
+<div class="screen" id="dta-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="dta-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--amber),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Music Vocabulary</div>
+      <p class="game-sub">Dynamics, tempo and articulation — symbol to meaning, and back.</p>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Category</div>
+        <div class="ks-qlen-pills" id="dta-cat-pills">
+          <div class="ks-qlen-pill sel" onclick="dtaSetCat('all',this)">All</div>
+          <div class="ks-qlen-pill" onclick="dtaSetCat('dynamics',this)">Dynamics</div>
+          <div class="ks-qlen-pill" onclick="dtaSetCat('tempo',this)">Tempo</div>
+          <div class="ks-qlen-pill" onclick="dtaSetCat('articulation',this)">Articulation</div>
+        </div>
+      </div>
+      <div class="ks-session-config" style="margin-top:.7rem">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="dta-qlen-pills">
+          <div class="ks-qlen-pill" onclick="dtaSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill sel" onclick="dtaSetQLen(15,this)">15</div>
+          <div class="ks-qlen-pill" onclick="dtaSetQLen(20,this)">20</div>
+        </div>
+      </div>
+      <button class="btn-start-ks" style="background:linear-gradient(135deg,var(--amber),var(--pink));margin-top:.5rem" onclick="dtaBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="dta-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="dta-progress-fill" class="ks-progress-fill" style="background:linear-gradient(90deg,var(--amber),var(--pink))"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="dta-q-num">1</span>&nbsp;/&nbsp;<span id="dta-q-total">15</span></div>
+      </div>
+      <div class="iv-score-row">
+        <div class="iv-score-box"><span id="dta-correct">0</span>/<span id="dta-total">0</span>&nbsp;✓</div>
+        <div class="iv-score-box"><span id="dta-pct">—</span></div>
+        <div class="iv-score-box">🔥&nbsp;<span id="dta-streak">0</span></div>
+        <div class="iv-score-box" id="dta-cat-badge-box">📚&nbsp;<span id="dta-cur-cat">—</span></div>
+      </div>
+      <div class="dta-card">
+        <div class="dta-prompt" id="dta-prompt">What is this marking called?</div>
+        <div class="dta-symbol" id="dta-symbol" style="font-size:3.5rem">ff</div>
+      </div>
+      <div id="dta-feedback" class="iv-feedback"></div>
+      <div id="dta-choices" class="dta-choices"></div>
+      <button class="gs-end-early" onclick="dtaEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="dta-end">
+      <div class="gs-end-card">
+        <span id="dta-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="dta-end-grade" class="gs-end-grade" style="color:var(--amber)">A</div>
+        <div id="dta-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="dta-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="dta-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="dta-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-ks" style="flex:1;margin-top:0;background:linear-gradient(135deg,var(--amber),var(--pink))" onclick="dtaPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Supabase creds (same pattern as other games) ──────────
 const _SUPA_URL=(()=>{const k=Object.keys(localStorage).find(k=>/^sb-.*-auth-token$/.test(k));if(!k)return'';try{const u=JSON.parse(localStorage.getItem(k)||'{}');return u.token_type?window.__SUPA_URL||'':''}catch{return''};})();
@@ -899,7 +982,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','dta-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -2032,9 +2115,12 @@ function fnDrawCanvas(ctx,W,H){
     ctx.beginPath();ctx.ellipse(1.5,0,5.5,3.5,0,0,Math.PI*2);
     ctx.fillStyle='#0f0d1a';ctx.fill();
     ctx.restore();
-    // Stem up
-    ctx.strokeStyle=col;ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(n.x+11,ny);ctx.lineTo(n.x+11,Math.max(0,ny-38));ctx.stroke();
+    // Stem: on/above 3rd line (step>=4, ny<=midLine) → down-left; else up-right
+    const fnMid=FN_BOTTOM-4*FN_HS;
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();
+    if(ny<=fnMid){ctx.moveTo(n.x-10,ny);ctx.lineTo(n.x-10,Math.min(H,ny+36));}
+    else{ctx.moveTo(n.x+10,ny);ctx.lineTo(n.x+10,Math.max(0,ny-36));}
+    ctx.stroke();
     ctx.globalAlpha=1;
   });
   ctx.textAlign='left';
@@ -2094,6 +2180,141 @@ async function fnMidiSetup(){
     _fnMidiAccess.onstatechange=()=>fnSetupMidiInputs();
   }catch(_){fnSetMidiStatus('disconnected');}
 }
+
+// ══════════════════════════════════════════════════════════
+// MUSIC VOCABULARY (Dynamics / Tempo / Articulation)
+// ══════════════════════════════════════════════════════════
+const DTA_DATA=[
+  // Dynamics
+  {sym:'pp',term:'Pianissimo',meaning:'Very soft',cat:'dynamics'},
+  {sym:'p',term:'Piano',meaning:'Soft',cat:'dynamics'},
+  {sym:'mp',term:'Mezzo-piano',meaning:'Moderately soft',cat:'dynamics'},
+  {sym:'mf',term:'Mezzo-forte',meaning:'Moderately loud',cat:'dynamics'},
+  {sym:'f',term:'Forte',meaning:'Loud',cat:'dynamics'},
+  {sym:'ff',term:'Fortissimo',meaning:'Very loud',cat:'dynamics'},
+  {sym:'sfz',term:'Sforzando',meaning:'Sudden strong accent on one note',cat:'dynamics'},
+  {sym:'cresc.',term:'Crescendo',meaning:'Gradually getting louder',cat:'dynamics'},
+  {sym:'dim.',term:'Diminuendo',meaning:'Gradually getting softer',cat:'dynamics'},
+  // Tempo
+  {sym:'Grave',term:'Grave',meaning:'Very slow and solemn',cat:'tempo',st:1},
+  {sym:'Largo',term:'Largo',meaning:'Very slow and broad',cat:'tempo',st:1},
+  {sym:'Adagio',term:'Adagio',meaning:'Slow and stately',cat:'tempo',st:1},
+  {sym:'Andante',term:'Andante',meaning:'At a walking pace',cat:'tempo',st:1},
+  {sym:'Moderato',term:'Moderato',meaning:'At a moderate pace',cat:'tempo',st:1},
+  {sym:'Allegro',term:'Allegro',meaning:'Fast and lively',cat:'tempo',st:1},
+  {sym:'Vivace',term:'Vivace',meaning:'Lively and quick',cat:'tempo',st:1},
+  {sym:'Presto',term:'Presto',meaning:'Very fast',cat:'tempo',st:1},
+  {sym:'rit.',term:'Ritardando',meaning:'Gradually slowing down',cat:'tempo'},
+  {sym:'accel.',term:'Accelerando',meaning:'Gradually speeding up',cat:'tempo'},
+  {sym:'a tempo',term:'A tempo',meaning:'Return to the original tempo',cat:'tempo',st:1},
+  // Articulation
+  {sym:'●',term:'Staccato',meaning:'Short and detached',cat:'articulation'},
+  {sym:'—',term:'Tenuto',meaning:'Hold the note for its full value',cat:'articulation'},
+  {sym:'>',term:'Accent',meaning:'Emphasize — play louder than surrounding notes',cat:'articulation'},
+  {sym:'𝄐',term:'Fermata',meaning:'Hold until the conductor signals',cat:'articulation'},
+  {sym:'tr',term:'Trill',meaning:'Rapidly alternate between two adjacent notes',cat:'articulation'},
+  {sym:'legato',term:'Legato',meaning:'Play notes smoothly and connected',cat:'articulation',st:1},
+];
+
+let dtaCat='all',dtaSessionLen=15,dtaCurrent=null,dtaQType='symbol';
+let dtaScore={correct:0,total:0,streak:0,bestStreak:0};
+let dtaAnswered=false,dtaQNum=0;
+
+function dtaSetCat(cat,el){
+  dtaCat=cat;
+  document.querySelectorAll('#dta-cat-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function dtaSetQLen(n,el){
+  dtaSessionLen=n;
+  document.querySelectorAll('#dta-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function startDTA(){showScreen('dta-screen');gsPanel(['dta-start','dta-play','dta-end'],'dta-start');}
+function dtaBeginSession(){
+  dtaScore={correct:0,total:0,streak:0,bestStreak:0};dtaQNum=0;
+  gsPanel(['dta-start','dta-play','dta-end'],'dta-play');dtaNextQuestion();
+}
+function dtaNextQuestion(){
+  if(dtaQNum>=dtaSessionLen){dtaEndSession();return;}
+  dtaAnswered=false;dtaQNum++;
+  document.getElementById('dta-q-num').textContent=dtaQNum;
+  document.getElementById('dta-q-total').textContent=dtaSessionLen;
+  document.getElementById('dta-progress-fill').style.width=Math.round(((dtaQNum-1)/dtaSessionLen)*100)+'%';
+  document.getElementById('dta-feedback').textContent='';
+  const pool=dtaCat==='all'?DTA_DATA:DTA_DATA.filter(d=>d.cat===dtaCat);
+  if(!pool.length)return;
+  dtaCurrent=pool[Math.floor(Math.random()*pool.length)];
+  // sym===term means no distinct symbol: always ask name→meaning
+  dtaQType=dtaCurrent.st||Math.random()<0.5?'meaning':'symbol';
+  // Category badge
+  const catCols={dynamics:'var(--sky)',tempo:'var(--green)',articulation:'var(--purple)'};
+  document.getElementById('dta-cur-cat').textContent=dtaCurrent.cat.charAt(0).toUpperCase()+dtaCurrent.cat.slice(1);
+  document.getElementById('dta-cat-badge-box').style.borderColor=catCols[dtaCurrent.cat]||'var(--border)';
+  document.getElementById('dta-cur-cat').style.color=catCols[dtaCurrent.cat]||'var(--muted)';
+  // Symbol / term display
+  const symEl=document.getElementById('dta-symbol');
+  const promptEl=document.getElementById('dta-prompt');
+  const txt=dtaQType==='symbol'?dtaCurrent.sym:dtaCurrent.term;
+  symEl.textContent=txt;
+  symEl.style.fontSize=txt.length<=3?'4rem':txt.length<=7?'3rem':'2rem';
+  promptEl.textContent=dtaQType==='symbol'?'What is this marking called?':'What does this mean?';
+  dtaBuildChoices(pool);
+}
+function dtaBuildChoices(pool){
+  const container=document.getElementById('dta-choices');
+  const isSym=dtaQType==='symbol';
+  const correctAns=isSym?dtaCurrent.term:dtaCurrent.meaning;
+  const wrong=pool.filter(d=>d!==dtaCurrent)
+    .sort(()=>Math.random()-.5).slice(0,3)
+    .map(d=>isSym?d.term:d.meaning);
+  const choices=[correctAns,...wrong].sort(()=>Math.random()-.5);
+  container.innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='dta-btn';btn.textContent=ch;
+    btn.onclick=()=>dtaGuess(ch,btn,correctAns);
+    container.appendChild(btn);
+  });
+}
+function dtaGuess(choice,btn,correct){
+  if(dtaAnswered)return;dtaAnswered=true;
+  const ok=choice===correct;
+  dtaScore.total++;
+  document.querySelectorAll('.dta-btn').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('dta-feedback');
+  if(ok){
+    dtaScore.correct++;dtaScore.streak++;dtaScore.bestStreak=Math.max(dtaScore.bestStreak,dtaScore.streak);
+    btn.classList.add('dta-correct');fb.textContent='✓ Correct!';fb.style.color='var(--green)';ksSndCorrect();
+  }else{
+    dtaScore.streak=0;btn.classList.add('dta-wrong');
+    document.querySelectorAll('.dta-btn').forEach(b=>{if(b.textContent===correct)b.classList.add('dta-correct');});
+    fb.textContent=`✗ ${correct}`;fb.style.color='var(--pink)';ksSndWrong();
+  }
+  dtaUpdateUI();
+  if(dtaQNum>=dtaSessionLen)setTimeout(dtaEndSession,2000);else setTimeout(dtaNextQuestion,2000);
+}
+function dtaUpdateUI(){
+  document.getElementById('dta-correct').textContent=dtaScore.correct;
+  document.getElementById('dta-total').textContent=dtaScore.total;
+  document.getElementById('dta-pct').textContent=dtaScore.total>0?Math.round(dtaScore.correct/dtaScore.total*100)+'%':'—';
+  document.getElementById('dta-streak').textContent=dtaScore.streak;
+}
+function dtaEndSession(){
+  const pct=dtaScore.total>0?Math.round(dtaScore.correct/dtaScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gc={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('dta-end-emoji').textContent=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  document.getElementById('dta-end-grade').textContent=grade;
+  document.getElementById('dta-end-grade').style.color=gc[grade];
+  document.getElementById('dta-end-msg').textContent=pct>=95?'Perfect score!':pct>=85?'Excellent!':pct>=70?'Well done!':pct>=55?'Keep going!':'Keep practising!';
+  document.getElementById('dta-end-score').textContent=`${dtaScore.correct}/${dtaScore.total}`;
+  document.getElementById('dta-end-pct').textContent=pct+'%';
+  document.getElementById('dta-end-streak').textContent=dtaScore.bestStreak;
+  gsPanel(['dta-start','dta-play','dta-end'],'dta-end');
+  ptSaveScore('music_vocab',dtaScore.correct*100,dtaScore.correct,dtaScore.total,dtaScore.bestStreak);
+}
+function dtaPlayAgain(){gsPanel(['dta-start','dta-play','dta-end'],'dta-start');}
 
 function sbDrawStaff(checkResults){
   const svg=document.getElementById('sb-staff');if(!svg)return;
