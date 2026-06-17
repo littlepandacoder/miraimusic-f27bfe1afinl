@@ -336,6 +336,21 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .bk-btn-xs{width:88px!important;height:58px!important;font-size:.85rem!important}
 .bk-btns.wrap{flex-wrap:wrap}
 .bk-question-lbl{font-size:.95rem;color:rgba(255,255,255,.78);text-align:center;margin-bottom:.55rem;min-height:1.3em;font-weight:600;letter-spacing:.01em}
+/* ── Pattern Drop ── */
+.pd-pattern-wrap{overflow-x:auto;padding:.4rem 0;margin-bottom:.4rem}
+.pd-pattern{display:flex;gap:.45rem;justify-content:center;min-width:min-content;padding:0 .5rem}
+.pd-slot{flex-shrink:0;border-radius:10px;overflow:hidden}
+.pd-slot-empty{width:76px;height:82px;border:2px dashed rgba(255,255,255,.25);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0}
+.pd-slot-empty.pd-target{border-color:var(--sky);border-style:solid;background:rgba(0,212,255,.09)}
+.pd-slot-empty.pd-correct{border-color:var(--green)!important;border-style:solid!important;background:rgba(57,217,138,.14)!important}
+.pd-slot-empty.pd-wrong{border-color:var(--pink)!important;border-style:solid!important;background:rgba(255,45,120,.12)!important}
+.pd-q{font-size:1.6rem;color:rgba(255,255,255,.28);pointer-events:none}
+.pd-tiles{display:flex;gap:1.2rem;justify-content:center;margin:.8rem 0 .4rem}
+.pd-tile{border-radius:14px;border:2px solid var(--border);padding:.5rem .5rem .3rem;cursor:pointer;transition:all .18s;background:rgba(255,255,255,.04);text-align:center;width:112px}
+.pd-tile.sel{border-color:var(--sky);background:rgba(0,212,255,.12);transform:scale(1.05)}
+.pd-tile-lbl{font-size:.72rem;font-weight:700;color:rgba(255,255,255,.52);margin-top:.3rem}
+.pd-hdr{font-size:.88rem;color:rgba(255,255,255,.48);text-align:center;margin-bottom:.6rem}
+.pd-hint{font-size:.78rem;color:rgba(255,255,255,.36);text-align:center;margin-bottom:.5rem}
 
 /* ── LINE OR SPACE ── */
 .ls-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
@@ -452,6 +467,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <span class="mode-icon">🎹</span>
       <div class="mode-name">2 or 3 Black Keys?</div>
       <p class="mode-desc">A section of the piano keyboard appears — quickly identify whether you see a group of 2 black keys or 3 black keys. Essential for finding notes fast!</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
+    </div>
+    <div class="mode-card" onclick="startPD()">
+      <span class="mode-icon">🧩</span>
+      <div class="mode-name">Complete the Pattern</div>
+      <p class="mode-desc">A piano key pattern appears with blanks — drag tiles of 2 or 3 black-key groups to fill the missing spots and complete the repeating pattern.</p>
       <span class="diff diff-easy">Beginner Friendly</span>
     </div>
     <div class="mode-card" onclick="startDTA()">
@@ -950,6 +971,45 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ COMPLETE THE PATTERN SCREEN ══ -->
+<div class="screen" id="pd-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="pd-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Complete the Pattern</div>
+      <p class="game-sub">Fill in the blanks to complete the repeating 2 / 3 black-key pattern. Tap a tile below, then tap a blank slot.</p>
+      <button class="btn-start-sb" onclick="pdBeginSession()">▶ Start</button>
+    </div>
+
+    <div class="gs-panel" id="pd-play">
+      <div class="pd-hdr">Round&nbsp;<span id="pd-round">1</span>&nbsp;/&nbsp;<span id="pd-total-rounds">5</span>&nbsp;·&nbsp;Score:&nbsp;<span id="pd-score-display">0</span></div>
+      <div class="pd-pattern-wrap">
+        <div id="pd-pattern" class="pd-pattern"></div>
+      </div>
+      <div class="pd-hint">Tap a tile ↓ then tap a blank slot ↑</div>
+      <div id="pd-tiles" class="pd-tiles"></div>
+      <div id="pd-feedback" class="ls-feedback"></div>
+    </div>
+
+    <div class="gs-panel" id="pd-end">
+      <div class="gs-end-card">
+        <span id="pd-end-emoji" class="gs-end-emoji">🧩</span>
+        <div id="pd-end-grade" class="gs-end-grade" style="color:var(--sky)">A</div>
+        <div id="pd-end-msg" class="gs-end-msg">Session complete!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="pd-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="pd-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="pdPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MUSIC VOCABULARY SCREEN ══ -->
 <div class="screen" id="dta-screen">
   <div class="game-wrap">
@@ -1077,7 +1137,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','dta-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','pd-screen','dta-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -2682,6 +2742,118 @@ function bkEndSession(){
   ptSaveScore('black_keys',bkScore.correct*100,bkScore.correct,bkScore.total,bkScore.bestStreak);
 }
 function bkPlayAgain(){gsPanel(['bk-start','bk-play','bk-end'],'bk-start');}
+
+// ══════════════════════════════════════════════════════════
+// COMPLETE THE PATTERN
+// ══════════════════════════════════════════════════════════
+let pdScore=0,pdRound=0;
+const PD_ROUNDS=5;
+let pdPattern=[],pdBlanks,pdAnswers={},pdSelectedTile=null;
+
+function startPD(){showScreen('pd-screen');gsPanel(['pd-start','pd-play','pd-end'],'pd-start');}
+function pdBeginSession(){
+  pdScore=0;pdRound=0;
+  gsPanel(['pd-start','pd-play','pd-end'],'pd-play');pdNextRound();
+}
+function pdNextRound(){
+  if(pdRound>=PD_ROUNDS){pdEndSession();return;}
+  pdRound++;pdSelectedTile=null;pdAnswers={};
+  // Alternating 2-3-2-3-2 or 3-2-3-2-3
+  const s=Math.random()<0.5?2:3;
+  pdPattern=[s,s===2?3:2,s,s===2?3:2,s];
+  // Pick 2 non-adjacent blank slots
+  const idxs=[0,1,2,3,4];let blanks;
+  for(let t=0;t<20;t++){
+    const b=idxs.sort(()=>Math.random()-.5).slice(0,2).sort((a,c)=>a-c);
+    if(Math.abs(b[0]-b[1])>1){blanks=b;break;}
+  }
+  pdBlanks=new Set(blanks||[0,2]);
+  document.getElementById('pd-round').textContent=pdRound;
+  document.getElementById('pd-total-rounds').textContent=PD_ROUNDS;
+  document.getElementById('pd-score-display').textContent=pdScore;
+  document.getElementById('pd-feedback').textContent='';
+  pdRenderPattern();pdRenderTiles();
+}
+
+// Generate inline SVG for a key group
+function pdSVG(n,small){
+  const ww=small?17:25,wh=small?54:80,bw=small?11:16,bh=small?33:50,gap=small?1:2,pad=small?5:7,top=small?7:10;
+  const nw=n===2?3:4,W=pad+nw*(ww+gap)-gap+pad,H=top+wh+(small?9:13);
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="display:block;width:100%;height:auto">`;
+  s+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#13111e" rx="${small?7:10}"/>`;
+  for(let i=0;i<nw;i++){
+    const x=pad+i*(ww+gap);
+    s+=`<rect x="${x}" y="${top}" width="${ww}" height="${wh}" rx="${small?3:5}" fill="#f0ede6" stroke="#8895a0" stroke-width="1"/>`;
+    s+=`<rect x="${x+1}" y="${top+1}" width="${ww-2}" height="${small?5:7}" rx="2" fill="rgba(255,255,255,0.45)"/>`;
+  }
+  for(let gi=0;gi<n;gi++){
+    const bx=pad+gi*(ww+gap)+ww+gap/2-bw/2;
+    s+=`<rect x="${bx}" y="${top}" width="${bw}" height="${bh}" rx="${small?2:3}" fill="#1a1828" stroke="#0a0a12" stroke-width="1"/>`;
+    s+=`<rect x="${bx+2}" y="${top+2}" width="${bw-4}" height="${small?6:9}" rx="2" fill="rgba(255,255,255,0.08)"/>`;
+  }
+  return s+'</svg>';
+}
+
+function pdRenderPattern(){
+  const row=document.getElementById('pd-pattern');row.innerHTML='';
+  pdPattern.forEach((n,i)=>{
+    const div=document.createElement('div');
+    if(pdBlanks.has(i)){
+      div.className='pd-slot-empty';div.dataset.idx=i;
+      div.innerHTML='<span class="pd-q">?</span>';
+      div.addEventListener('click',()=>pdDropOnSlot(i,div));
+    }else{
+      div.className='pd-slot';div.innerHTML=pdSVG(n,true);
+    }
+    row.appendChild(div);
+  });
+}
+function pdRenderTiles(){
+  const wrap=document.getElementById('pd-tiles');
+  wrap.innerHTML=[2,3].map(n=>`<div class="pd-tile" id="pd-tile-${n}" onclick="pdSelectTile(${n})">${pdSVG(n,false)}<div class="pd-tile-lbl">${n} Black Keys</div></div>`).join('');
+}
+function pdSelectTile(n){
+  pdSelectedTile=n;
+  document.querySelectorAll('.pd-tile').forEach(t=>t.classList.remove('sel'));
+  document.getElementById('pd-tile-'+n).classList.add('sel');
+  document.querySelectorAll('.pd-slot-empty').forEach(s=>{if(!s.dataset.filled)s.classList.add('pd-target');});
+}
+function pdDropOnSlot(idx,div){
+  if(pdSelectedTile===null||div.dataset.filled)return;
+  pdAnswers[idx]=pdSelectedTile;
+  div.dataset.filled='1';div.classList.remove('pd-target','pd-q');
+  div.innerHTML=pdSVG(pdSelectedTile,true);
+  pdSelectedTile=null;
+  document.querySelectorAll('.pd-tile').forEach(t=>t.classList.remove('sel'));
+  document.querySelectorAll('.pd-slot-empty').forEach(s=>s.classList.remove('pd-target'));
+  if(Object.keys(pdAnswers).length===pdBlanks.size)setTimeout(pdCheck,300);
+}
+function pdCheck(){
+  let ok=true;
+  pdBlanks.forEach(i=>{
+    const slot=document.querySelector(`.pd-slot-empty[data-idx="${i}"]`);
+    if(pdAnswers[i]===pdPattern[i])slot?.classList.add('pd-correct');
+    else{slot?.classList.add('pd-wrong');ok=false;}
+  });
+  const fb=document.getElementById('pd-feedback');
+  if(ok){pdScore++;fb.textContent='✓ Pattern complete!';fb.style.color='var(--green)';ksSndCorrect();}
+  else{fb.textContent='✗ Check the highlighted slots!';fb.style.color='var(--pink)';ksSndWrong();}
+  document.getElementById('pd-score-display').textContent=pdScore;
+  setTimeout(pdNextRound,1800);
+}
+function pdEndSession(){
+  const pct=Math.round(pdScore/PD_ROUNDS*100);
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gc={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('pd-end-emoji').textContent=pdScore===PD_ROUNDS?'🏆':pdScore>=3?'🎉':'🧩';
+  document.getElementById('pd-end-grade').textContent=grade;
+  document.getElementById('pd-end-grade').style.color=gc[grade];
+  document.getElementById('pd-end-msg').textContent=pdScore===PD_ROUNDS?'Perfect!':pdScore>=3?'Well done!':'Keep practising!';
+  document.getElementById('pd-end-score').textContent=`${pdScore}/${PD_ROUNDS}`;
+  document.getElementById('pd-end-pct').textContent=pct+'%';
+  gsPanel(['pd-start','pd-play','pd-end'],'pd-end');
+}
+function pdPlayAgain(){gsPanel(['pd-start','pd-play','pd-end'],'pd-start');}
 
 function sbDrawStaff(checkResults){
   const svg=document.getElementById('sb-staff');if(!svg)return;
