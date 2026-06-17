@@ -2591,28 +2591,44 @@ let bkScore={correct:0,total:0,streak:0,bestStreak:0};
 let bkAnswered=false,bkQNum=0;
 let bkQType='black'; // 'black' | 'white-count' | 'white-num'
 let bkNoteIdx=0,bkCorrectVal=2;
-let bkPool=[],bkPoolIdx=0;
+const BK_BLACK_PHASE=10; // first N questions are always black-key type
+let bkBlackPool=[],bkBlackIdx=0;
+let bkMixedPool=[],bkMixedIdx=0;
 
-// All 11 unique questions: 2 black + 2 white-count + 7 white-num
+function bkShuffleNoRepeat(arr,lastItem){
+  arr.sort(()=>Math.random()-.5);
+  // Swap first item if it matches last item from previous round
+  if(lastItem!==undefined&&arr.length>1&&
+     arr[0].type===lastItem.type&&arr[0].group===lastItem.group&&arr[0].noteIdx===lastItem.noteIdx){
+    const tmp=arr[0];arr[0]=arr[1];arr[1]=tmp;
+  }
+}
 function bkBuildPool(){
-  bkPool=[
-    {type:'black',group:2},{type:'black',group:3},
+  bkBlackPool=[{type:'black',group:2},{type:'black',group:3}];
+  bkBlackPool.sort(()=>Math.random()-.5);
+  bkBlackIdx=0;
+  bkMixedPool=[
     {type:'white-count',group:2},{type:'white-count',group:3},
     ...[0,1,2,3,4,5,6].map(i=>({type:'white-num',noteIdx:i}))
   ].sort(()=>Math.random()-.5);
-  bkPoolIdx=0;
+  bkMixedIdx=0;
 }
 function bkNextQ(){
-  if(bkPoolIdx>=bkPool.length){
-    // Reshuffle for next round, ensure no back-to-back repeat at boundary
-    const last=bkPool[bkPool.length-1];
-    bkPool.sort(()=>Math.random()-.5);
-    if(bkPool[0].type===last.type&&bkPool[0].group===last.group&&bkPool[0].noteIdx===last.noteIdx){
-      const tmp=bkPool[0];bkPool[0]=bkPool[1];bkPool[1]=tmp;
+  if(bkQNum<=BK_BLACK_PHASE){
+    // Phase 1: black key questions only
+    if(bkBlackIdx>=bkBlackPool.length){
+      bkShuffleNoRepeat(bkBlackPool,bkBlackPool[bkBlackPool.length-1]);
+      bkBlackIdx=0;
     }
-    bkPoolIdx=0;
+    return bkBlackPool[bkBlackIdx++];
+  }else{
+    // Phase 2: white-count + white-num, shuffled pool, no repeat until all seen
+    if(bkMixedIdx>=bkMixedPool.length){
+      bkShuffleNoRepeat(bkMixedPool,bkMixedPool[bkMixedPool.length-1]);
+      bkMixedIdx=0;
+    }
+    return bkMixedPool[bkMixedIdx++];
   }
-  return bkPool[bkPoolIdx++];
 }
 
 function bkSetQLen(n,el){
