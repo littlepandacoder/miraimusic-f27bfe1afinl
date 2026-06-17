@@ -320,6 +320,17 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .dta-btn.dta-wrong{background:rgba(255,45,120,.12);border-color:var(--pink);color:var(--pink)}
 .dta-btn:disabled{cursor:default}
 .dta-grade-pill{display:inline-block;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--amber);letter-spacing:.03em;margin-bottom:.55rem}
+/* ── 2 or 3 Black Keys ── */
+.bk-piano-wrap{background:#0f0d1a;border-radius:14px;border:1px solid var(--border);padding:1.1rem .6rem 1rem;margin-bottom:.9rem;display:flex;justify-content:center}
+.bk-btns{display:flex;gap:1rem;justify-content:center;margin-bottom:1rem}
+.bk-btn{width:145px;height:72px;border-radius:14px;font-size:1rem;font-weight:800;border:2px solid;background:transparent;cursor:pointer;transition:all .15s}
+#bk-btn-2{border-color:var(--sky);color:var(--sky);background:rgba(0,212,255,.07)}
+#bk-btn-2:hover:not(:disabled){background:rgba(0,212,255,.2);transform:scale(1.04)}
+#bk-btn-3{border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.07)}
+#bk-btn-3:hover:not(:disabled){background:rgba(168,85,247,.2);transform:scale(1.04)}
+.bk-btn.bk-correct{background:rgba(57,217,138,.22)!important;border-color:var(--green)!important;color:var(--green)!important;transform:scale(1.05)}
+.bk-btn.bk-wrong{background:rgba(255,45,120,.18)!important;border-color:var(--pink)!important;color:var(--pink)!important}
+.bk-btn:disabled{cursor:default}
 
 /* ── LINE OR SPACE ── */
 .ls-staff-wrap{background:#0f0d1a;border-radius:12px;border:1px solid var(--border);
@@ -431,6 +442,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <div class="mode-name">Falling Notes</div>
       <p class="mode-desc">Notes slide across the staff from right to left. Name each one before it passes the hit line! Speed increases as you level up. 3 lives — don't miss!</p>
       <span class="diff diff-med">Intermediate</span>
+    </div>
+    <div class="mode-card" onclick="startBK()">
+      <span class="mode-icon">🎹</span>
+      <div class="mode-name">2 or 3 Black Keys?</div>
+      <p class="mode-desc">A section of the piano keyboard appears — quickly identify whether you see a group of 2 black keys or 3 black keys. Essential for finding notes fast!</p>
+      <span class="diff diff-easy">Beginner Friendly</span>
     </div>
     <div class="mode-card" onclick="startDTA()">
       <span class="mode-icon">🎭</span>
@@ -871,6 +888,65 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ 2 OR 3 BLACK KEYS SCREEN ══ -->
+<div class="screen" id="bk-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="bk-start">
+      <div class="game-title" style="background:linear-gradient(135deg,#64748b,var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent">2 or 3 Black Keys?</div>
+      <p class="game-sub">A section of piano keys appears — identify the black key group as fast as you can!</p>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="bk-qlen-pills">
+          <div class="ks-qlen-pill" onclick="bkSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill sel" onclick="bkSetQLen(20,this)">20</div>
+          <div class="ks-qlen-pill" onclick="bkSetQLen(30,this)">30</div>
+        </div>
+      </div>
+      <button class="btn-start-sb" onclick="bkBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="bk-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="bk-progress-fill" class="sb-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="bk-q-num">1</span>&nbsp;/&nbsp;<span id="bk-q-total">20</span></div>
+      </div>
+      <div class="ls-score-row">
+        <div class="ls-score-box"><span id="bk-correct">0</span>/<span id="bk-total">0</span>&nbsp;✓</div>
+        <div class="ls-score-box"><span id="bk-pct">—</span></div>
+        <div class="ls-score-box">🔥&nbsp;<span id="bk-streak">0</span></div>
+      </div>
+      <div class="bk-piano-wrap">
+        <svg id="bk-piano" viewBox="0 0 140 130" width="100%" style="max-width:340px"></svg>
+      </div>
+      <div id="bk-feedback" class="ls-feedback"></div>
+      <div class="bk-btns">
+        <button class="bk-btn" id="bk-btn-2" onclick="bkGuess(2)">2 Black Keys</button>
+        <button class="bk-btn" id="bk-btn-3" onclick="bkGuess(3)">3 Black Keys</button>
+      </div>
+      <button class="gs-end-early" onclick="bkEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="bk-end">
+      <div class="gs-end-card">
+        <span id="bk-end-emoji" class="gs-end-emoji">🎹</span>
+        <div id="bk-end-grade" class="gs-end-grade" style="color:var(--sky)">A</div>
+        <div id="bk-end-msg" class="gs-end-msg">Session complete!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="bk-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="bk-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="bk-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="bkPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MUSIC VOCABULARY SCREEN ══ -->
 <div class="screen" id="dta-screen">
   <div class="game-wrap">
@@ -998,7 +1074,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','dta-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','dta-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -2430,6 +2506,105 @@ function dtaEndSession(){
   ptSaveScore('music_vocab',dtaScore.correct*100,dtaScore.correct,dtaScore.total,dtaScore.bestStreak);
 }
 function dtaPlayAgain(){gsPanel(['dta-start','dta-play','dta-end'],'dta-start');}
+
+// ══════════════════════════════════════════════════════════
+// 2 OR 3 BLACK KEYS
+// ══════════════════════════════════════════════════════════
+let bkSessionLen=20,bkCurrent=2;
+let bkScore={correct:0,total:0,streak:0,bestStreak:0};
+let bkAnswered=false,bkQNum=0;
+
+function bkSetQLen(n,el){
+  bkSessionLen=n;
+  document.querySelectorAll('#bk-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function startBK(){showScreen('bk-screen');gsPanel(['bk-start','bk-play','bk-end'],'bk-start');}
+function bkBeginSession(){
+  bkScore={correct:0,total:0,streak:0,bestStreak:0};bkQNum=0;
+  gsPanel(['bk-start','bk-play','bk-end'],'bk-play');bkNextQuestion();
+}
+function bkNextQuestion(){
+  if(bkQNum>=bkSessionLen){bkEndSession();return;}
+  bkAnswered=false;bkQNum++;
+  document.getElementById('bk-q-num').textContent=bkQNum;
+  document.getElementById('bk-q-total').textContent=bkSessionLen;
+  document.getElementById('bk-progress-fill').style.width=Math.round(((bkQNum-1)/bkSessionLen)*100)+'%';
+  document.getElementById('bk-feedback').textContent='';
+  document.getElementById('bk-btn-2').className='bk-btn';
+  document.getElementById('bk-btn-3').className='bk-btn';
+  document.getElementById('bk-btn-2').disabled=false;
+  document.getElementById('bk-btn-3').disabled=false;
+  bkCurrent=Math.random()<0.5?2:3;
+  bkDrawPiano();
+}
+function bkDrawPiano(){
+  const svg=document.getElementById('bk-piano');
+  const ww=42,wh=110,bw=26,bh=68,gap=2,pad=10,top=10;
+  const nw=bkCurrent===2?3:4;
+  const totalW=pad+nw*(ww+gap)-gap+pad;
+  svg.setAttribute('viewBox',`0 0 ${totalW} 135`);
+  // Piano body background
+  let s=`<rect x="0" y="0" width="${totalW}" height="135" fill="#13111e" rx="12"/>`;
+  // White keys (drawn first so black keys render on top)
+  for(let i=0;i<nw;i++){
+    const x=pad+i*(ww+gap);
+    s+=`<rect x="${x}" y="${top}" width="${ww}" height="${wh}" rx="5" fill="#f0ede6" stroke="#8895a0" stroke-width="1.3"/>`;
+    // Subtle top sheen
+    s+=`<rect x="${x+2}" y="${top+2}" width="${ww-4}" height="8" rx="3" fill="rgba(255,255,255,0.55)"/>`;
+  }
+  // Black keys (centered in each gap)
+  const nbk=bkCurrent===2?2:3;
+  for(let gi=0;gi<nbk;gi++){
+    // gap gi is between white key gi and gi+1
+    const bx=pad+gi*(ww+gap)+ww+gap/2-bw/2;
+    s+=`<rect x="${bx}" y="${top}" width="${bw}" height="${bh}" rx="5" fill="#1a1828" stroke="#0a0a12" stroke-width="1.3"/>`;
+    // Shine strip
+    s+=`<rect x="${bx+4}" y="${top+4}" width="${bw-8}" height="12" rx="3" fill="rgba(255,255,255,0.11)"/>`;
+  }
+  svg.innerHTML=s;
+}
+function bkGuess(num){
+  if(bkAnswered)return;bkAnswered=true;
+  const ok=num===bkCurrent;
+  bkScore.total++;
+  document.getElementById('bk-btn-2').disabled=true;
+  document.getElementById('bk-btn-3').disabled=true;
+  const clickedBtn=document.getElementById('bk-btn-'+num);
+  const correctBtn=document.getElementById('bk-btn-'+bkCurrent);
+  const fb=document.getElementById('bk-feedback');
+  if(ok){
+    bkScore.correct++;bkScore.streak++;bkScore.bestStreak=Math.max(bkScore.bestStreak,bkScore.streak);
+    clickedBtn.classList.add('bk-correct');
+    fb.textContent=`✓ Correct! That's ${bkCurrent} black keys.`;fb.style.color='var(--green)';ksSndCorrect();
+  }else{
+    bkScore.streak=0;clickedBtn.classList.add('bk-wrong');correctBtn.classList.add('bk-correct');
+    fb.textContent=`✗ There are ${bkCurrent} black keys!`;fb.style.color='var(--pink)';ksSndWrong();
+  }
+  bkUpdateUI();
+  if(bkQNum>=bkSessionLen)setTimeout(bkEndSession,1500);else setTimeout(bkNextQuestion,1500);
+}
+function bkUpdateUI(){
+  document.getElementById('bk-correct').textContent=bkScore.correct;
+  document.getElementById('bk-total').textContent=bkScore.total;
+  document.getElementById('bk-pct').textContent=bkScore.total>0?Math.round(bkScore.correct/bkScore.total*100)+'%':'—';
+  document.getElementById('bk-streak').textContent=bkScore.streak;
+}
+function bkEndSession(){
+  const pct=bkScore.total>0?Math.round(bkScore.correct/bkScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gc={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  document.getElementById('bk-end-emoji').textContent=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎹';
+  document.getElementById('bk-end-grade').textContent=grade;
+  document.getElementById('bk-end-grade').style.color=gc[grade];
+  document.getElementById('bk-end-msg').textContent=pct>=95?'Perfect score!':pct>=85?'Excellent!':pct>=70?'Well done!':pct>=55?'Keep going!':'Keep practising!';
+  document.getElementById('bk-end-score').textContent=`${bkScore.correct}/${bkScore.total}`;
+  document.getElementById('bk-end-pct').textContent=pct+'%';
+  document.getElementById('bk-end-streak').textContent=bkScore.bestStreak;
+  gsPanel(['bk-start','bk-play','bk-end'],'bk-end');
+  ptSaveScore('black_keys',bkScore.correct*100,bkScore.correct,bkScore.total,bkScore.bestStreak);
+}
+function bkPlayAgain(){gsPanel(['bk-start','bk-play','bk-end'],'bk-start');}
 
 function sbDrawStaff(checkResults){
   const svg=document.getElementById('sb-staff');if(!svg)return;
