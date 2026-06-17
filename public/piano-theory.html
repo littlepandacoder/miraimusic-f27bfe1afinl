@@ -2523,6 +2523,29 @@ let bkScore={correct:0,total:0,streak:0,bestStreak:0};
 let bkAnswered=false,bkQNum=0;
 let bkQType='black'; // 'black' | 'white-count' | 'white-num'
 let bkNoteIdx=0,bkCorrectVal=2;
+let bkPool=[],bkPoolIdx=0;
+
+// All 11 unique questions: 2 black + 2 white-count + 7 white-num
+function bkBuildPool(){
+  bkPool=[
+    {type:'black',group:2},{type:'black',group:3},
+    {type:'white-count',group:2},{type:'white-count',group:3},
+    ...[0,1,2,3,4,5,6].map(i=>({type:'white-num',noteIdx:i}))
+  ].sort(()=>Math.random()-.5);
+  bkPoolIdx=0;
+}
+function bkNextQ(){
+  if(bkPoolIdx>=bkPool.length){
+    // Reshuffle for next round, ensure no back-to-back repeat at boundary
+    const last=bkPool[bkPool.length-1];
+    bkPool.sort(()=>Math.random()-.5);
+    if(bkPool[0].type===last.type&&bkPool[0].group===last.group&&bkPool[0].noteIdx===last.noteIdx){
+      const tmp=bkPool[0];bkPool[0]=bkPool[1];bkPool[1]=tmp;
+    }
+    bkPoolIdx=0;
+  }
+  return bkPool[bkPoolIdx++];
+}
 
 function bkSetQLen(n,el){
   bkSessionLen=n;
@@ -2532,6 +2555,7 @@ function bkSetQLen(n,el){
 function startBK(){showScreen('bk-screen');gsPanel(['bk-start','bk-play','bk-end'],'bk-start');}
 function bkBeginSession(){
   bkScore={correct:0,total:0,streak:0,bestStreak:0};bkQNum=0;
+  bkBuildPool();
   gsPanel(['bk-start','bk-play','bk-end'],'bk-play');bkNextQuestion();
 }
 function bkNextQuestion(){
@@ -2542,24 +2566,18 @@ function bkNextQuestion(){
   document.getElementById('bk-progress-fill').style.width=Math.round(((bkQNum-1)/bkSessionLen)*100)+'%';
   document.getElementById('bk-feedback').textContent='';
 
-  // Phase progression: first third = black keys, middle third = white count, last third = white numbering
-  const phase1End=Math.ceil(bkSessionLen/3),phase2End=Math.ceil(bkSessionLen*2/3);
-  if(bkQNum<=phase1End){
-    // Phase 1: Is it 2 or 3 black keys?
-    bkQType='black';
-    bkCurrent=Math.random()<0.5?2:3;
-    bkCorrectVal=bkCurrent;
+  const q=bkNextQ();
+  bkQType=q.type;
+  if(q.type==='black'){
+    bkCurrent=q.group; bkCorrectVal=bkCurrent;
     document.getElementById('bk-question').textContent='Is it 2 or 3 black keys?';
     bkDrawGroup();
     bkBuildButtons([
       {v:2,lbl:'2 Black Keys',col:'var(--sky)',bg:'rgba(0,212,255,.07)'},
       {v:3,lbl:'3 Black Keys',col:'var(--purple)',bg:'rgba(168,85,247,.07)'}
     ],'');
-  }else if(bkQNum<=phase2End){
-    // Phase 2: How many white keys in this group?
-    bkQType='white-count';
-    bkCurrent=Math.random()<0.5?2:3;
-    bkCorrectVal=bkCurrent===2?3:4;
+  }else if(q.type==='white-count'){
+    bkCurrent=q.group; bkCorrectVal=bkCurrent===2?3:4;
     document.getElementById('bk-question').textContent='How many white keys are in this group?';
     bkDrawGroup();
     bkBuildButtons([
@@ -2569,10 +2587,7 @@ function bkNextQuestion(){
       {v:5,lbl:'5 White Keys',col:'var(--green)',bg:'rgba(57,217,138,.07)'}
     ],'bk-btn-sm');
   }else{
-    // Phase 3: Which number white key is this note?
-    bkQType='white-num';
-    bkNoteIdx=Math.floor(Math.random()*7);
-    bkCorrectVal=bkNoteIdx;
+    bkNoteIdx=q.noteIdx; bkCorrectVal=bkNoteIdx;
     document.getElementById('bk-question').textContent=`"${BK_NOTES[bkNoteIdx]}" is the ___ white key.`;
     bkDrawOctave(bkNoteIdx);
     const others=[0,1,2,3,4,5,6].filter(i=>i!==bkNoteIdx).sort(()=>Math.random()-.5).slice(0,3);
