@@ -2542,23 +2542,24 @@ function bkNextQuestion(){
   document.getElementById('bk-progress-fill').style.width=Math.round(((bkQNum-1)/bkSessionLen)*100)+'%';
   document.getElementById('bk-feedback').textContent='';
 
-  const roll=Math.random();
-  if(roll<0.33){
-    // Q-type A: count the black keys
+  // Phase progression: first third = black keys, middle third = white count, last third = white numbering
+  const phase1End=Math.ceil(bkSessionLen/3),phase2End=Math.ceil(bkSessionLen*2/3);
+  if(bkQNum<=phase1End){
+    // Phase 1: Is it 2 or 3 black keys?
     bkQType='black';
     bkCurrent=Math.random()<0.5?2:3;
     bkCorrectVal=bkCurrent;
-    document.getElementById('bk-question').textContent='How many black keys are in this group?';
+    document.getElementById('bk-question').textContent='Is it 2 or 3 black keys?';
     bkDrawGroup();
     bkBuildButtons([
       {v:2,lbl:'2 Black Keys',col:'var(--sky)',bg:'rgba(0,212,255,.07)'},
       {v:3,lbl:'3 Black Keys',col:'var(--purple)',bg:'rgba(168,85,247,.07)'}
     ],'');
-  }else if(roll<0.66){
-    // Q-type B: count the white keys in a group
+  }else if(bkQNum<=phase2End){
+    // Phase 2: How many white keys in this group?
     bkQType='white-count';
     bkCurrent=Math.random()<0.5?2:3;
-    bkCorrectVal=bkCurrent===2?3:4; // 2-black group has 3 whites; 3-black has 4
+    bkCorrectVal=bkCurrent===2?3:4;
     document.getElementById('bk-question').textContent='How many white keys are in this group?';
     bkDrawGroup();
     bkBuildButtons([
@@ -2568,13 +2569,12 @@ function bkNextQuestion(){
       {v:5,lbl:'5 White Keys',col:'var(--green)',bg:'rgba(57,217,138,.07)'}
     ],'bk-btn-sm');
   }else{
-    // Q-type C: which number white key is this note?
+    // Phase 3: Which number white key is this note?
     bkQType='white-num';
     bkNoteIdx=Math.floor(Math.random()*7);
     bkCorrectVal=bkNoteIdx;
     document.getElementById('bk-question').textContent=`"${BK_NOTES[bkNoteIdx]}" is the ___ white key.`;
     bkDrawOctave(bkNoteIdx);
-    // 4 choices: correct + 3 shuffled others
     const others=[0,1,2,3,4,5,6].filter(i=>i!==bkNoteIdx).sort(()=>Math.random()-.5).slice(0,3);
     const choices=[bkNoteIdx,...others].sort(()=>Math.random()-.5);
     const cols=['var(--sky)','var(--purple)','var(--amber)','var(--green)'];
