@@ -168,5 +168,95 @@
 
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Custom cursor for cookie consent — sits above CookieHub overlay -->
+    <div id="cch-cur" aria-hidden="true"></div>
+    <style>
+      #cch-cur{
+        position:fixed;left:-99px;top:-99px;
+        width:18px;height:18px;border-radius:50%;
+        background:#fff;
+        pointer-events:none;
+        z-index:2147483647;
+        transform:translate(-50%,-50%);
+        transition:background .22s,box-shadow .22s;
+        opacity:0;
+        box-shadow:0 0 0 2px rgba(255,255,255,.28);
+      }
+      .cch-on #cch-cur{opacity:1;}
+      .cch-on,.cch-on *{cursor:none!important;}
+    </style>
+    <script>
+    (function(){
+      var cur=document.getElementById('cch-cur');
+      var on=false;
+      document.addEventListener('mousemove',function(e){
+        cur.style.left=e.clientX+'px';
+        cur.style.top=e.clientY+'px';
+      },true);
+      function activate(){
+        if(on)return;on=true;
+        document.documentElement.classList.add('cch-on');
+      }
+      function deactivate(){
+        if(!on)return;on=false;
+        document.documentElement.classList.remove('cch-on');
+        cur.style.background='#fff';
+        cur.style.boxShadow='0 0 0 2px rgba(255,255,255,.28)';
+      }
+      function wireBtn(btn){
+        if(!btn||btn._cchWired)return;
+        btn._cchWired=true;
+        btn.addEventListener('mouseenter',function(){
+          cur.style.background='#FF2D78';
+          cur.style.boxShadow='0 0 16px rgba(255,45,120,.85)';
+        });
+        btn.addEventListener('mouseleave',function(){
+          cur.style.background='#fff';
+          cur.style.boxShadow='0 0 0 2px rgba(255,255,255,.28)';
+        });
+        btn.addEventListener('click',function(){
+          // Flash pink then settle to white, then hide custom cursor
+          cur.style.background='#FF2D78';
+          cur.style.boxShadow='0 0 24px rgba(255,45,120,1)';
+          setTimeout(function(){
+            cur.style.background='#fff';
+            cur.style.boxShadow='0 0 0 2px rgba(255,255,255,.28)';
+            setTimeout(deactivate,400);
+          },550);
+        });
+      }
+      // Watch for CookieHub banner injection
+      var obs=new MutationObserver(function(){
+        // CookieHub uses class prefixes like ch2-
+        var banner=document.querySelector('[class*="ch2-dialog"],[class*="ch2-container"],#ch2');
+        if(!banner){
+          // Fallback: any fixed overlay that appeared
+          var nodes=document.querySelectorAll('[style*="z-index"]');
+          nodes.forEach(function(n){
+            if(n.style.position==='fixed'&&parseInt(n.style.zIndex)>9000)banner=n;
+          });
+        }
+        if(banner&&!banner._cchSeen){
+          banner._cchSeen=true;
+          activate();
+          // Wire all likely "allow" / "accept" buttons inside banner
+          var btns=banner.querySelectorAll('button,a[role="button"]');
+          btns.forEach(function(b){
+            if(/allow|accept|agree|got it/i.test(b.textContent))wireBtn(b);
+          });
+          // Also wire by CookieHub class convention
+          var chBtn=banner.querySelector('.ch2-allow-all,.ch2-btn-accept');
+          wireBtn(chBtn);
+          // Watch for banner removal
+          var rmObs=new MutationObserver(function(){
+            if(!document.body.contains(banner)){deactivate();rmObs.disconnect();}
+          });
+          rmObs.observe(document.body,{childList:true,subtree:true});
+        }
+      });
+      obs.observe(document.body,{childList:true,subtree:true});
+    })();
+    </script>
   </body>
 </html>
