@@ -15,6 +15,7 @@ interface TrialBillingProps {
 const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [promoCode, setPromoCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -91,7 +92,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
-        { body: { userId, email } }
+        { body: { userId, email, promoCode: promoCode.trim() || undefined } }
       );
 
       if (fnError || !data?.url) {
@@ -161,6 +162,16 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
                   className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Promo Code (optional)</label>
+                <input
+                  type="text"
+                  placeholder="Enter a promo code"
+                  className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
                 />
               </div>
 

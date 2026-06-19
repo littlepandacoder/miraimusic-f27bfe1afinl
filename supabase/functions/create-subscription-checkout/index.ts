@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email } = await req.json();
+    const { userId, email, promoCode } = await req.json();
 
     if (!userId || !email) {
       throw new Error("userId and email are required");
@@ -51,25 +51,47 @@ serve(async (req) => {
       cancel_url: `${origin}/signup`,
     };
 
-    // Try to apply the FIRST_MONTH coupon — skip if it doesn't exist
     const couponId = Deno.env.get("STRIPE_FIRST_MONTH_COUPON") ?? "FIRST_MONTH";
-    let session: Stripe.Checkout.Session;
-    try {
-      session = await stripe.checkout.sessions.create({
-        ...sessionParams,
-        discounts: [{ coupon: couponId }],
+    let session: Stripe.Checkout.Session | undefined = undefined;
+    let promoApplied = false;
+
+    // A customer-typed code is a Promotion Code, not a raw Coupon ID — look it up first.
+    if (promoCode) {
+      const promos = await stripe.promotionCodes.list({
+        code: String(promoCode).trim(),
+        active: true,
+        limit: 1,
       });
-      console.log("[checkout] created with coupon:", couponId);
-    } catch (couponErr: any) {
-      if (couponErr?.message?.includes("No such coupon")) {
-        console.log("[checkout] coupon not found, creating session without discount");
-        session = await stripe.checkout.sessions.create(sessionParams);
-      } else {
-        throw couponErr;
+      const promo = promos.data[0];
+      if (promo) {
+        session = await stripe.checkout.sessions.create({
+          ...sessionParams,
+          discounts: [{ promotion_code: promo.id }],
+        });
+        promoApplied = true;
+        console.log("[checkout] created with promotion code:", promoCode);
       }
     }
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    // No promo code given, or it didn't resolve — fall back to the default FIRST_MONTH coupon.
+    if (!session) {
+      try {
+        session = await stripe.checkout.sessions.create({
+          ...sessionParams,
+          discounts: [{ coupon: couponId }],
+        });
+        console.log("[checkout] created with coupon:", couponId);
+      } catch (couponErr: any) {
+        if (couponErr?.message?.includes("No such coupon")) {
+          console.log("[checkout] coupon not found, creating session without discount");
+          session = await stripe.checkout.sessions.create(sessionParams);
+        } else {
+          throw couponErr;
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ url: session.url, promoApplied }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
