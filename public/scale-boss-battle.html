@@ -304,6 +304,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   <div class="scale-zone">
     <div class="scale-eyebrow">🎵 Find all 8 notes of this scale</div>
     <div class="scale-name" id="scaleNameDisp">C MAJOR</div>
+    <div class="scale-notes-row" id="scaleNotesDisp" style="display:none"></div>
     <div class="hint-text" id="hintText"></div>
     <div class="prog-row" id="progRow">
       <div class="prog-dot" id="p0"></div><div class="prog-dot" id="p1"></div>
@@ -701,6 +702,11 @@ function nextScale(){
   while(next===currentScale&&pool.length>1);
   currentScale=next;
   document.getElementById('scaleNameDisp').textContent=next.name.toUpperCase();
+  // Beginner boss (first one) shows the scale's notes up front; later,
+  // harder bosses hide them so players have to know the scale themselves.
+  const notesDisp=document.getElementById('scaleNotesDisp');
+  if(bossIdx===0){notesDisp.textContent=next.display;notesDisp.style.display='block';}
+  else{notesDisp.textContent='';notesDisp.style.display='none';}
   document.getElementById('hintText').textContent='';
   for(let i=0;i<8;i++){const d=document.getElementById('p'+i);if(d)d.className='prog-dot';}
   document.getElementById('progLabel').textContent='0 / 8 notes selected';
