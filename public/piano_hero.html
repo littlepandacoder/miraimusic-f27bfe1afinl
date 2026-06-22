@@ -1694,7 +1694,7 @@ window.musicableUserId   = null;
       Practice Mode <span style="color:var(--pink)">🎼</span>
     </div>
     <div style="font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:1rem">
-      Notes scroll on the staff · play along · wait mode pauses until you hit the right note
+      Notes fall toward the keyboard · play along · wait mode pauses until you hit the right note
     </div>
     <!-- Options row -->
     <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center">
@@ -1970,7 +1970,7 @@ window.musicableUserId   = null;
         <button onclick="stopPractice()" style="font-family:'DM Mono',monospace;font-size:.7rem;padding:.35rem .8rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer">✕ Stop</button>
       </div>
     </div>
-    <!-- Scrolling staff -->
+    <!-- Falling notes -->
     <div style="flex:1;position:relative;min-height:0;overflow:hidden">
       <canvas id="practiceStaff" style="display:block;width:100%;height:100%"></canvas>
       <div id="practiceHitFB" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;opacity:0;transition:opacity .1s;text-align:center"></div>
@@ -3116,22 +3116,9 @@ function kbSettingsRedrawAll() {
 
 /* ═══════════════════════════════════════════════════════════
    PRACTICE MODE ENGINE
-   Scrolling staff with real note heads, wait mode, multiplayer
+   Falling notes onto a hit-zone line, wait mode, multiplayer
 ═══════════════════════════════════════════════════════════ */
 
-// ── Constants ─────────────────────────────────────────────
-// LINE_GAP is a fixed pixel constant — must never be computed from canvas size.
-// Every size derived from it (clef, notes, time sig) is therefore identical on every load.
-const LINE_GAP = 24; // px between staff lines
-const SCROLL_BEATS_VISIBLE = 14; // how many beats visible ahead of cursor
-
-// ── Diatonic step helper (C4=0) ───────────────────────────
-const DIATONIC_WHITES = ['C','D','E','F','G','A','B'];
-function diatonicStep(midi) {
-  const name = NOTE_NAMES[midi % 12].replace('#','');
-  const oct  = Math.floor(midi / 12) - 1;
-  return (oct - 4) * 7 + DIATONIC_WHITES.indexOf(name);
-}
 
 // ── Practice state ────────────────────────────────────────
 let pr = {
@@ -3491,28 +3478,6 @@ function resizePracticeCanvases() {
 }
 window.addEventListener('resize', resizePracticeCanvases);
 
-// ── Staff geometry helpers ────────────────────────────────
-// Returns all measurements needed to draw the grand staff.
-// LINE_GAP is derived from canvas height so the staff always
-// fills ~80% of the available space — matching the reference image.
-function staffGeometry(h) {
-  // LINE_GAP is the global fixed constant above — never recomputed here.
-  // h is only used to center the grand staff vertically in the canvas.
-  const totalH = LINE_GAP * 10.5; // 4 treble + 2.5 gap + 4 bass spans
-  const tTop   = Math.max(8, Math.round((h - totalH) / 2));
-  const bTop   = tTop + LINE_GAP * 6.5; // tTop + 4*LG treble + 2.5*LG gap
-  const midCyT = tTop + 5 * LINE_GAP;
-  const midCyB = bTop - LINE_GAP;
-  return { tTop, bTop, midCyT, midCyB, LINE_GAP };
-}
-
-function noteYFromStep(step, geo) {
-  // step = diatonicStep(midi), C4=0
-  // Notes step >= -1 go on treble, below that on bass
-  const useTreble = step >= -1;
-  const refY      = useTreble ? geo.midCyT : geo.midCyB;
-  return refY - step * (geo.LINE_GAP / 2);
-}
 
 // ── Main practice render loop ─────────────────────────────
 function practiceLoop() {
@@ -3522,7 +3487,7 @@ function practiceLoop() {
     updatePracticeLogic();
   }
 
-  drawPracticeStaff();
+  drawPracticeFalling();
   updatePracticeHUD();
   pr.raf = requestAnimationFrame(practiceLoop);
 }
@@ -3623,17 +3588,14 @@ function scorePracticeHit(midi, perfect) {
   startAudio().then(() => hitSound.triggerAttackRelease('C2','16n',Tone.now()));
   mpBroadcast({ type:'score', score: pr.score, hits: pr.hitNotes, total: pr.totalNotes });
 
-  // Firework burst on the staff at the hit note's position
-  const geo     = staffGeometry(PR_H);
-  const LG      = geo.LINE_GAP;
-  const cursorX = Math.round(LINE_GAP * 8.5); // HEADER_W — identical to drawPracticeStaff
-  const step    = diatonicStep(midi);
-  const noteY   = noteYFromStep(step, geo);
+  // Firework burst at the note's lane position on the hit-zone line
+  const burstX = getNoteLaneX(midi, PR_W);
+  const burstY = PR_H - HIT_ZONE_H;
   const burstCount = perfect ? 24 : 16;
-  spawnStaffBurst(cursorX, noteY, color, burstCount);
+  spawnStaffBurst(burstX, burstY, color, burstCount);
   // Extra sparkle ring for PERFECT
   if (perfect) {
-    spawnStaffBurst(cursorX, noteY, '#FFFFFF', 8);
+    spawnStaffBurst(burstX, burstY, '#FFFFFF', 8);
   }
 }
 
@@ -3735,86 +3697,16 @@ function updateStaffParticles(ctx) {
   }
 }
 
-// ── Staff renderer ────────────────────────────────────────
-// Beaming rules (matches reference image):
-//  • Beam groups span HALF a bar (4 eighth-note units in 4/4)
-//  • Cross-staff notes share ONE beam in the inter-staff gap
-//  • Semiquavers (dur<=0.5) get a double beam
-//  • Stems normalised to a nearly-flat beam line
-//  • Stem direction: avg note Y below staff mid → stems up
-function drawPracticeStaff() {
+// ── Falling-notes renderer ─────────────────────────────────
+// Same visual language as Songs Mode's renderGame(): bars fall
+// straight down toward a hit-zone line just above the keyboard.
+// Lane X is the note's actual key position, so low (bass) notes
+// land over the left/bass keys and high (treble) notes land over
+// the right/treble keys — no separate staff/clef split needed.
+function drawPracticeFalling() {
   prCtx.clearRect(0, 0, PR_W, PR_H);
   prCtx.fillStyle = '#0a0812';
   prCtx.fillRect(0, 0, PR_W, PR_H);
-
-  const geo         = staffGeometry(PR_H);
-  const LG          = geo.LINE_GAP;
-  const curBeat     = pr.curBeat || 0;
-
-  // ── Layout ───────────────────────────────────────────────
-  // HEADER_W: protected left zone where the clef + time sig live.
-  // cursorX is pinned exactly to HEADER_W so the red cursor aligns
-  // with the system barline — the left boundary of the note area.
-  const HEADER_W    = Math.round(LG * 8.5);
-  const cursorX     = HEADER_W;
-  const pxPerBeat   = (PR_W - HEADER_W) / SCROLL_BEATS_VISIBLE;
-
-  const STAFF_COLOR = '#546e7a';
-  const CLEF_COLOR  = '#c0d4e0';  // bright enough to see on dark background
-
-  // Note head radii — FIXED size (same across all notes/songs)
-  const RX = Math.round(LG * 0.72);
-  const RY = Math.round(LG * 0.46);
-
-  // ── 5 staff lines — full width ────────────────────────────
-  prCtx.strokeStyle = STAFF_COLOR;
-  prCtx.lineWidth   = 1.8;
-  for (let i = 0; i < 5; i++) {
-    const y = geo.tTop + i * LG;
-    prCtx.beginPath(); prCtx.moveTo(4, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
-  }
-  for (let i = 0; i < 5; i++) {
-    const y = geo.bTop + i * LG;
-    prCtx.beginPath(); prCtx.moveTo(4, y); prCtx.lineTo(PR_W, y); prCtx.stroke();
-  }
-
-  // ── Measure barlines ──────────────────────────────────────
-  // BAR_MARGIN keeps the barline clear of note heads on both sides.
-  // Drawn BEFORE cursor/notes so notes always render on top.
-  const BAR_MARGIN = RX + Math.round(LG * 0.9);
-  {
-    const _btx = b => cursorX + (b - curBeat) * pxPerBeat;
-    const bpb  = pr.beatsPerBar || 8;
-    const sTop = geo.tTop;
-    const sBot = geo.bTop + 4 * LG;
-    const lb   = curBeat - cursorX / pxPerBeat - bpb;
-    const rb   = curBeat + SCROLL_BEATS_VISIBLE + bpb;
-    const fb   = Math.ceil(lb / bpb) * bpb;
-    prCtx.save();
-    prCtx.strokeStyle = STAFF_COLOR;
-    prCtx.lineWidth   = 1.8;
-    for (let bb = fb; bb <= rb; bb += bpb) {
-      const bx = _btx(bb) - BAR_MARGIN;
-      if (bx <= HEADER_W + 2) continue;
-      if (bx > PR_W + 2) break;
-      prCtx.beginPath();
-      prCtx.moveTo(bx, sTop);
-      prCtx.lineTo(bx, sBot);
-      prCtx.stroke();
-    }
-    prCtx.restore();
-  }
-
-  // ── Cursor / playhead ─────────────────────────────────────
-  const cTop = geo.tTop - LG * 1.0;
-  const cBot = geo.bTop + LG * 5.0;
-  prCtx.save();
-  prCtx.strokeStyle = 'rgba(255,45,120,0.18)'; prCtx.lineWidth = 40; prCtx.lineCap = 'butt';
-  prCtx.shadowColor = 'rgba(255,45,120,0.5)'; prCtx.shadowBlur = 24;
-  prCtx.beginPath(); prCtx.moveTo(cursorX, cTop); prCtx.lineTo(cursorX, cBot); prCtx.stroke();
-  prCtx.strokeStyle = '#FF2D78'; prCtx.lineWidth = 3; prCtx.shadowBlur = 14;
-  prCtx.beginPath(); prCtx.moveTo(cursorX, cTop); prCtx.lineTo(cursorX, cBot); prCtx.stroke();
-  prCtx.restore();
 
   // ── Wait-mode border pulse ────────────────────────────────
   if (pr.waitingForNote && pr.waitTarget) {
@@ -3825,516 +3717,124 @@ function drawPracticeStaff() {
     prCtx.restore();
   }
 
-  // ──────────────────────────────────────────────────────────
-  // Collect visible notes with geometry
-  // ──────────────────────────────────────────────────────────
-  const STEM_LEN = LG * 3.5;
-  const stemW    = Math.max(2.5, LG * 0.14);
+  const wkw     = PR_W / N_WHITE;
+  const hitY    = PR_H - HIT_ZONE_H;
+  const curBeat = pr.curBeat || 0;
 
-  /** Get X pixel for a beat position */
-  const beatToX = beat => cursorX + (beat - curBeat) * pxPerBeat;
-
-  /** Get Y pixel for a midi note */
-  const midiToY = midi => {
-    const step = diatonicStep(midi);
-    return noteYFromStep(step, geo);
-  };
-
-  /** Stem direction: below staff middle → up */
-  const stemDir = (midi, useTreble) => {
-    const staffMidY = (useTreble ? geo.tTop : geo.bTop) + 2 * LG;
-    return midiToY(midi) >= staffMidY ? 1 : -1; // 1=up, -1=down
-  };
-
-  // Build visible notes at their beat-proportional positions (correct scroll timing)
-  const visible = pr.notes
-    .filter(n => !n.missed && !n.hit)
-    .map(n => {
-      const x       = beatToX(n.beat);
-      const step    = diatonicStep(n.midi);
-      const useT    = step >= -1;
-      const y       = noteYFromStep(step, geo);
-      const sd      = stemDir(n.midi, useT);
-      const stemX   = sd > 0 ? x + RX * 0.85 : x - RX * 0.85;
-      const stemTip = y - sd * STEM_LEN;
-      return { ...n, x, y, step, useT, sd, stemX, stemTip, _isSolo: false };
-    })
-    .filter(n => n.x > HEADER_W && n.x <= PR_W + 80);
-
-  // ── Missed note ghosts (recent misses shown as fading red X) ──
-  pr.notes
-    .filter(n => n.missed && n.missedAt !== undefined && (curBeat - n.missedAt) < 5)
-    .forEach(n => {
-      const age   = curBeat - n.missedAt; // 0..5
-      const alpha = Math.max(0, 1 - age / 5);
-      const x     = beatToX(n.beat);
-      const y     = midiToY(n.midi);
-      if (x <= HEADER_W || x > PR_W + 80) return;
-      prCtx.save();
-      prCtx.globalAlpha = alpha * 0.65;
-      prCtx.strokeStyle = '#EF4444';
-      prCtx.lineWidth   = Math.max(2.5, LG * 0.16);
-      prCtx.shadowColor = '#EF4444';
-      prCtx.shadowBlur  = 12;
-      const xr = RX * 0.9, yr = RY * 0.9;
-      prCtx.beginPath(); prCtx.moveTo(x - xr, y - yr); prCtx.lineTo(x + xr, y + yr); prCtx.stroke();
-      prCtx.beginPath(); prCtx.moveTo(x + xr, y - yr); prCtx.lineTo(x - xr, y + yr); prCtx.stroke();
-      prCtx.restore();
-    });
-
-  // ──────────────────────────────────────────────────────────
-  // Music-theory beaming
-  //  Groups: quavers+semiquavers within each quarter-note span
-  //  (quarter = 2 eighth-note units). Cross-staff notes split.
-  // ──────────────────────────────────────────────────────────
-  const QUARTER_SPAN = 2; // eighth-note units per quarter
-  const beamable     = visible.filter(n => n.dur <= 1);
-
-  // Build groups keyed by (quarterIdx, staff)
-  const groupMap = new Map();
-  beamable.forEach(n => {
-    const qi  = Math.floor(n.beat / QUARTER_SPAN);
-    const key = `${qi}-${n.useT ? 'T' : 'B'}`;
-    if (!groupMap.has(key)) groupMap.set(key, []);
-    groupMap.get(key).push(n);
+  // Lane lines for each white key
+  prCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+  prCtx.lineWidth   = 1;
+  WHITE_KEYS.forEach((_, i) => {
+    prCtx.beginPath();
+    prCtx.moveTo(i * wkw, 0);
+    prCtx.lineTo(i * wkw, PR_H);
+    prCtx.stroke();
   });
 
-  // Mark solos; keep multi-note groups
-  const beamGroups = [];
-  groupMap.forEach(items => {
-    items.sort((a, b) => a.beat - b.beat);
-    if (items.length >= 2) {
-      beamGroups.push(items);
-    } else {
-      items[0]._isSolo = true; // gets individual flag
-    }
-  });
+  // Hit zone bar
+  const hitGrad = prCtx.createLinearGradient(0, hitY, 0, hitY + HIT_ZONE_H);
+  hitGrad.addColorStop(0, 'rgba(255,45,120,0.7)');
+  hitGrad.addColorStop(1, 'rgba(255,45,120,0)');
+  prCtx.fillStyle = hitGrad;
+  prCtx.fillRect(0, hitY, PR_W, HIT_ZONE_H);
 
-  // Build set of beamed notes
-  const beamedSet = new Set();
-  beamGroups.forEach(g => g.forEach(n => beamedSet.add(n)));
+  prCtx.strokeStyle = 'rgba(255,45,120,0.8)';
+  prCtx.lineWidth   = 2;
+  prCtx.beginPath();
+  prCtx.moveTo(0, hitY);
+  prCtx.lineTo(PR_W, hitY);
+  prCtx.stroke();
 
-  // ──────────────────────────────────────────────────────────
-  // For beamed groups, normalise all stem tips to a slanted
-  // beam line (first-to-last note stem tips, slope-capped).
-  // ──────────────────────────────────────────────────────────
-  beamGroups.forEach(group => {
-    const first = group[0], last = group[group.length - 1];
-    const dx    = last.stemX - first.stemX || 1;
-    const rawSlope = (last.stemTip - first.stemTip) / dx;
-    const maxSlope = LG * 0.35 / Math.max(1, Math.abs(dx));
-    const slope    = Math.max(-maxSlope, Math.min(maxSlope, rawSlope));
+  // Notes — same fall density as Songs Mode (20 beat units visible)
+  const ppb = PR_H / 20;
 
-    group.forEach(n => {
-      n.stemTip = first.stemTip + slope * (n.stemX - first.stemX);
-    });
-  });
+  pr.notes.forEach(n => {
+    if (n.hit) return;
+    const beatFromNow = n.beat - curBeat;
+    const noteH = Math.max(16, n.dur * ppb);
+    const noteY = hitY - beatFromNow * ppb - noteH;
 
-  // ──────────────────────────────────────────────────────────
-  // DRAW PASS 1: ledger lines, note heads, accidentals, dots
-  // ──────────────────────────────────────────────────────────
-  visible.forEach(n => {
-    const { x: noteX, y: noteY, useT, step } = n;
-    const isSharp   = NOTE_NAMES[n.midi % 12].includes('#');
-    const isWait    = pr.waitingForNote && pr.waitTarget === n;
-    const color     = isWait ? '#00D4FF' : n.color;
+    // Skip if way off screen
+    if (noteY > PR_H + noteH || noteY + noteH < -noteH * 2) return;
 
-    const isWhole   = n.dur >= 8;
-    const isHalf    = n.dur >= 4 && n.dur < 8;
-    const isDotted  = n.dur === 3 || n.dur === 6 || n.dur === 1.5;
+    const noteX = getNoteLaneX(n.midi, PR_W);
+    const noteW = Math.max(16, wkw * (n.midi % 12 === 1 ? 0.5 : 0.75));
 
-    // ── Ledger lines ─────────────────────────────────────────
-    const lTop = useT ? geo.tTop : geo.bTop;
-    const lBot = lTop + 4 * LG;
-    prCtx.save();
-    prCtx.strokeStyle = '#4a6070'; prCtx.lineWidth = 1.6;
-    if (noteY > lBot + LG * 0.4) {
-      for (let ly = lBot + LG; ly <= noteY + LG * 0.4; ly += LG) {
-        prCtx.beginPath(); prCtx.moveTo(noteX - RX - 5, ly); prCtx.lineTo(noteX + RX + 5, ly); prCtx.stroke();
-      }
-    }
-    if (noteY < lTop - LG * 0.4) {
-      for (let ly = lTop - LG; ly >= noteY - LG * 0.4; ly -= LG) {
-        prCtx.beginPath(); prCtx.moveTo(noteX - RX - 5, ly); prCtx.lineTo(noteX + RX + 5, ly); prCtx.stroke();
-      }
-    }
-    prCtx.restore();
-
-    // ── Glow ─────────────────────────────────────────────────
-    prCtx.shadowColor = color;
-    prCtx.shadowBlur  = isWait ? 40 : 22;
-
-    // ── Note head ────────────────────────────────────────────
-    const drawPill = (cx, cy, rx, ry, fill) => {
-      const r = ry;
+    // Wait mode: pulse the target note
+    const isWaitTarget = pr.waitingForNote && pr.waitTarget === n;
+    if (isWaitTarget) {
+      const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 120);
+      prCtx.shadowColor = '#00D4FF';
+      prCtx.shadowBlur  = 30 * pulse;
+      prCtx.strokeStyle = `rgba(0,212,255,${pulse})`;
+      prCtx.lineWidth   = 3;
       prCtx.beginPath();
-      if (prCtx.roundRect) prCtx.roundRect(cx - rx, cy - ry, rx * 2, ry * 2, r);
-      else prCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-      if (fill) { prCtx.fillStyle = fill; prCtx.fill(); }
-      else prCtx.stroke();
-    };
-
-    if (isWhole) {
-      prCtx.strokeStyle = color; prCtx.lineWidth = Math.max(3, LG * 0.18);
-      drawPill(noteX, noteY, RX, RY, null);
+      prCtx.roundRect
+        ? prCtx.roundRect(noteX - noteW/2 - 4, noteY - 4, noteW + 8, noteH + 8, 8)
+        : prCtx.rect(noteX - noteW/2 - 4, noteY - 4, noteW + 8, noteH + 8);
+      prCtx.stroke();
       prCtx.shadowBlur = 0;
-      drawPill(noteX, noteY, RX - Math.max(3, LG * 0.2), RY - Math.max(2, LG * 0.14), '#0a0812');
-    } else if (isHalf) {
-      drawPill(noteX, noteY, RX, RY, color);
-      prCtx.shadowBlur = 0;
-      drawPill(noteX, noteY, RX - Math.max(3.5, LG * 0.22), RY - Math.max(2.5, LG * 0.16), '#0a0812');
-    } else {
-      drawPill(noteX, noteY, RX, RY, color);
-      prCtx.shadowBlur = 0;
-      prCtx.save();
-      prCtx.globalAlpha = 0.35;
-      const hiGrad = prCtx.createLinearGradient(noteX, noteY - RY, noteX, noteY);
-      hiGrad.addColorStop(0, '#ffffff'); hiGrad.addColorStop(1, 'transparent');
-      prCtx.fillStyle = hiGrad;
-      if (prCtx.roundRect) {
-        prCtx.beginPath(); prCtx.roundRect(noteX - RX, noteY - RY, RX * 2, RY, RY * 0.5); prCtx.fill();
-      }
-      prCtx.restore();
     }
 
-    // Outer ring badge
-    prCtx.save();
-    prCtx.strokeStyle = color; prCtx.lineWidth = Math.max(2, LG * 0.12);
-    prCtx.shadowColor = color; prCtx.shadowBlur = 8; prCtx.globalAlpha = 0.7;
-    drawPill(noteX, noteY, RX + Math.max(2, LG * 0.12), RY + Math.max(1.5, LG * 0.08), null);
-    prCtx.restore();
+    // Glow + draw
+    prCtx.shadowColor = n.color;
+    prCtx.shadowBlur  = n.missed ? 0 : 20;
+    prCtx.globalAlpha = n.missed ? 0.2 : 1;
 
-    // ── Dot ───────────────────────────────────────────────────
-    if (isDotted) {
-      const dotR = Math.max(4, Math.round(LG * 0.28));
-      const dotX = noteX + RX + dotR * 1.8;
-      const dotY = noteY;
-      prCtx.save(); prCtx.fillStyle = color;
-      prCtx.shadowColor = color; prCtx.shadowBlur = 8;
-      prCtx.beginPath(); prCtx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
-      prCtx.fill(); prCtx.restore();
+    // Note body — rounded rectangle
+    const r = 6;
+    prCtx.fillStyle = n.missed ? '#333' : n.color;
+    prCtx.beginPath();
+    prCtx.moveTo(noteX - noteW/2 + r, noteY);
+    prCtx.lineTo(noteX + noteW/2 - r, noteY);
+    prCtx.arcTo(noteX + noteW/2, noteY, noteX + noteW/2, noteY + r, r);
+    prCtx.lineTo(noteX + noteW/2, noteY + noteH - r);
+    prCtx.arcTo(noteX + noteW/2, noteY + noteH, noteX + noteW/2 - r, noteY + noteH, r);
+    prCtx.lineTo(noteX - noteW/2 + r, noteY + noteH);
+    prCtx.arcTo(noteX - noteW/2, noteY + noteH, noteX - noteW/2, noteY + noteH - r, r);
+    prCtx.lineTo(noteX - noteW/2, noteY + r);
+    prCtx.arcTo(noteX - noteW/2, noteY, noteX - noteW/2 + r, noteY, r);
+    prCtx.closePath();
+    prCtx.fill();
+
+    // Shine
+    if (!n.missed) {
+      const shine = prCtx.createLinearGradient(noteX - noteW/2, noteY, noteX + noteW/2, noteY);
+      shine.addColorStop(0, 'rgba(255,255,255,0.3)');
+      shine.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      shine.addColorStop(1, 'rgba(255,255,255,0)');
+      prCtx.fillStyle = shine;
+      prCtx.beginPath();
+      prCtx.moveTo(noteX - noteW/2 + r, noteY);
+      prCtx.lineTo(noteX + noteW/2 - r, noteY);
+      prCtx.arcTo(noteX + noteW/2, noteY, noteX + noteW/2, noteY + r, r);
+      prCtx.lineTo(noteX + noteW/2, noteY + noteH/3);
+      prCtx.lineTo(noteX - noteW/2, noteY + noteH/3);
+      prCtx.lineTo(noteX - noteW/2, noteY + r);
+      prCtx.arcTo(noteX - noteW/2, noteY, noteX - noteW/2 + r, noteY, r);
+      prCtx.closePath();
+      prCtx.fill();
     }
 
-    // ── Accidental ────────────────────────────────────────────
-    if (isSharp) {
-      prCtx.save(); prCtx.fillStyle = color;
-      prCtx.font = `bold ${Math.round(LG * 1.4)}px sans-serif`;
-      prCtx.textAlign = 'right'; prCtx.textBaseline = 'middle';
-      prCtx.shadowColor = color; prCtx.shadowBlur = 8;
-      prCtx.fillText('\u266f', noteX - RX - 5, noteY);
-      prCtx.restore();
+    // Label
+    if (!n.missed && noteH > 22) {
+      prCtx.shadowBlur  = 0;
+      prCtx.fillStyle   = '#fff';
+      prCtx.font        = `bold ${Math.max(9, Math.min(13, noteW * 0.55))}px "DM Mono",monospace`;
+      prCtx.textAlign   = 'center';
+      prCtx.textBaseline= 'middle';
+      prCtx.fillText(NOTE_NAMES[n.midi % 12], noteX, noteY + noteH / 2);
+      prCtx.textBaseline= 'alphabetic';
     }
 
-
+    prCtx.shadowBlur  = 0;
     prCtx.globalAlpha = 1;
-  });
-
-  // ──────────────────────────────────────────────────────────
-  // DRAW PASS 2: stems + individual flags (non-beamed notes)
-  // ──────────────────────────────────────────────────────────
-  visible.forEach(n => {
-    const isWhole  = n.dur >= 8;
-    if (isWhole) return; // no stem on whole notes
-
-    const color  = (pr.waitingForNote && pr.waitTarget === n) ? '#00D4FF' : n.color;
-    const inBeam = beamedSet.has(n);
-
-    prCtx.save();
-    prCtx.strokeStyle = color; prCtx.lineWidth = stemW; prCtx.lineCap = 'round';
-    prCtx.shadowColor = color; prCtx.shadowBlur = 5;
-    prCtx.beginPath();
-    prCtx.moveTo(n.stemX, n.y + (n.sd > 0 ? -RY * 0.3 : RY * 0.3));
-    prCtx.lineTo(n.stemX, n.stemTip);
-    prCtx.stroke();
-    prCtx.restore();
-
-    // Individual flag (solo quaver/semiquaver not in a beam group)
-    const needsFlag = n.dur <= 1 && (!inBeam || n._isSolo);
-    if (needsFlag) {
-      const numFlags = n.dur <= 0.5 ? 2 : 1; // semiquaver=2, quaver=1
-      const d = n.sd; // 1=stem-up, -1=stem-down
-      for (let f = 0; f < numFlags; f++) {
-        const fy = n.stemTip + f * LG * 0.85 * d;
-        prCtx.save();
-        prCtx.strokeStyle = color; prCtx.lineWidth = stemW; prCtx.lineCap = 'round';
-        prCtx.shadowColor = color; prCtx.shadowBlur = 5;
-        prCtx.beginPath();
-        prCtx.moveTo(n.stemX, fy);
-        prCtx.bezierCurveTo(
-          n.stemX + d * LG * 1.2, fy + d * LG * 0.6,
-          n.stemX + d * LG * 1.0, fy + d * LG * 1.8,
-          n.stemX,                fy + d * LG * 2.4
-        );
-        prCtx.stroke();
-        prCtx.restore();
-      }
-    }
-  });
-
-  // ──────────────────────────────────────────────────────────
-  // DRAW PASS 3: beams
-  // Primary beam connects all notes in a group.
-  // Secondary beam connects consecutive semiquavers only.
-  // ──────────────────────────────────────────────────────────
-  const BEAM_H    = Math.max(3.5, LG * 0.2); // beam thickness
-  const BEAM_GAP  = BEAM_H + 2;               // gap between double beam
-
-  beamGroups.forEach(group => {
-    if (group.length < 2) return;
-    const first = group[0], last = group[group.length - 1];
-    const color = first.color;
-
-    // Slope from first to last normalised stem tips
-    const x1 = first.stemX, y1 = first.stemTip;
-    const x2 = last.stemX,  y2 = last.stemTip;
-    const slope = (x2 - x1) > 0.5 ? (y2 - y1) / (x2 - x1) : 0;
-
-    // Beam Y at any X
-    const beamY = (x) => y1 + slope * (x - x1);
-
-    // ── Primary beam (one beam for all quavers+semiquavers) ──
-    const beamOffset = first.sd > 0 ? 0 : 0; // direction-agnostic for primary
-    prCtx.save();
-    prCtx.strokeStyle = color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
-    prCtx.shadowColor = color; prCtx.shadowBlur = 6;
-    prCtx.beginPath();
-    prCtx.moveTo(x1, beamY(x1));
-    prCtx.lineTo(x2, beamY(x2));
-    prCtx.stroke();
-    prCtx.restore();
-
-    // ── Secondary beam for semiquavers ────────────────────────
-    // Direction: if stems go up, second beam is below first beam;
-    // if stems go down, second beam is above.
-    const secOff = first.sd > 0 ? BEAM_GAP : -BEAM_GAP;
-
-    // Find runs of consecutive semiquavers
-    let i = 0;
-    while (i < group.length) {
-      if (group[i].dur <= 0.5) {
-        let j = i;
-        while (j < group.length && group[j].dur <= 0.5) j++;
-        const run = group.slice(i, j);
-
-        if (run.length >= 2) {
-          // Full secondary beam across the run
-          const rx1 = run[0].stemX, rx2 = run[run.length - 1].stemX;
-          prCtx.save();
-          prCtx.strokeStyle = run[0].color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
-          prCtx.shadowColor = run[0].color; prCtx.shadowBlur = 6;
-          prCtx.beginPath();
-          prCtx.moveTo(rx1, beamY(rx1) + secOff);
-          prCtx.lineTo(rx2, beamY(rx2) + secOff);
-          prCtx.stroke();
-          prCtx.restore();
-        } else {
-          // Single semiquaver in a mixed group — draw a stub beam
-          const sn   = run[0];
-          const stub = Math.min(pxPerBeat * 0.9, LG * 1.0);
-          // Stub goes toward the nearest neighbour
-          const prevIsQ = i > 0;
-          const sx1 = prevIsQ ? sn.stemX - stub : sn.stemX;
-          const sx2 = prevIsQ ? sn.stemX        : sn.stemX + stub;
-          prCtx.save();
-          prCtx.strokeStyle = sn.color; prCtx.lineWidth = BEAM_H; prCtx.lineCap = 'round';
-          prCtx.shadowColor = sn.color; prCtx.shadowBlur = 6;
-          prCtx.beginPath();
-          prCtx.moveTo(sx1, beamY(sx1) + secOff);
-          prCtx.lineTo(sx2, beamY(sx2) + secOff);
-          prCtx.stroke();
-          prCtx.restore();
-        }
-        i = j;
-      } else {
-        i++;
-      }
-    }
   });
 
   // ── Staff firework particles ──────────────────────────────
   updateStaffParticles(prCtx);
-
-  // ── Header mask: hide note overflow, redraw clef + time sig on top ──
-  prCtx.fillStyle = '#0a0812';
-  prCtx.fillRect(0, 0, HEADER_W, PR_H);
-  // Redraw staff lines in header zone
-  prCtx.strokeStyle = STAFF_COLOR;
-  prCtx.lineWidth   = 1.8;
-  for (let i = 0; i < 5; i++) {
-    prCtx.beginPath(); prCtx.moveTo(4, geo.tTop + i * LG); prCtx.lineTo(HEADER_W, geo.tTop + i * LG); prCtx.stroke();
-    prCtx.beginPath(); prCtx.moveTo(4, geo.bTop + i * LG); prCtx.lineTo(HEADER_W, geo.bTop + i * LG); prCtx.stroke();
-  }
-  // System barline at header boundary
-  prCtx.strokeStyle = STAFF_COLOR;
-  prCtx.lineWidth   = 2.5;
-  prCtx.beginPath(); prCtx.moveTo(HEADER_W, geo.tTop); prCtx.lineTo(HEADER_W, geo.bTop + 4 * LG); prCtx.stroke();
-  // Clef symbols drawn last (on top of everything)
-  drawTrebleClef(prCtx, 4, geo.tTop, LG, CLEF_COLOR);
-  drawBassClef(prCtx, 4, geo.bTop, LG, CLEF_COLOR);
-  // Time signature drawn last
-  const tsNum    = pr.timeSigNum || 4;
-  const tsDen    = pr.timeSigDen || 4;
-  const tsFontSz = Math.round(LG * 2.1);
-  const tsX      = Math.round(LG * 6.5);
-  prCtx.save();
-  prCtx.fillStyle     = CLEF_COLOR;
-  prCtx.font          = `bold ${tsFontSz}px serif`;
-  prCtx.textAlign     = 'center';
-  prCtx.textBaseline  = 'middle';
-  prCtx.fillText(String(tsNum), tsX, geo.tTop + LG * 1.0);
-  prCtx.fillText(String(tsDen), tsX, geo.tTop + LG * 3.0);
-  prCtx.fillText(String(tsNum), tsX, geo.bTop + LG * 1.0);
-  prCtx.fillText(String(tsDen), tsX, geo.bTop + LG * 3.0);
-  prCtx.restore();
 }
 
-// ══════════════════════════════════════════════════════════
-//  TREBLE CLEF — rendered from SVG path (Openclipart, public domain)
-//  The original path is in viewBox 0 0 744.09 1052.4.
-//  We scale + position it so the G4 spiral aligns with tTop+3*L.
-//  The SVG is re-coloured by drawing white then tinting with color.
-// ══════════════════════════════════════════════════════════
-const _trebleClefImgCache = new Map(); // color → HTMLImageElement
-
-function getTrebleClefImage(color, onReady) {
-  if (_trebleClefImgCache.has(color)) {
-    const img = _trebleClefImgCache.get(color);
-    if (img.complete) onReady(img);
-    else img.addEventListener('load', () => onReady(img), { once: true });
-    return;
-  }
-  // Build inline SVG with the desired fill color, no stroke
-  const pathD = "m278.89 840.5c0 23.811 27.144 51.133 48.193 55.108 0 0 22.508 5.6134 41.03 1.1224 3.3461 0.75146 59.498-9.5416 60.62-84.755l-11.843-91.536c7.8919-1.3481 33.643-13.763 41.592-18.478 21.812-12.943 31.355-31.636 39.852-45.465 9.5416-20.768 15.155-34.946 15.155-57.556 0-57.185-46.341-103.54-103.5-103.54-8.2386 0-16.243 0.97722-23.934 2.7962l-10.216-73.464c38.684-43.006 77.897-95.869 91.065-144.31 12.91-63.989 6.7357-107.21-27.504-125.73-31.432-7.2969-69.589 35.643-92.052 97.666-14.594 33.116 3.9976 96.385 12.349 122.36-61.528 58.983-122.74 101.28-129.1 203.51 0 80.053 64.874 144.94 144.89 144.94 7.6452 0 20.275 0.179 34.643-1.6835l6.7583 91.412s2.593 66.862-48.293 75.922c-20.196 3.5928-39.674 7.7565-34.07-5.6118 15.739-8.1967 34.07-21.263 34.07-42.704 0-26.683-20.085-48.316-44.849-48.316-24.774 0-44.859 21.633-44.859 48.316zm90.975-409.14 9.5303 68.634c-42.22 13.057-72.901 52.426-72.901 98.946 0 52.649 62.945 77.202 61.239 64.706-24.54-10.587-33.633-22.486-33.633-50.911 0-32.129 21.958-59.115 51.673-66.806l22.665 163.41c-5.0974 1.3804-10.598 2.5479-16.558 3.4799-86.249-1.7287-126.79-47.632-126.79-127.68 0.002-44.846 52.809-96.576 104.77-153.77zm45.197 275.97-22.599-162.78c3.4574-0.5386 7.0163-0.83047 10.632-0.83047 38.1 0 68.994 30.905 68.994 69.017-0.76275 30.67-2.2237 76.336-57.027 94.59zm-48.06-342.71c-15.548-52.459-1.4932-78.603 7.6323-98.699 21.565-47.452 40.537-64.706 59.857-80.108 25.124 9.8561 13.784 80.108 10.012 80.108-11.831 41.446-54.276 74.395-77.502 98.699z";
-  const svgSrc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 744.09 1052.4">
-    <path d="${pathD}" fill="${color}" stroke="none"/>
-  </svg>`;
-  const blob = new Blob([svgSrc], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
-  const img  = new Image();
-  img.onload = () => { URL.revokeObjectURL(url); onReady(img); };
-  img.src = url;
-  _trebleClefImgCache.set(color, img);
-}
-
-function drawTrebleClef(ctx, x, tTop, L, color) {
-  // ┌─────────────────────────────────────────────────────────┐
-  // │  TREBLE CLEF SIZE — edit these two values to resize     │
-  // │                                                         │
-  // │  TREBLE_HEIGHT_FACTOR  controls overall height.         │
-  // │    • Value = multiples of LG (the space between lines)  │
-  // │    • 7.5 = tall clef spanning ~1.8 lines above & below  │
-  // │    • 5.5 = compact, roughly staff height only           │
-  // │    • Screenshot target ≈ 7.5                            │
-  // │                                                         │
-  // │  TREBLE_LEFT_OFFSET controls horizontal position.       │
-  // │    • 0   = flush left of clef zone                      │
-  // │    • Negative = shift left, Positive = shift right      │
-  // └─────────────────────────────────────────────────────────┘
-  const TREBLE_HEIGHT_FACTOR = 7.5;    // ← EDIT THIS to resize
-  const TREBLE_LEFT_OFFSET   = -2;     // ← EDIT THIS to reposition
-
-  // SVG natural dimensions: 744.09 wide × 1052.4 tall
-  // G4 spiral anchor sits at 79.9% down the SVG height
-  const targetH   = L * TREBLE_HEIGHT_FACTOR;
-  const targetW   = targetH * (744.09 / 1052.4);   // auto aspect ratio
-  const svgG4frac = 0.799;
-  const imgTop    = (tTop + 3 * L) - svgG4frac * targetH;
-  const imgLeft   = x + TREBLE_LEFT_OFFSET;
-
-  getTrebleClefImage(color, img => {
-    ctx.save();
-    ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
-    ctx.restore();
-  });
-  // Also draw from cache synchronously if already loaded (covers frame 1+)
-  if (_trebleClefImgCache.has(color)) {
-    const img = _trebleClefImgCache.get(color);
-    if (img.complete) {
-      ctx.save();
-      ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
-      ctx.restore();
-    }
-  }
-}
-// ══════════════════════════════════════════════════════════
-//  BASS CLEF — SVG image (rickvanderzwet, public domain)
-//  viewBox: 0 0 41.161 47.605
-//  F3 line sits at ~33.7% down the image height.
-//  Color tinted to match Musicable branding.
-// ══════════════════════════════════════════════════════════
-const _bassClefImgCache = new Map();
-
-function getBassClefImage(color, onReady) {
-  if (_bassClefImgCache.has(color)) {
-    const img = _bassClefImgCache.get(color);
-    if (img.complete) onReady(img);
-    else img.addEventListener('load', () => onReady(img), { once: true });
-    return;
-  }
-  const svgSrc = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.161 47.605">
-    <g stroke="${color}" transform="translate(-80.598 -338.39)" fill="${color}" fill-rule="evenodd">
-      <path stroke-width=".45574" d="m94.574 338.62c-8.785 0.21-15.515 6.36-13.334 15.79 0.002 0.01 0.013 0.02 0.016 0.03 0.256 3.25 2.96 5.81 6.276 5.81 3.485 0 6.309-2.82 6.309-6.3 0-3.08-2.191-5.64-5.098-6.2-1.158-0.41-2.896-1.34-2.82-2.84 0.036-0.74 0.903-2.09 2.294-2.77 1.691-0.79 3.434-1.22 5.194-0.86 2.667 0.49 9.489 5.39 10.019 13.88 0.31 6.44-3.31 15.15-6.849 19.27-5.698 6.51-14.851 10.55-13.955 11.27 0.803 0.72 11.61-4.22 17.237-10.42 6.867-7.44 10.267-13.64 9.937-21.17-0.19-7.54-6.03-15.7-15.226-15.49z"/>
-      <path stroke-linejoin="round" d="m116.86 36.473a9.7721 9.1613 0 1 1 -19.546 0 9.7721 9.1613 0 1 1 19.546 0z" transform="matrix(.50978 0 0 .50978 61.959 329.32)" stroke-linecap="round" stroke-width=".894"/>
-      <path stroke-linejoin="round" d="m116.86 36.473a9.7721 9.1613 0 1 1 -19.546 0 9.7721 9.1613 0 1 1 19.546 0z" transform="matrix(.50978 0 0 .50978 61.959 342.37)" stroke-linecap="round" stroke-width=".894"/>
-    </g>
-  </svg>`;
-  const blob = new Blob([svgSrc], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
-  const img  = new Image();
-  img.onload = () => { URL.revokeObjectURL(url); onReady(img); };
-  img.src = url;
-  _bassClefImgCache.set(color, img);
-}
-
-function drawBassClef(ctx, x, bTop, L, color) {
-  // ┌─────────────────────────────────────────────────────────┐
-  // │  BASS CLEF SIZE — edit these two values to resize       │
-  // │                                                         │
-  // │  BASS_HEIGHT_FACTOR  controls overall height.           │
-  // │    • Value = multiples of LG (space between lines)      │
-  // │    • 4.5 = compact, fits within the 4-line staff span   │
-  // │    • 6.0 = taller, extends above/below staff            │
-  // │    • Screenshot target ≈ 4.5                            │
-  // │                                                         │
-  // │  BASS_LEFT_OFFSET controls horizontal position.         │
-  // │    • 0   = flush left of clef zone                      │
-  // │    • Positive = shift right                             │
-  // └─────────────────────────────────────────────────────────┘
-  const BASS_HEIGHT_FACTOR = 4.5;    // ← EDIT THIS to resize
-  const BASS_LEFT_OFFSET   = 2;      // ← EDIT THIS to reposition
-
-  // SVG viewBox: 0 0 41.161 47.605
-  // F3 line (dot midpoint) sits at 33.7% down the SVG height
-  const targetH = L * BASS_HEIGHT_FACTOR;
-  const targetW = targetH * (41.161 / 47.605);   // auto aspect ratio
-  const F3frac  = 0.337;
-  const imgTop  = (bTop + L) - F3frac * targetH;
-  const imgLeft = x + BASS_LEFT_OFFSET;
-
-  getBassClefImage(color, img => {
-    ctx.save();
-    ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
-    ctx.restore();
-  });
-  // Also draw from cache synchronously if already loaded (covers frame 1+)
-  if (_bassClefImgCache.has(color)) {
-    const img = _bassClefImgCache.get(color);
-    if (img.complete) {
-      ctx.save();
-      ctx.drawImage(img, imgLeft, imgTop, targetW, targetH);
-      ctx.restore();
-    }
-  }
-}
-
-// Pre-warm clef SVG caches immediately so the images are fully
-// loaded before the first practice frame — eliminates the flicker
-// that occurs when the async load callback fires mid-frame.
-(function _prewarmClefs() {
-  const _C = '#c0d4e0';
-  getTrebleClefImage(_C, () => {});
-  getBassClefImage(_C, () => {});
-})();
 
 // ── Practice keyboard canvas ──────────────────────────────
 let prKbHeld = null;
@@ -6645,15 +6145,15 @@ function updateGame() {
   if (curBeat > game.totalBeats && !game.waitingForNote) endGame(true);
 }
 
-function getNoteLaneX(midi) {
+function getNoteLaneX(midi, width = GW) {
   // Map midi to x position matching the game keyboard
-  const wkw = GW / N_WHITE;
+  const wkw = width / N_WHITE;
   const wi   = WHITE_KEYS.indexOf(midi);
   if (wi >= 0) return wi * wkw + wkw / 2;
   // sharp: between neighbors
   const below = WHITE_KEYS.indexOf(midi - 1);
   if (below >= 0) return below * wkw + wkw;
-  return GW / 2;
+  return width / 2;
 }
 
 function renderGame() {
