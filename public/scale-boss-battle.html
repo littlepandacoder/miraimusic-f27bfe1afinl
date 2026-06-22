@@ -842,6 +842,10 @@ function initBoss(){
   document.getElementById('bossName').textContent=boss.name;
   updateBossHp();updatePlayerHp();
   ['bossWrap','playerWrap'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('idle','atk-r','atk-l','hurt','dying');void el.offsetWidth;el.classList.add('idle');});
+  // Beginner boss (first one) keeps key letters visible to help find notes;
+  // later, harder bosses hide them so students rely on their own knowledge.
+  const showLabels=bossIdx===0;
+  document.querySelectorAll('.key-lbl').forEach(el=>{el.style.display=showLabels?'':'none';});
 }
 function startGame(){
   bossIdx=0;playerHp=350;playerMaxHp=350;score=0;correctCount=0;wrongCount=0;locked=false;

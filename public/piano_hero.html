@@ -2183,7 +2183,8 @@ window.musicableUserId   = null;
           <div style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-align:center">Enter the room code or paste the link from your teacher</div>
           <input class="room-input" id="studentRoomCode" placeholder="Room code (e.g. PIANO-4829)" maxlength="24" oninput="this.value=this.value.toUpperCase()" data-ddg-inputtype="unknown">
           <input class="room-input" id="studentName" placeholder="Your name (e.g. Alex)" maxlength="20" data-ddg-inputtype="identities.fullName">
-          <button class="room-join-btn" onclick="roomStudentJoin()">🎹 Join Room</button>
+          <div id="roomJoinError" style="display:none;color:#EF4444;font-family:'DM Mono',monospace;font-size:.72rem;text-align:center"></div>
+          <button class="room-join-btn" id="roomJoinBtn" onclick="roomStudentJoin()">🎹 Join Room</button>
           <button class="room-back-btn" style="align-self:center" onclick="roomLeave()">← Back</button>
         </div>
       </div>
@@ -2226,7 +2227,8 @@ window.musicableUserId   = null;
             <div style="flex:1;height:1px;background:var(--border)"></div>
           </div>
 
-          <!-- Student's own piano (bottom) -->\n          <div class="room-piano-section student-piano" style="flex:1;min-height:140px">
+          <!-- Student's own piano (bottom) -->
+          <div class="room-piano-section student-piano" style="flex:1;min-height:140px">
             <div class="room-piano-label">
               <span id="studentPianoLabel">Your Piano</span>
               <span class="badge badge-you">YOU</span>
@@ -4198,11 +4200,18 @@ function refreshMidiDevices() {
   updateModalMidiList();
 }
 
+// Sustain pedal (CC64) state — Piano Room only. While held, releasing a key
+// keeps it lit/sounding (and keeps broadcasting it as "on" to the other side
+// of the room) until the pedal itself is lifted, like a real piano pedal.
+let roomSustainOn = false;
+const roomSustainedNotes = new Set();
+
 function onMidiMessage(msg) {
   const [status, note, velocity] = msg.data;
   const cmd   = status & 0xF0;
   const isOn  = cmd === 0x90 && velocity > 0;
   const isOff = cmd === 0x80 || (cmd === 0x90 && velocity === 0);
+  const isSustainCC = cmd === 0xB0 && note === 64;
 
   if (document.getElementById('inputModal').classList.contains('active')) return;
   // MIDI always works in: Piano Room, free-play screen, and when user selected MIDI
@@ -4211,6 +4220,20 @@ function onMidiMessage(msg) {
   const isPlayScreen = screen === 'play';
   if (!isRoomScreen && !isPlayScreen && modal.selectedInput !== 'midi' && modal.selectedInput !== null) return;
 
+  if (isSustainCC) {
+    if (!isRoomScreen) return;
+    roomSustainOn = velocity >= 64;
+    if (!roomSustainOn) {
+      // Pedal lifted — release everything that was held over by the pedal.
+      roomSustainedNotes.forEach((heldNote) => {
+        noteRelease(heldNote);
+        roomHandleMidiNoteOff(heldNote);
+      });
+      roomSustainedNotes.clear();
+    }
+    return;
+  }
+
   if (isOn) {
     startAudio();
     if (currentScreen() === 'play') {
@@ -4218,6 +4241,7 @@ function onMidiMessage(msg) {
     } else if (currentScreen() === 'game') {
       gameKeyPress(note);
     } else if (currentScreen() === 'room') {
+      roomSustainedNotes.delete(note); // re-pressing a sustained note restarts it normally
       noteAttack(note);
       roomHandleMidiNoteOn(note);
     }
@@ -4227,8 +4251,12 @@ function onMidiMessage(msg) {
     } else if (currentScreen() === 'game') {
       gameKeyRelease(note);
     } else if (currentScreen() === 'room') {
-      noteRelease(note);
-      roomHandleMidiNoteOff(note);
+      if (roomSustainOn) {
+        roomSustainedNotes.add(note);
+      } else {
+        noteRelease(note);
+        roomHandleMidiNoteOff(note);
+      }
     }
   }
 }
@@ -9856,14 +9884,52 @@ function roomUpdateStudentCount() {
 }
 
 /* ── Student: join a room ─────────────────────────────────── */
+function roomJoinShowError(msg) {
+  const el = document.getElementById('roomJoinError');
+  if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+}
+
 function roomStudentJoin() {
   const codeRaw = document.getElementById('studentRoomCode').value.trim().toUpperCase();
   const nameRaw = document.getElementById('studentName').value.trim() || 'Student';
   if (!codeRaw) { alert('Please enter a room code'); return; }
 
+  roomJoinShowError('');
+  const joinBtn = document.getElementById('roomJoinBtn');
+  if (joinBtn) { joinBtn.disabled = true; joinBtn.textContent = '🔎 Checking room…'; }
+
   ROOM.code   = codeRaw;
   ROOM.myId   = roomGenId();
   ROOM.myName = nameRaw;
+
+  // Verify an active teacher is actually present in this room before
+  // showing the "connected" UI — otherwise a student would sit watching
+  // a dead room waiting for a teacher who was never there (or left).
+  if (fbConnect(codeRaw)) {
+    _fbRef.child('presence').once('value').then((snap) => {
+      const presence = snap.val() || {};
+      const hasTeacher = Object.values(presence).some(p => p && p.role === 'teacher');
+      if (!hasTeacher) {
+        fbDisconnect();
+        if (joinBtn) { joinBtn.disabled = false; joinBtn.textContent = '🎹 Join Room'; }
+        roomJoinShowError(`No room exists with the code "${codeRaw}", or it isn't active right now. Ask your teacher for the current room code.`);
+        return;
+      }
+      roomStudentJoinConfirmed(codeRaw, nameRaw, true);
+    }).catch(() => {
+      // Presence check itself failed (e.g. network blip) — don't block the
+      // student over a transient read error, just join as before.
+      roomStudentJoinConfirmed(codeRaw, nameRaw, true);
+    });
+  } else {
+    // Firebase unavailable — same-device fallback, no way to verify the room.
+    roomStudentJoinConfirmed(codeRaw, nameRaw, false);
+  }
+}
+
+function roomStudentJoinConfirmed(codeRaw, nameRaw, firebaseConnected) {
+  const joinBtn = document.getElementById('roomJoinBtn');
+  if (joinBtn) { joinBtn.disabled = false; joinBtn.textContent = '🎹 Join Room'; }
 
   document.getElementById('roomJoinForm').style.display     = 'none';
   document.getElementById('roomStudentActive').style.display = 'flex';
@@ -9872,8 +9938,7 @@ function roomStudentJoin() {
 
   roomSetNetStatus('studentNetBadge', 'connecting', 'Connecting…');
 
-  // Connect to Firebase
-  if (fbConnect(codeRaw)) {
+  if (firebaseConnected) {
     // Set our presence
     fbSetPresence({ role:'student', name:nameRaw, id:ROOM.myId });
 

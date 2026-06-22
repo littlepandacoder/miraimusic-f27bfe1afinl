@@ -505,21 +505,23 @@ function drawPiano() {
     pCtx.shadowBlur = 0;
     pCtx.strokeStyle = '#333'; pCtx.lineWidth = 0.8; pCtx.stroke();
 
-    // Octave labels
+    // Octave labels — suppressed on the highlighted (quizzed) key until
+    // answered, so a "C3"/"C4" label doesn't give away that the note is a C.
     const name = NOTE_ALL[k.midi%12];
     const oct  = Math.floor(k.midi/12)-1;
-    if (name === 'C') {
+    const revealed = !isHL || state.answered;
+    if (name === 'C' && revealed) {
       pCtx.fillStyle = isHL ? '#fff' : '#8a6030';
       pCtx.font = `bold ${Math.max(7,wkw*.4)}px "DM Mono",monospace`;
       pCtx.textAlign = 'center';
       pCtx.fillText('C'+oct, k.x+wkw/2, H-6);
     }
-    // Note name on highlighted key
+    // Highlighted key: show "?" until answered, then reveal the note name
     if (isHL) {
       pCtx.fillStyle = '#fff';
       pCtx.font = `bold ${Math.max(9,wkw*.5)}px "DM Mono",monospace`;
       pCtx.textAlign = 'center';
-      pCtx.fillText(NOTE_ALL[k.midi%12], k.x+wkw/2, H*0.55);
+      pCtx.fillText(revealed ? NOTE_ALL[k.midi%12] : '?', k.x+wkw/2, H*0.55);
     }
   });
 
@@ -550,7 +552,7 @@ function drawPiano() {
       pCtx.fillStyle = '#fff';
       pCtx.font = `bold ${Math.max(7,k.w*.55)}px "DM Mono",monospace`;
       pCtx.textAlign = 'center';
-      pCtx.fillText(NOTE_ALL[k.midi%12], k.x+k.w/2, BKH*0.65);
+      pCtx.fillText(state.answered ? NOTE_ALL[k.midi%12] : '?', k.x+k.w/2, BKH*0.65);
     }
   });
 }
