@@ -304,7 +304,6 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   <div class="scale-zone">
     <div class="scale-eyebrow">🎵 Find all 8 notes of this scale</div>
     <div class="scale-name" id="scaleNameDisp">C MAJOR</div>
-    <div class="scale-notes-row" id="scaleNotesDisp">C · D · E · F · G · A · B</div>
     <div class="hint-text" id="hintText"></div>
     <div class="prog-row" id="progRow">
       <div class="prog-dot" id="p0"></div><div class="prog-dot" id="p1"></div>
@@ -702,7 +701,6 @@ function nextScale(){
   while(next===currentScale&&pool.length>1);
   currentScale=next;
   document.getElementById('scaleNameDisp').textContent=next.name.toUpperCase();
-  document.getElementById('scaleNotesDisp').textContent=next.display;
   document.getElementById('hintText').textContent='';
   for(let i=0;i<8;i++){const d=document.getElementById('p'+i);if(d)d.className='prog-dot';}
   document.getElementById('progLabel').textContent='0 / 8 notes selected';

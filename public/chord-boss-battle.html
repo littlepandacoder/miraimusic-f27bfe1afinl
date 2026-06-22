@@ -400,7 +400,6 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   <div class="chord-zone" id="chordZone">
     <div class="chord-eyebrow">⚔ Play this chord to attack</div>
     <div class="chord-name" id="chordNameDisp">C MAJOR</div>
-    <div class="chord-notes-row" id="chordNotesDisp">C · E · G</div>
     <div class="chord-actions">
       <button class="hint-btn" id="hintBtn" onclick="showHint()">💡 Hint <span style="opacity:.7">(-10 HP)</span></button>
       <button class="skip-btn" id="skipBtn" onclick="skipChord()">⏭ Skip <span style="opacity:.7">(-30 HP)</span></button>
@@ -411,7 +410,6 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white);overflow-x:
   <div class="scale-zone" id="scaleZone" style="display:none">
     <div class="scale-eyebrow-d">🎵 Find all 7 notes of this scale</div>
     <div class="scale-name-d" id="scaleNameDisp">C MAJOR</div>
-    <div class="scale-notes-d" id="scaleNotesDisp">C · D · E · F · G · A · B</div>
     <div class="hint-text-s" id="hintTextScale"></div>
     <div class="prog-row">
       <div class="prog-dot" id="p0"></div><div class="prog-dot" id="p1"></div>
@@ -1108,7 +1106,6 @@ function nextChord(){
   while(next===currentChord&&pool.length>1);
   currentChord=next;
   document.getElementById('chordNameDisp').textContent=next.name.toUpperCase();
-  document.getElementById('chordNotesDisp').textContent=next.display;
   const midiOn=document.getElementById('midiPill')?.classList.contains('connected');
   setStatus(midiOn?'Play the chord on your MIDI keyboard or click below':'Click the chord notes on the piano below','color:var(--muted)');
 }
@@ -1129,7 +1126,6 @@ function nextScaleItem(){
   while(next===currentScale&&pool.length>1);
   currentScale=next;
   document.getElementById('scaleNameDisp').textContent=next.name.toUpperCase();
-  document.getElementById('scaleNotesDisp').textContent=next.display;
   const ht=document.getElementById('hintTextScale');if(ht)ht.textContent='';
   for(let i=0;i<8;i++){const d=document.getElementById('p'+i);if(d)d.className='prog-dot';}
   const pl=document.getElementById('progLabel');if(pl)pl.textContent='0 / 8 notes selected';
