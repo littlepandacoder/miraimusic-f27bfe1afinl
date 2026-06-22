@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Zap, ShieldCheck, GraduationCap, Users } from "lucide-react";
 
 const studentFeatures = [
-  "$8 first month, then $17/month — cancel anytime",
+  "$17/month or $199/year — cancel anytime",
   "Access all Foundation & Course modules",
   "AI-powered piano feedback",
   "Gamified learning maps & quizzes",
@@ -66,7 +66,7 @@ const Pricing = () => {
             {/* Student Plan */}
             <Card className="relative bg-card border-primary ring-2 ring-primary/20 flex flex-col">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold whitespace-nowrap">
-                $8 First Month
+                Most Popular
               </div>
               <CardHeader className="pb-4 text-center pt-6 sm:pt-8">
                 <div className="flex justify-center mb-2">
@@ -79,7 +79,7 @@ const Pricing = () => {
                   <span className="text-3xl sm:text-4xl font-black">$17</span>
                   <span className="text-xs sm:text-sm text-muted-foreground">/month</span>
                 </div>
-                <p className="text-muted-foreground text-xs mt-1">$8 first month, then $17/month. Cancel anytime.</p>
+                <p className="text-muted-foreground text-xs mt-1">or $199/year. Cancel anytime.</p>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col space-y-4 sm:space-y-6">
                 <ul className="space-y-2 flex-1">
@@ -91,7 +91,7 @@ const Pricing = () => {
                   ))}
                 </ul>
                 <Button className="w-full btn-hero text-sm sm:text-base py-2 sm:py-3" onClick={handleStudentCTA}>
-                  {user && roles.length > 0 ? "Go to Dashboard" : "Start for $8"}
+                  {user && roles.length > 0 ? "Go to Dashboard" : "Get Started"}
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck className="w-3 h-3 text-primary" /> Secure via Stripe
@@ -146,7 +146,7 @@ const Pricing = () => {
           <div className="max-w-2xl mx-auto mt-12 sm:mt-16 md:mt-20 space-y-4 sm:space-y-6">
             <h2 className="text-xl sm:text-2xl font-black text-center mb-6 sm:mb-8">Common Questions</h2>
             {[
-              { q: "What happens after the first month?", a: "After your first month at $8, your subscription continues at $17/month. You'll receive a reminder before you're charged on day 30." },
+              { q: "Can I pay yearly instead of monthly?", a: "Yes — choose Yearly at checkout to pay $199/year instead of $17/month." },
               { q: "How does the teacher plan work?", a: "You get 10 student seat slots. You can onboard students directly from your dashboard. Need more? Add seats for $1 each." },
               { q: "Can I add more than 10 students as a teacher?", a: "Yes — buy additional seats from your My Students dashboard at $1/seat. Each seat unlocks one more student slot." },
               { q: "How do I cancel?", a: "Cancel from the Stripe Customer Portal your subscription at any time. You keep access until the end of your billing period." },

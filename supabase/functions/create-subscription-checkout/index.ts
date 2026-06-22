@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email, promoCode } = await req.json();
+    const { userId, email, promoCode, billingPeriod } = await req.json();
 
     if (!userId || !email) {
       throw new Error("userId and email are required");
@@ -28,8 +28,10 @@ serve(async (req) => {
       apiVersion: "2024-06-20",
     });
 
-    const priceId =
-      Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
+    const isYearly = billingPeriod === "yearly";
+    const priceId = isYearly
+      ? Deno.env.get("STRIPE_STUDENT_YEARLY_PRICE_ID") ?? "price_1Tl8QbB8UWyR18ZVc5ghssYc"
+      : Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
 
     const origin = req.headers.get("origin") ?? "https://musicable.app";
 
@@ -44,9 +46,9 @@ serve(async (req) => {
       payment_method_collection: "always",
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        metadata: { userId, planType: "student" },
+        metadata: { userId, planType: "student", billingPeriod: isYearly ? "yearly" : "monthly" },
       },
-      metadata: { userId, planType: "student" },
+      metadata: { userId, planType: "student", billingPeriod: isYearly ? "yearly" : "monthly" },
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/signup`,
     };

@@ -16,6 +16,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -92,7 +93,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
-        { body: { userId, email, promoCode: promoCode.trim() || undefined } }
+        { body: { userId, email, promoCode: promoCode.trim() || undefined, billingPeriod } }
       );
 
       if (fnError || !data?.url) {
@@ -130,7 +131,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
             <div>
               <h1 className="text-3xl font-bold">Create Your Account</h1>
               <p className="text-muted-foreground mt-1">
-                Set your password, then subscribe for $17/month.
+                Set your password, then choose monthly or yearly billing.
               </p>
             </div>
 
@@ -179,7 +180,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
               <div className="space-y-2 pt-1">
                 {[
-                  "$17/month, billed today",
+                  billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
                   "Access all piano course modules",
                   "Cancel anytime from Stripe Customer Portal",
                 ].map((f) => (
@@ -194,9 +195,34 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
           {/* Right — pricing + CTA */}
           <Card className="p-6 flex flex-col justify-center gap-6">
+            <div className="flex rounded-lg border border-border p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setBillingPeriod("monthly")}
+                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                  billingPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingPeriod("yearly")}
+                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                  billingPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Yearly
+              </button>
+            </div>
+
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-1">Subscribe</h2>
-              <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+              {billingPeriod === "yearly" ? (
+                <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
+              ) : (
+                <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+              )}
               <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
             </div>
 
@@ -219,7 +245,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
             <p className="text-xs text-center text-muted-foreground">
               You'll be redirected to Stripe's secure checkout to enter your card details.
-              Your card is charged $17/month, starting today.
+              Your card is charged {billingPeriod === "yearly" ? "$199/year" : "$17/month"}, starting today.
             </p>
           </Card>
         </div>
