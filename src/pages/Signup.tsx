@@ -83,55 +83,67 @@ const Signup = () => {
     navigate("/dashboard");
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-pink" />
-          <p className="text-foreground font-semibold">Processing your information...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
 
-  if (stage === "email") {
-    return (
-      <>
-        {subNeeded && (
-          <div className="fixed top-0 inset-x-0 z-50 bg-destructive text-destructive-foreground px-4 py-3 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            Subscription needed — please subscribe below to access the dashboard.
+  const renderStage = () => {
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-pink" />
+            <p className="text-foreground font-semibold">Processing your information...</p>
           </div>
-        )}
-        <div className={subNeeded ? "pt-12" : ""}>
-          <EmailCollection onComplete={handleEmailSubmit} />
         </div>
-      </>
-    );
-  }
+      );
+    }
 
-  if (stage === "onboarding") {
-    return (
-      <Onboarding
-        email={email}
-        docId={docId}
-        onComplete={handleOnboardingComplete}
-      />
-    );
-  }
+    if (stage === "email") {
+      return <EmailCollection onComplete={handleEmailSubmit} />;
+    }
 
-  if (stage === "billing" && onboardingData && docId) {
-    return (
-      <TrialBilling
-        email={email}
-        docId={docId}
-        onboardingData={onboardingData}
-        onComplete={handleBillingComplete}
-      />
-    );
-  }
+    if (stage === "onboarding") {
+      return (
+        <Onboarding
+          email={email}
+          docId={docId}
+          onComplete={handleOnboardingComplete}
+        />
+      );
+    }
 
-  return null;
+    if (stage === "billing" && onboardingData && docId) {
+      return (
+        <TrialBilling
+          email={email}
+          docId={docId}
+          onboardingData={onboardingData}
+          onComplete={handleBillingComplete}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <>
+      {subNeeded && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-destructive text-destructive-foreground px-4 py-3 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          Subscription needed — please subscribe below to access the dashboard.
+          <button onClick={handleLogout} className="underline hover:opacity-80">
+            Log out
+          </button>
+        </div>
+      )}
+      <div className={subNeeded ? "pt-12" : ""}>
+        {renderStage()}
+      </div>
+    </>
+  );
 };
 
 export default Signup;
