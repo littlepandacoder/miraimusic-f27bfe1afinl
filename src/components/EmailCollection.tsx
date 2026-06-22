@@ -69,7 +69,7 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
             MUSICABLE
           </h1>
           <p className="text-muted-foreground text-sm">
-            Start for only $8 instead of $17. Unlock 900+ lessons.
+            Start learning for $17/month. Unlock 900+ lessons.
           </p>
         </div>
 

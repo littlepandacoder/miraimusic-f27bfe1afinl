@@ -51,7 +51,6 @@ serve(async (req) => {
       cancel_url: `${origin}/signup`,
     };
 
-    const couponId = Deno.env.get("STRIPE_FIRST_MONTH_COUPON") ?? "FIRST_MONTH";
     let session: Stripe.Checkout.Session | undefined = undefined;
     let promoApplied = false;
 
@@ -73,22 +72,9 @@ serve(async (req) => {
       }
     }
 
-    // No promo code given, or it didn't resolve — fall back to the default FIRST_MONTH coupon.
+    // No promo code given, or it didn't resolve — full price, no discount.
     if (!session) {
-      try {
-        session = await stripe.checkout.sessions.create({
-          ...sessionParams,
-          discounts: [{ coupon: couponId }],
-        });
-        console.log("[checkout] created with coupon:", couponId);
-      } catch (couponErr: any) {
-        if (couponErr?.message?.includes("No such coupon")) {
-          console.log("[checkout] coupon not found, creating session without discount");
-          session = await stripe.checkout.sessions.create(sessionParams);
-        } else {
-          throw couponErr;
-        }
-      }
+      session = await stripe.checkout.sessions.create(sessionParams);
     }
 
     return new Response(JSON.stringify({ url: session.url, promoApplied }), {

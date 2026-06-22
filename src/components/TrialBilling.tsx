@@ -130,7 +130,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
             <div>
               <h1 className="text-3xl font-bold">Create Your Account</h1>
               <p className="text-muted-foreground mt-1">
-                Set your password, then start your first month for $8.
+                Set your password, then subscribe for $17/month.
               </p>
             </div>
 
@@ -179,8 +179,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
               <div className="space-y-2 pt-1">
                 {[
-                  "$8 for your first month — less than a coffee",
-                  "Billed $8 today, then $17/month on day 30",
+                  "$17/month, billed today",
                   "Access all piano course modules",
                   "Cancel anytime from Stripe Customer Portal",
                 ].map((f) => (
@@ -196,9 +195,9 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
           {/* Right — pricing + CTA */}
           <Card className="p-6 flex flex-col justify-center gap-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-1">Start for $8</h2>
+              <h2 className="text-2xl font-bold mb-1">Subscribe</h2>
               <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
-              <p className="text-sm text-muted-foreground mt-1">Then $17/month — cancel anytime</p>
+              <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
             </div>
 
             <Button
@@ -209,7 +208,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
               {loading ? (
                 <><Loader2 size={18} className="animate-spin mr-2" /> Setting up…</>
               ) : (
-                <><CreditCard size={18} className="mr-2" /> Start for $8</>
+                <><CreditCard size={18} className="mr-2" /> Subscribe</>
               )}
             </Button>
 
@@ -220,7 +219,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
             <p className="text-xs text-center text-muted-foreground">
               You'll be redirected to Stripe's secure checkout to enter your card details.
-              Your card is charged $8 today, then $17/month after that.
+              Your card is charged $17/month, starting today.
             </p>
           </Card>
         </div>
