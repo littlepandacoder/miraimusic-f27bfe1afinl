@@ -372,6 +372,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .ls-num-btns{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
 .ls-num-btn{min-width:56px;height:56px;border-radius:14px;font-size:1rem;font-weight:800;border:2px solid var(--amber);color:var(--amber);background:rgba(245,158,11,.08);cursor:pointer;transition:all .15s}
 .ls-num-btn:hover:not(:disabled){background:rgba(245,158,11,.22);transform:scale(1.06)}
+.fsq-prompt{text-align:center;font-family:'DM Mono',monospace;font-size:2.4rem;font-weight:900;color:var(--white);letter-spacing:.02em;margin:1.5rem 0 1rem;text-shadow:0 0 40px rgba(168,85,247,.35)}
 .ls-num-btn.ls-correct{background:rgba(57,217,138,.22);border-color:var(--green);color:var(--green);transform:scale(1.07)}
 .ls-num-btn.ls-wrong{background:rgba(255,45,120,.18);border-color:var(--pink);color:var(--pink)}
 .ls-num-btn:disabled{cursor:default;opacity:.6}
@@ -482,6 +483,12 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <div class="mode-name">Music Vocabulary</div>
       <p class="mode-desc">Test your knowledge of dynamics (pp, ff, cresc.), tempo markings (Allegro, Adagio) and articulation (staccato, fermata, accent). Symbol ↔ meaning flashcard quiz.</p>
       <span class="diff diff-easy">Beginner Friendly</span>
+    </div>
+    <div class="mode-card" onclick="startFlatsSharpsQuiz()">
+      <span class="mode-icon">♭♯</span>
+      <div class="mode-name">Flats &amp; Sharps Quiz</div>
+      <p class="mode-desc">A major key is named — work out how many flats or sharps it has, and which ones. Fast music-theory recall practice.</p>
+      <span class="diff diff-med">Intermediate</span>
     </div>
   </div>
 </div>
@@ -859,6 +866,61 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ FLATS & SHARPS QUIZ SCREEN ══ -->
+<div class="screen" id="fsq-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="fsq-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Flats &amp; Sharps Quiz</div>
+      <p class="game-sub">A major key is named — how many flats or sharps does it have, and which ones?</p>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="fsq-qlen-pills">
+          <div class="ks-qlen-pill" onclick="fsqSetQLen(5,this)">5</div>
+          <div class="ks-qlen-pill sel" onclick="fsqSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill" onclick="fsqSetQLen(15,this)">15</div>
+        </div>
+      </div>
+      <button class="btn-start-sb" onclick="fsqBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="fsq-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="fsq-progress-fill" class="sb-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="fsq-q-num">1</span>&nbsp;/&nbsp;<span id="fsq-q-total">10</span></div>
+      </div>
+      <div class="ls-score-row">
+        <div class="ls-score-box"><span id="fsq-correct">0</span>/<span id="fsq-total">0</span>&nbsp;✓</div>
+        <div class="ls-score-box"><span id="fsq-pct">—</span></div>
+        <div class="ls-score-box">🔥&nbsp;<span id="fsq-streak">0</span></div>
+      </div>
+      <div class="fsq-prompt" id="fsq-prompt">F MAJOR</div>
+      <div id="fsq-feedback" class="ls-feedback"></div>
+      <div id="fsq-choices" class="ks-choices"></div>
+      <button class="gs-end-early" onclick="fsqEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="fsq-end">
+      <div class="gs-end-card">
+        <span id="fsq-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="fsq-end-grade" class="gs-end-grade">A</div>
+        <div id="fsq-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="fsq-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="fsq-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="fsq-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div id="fsq-end-ai" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:1rem;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.5rem;min-height:60px"></div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="fsqPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ FALLING NOTES SCREEN ══ -->
 <div class="screen" id="falling-notes-screen">
   <div class="game-wrap">
@@ -1139,7 +1201,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','pd-screen','dta-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','pd-screen','dta-screen','fsq-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -2087,6 +2149,113 @@ function lsEndSession(){
   ptSaveScore('line_space',lsScore.correct*100,lsScore.correct,lsScore.total,lsScore.bestStreak);
 }
 function lsPlayAgain(){gsPanel(['ls-start','ls-play','ls-end'],'ls-start');}
+
+// ══════════════════════════════════════════════════════════
+// FLATS & SHARPS QUIZ — name a major key, name its accidentals
+// ══════════════════════════════════════════════════════════
+const SHARP_NAME_ORDER=['F♯','C♯','G♯','D♯','A♯','E♯','B♯'];
+const FLAT_NAME_ORDER=['B♭','E♭','A♭','D♭','G♭','C♭','F♭'];
+
+let fsqScore={correct:0,total:0,streak:0,bestStreak:0};
+let fsqSessionLen=10;
+let fsqQuestionNum=0;
+let fsqAnswered=false;
+let fsqCurrent=null;
+let fsqWrongKeys=[];
+
+function fsqFormatAnswer(key){
+  if(key.sharps===0&&key.flats===0)return '0 — no accidentals';
+  if(key.flats>0)return `${key.flats} flat${key.flats>1?'s':''}: ${FLAT_NAME_ORDER.slice(0,key.flats).join(' ')}`;
+  return `${key.sharps} sharp${key.sharps>1?'s':''}: ${SHARP_NAME_ORDER.slice(0,key.sharps).join(' ')}`;
+}
+
+function startFlatsSharpsQuiz(){ showScreen('fsq-screen'); gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-start'); }
+
+function fsqSetQLen(n,el){
+  fsqSessionLen=n;
+  document.querySelectorAll('#fsq-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function fsqBeginSession(){
+  fsqScore={correct:0,total:0,streak:0,bestStreak:0};
+  fsqQuestionNum=0;fsqWrongKeys=[];
+  gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-play');
+  fsqNextQuestion();
+}
+
+function fsqUpdateScoreUI(){
+  document.getElementById('fsq-correct').textContent=fsqScore.correct;
+  document.getElementById('fsq-total').textContent=fsqScore.total;
+  document.getElementById('fsq-pct').textContent=fsqScore.total>0?Math.round(fsqScore.correct/fsqScore.total*100)+'%':'—';
+  document.getElementById('fsq-streak').textContent=fsqScore.streak;
+  const fill=Math.round((fsqQuestionNum/fsqSessionLen)*100);
+  const el=document.getElementById('fsq-progress-fill');if(el)el.style.width=fill+'%';
+}
+
+function fsqNextQuestion(){
+  if(fsqScore.total>=fsqSessionLen){fsqEndSession();return;}
+  fsqQuestionNum++;
+  document.getElementById('fsq-q-num').textContent=fsqQuestionNum;
+  document.getElementById('fsq-q-total').textContent=fsqSessionLen;
+  fsqCurrent=KS_ALL[Math.floor(Math.random()*KS_ALL.length)];
+  fsqAnswered=false;
+  document.getElementById('fsq-prompt').textContent=fsqCurrent.name.toUpperCase();
+  document.getElementById('fsq-feedback').textContent='';
+
+  const wrongPool=ksShuffle(KS_ALL.filter(k=>k.id!==fsqCurrent.id&&fsqFormatAnswer(k)!==fsqFormatAnswer(fsqCurrent)));
+  const choices=ksShuffle([fsqCurrent,...wrongPool.slice(0,3)]);
+  const btns=document.getElementById('fsq-choices');btns.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');btn.className='ks-choice-btn';btn.textContent=fsqFormatAnswer(c);
+    btn.onclick=()=>fsqGuess(c,btn);btns.appendChild(btn);
+  });
+  fsqUpdateScoreUI();
+}
+
+function fsqGuess(choice,clickedBtn){
+  if(fsqAnswered)return;fsqAnswered=true;
+  const correct=choice.id===fsqCurrent.id;
+  fsqScore.total++;
+  const fb=document.getElementById('fsq-feedback');
+  if(correct){
+    fsqScore.correct++;fsqScore.streak++;fsqScore.bestStreak=Math.max(fsqScore.bestStreak,fsqScore.streak);
+    clickedBtn.classList.add('ks-correct');
+    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+  }else{
+    fsqScore.streak=0;fsqWrongKeys.push(fsqCurrent.name);
+    clickedBtn.classList.add('ks-wrong');
+    document.querySelectorAll('#fsq-choices .ks-choice-btn').forEach(b=>{if(b.textContent===fsqFormatAnswer(fsqCurrent))b.classList.add('ks-correct');});
+    fb.textContent=`✗ ${fsqCurrent.name} has ${fsqFormatAnswer(fsqCurrent)}`;fb.style.color='var(--pink)';
+  }
+  document.querySelectorAll('#fsq-choices .ks-choice-btn').forEach(b=>b.disabled=true);
+  fsqUpdateScoreUI();
+  if(fsqScore.total>=fsqSessionLen){setTimeout(fsqEndSession,2000);}else{setTimeout(fsqNextQuestion,2000);}
+}
+
+function fsqEndSession(){
+  const pct=fsqScore.total>0?Math.round(fsqScore.correct/fsqScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  const msg=pct>=95?'Outstanding!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep practising!';
+  document.getElementById('fsq-end-emoji').textContent=emoji;
+  document.getElementById('fsq-end-grade').textContent=grade;
+  document.getElementById('fsq-end-grade').style.color=gradeCols[grade];
+  document.getElementById('fsq-end-msg').textContent=msg;
+  document.getElementById('fsq-end-score').textContent=`${fsqScore.correct}/${fsqScore.total}`;
+  document.getElementById('fsq-end-pct').textContent=pct+'%';
+  document.getElementById('fsq-end-streak').textContent=fsqScore.bestStreak;
+  document.getElementById('fsq-end-ai').textContent='✨ Generating feedback…';
+  gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-end');
+  ptSaveScore('flats_sharps_quiz',fsqScore.correct*100,fsqScore.correct,fsqScore.total,fsqScore.bestStreak);
+  ptAiAnalysis('flats_sharps_quiz',fsqScore.correct,fsqScore.total,[...new Set(fsqWrongKeys)].slice(0,5)).then(txt=>{
+    const el=document.getElementById('fsq-end-ai');
+    el.textContent=txt||'Keep practising key signatures — consistency is the key!';
+  });
+}
+
+function fsqPlayAgain(){ gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-start'); }
 
 function startFallingNotes(){ showScreen('falling-notes-screen'); gsPanel(['fn-start','fn-play','fn-end'],'fn-start'); }
 
