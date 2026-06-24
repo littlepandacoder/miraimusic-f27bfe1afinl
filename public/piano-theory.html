@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Piano Theory — Musicable</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
 :root{
   --bg:#0a0812;--card:#151228;--card2:#1c1935;
@@ -373,6 +374,8 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
 .ls-num-btn{min-width:56px;height:56px;border-radius:14px;font-size:1rem;font-weight:800;border:2px solid var(--amber);color:var(--amber);background:rgba(245,158,11,.08);cursor:pointer;transition:all .15s}
 .ls-num-btn:hover:not(:disabled){background:rgba(245,158,11,.22);transform:scale(1.06)}
 .fsq-prompt{text-align:center;font-family:'DM Mono',monospace;font-size:2.4rem;font-weight:900;color:var(--white);letter-spacing:.02em;margin:1.5rem 0 1rem;text-shadow:0 0 40px rgba(168,85,247,.35)}
+.fsq-replay-btn{display:block;margin:1.5rem auto 1rem;padding:1rem 2rem;border-radius:14px;border:2px solid var(--sky);background:rgba(0,212,255,.08);color:var(--sky);font-family:'DM Mono',monospace;font-size:1rem;font-weight:700;cursor:pointer;transition:all .15s}
+.fsq-replay-btn:hover{background:rgba(0,212,255,.18);transform:scale(1.03)}
 .ls-num-btn.ls-correct{background:rgba(57,217,138,.22);border-color:var(--green);color:var(--green);transform:scale(1.07)}
 .ls-num-btn.ls-wrong{background:rgba(255,45,120,.18);border-color:var(--pink);color:var(--pink)}
 .ls-num-btn:disabled{cursor:default;opacity:.6}
@@ -488,6 +491,18 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <span class="mode-icon">♭♯</span>
       <div class="mode-name">Flats &amp; Sharps Quiz</div>
       <p class="mode-desc">A major key is named — work out how many flats or sharps it has, and which ones. Fast music-theory recall practice.</p>
+      <span class="diff diff-med">Intermediate</span>
+    </div>
+    <div class="mode-card" onclick="startCadenceQuiz()">
+      <span class="mode-icon">🎧</span>
+      <div class="mode-name">Cadence Ear Training</div>
+      <p class="mode-desc">Listen to a short chord progression in C major and identify the cadence — Authentic, Plagal, Half, or Deceptive. Train your ear, not just your eyes.</p>
+      <span class="diff diff-med">Intermediate</span>
+    </div>
+    <div class="mode-card" onclick="startProgressionQuiz()">
+      <span class="mode-icon">🎧</span>
+      <div class="mode-name">Chord Progression Quiz</div>
+      <p class="mode-desc">Listen to a 4-chord progression and pick its Roman-numeral pattern — I-V-vi-IV, ii-V-I, the 50s progression and more. Pure ear training.</p>
       <span class="diff diff-med">Intermediate</span>
     </div>
   </div>
@@ -921,6 +936,116 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   </div>
 </div>
 
+<!-- ══ CADENCE EAR TRAINING SCREEN ══ -->
+<div class="screen" id="cad-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="cad-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--sky),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Cadence Ear Training</div>
+      <p class="game-sub">Listen to a short progression in C major and name the cadence — Authentic, Plagal, Half, or Deceptive.</p>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="cad-qlen-pills">
+          <div class="ks-qlen-pill" onclick="cadSetQLen(5,this)">5</div>
+          <div class="ks-qlen-pill sel" onclick="cadSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill" onclick="cadSetQLen(15,this)">15</div>
+        </div>
+      </div>
+      <button class="btn-start-sb" onclick="cadBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="cad-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="cad-progress-fill" class="sb-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="cad-q-num">1</span>&nbsp;/&nbsp;<span id="cad-q-total">10</span></div>
+      </div>
+      <div class="ls-score-row">
+        <div class="ls-score-box"><span id="cad-correct">0</span>/<span id="cad-total">0</span>&nbsp;✓</div>
+        <div class="ls-score-box"><span id="cad-pct">—</span></div>
+        <div class="ls-score-box">🔥&nbsp;<span id="cad-streak">0</span></div>
+      </div>
+      <button class="fsq-replay-btn" onclick="cadReplay()">▶ Play Cadence</button>
+      <div id="cad-feedback" class="ls-feedback"></div>
+      <div id="cad-choices" class="ks-choices"></div>
+      <button class="gs-end-early" onclick="cadEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="cad-end">
+      <div class="gs-end-card">
+        <span id="cad-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="cad-end-grade" class="gs-end-grade">A</div>
+        <div id="cad-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="cad-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="cad-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="cad-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div id="cad-end-ai" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:1rem;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.5rem;min-height:60px"></div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="cadPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHORD PROGRESSION QUIZ SCREEN ══ -->
+<div class="screen" id="prog-screen">
+  <div class="game-wrap">
+    <button class="game-back" onclick="goMenu()">↩ Back to Modes</button>
+
+    <div class="gs-panel active" id="prog-start">
+      <div class="game-title" style="background:linear-gradient(135deg,var(--green),var(--sky));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Chord Progression Quiz</div>
+      <p class="game-sub">Listen to a 4-chord progression in C major and pick its Roman-numeral pattern.</p>
+      <div class="ks-session-config">
+        <div class="ks-session-config-title">Questions per session</div>
+        <div class="ks-qlen-pills" id="prog-qlen-pills">
+          <div class="ks-qlen-pill" onclick="progSetQLen(5,this)">5</div>
+          <div class="ks-qlen-pill sel" onclick="progSetQLen(10,this)">10</div>
+          <div class="ks-qlen-pill" onclick="progSetQLen(15,this)">15</div>
+        </div>
+      </div>
+      <button class="btn-start-sb" onclick="progBeginSession()">▶ Start Session</button>
+    </div>
+
+    <div class="gs-panel" id="prog-play">
+      <div class="ks-progress-row">
+        <div class="ks-progress-bar"><div id="prog-progress-fill" class="sb-progress-fill"></div></div>
+        <div class="ks-progress-label">Q&nbsp;<span id="prog-q-num">1</span>&nbsp;/&nbsp;<span id="prog-q-total">10</span></div>
+      </div>
+      <div class="ls-score-row">
+        <div class="ls-score-box"><span id="prog-correct">0</span>/<span id="prog-total">0</span>&nbsp;✓</div>
+        <div class="ls-score-box"><span id="prog-pct">—</span></div>
+        <div class="ls-score-box">🔥&nbsp;<span id="prog-streak">0</span></div>
+      </div>
+      <button class="fsq-replay-btn" onclick="progReplay()">▶ Play Progression</button>
+      <div id="prog-feedback" class="ls-feedback"></div>
+      <div id="prog-choices" class="ks-choices"></div>
+      <button class="gs-end-early" onclick="progEndSession()">✕ End Session Early</button>
+    </div>
+
+    <div class="gs-panel" id="prog-end">
+      <div class="gs-end-card">
+        <span id="prog-end-emoji" class="gs-end-emoji">🎉</span>
+        <div id="prog-end-grade" class="gs-end-grade">A</div>
+        <div id="prog-end-msg" class="gs-end-msg">Well done!</div>
+        <div class="gs-end-stats">
+          <div class="gs-end-stat"><div id="prog-end-score" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Score</div></div>
+          <div class="gs-end-stat"><div id="prog-end-pct" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Accuracy</div></div>
+          <div class="gs-end-stat"><div id="prog-end-streak" class="gs-end-stat-val">—</div><div class="gs-end-stat-lbl">Best Streak</div></div>
+        </div>
+        <div id="prog-end-ai" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:1rem;text-align:left;font-size:.82rem;color:var(--muted);line-height:1.65;margin-bottom:1.5rem;min-height:60px"></div>
+        <div class="gs-end-btns">
+          <button class="btn-start-sb" style="flex:1;margin-top:0" onclick="progPlayAgain()">▶ Play Again</button>
+          <button class="btn-ghost" onclick="goMenu()">↩ Modes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ FALLING NOTES SCREEN ══ -->
 <div class="screen" id="falling-notes-screen">
   <div class="game-wrap">
@@ -1201,7 +1326,7 @@ async function ptAiAnalysis(game,correct,total,weakKeys){
 
 // ── Screen management ──────────────────────────────────────
 function showScreen(id){
-  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','pd-screen','dta-screen','fsq-screen'].forEach(s=>{
+  ['mode-select','key-sig-screen','scale-screen','staff-naming-screen','interval-screen','line-space-screen','falling-notes-screen','bk-screen','pd-screen','dta-screen','fsq-screen','cad-screen','prog-screen'].forEach(s=>{
     document.getElementById(s).classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
@@ -2256,6 +2381,252 @@ function fsqEndSession(){
 }
 
 function fsqPlayAgain(){ gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-start'); }
+
+// ══════════════════════════════════════════════════════════
+// EAR TRAINING — shared chord audio (Cadences + Progressions)
+// ══════════════════════════════════════════════════════════
+let _eatSynth=null;
+function eatGetSynth(){
+  if(!_eatSynth){
+    _eatSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.3,sustain:0.4,release:0.8}}).toDestination();
+    _eatSynth.volume.value=-6;
+  }
+  return _eatSynth;
+}
+function eatPlayProgression(chords,chordDur=0.9,gap=1.0){
+  Tone.start().then(()=>{
+    const synth=eatGetSynth();
+    const now=Tone.now()+0.05;
+    chords.forEach((notes,i)=>{ synth.triggerAttackRelease(notes,chordDur,now+i*gap); });
+  });
+}
+
+// C major triads (close position, octave 4)
+const EAT_CHORDS={
+  I:  ['C4','E4','G4'],
+  ii: ['D4','F4','A4'],
+  iii:['E4','G4','B4'],
+  IV: ['F4','A4','C5'],
+  V:  ['G4','B4','D5'],
+  vi: ['A4','C5','E5'],
+};
+
+// ══════════════════════════════════════════════════════════
+// CADENCE EAR TRAINING
+// ══════════════════════════════════════════════════════════
+const CADENCES=[
+  {id:'authentic', name:'Authentic Cadence', chords:[EAT_CHORDS.I,EAT_CHORDS.IV,EAT_CHORDS.V,EAT_CHORDS.I]},
+  {id:'plagal',    name:'Plagal Cadence',    chords:[EAT_CHORDS.I,EAT_CHORDS.V,EAT_CHORDS.IV,EAT_CHORDS.I]},
+  {id:'half',      name:'Half Cadence',      chords:[EAT_CHORDS.I,EAT_CHORDS.IV,EAT_CHORDS.I,EAT_CHORDS.V]},
+  {id:'deceptive', name:'Deceptive Cadence', chords:[EAT_CHORDS.I,EAT_CHORDS.IV,EAT_CHORDS.V,EAT_CHORDS.vi]},
+];
+
+let cadScore={correct:0,total:0,streak:0,bestStreak:0};
+let cadSessionLen=10;
+let cadQuestionNum=0;
+let cadAnswered=false;
+let cadCurrent=null;
+let cadWrong=[];
+
+function startCadenceQuiz(){ showScreen('cad-screen'); gsPanel(['cad-start','cad-play','cad-end'],'cad-start'); }
+
+function cadSetQLen(n,el){
+  cadSessionLen=n;
+  document.querySelectorAll('#cad-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function cadBeginSession(){
+  cadScore={correct:0,total:0,streak:0,bestStreak:0};
+  cadQuestionNum=0;cadWrong=[];
+  gsPanel(['cad-start','cad-play','cad-end'],'cad-play');
+  cadNextQuestion();
+}
+
+function cadUpdateScoreUI(){
+  document.getElementById('cad-correct').textContent=cadScore.correct;
+  document.getElementById('cad-total').textContent=cadScore.total;
+  document.getElementById('cad-pct').textContent=cadScore.total>0?Math.round(cadScore.correct/cadScore.total*100)+'%':'—';
+  document.getElementById('cad-streak').textContent=cadScore.streak;
+  const fill=Math.round((cadQuestionNum/cadSessionLen)*100);
+  const el=document.getElementById('cad-progress-fill');if(el)el.style.width=fill+'%';
+}
+
+function cadNextQuestion(){
+  if(cadScore.total>=cadSessionLen){cadEndSession();return;}
+  cadQuestionNum++;
+  document.getElementById('cad-q-num').textContent=cadQuestionNum;
+  document.getElementById('cad-q-total').textContent=cadSessionLen;
+  cadCurrent=CADENCES[Math.floor(Math.random()*CADENCES.length)];
+  cadAnswered=false;
+  document.getElementById('cad-feedback').textContent='';
+
+  const choices=ksShuffle([...CADENCES]);
+  const btns=document.getElementById('cad-choices');btns.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');btn.className='ks-choice-btn';btn.textContent=c.name;
+    btn.onclick=()=>cadGuess(c,btn);btns.appendChild(btn);
+  });
+  cadUpdateScoreUI();
+  eatPlayProgression(cadCurrent.chords);
+}
+
+function cadReplay(){ if(cadCurrent)eatPlayProgression(cadCurrent.chords); }
+
+function cadGuess(choice,clickedBtn){
+  if(cadAnswered)return;cadAnswered=true;
+  const correct=choice.id===cadCurrent.id;
+  cadScore.total++;
+  const fb=document.getElementById('cad-feedback');
+  if(correct){
+    cadScore.correct++;cadScore.streak++;cadScore.bestStreak=Math.max(cadScore.bestStreak,cadScore.streak);
+    clickedBtn.classList.add('ks-correct');
+    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+  }else{
+    cadScore.streak=0;cadWrong.push(cadCurrent.name);
+    clickedBtn.classList.add('ks-wrong');
+    document.querySelectorAll('#cad-choices .ks-choice-btn').forEach(b=>{if(b.textContent===cadCurrent.name)b.classList.add('ks-correct');});
+    fb.textContent=`✗ That was a ${cadCurrent.name}`;fb.style.color='var(--pink)';
+  }
+  document.querySelectorAll('#cad-choices .ks-choice-btn').forEach(b=>b.disabled=true);
+  cadUpdateScoreUI();
+  if(cadScore.total>=cadSessionLen){setTimeout(cadEndSession,2000);}else{setTimeout(cadNextQuestion,2000);}
+}
+
+function cadEndSession(){
+  const pct=cadScore.total>0?Math.round(cadScore.correct/cadScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  const msg=pct>=95?'Outstanding ears!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep listening!';
+  document.getElementById('cad-end-emoji').textContent=emoji;
+  document.getElementById('cad-end-grade').textContent=grade;
+  document.getElementById('cad-end-grade').style.color=gradeCols[grade];
+  document.getElementById('cad-end-msg').textContent=msg;
+  document.getElementById('cad-end-score').textContent=`${cadScore.correct}/${cadScore.total}`;
+  document.getElementById('cad-end-pct').textContent=pct+'%';
+  document.getElementById('cad-end-streak').textContent=cadScore.bestStreak;
+  document.getElementById('cad-end-ai').textContent='✨ Generating feedback…';
+  gsPanel(['cad-start','cad-play','cad-end'],'cad-end');
+  ptSaveScore('cadence_quiz',cadScore.correct*100,cadScore.correct,cadScore.total,cadScore.bestStreak);
+  ptAiAnalysis('cadence_quiz',cadScore.correct,cadScore.total,[...new Set(cadWrong)].slice(0,5)).then(txt=>{
+    const el=document.getElementById('cad-end-ai');
+    el.textContent=txt||'Keep training your ear on cadences — listen for how the final chord resolves!';
+  });
+}
+
+function cadPlayAgain(){ gsPanel(['cad-start','cad-play','cad-end'],'cad-start'); }
+
+// ══════════════════════════════════════════════════════════
+// CHORD PROGRESSION QUIZ
+// ══════════════════════════════════════════════════════════
+const PROGRESSIONS=[
+  {id:'p1',label:'I - IV - V - I',  chords:[EAT_CHORDS.I,EAT_CHORDS.IV,EAT_CHORDS.V,EAT_CHORDS.I]},
+  {id:'p2',label:'I - V - vi - IV', chords:[EAT_CHORDS.I,EAT_CHORDS.V,EAT_CHORDS.vi,EAT_CHORDS.IV]},
+  {id:'p3',label:'vi - IV - I - V', chords:[EAT_CHORDS.vi,EAT_CHORDS.IV,EAT_CHORDS.I,EAT_CHORDS.V]},
+  {id:'p4',label:'I - vi - IV - V', chords:[EAT_CHORDS.I,EAT_CHORDS.vi,EAT_CHORDS.IV,EAT_CHORDS.V]},
+  {id:'p5',label:'ii - V - I - I',  chords:[EAT_CHORDS.ii,EAT_CHORDS.V,EAT_CHORDS.I,EAT_CHORDS.I]},
+  {id:'p6',label:'I - IV - vi - V', chords:[EAT_CHORDS.I,EAT_CHORDS.IV,EAT_CHORDS.vi,EAT_CHORDS.V]},
+  {id:'p7',label:'vi - V - IV - V', chords:[EAT_CHORDS.vi,EAT_CHORDS.V,EAT_CHORDS.IV,EAT_CHORDS.V]},
+  {id:'p8',label:'I - V - IV - V',  chords:[EAT_CHORDS.I,EAT_CHORDS.V,EAT_CHORDS.IV,EAT_CHORDS.V]},
+];
+
+let progScore={correct:0,total:0,streak:0,bestStreak:0};
+let progSessionLen=10;
+let progQuestionNum=0;
+let progAnswered=false;
+let progCurrent=null;
+let progWrong=[];
+
+function startProgressionQuiz(){ showScreen('prog-screen'); gsPanel(['prog-start','prog-play','prog-end'],'prog-start'); }
+
+function progSetQLen(n,el){
+  progSessionLen=n;
+  document.querySelectorAll('#prog-qlen-pills .ks-qlen-pill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function progBeginSession(){
+  progScore={correct:0,total:0,streak:0,bestStreak:0};
+  progQuestionNum=0;progWrong=[];
+  gsPanel(['prog-start','prog-play','prog-end'],'prog-play');
+  progNextQuestion();
+}
+
+function progUpdateScoreUI(){
+  document.getElementById('prog-correct').textContent=progScore.correct;
+  document.getElementById('prog-total').textContent=progScore.total;
+  document.getElementById('prog-pct').textContent=progScore.total>0?Math.round(progScore.correct/progScore.total*100)+'%':'—';
+  document.getElementById('prog-streak').textContent=progScore.streak;
+  const fill=Math.round((progQuestionNum/progSessionLen)*100);
+  const el=document.getElementById('prog-progress-fill');if(el)el.style.width=fill+'%';
+}
+
+function progNextQuestion(){
+  if(progScore.total>=progSessionLen){progEndSession();return;}
+  progQuestionNum++;
+  document.getElementById('prog-q-num').textContent=progQuestionNum;
+  document.getElementById('prog-q-total').textContent=progSessionLen;
+  progCurrent=PROGRESSIONS[Math.floor(Math.random()*PROGRESSIONS.length)];
+  progAnswered=false;
+  document.getElementById('prog-feedback').textContent='';
+
+  const wrongPool=ksShuffle(PROGRESSIONS.filter(p=>p.id!==progCurrent.id));
+  const choices=ksShuffle([progCurrent,...wrongPool.slice(0,3)]);
+  const btns=document.getElementById('prog-choices');btns.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');btn.className='ks-choice-btn';btn.textContent=c.label;
+    btn.onclick=()=>progGuess(c,btn);btns.appendChild(btn);
+  });
+  progUpdateScoreUI();
+  eatPlayProgression(progCurrent.chords);
+}
+
+function progReplay(){ if(progCurrent)eatPlayProgression(progCurrent.chords); }
+
+function progGuess(choice,clickedBtn){
+  if(progAnswered)return;progAnswered=true;
+  const correct=choice.id===progCurrent.id;
+  progScore.total++;
+  const fb=document.getElementById('prog-feedback');
+  if(correct){
+    progScore.correct++;progScore.streak++;progScore.bestStreak=Math.max(progScore.bestStreak,progScore.streak);
+    clickedBtn.classList.add('ks-correct');
+    fb.textContent='✓ Correct!';fb.style.color='var(--green)';
+  }else{
+    progScore.streak=0;progWrong.push(progCurrent.label);
+    clickedBtn.classList.add('ks-wrong');
+    document.querySelectorAll('#prog-choices .ks-choice-btn').forEach(b=>{if(b.textContent===progCurrent.label)b.classList.add('ks-correct');});
+    fb.textContent=`✗ That was ${progCurrent.label}`;fb.style.color='var(--pink)';
+  }
+  document.querySelectorAll('#prog-choices .ks-choice-btn').forEach(b=>b.disabled=true);
+  progUpdateScoreUI();
+  if(progScore.total>=progSessionLen){setTimeout(progEndSession,2000);}else{setTimeout(progNextQuestion,2000);}
+}
+
+function progEndSession(){
+  const pct=progScore.total>0?Math.round(progScore.correct/progScore.total*100):0;
+  const grade=pct>=95?'S':pct>=85?'A':pct>=70?'B':pct>=55?'C':pct>=40?'D':'F';
+  const gradeCols={S:'#FFD700',A:'#39D98A',B:'#00D4FF',C:'#F59E0B',D:'#A855F7',F:'#FF2D78'};
+  const emoji=pct>=85?'🏆':pct>=70?'🎉':pct>=55?'💪':'🎵';
+  const msg=pct>=95?'Outstanding ears!':pct>=85?'Excellent work!':pct>=70?'Well done!':pct>=55?'Good effort!':'Keep listening!';
+  document.getElementById('prog-end-emoji').textContent=emoji;
+  document.getElementById('prog-end-grade').textContent=grade;
+  document.getElementById('prog-end-grade').style.color=gradeCols[grade];
+  document.getElementById('prog-end-msg').textContent=msg;
+  document.getElementById('prog-end-score').textContent=`${progScore.correct}/${progScore.total}`;
+  document.getElementById('prog-end-pct').textContent=pct+'%';
+  document.getElementById('prog-end-streak').textContent=progScore.bestStreak;
+  document.getElementById('prog-end-ai').textContent='✨ Generating feedback…';
+  gsPanel(['prog-start','prog-play','prog-end'],'prog-end');
+  ptSaveScore('progression_quiz',progScore.correct*100,progScore.correct,progScore.total,progScore.bestStreak);
+  ptAiAnalysis('progression_quiz',progScore.correct,progScore.total,[...new Set(progWrong)].slice(0,5)).then(txt=>{
+    const el=document.getElementById('prog-end-ai');
+    el.textContent=txt||'Keep training your ear on chord progressions — listen for the bass movement between chords!';
+  });
+}
+
+function progPlayAgain(){ gsPanel(['prog-start','prog-play','prog-end'],'prog-start'); }
 
 function startFallingNotes(){ showScreen('falling-notes-screen'); gsPanel(['fn-start','fn-play','fn-end'],'fn-start'); }
 
