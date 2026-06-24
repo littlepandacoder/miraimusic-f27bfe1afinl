@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Mail } from "lucide-react";
 // Ensure this path exactly matches where your saveEmail function lives
-import { saveEmail } from "@/lib/signupService"; 
+import { saveEmail } from "@/lib/signupService";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EmailCollectionProps {
   onComplete: (email: string, docId: string) => void;
@@ -13,6 +14,7 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user, signOut } = useAuth();
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,6 +60,11 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = "/login";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-navy/50 to-background flex items-center justify-center p-4 font-sans">
       <Card className="w-full max-w-md bg-card/50 border-border/30 p-8 shadow-2xl backdrop-blur-md">
@@ -71,6 +78,18 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
           <p className="text-muted-foreground text-sm">
             Start learning for $17/month. Unlock 900+ lessons.
           </p>
+          {user && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Signed in as {user.email}.{" "}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="underline hover:text-foreground transition-colors"
+              >
+                Log out
+              </button>
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
