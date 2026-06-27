@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Boss Battle — Musicable</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
 :root{
   --bg:#080614;--bg2:#0f0d1a;--card:#140f26;--border:rgba(255,255,255,0.07);
@@ -801,7 +802,25 @@ function freq(noteId){
   const midi=(parseInt(m[2])+1)*12+NOTE_MAP[m[1]];
   return 440*Math.pow(2,(midi-69)/12);
 }
-function synthNote(noteId,dur=1.8,vol=0.22){
+
+// Real piano samples (Salamander Grand Piano, same pack used by Piano Hero)
+// — falls back to the old additive-synth tone only until they load.
+let _pianoSamplerReady=false;
+const _pianoSampler=new Tone.Sampler({
+  urls:{
+    'A0':'A0.mp3','C1':'C1.mp3','D#1':'Ds1.mp3','F#1':'Fs1.mp3','A1':'A1.mp3',
+    'C2':'C2.mp3','D#2':'Ds2.mp3','F#2':'Fs2.mp3','A2':'A2.mp3','C3':'C3.mp3',
+    'D#3':'Ds3.mp3','F#3':'Fs3.mp3','A3':'A3.mp3','C4':'C4.mp3','D#4':'Ds4.mp3',
+    'F#4':'Fs4.mp3','A4':'A4.mp3','C5':'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3',
+    'A5':'A5.mp3','C6':'C6.mp3',
+  },
+  baseUrl:'https://tonejs.github.io/audio/salamander/',
+  release:0.8,
+  onload:()=>{_pianoSamplerReady=true;},
+}).toDestination();
+let _toneStarted=false;
+
+function synthNoteFallback(noteId,dur,vol){
   try{
     const c=getAC(),f=freq(noteId),now=c.currentTime;
     [[1,.28,'triangle'],[2,.14,'sine'],[3,.08,'sine'],[4,.04,'sine']].forEach(([h,v,t])=>{
@@ -813,6 +832,11 @@ function synthNote(noteId,dur=1.8,vol=0.22){
       o.start(now);o.stop(now+dur+.01);
     });
   }catch(_){}
+}
+function synthNote(noteId,dur=1.8,vol=0.22){
+  if(!_pianoSamplerReady){ synthNoteFallback(noteId,dur,vol); return; }
+  if(!_toneStarted){ _toneStarted=true; Tone.start(); }
+  try{ _pianoSampler.triggerAttackRelease(noteId,dur*0.6,Tone.now(),Math.max(0.5,Math.min(1,vol*3))); }catch(_){}
 }
 function sfx(type){
   try{

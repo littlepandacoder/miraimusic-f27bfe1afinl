@@ -1427,7 +1427,7 @@ window.musicableUserId   = null;
 <nav id="nav">
   <a href="/dashboard" class="nav-logo">🎹 Piano Hero</a>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showScreen('play')">Practice</button>
+    <button class="nav-tab active" onclick="showScreen('play')" style="display:none">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
     <button class="nav-tab" onclick="(adminUser || window.musicableUserId) ? (showScreen('admin'), adminRefreshFromFirebase()) : adminLoginOpen()">⚙ Admin</button>
   </div>

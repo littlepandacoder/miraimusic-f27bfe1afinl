@@ -2384,20 +2384,34 @@ function fsqPlayAgain(){ gsPanel(['fsq-start','fsq-play','fsq-end'],'fsq-start')
 
 // ══════════════════════════════════════════════════════════
 // EAR TRAINING — shared chord audio (Cadences + Progressions)
+// Real piano samples (Salamander Grand Piano, same pack used by
+// Piano Hero) — falls back to a basic synth only until they load.
 // ══════════════════════════════════════════════════════════
-let _eatSynth=null;
-function eatGetSynth(){
-  if(!_eatSynth){
-    _eatSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.3,sustain:0.4,release:0.8}}).toDestination();
-    _eatSynth.volume.value=-6;
+let _eatSamplerReady=false;
+const _eatSampler=new Tone.Sampler({
+  urls:{
+    'C3':'C3.mp3','D#3':'Ds3.mp3','F#3':'Fs3.mp3','A3':'A3.mp3',
+    'C4':'C4.mp3','D#4':'Ds4.mp3','F#4':'Fs4.mp3','A4':'A4.mp3',
+    'C5':'C5.mp3','D#5':'Ds5.mp3','F#5':'Fs5.mp3','A5':'A5.mp3',
+  },
+  baseUrl:'https://tonejs.github.io/audio/salamander/',
+  release:1.0,
+  onload:()=>{_eatSamplerReady=true;},
+}).toDestination();
+
+let _eatFallbackSynth=null;
+function eatGetFallbackSynth(){
+  if(!_eatFallbackSynth){
+    _eatFallbackSynth=new Tone.PolySynth(Tone.Synth,{oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.3,sustain:0.4,release:0.8}}).toDestination();
+    _eatFallbackSynth.volume.value=-6;
   }
-  return _eatSynth;
+  return _eatFallbackSynth;
 }
 function eatPlayProgression(chords,chordDur=0.9,gap=1.0){
   Tone.start().then(()=>{
-    const synth=eatGetSynth();
+    const instrument=_eatSamplerReady?_eatSampler:eatGetFallbackSynth();
     const now=Tone.now()+0.05;
-    chords.forEach((notes,i)=>{ synth.triggerAttackRelease(notes,chordDur,now+i*gap); });
+    chords.forEach((notes,i)=>{ instrument.triggerAttackRelease(notes,chordDur,now+i*gap); });
   });
 }
 
