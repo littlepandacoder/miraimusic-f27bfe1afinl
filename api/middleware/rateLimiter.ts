@@ -54,8 +54,8 @@ export function createRateLimiter(config: RateLimitConfig) {
     if (recentTimestamps.length >= maxRequests) {
       const retryAfter = Math.ceil((recentTimestamps[0] + windowMs - now) / 1000);
 
-      res.setHeader("Retry-After", retryAfter.toString());
-      res.setHeader("RateLimit-Limit", maxRequests.toString());
+      res.setHeader("Retry-After", String(retryAfter));
+      res.setHeader("RateLimit-Limit", String(maxRequests));
       res.setHeader("RateLimit-Remaining", "0");
       res.setHeader("RateLimit-Reset", new Date(recentTimestamps[0] + windowMs).toISOString());
 
@@ -73,8 +73,8 @@ export function createRateLimiter(config: RateLimitConfig) {
     store.set(key, recentTimestamps);
 
     // Set rate limit headers
-    res.setHeader("RateLimit-Limit", maxRequests.toString());
-    res.setHeader("RateLimit-Remaining", (maxRequests - recentTimestamps.length).toString());
+    res.setHeader("RateLimit-Limit", String(maxRequests));
+    res.setHeader("RateLimit-Remaining", String(maxRequests - recentTimestamps.length));
     res.setHeader("RateLimit-Reset", new Date(recentTimestamps[0] + windowMs).toISOString());
 
     // Store for checking after response
