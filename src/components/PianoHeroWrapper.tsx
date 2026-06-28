@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useGameAudioInput } from "@/hooks/useGameAudioInput";
-import { useMetronome } from "@/hooks/useMetronome";
+import { useMetronomeWithCountoff } from "@/hooks/useMetronomeWithCountoff";
 import { Button } from "@/components/ui/button";
 import { FeaturePaywallModal } from "./FeaturePaywallModal";
 import { Mic, MicOff, Music2 } from "lucide-react";
@@ -21,11 +21,23 @@ export function PianoHeroWrapper() {
   const [metronomeBPM, setMetronomeBPM] = useState(120);
   const [gameMode, setGameMode] = useState<"wait" | "normal">("wait");
 
-  // Initialize metronome with Web Audio API
-  useMetronome({
+  // Initialize metronome with 8-bar count-off for Normal Mode
+  const { currentBar, currentBeat, isCountingOff } = useMetronomeWithCountoff({
     enabled: metronomeEnabled,
     bpm: metronomeBPM,
     isNormalMode: gameMode === "normal",
+    countoffBars: 8,
+    onCountoffComplete: () => {
+      // Send message to game that count-off is done and it can start rolling notes
+      if (gameFrameRef.current?.contentWindow) {
+        gameFrameRef.current.contentWindow.postMessage(
+          {
+            type: "START_GAME",
+          },
+          "*"
+        );
+      }
+    },
   });
 
   const {
@@ -198,6 +210,31 @@ export function PianoHeroWrapper() {
                   {currentNote.cents > 0 ? "sharp" : "flat"}
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Count-off Display - Show when counting off */}
+          {isCountingOff && metronomeEnabled && gameMode === "normal" && (
+            <div className="bg-gradient-to-br from-primary/20 to-primary/10 border-2 border-primary rounded-lg p-4 backdrop-blur w-48 text-center animate-pulse">
+              <p className="text-xs text-muted-foreground mb-2">COUNT-OFF</p>
+              <div className="text-4xl font-black text-primary mb-2">
+                {currentBar}
+              </div>
+              <div className="flex justify-center gap-1">
+                {[1, 2, 3, 4].map((beat) => (
+                  <div
+                    key={beat}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      beat === currentBeat
+                        ? "bg-primary scale-125"
+                        : beat < currentBeat
+                          ? "bg-primary/50"
+                          : "bg-primary/20"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-primary mt-2">Get ready...</p>
             </div>
           )}
 
