@@ -35,84 +35,17 @@ export interface PDFViewerProps {
 export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<any>(null);
-  const [pdf, setPdf] = useState<any>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [pageWidth, setPageWidth] = useState(800);
-  const [pageHeight, setPageHeight] = useState(1000);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lines, setLines] = useState<DrawLine[]>([]);
   const [tool, setTool] = useState<ToolType>("pen");
   const [color, setColor] = useState("#FF0000");
   const [brushWidth, setBrushWidth] = useState(2);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
-    const loadPdf = async () => {
-      try {
-        console.log("Loading PDF from:", fileUrl);
-        const pdfDoc = await pdfjsLib.getDocument(fileUrl).promise;
-        console.log("PDF loaded:", pdfDoc.numPages, "pages");
-        setPdf(pdfDoc);
-        setTotalPages(pdfDoc.numPages);
-        await renderPage(1, pdfDoc);
-        console.log("Page 1 rendered");
-      } catch (err) {
-        console.error("Failed to load PDF:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (fileUrl) {
-      loadPdf();
-    }
+    setLoading(false);
   }, [fileUrl]);
-
-  const renderPage = async (pageNum: number, pdfDoc: any) => {
-    try {
-      console.log("Rendering page:", pageNum);
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        console.error("Canvas ref not found");
-        return;
-      }
-
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      setPageWidth(viewport.width);
-      setPageHeight(viewport.height);
-
-      const context = canvas.getContext("2d");
-      if (!context) {
-        console.error("Canvas 2D context not found");
-        return;
-      }
-      await page.render({ canvasContext: context, viewport }).promise;
-      console.log("Page rendered successfully");
-      setLines([]);
-    } catch (err) {
-      console.error("Failed to render page:", err);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1 && pdf) {
-      const newPage = currentPage - 1;
-      setCurrentPage(newPage);
-      renderPage(newPage, pdf);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages && pdf) {
-      const newPage = currentPage + 1;
-      setCurrentPage(newPage);
-      renderPage(newPage, pdf);
-    }
-  };
 
   const handleMouseDown = (e: any) => {
     if (tool === "view") return;
@@ -299,52 +232,25 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
       </div>
 
       {/* PDF Viewer */}
-      <div className="flex-1 flex justify-center bg-gray-100 overflow-auto">
-        <div className="relative bg-white" style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}>
-          <canvas
-            ref={canvasRef}
-            style={{ display: "block", width: "auto", height: "auto" }}
+      <div className="flex-1 bg-gray-100 overflow-auto flex items-center justify-center">
+        {!loading && (
+          <iframe
+            src={`${fileUrl}#toolbar=1&navpanes=0`}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+              transform: `scale(${zoom})`,
+              transformOrigin: "top center",
+            }}
+            title="PDF Viewer"
           />
-
-          {canvasRef.current && (
-            <Stage
-              ref={stageRef}
-              width={pageWidth}
-              height={pageHeight}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                cursor: tool === "eraser" ? "grab" : "crosshair",
-              }}
-            >
-              <Layer>
-                {lines.map((line, idx) => (
-                  <Line
-                    key={idx}
-                    points={line.points}
-                    stroke={
-                      line.tool === "eraser"
-                        ? "rgba(255,255,255,0.8)"
-                        : line.color
-                    }
-                    strokeWidth={line.width}
-                    lineCap="round"
-                    lineJoin="round"
-                    opacity={line.tool === "highlighter" ? 0.3 : 1}
-                    globalCompositeOperation={
-                      line.tool === "eraser" ? "destination-out" : "source-over"
-                    }
-                  />
-                ))}
-              </Layer>
-            </Stage>
-          )}
-        </div>
+        )}
+        {loading && (
+          <div className="text-center">
+            <p className="text-gray-600">Loading PDF...</p>
+          </div>
+        )}
       </div>
     </div>
   );
