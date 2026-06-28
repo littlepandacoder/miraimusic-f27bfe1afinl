@@ -1,19 +1,24 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useConversation } from "@elevenlabs/react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, MicOff, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { Mic, MicOff, Volume2, VolumeX, Loader2, Lock, Crown } from "lucide-react";
 
 const AGENT_ID = "agent_7401krc6fjd4e1hvvce2m7mn0ss0";
 
 const AITutor = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const subscriptionStatus = useSubscriptionStatus();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const micStreamRef = useRef<MediaStream | null>(null);
+
+  // Check if user has Premium plan
+  const hasPremium = subscriptionStatus.planId === "premium" || subscriptionStatus.planId === "pro";
 
   const stopMic = () => {
     micStreamRef.current?.getTracks().forEach((tr) => tr.stop());
@@ -93,6 +98,70 @@ const AITutor = () => {
   }, [conversation, isMuted]);
 
   const isConnected = conversation.status === "connected";
+
+  // Show upgrade prompt if not Premium
+  if (!hasPremium) {
+    return (
+      <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-purple-500" />
+            Musicable Pro - AI Tutor with Voice
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="text-center space-y-4">
+            <div className="w-32 h-32 rounded-full mx-auto bg-purple-500/20 flex items-center justify-center">
+              <Lock className="w-16 h-16 text-purple-500" />
+            </div>
+
+            <div>
+              <h3 className="font-bold text-lg mb-2">Unlock AI Tutor with Voice</h3>
+              <p className="text-sm text-muted-foreground">
+                Get real-time voice feedback and personalized guidance from your AI music tutor.
+              </p>
+            </div>
+
+            <div className="bg-purple-500/10 rounded-lg p-4 space-y-2 text-sm">
+              <p className="font-semibold text-purple-600">Musicable Pro includes:</p>
+              <ul className="space-y-1 text-left">
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-purple-500" />
+                  Unlimited AI Tutor conversations
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-purple-500" />
+                  Real-time voice feedback
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-purple-500" />
+                  Advanced progress analytics
+                </li>
+                <li className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-purple-500" />
+                  Priority support
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-4">
+              <div className="text-3xl font-black mb-2">
+                $29<span className="text-sm font-normal text-muted-foreground">/month</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">Cancel anytime</p>
+              <Button
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white h-12 font-bold"
+                onClick={() => window.location.href = "/dashboard/account?upgrade=premium"}
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Musicable Pro
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card border-border">
