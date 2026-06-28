@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email, promoCode, billingPeriod } = await req.json();
+    const { userId, email, promoCode, billingPeriod, planType = "student" } = await req.json();
 
     if (!userId || !email) {
       throw new Error("userId and email are required");
@@ -28,10 +28,18 @@ serve(async (req) => {
       apiVersion: "2024-06-20",
     });
 
-    const isYearly = billingPeriod === "yearly";
-    const priceId = isYearly
-      ? Deno.env.get("STRIPE_STUDENT_YEARLY_PRICE_ID") ?? "price_1Tl8QbB8UWyR18ZVc5ghssYc"
-      : Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
+    let priceId: string;
+    let actualPlanType = planType;
+
+    // Determine price based on plan type
+    if (planType === "premium") {
+      priceId = Deno.env.get("STRIPE_PREMIUM_PRICE_ID") ?? "price_1TnRLjB8UWyR18ZVFWzFrHdY";
+    } else {
+      const isYearly = billingPeriod === "yearly";
+      priceId = isYearly
+        ? Deno.env.get("STRIPE_STUDENT_YEARLY_PRICE_ID") ?? "price_1Tl8QbB8UWyR18ZVc5ghssYc"
+        : Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
+    }
 
     const origin = req.headers.get("origin") ?? "https://musicable.app";
 
@@ -40,15 +48,16 @@ serve(async (req) => {
     const customerId = existing.data[0]?.id;
 
     // Build base session params
+    const billingPeriodStr = planType === "premium" ? "monthly" : (billingPeriod === "yearly" ? "yearly" : "monthly");
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       ...(customerId ? { customer: customerId } : { customer_email: email }),
       mode: "subscription",
       payment_method_collection: "always",
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        metadata: { userId, planType: "student", billingPeriod: isYearly ? "yearly" : "monthly" },
+        metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
       },
-      metadata: { userId, planType: "student", billingPeriod: isYearly ? "yearly" : "monthly" },
+      metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/signup`,
     };

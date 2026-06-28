@@ -23,13 +23,19 @@ const Signup = () => {
   const [searchParams]  = useSearchParams();
   const [stage, setStage] = useState<Stage>("email");
   const [subNeeded, setSubNeeded] = useState(false);
+  const [planType, setPlanType] = useState<"student" | "premium">("student");
 
-  // ── Affiliate referral tracking ─────────────────────────────────────
+  // ── Affiliate referral tracking & plan type ────────────────────────
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
       localStorage.setItem("musicable_ref_code", ref.toUpperCase());
       logClick(ref.toUpperCase()); // fire-and-forget click log
+    }
+
+    const plan = searchParams.get("plan");
+    if (plan === "premium" || plan === "student") {
+      setPlanType(plan);
     }
   }, []);
 
@@ -121,6 +127,7 @@ const Signup = () => {
           docId={docId}
           onboardingData={onboardingData}
           onComplete={handleBillingComplete}
+          planType={planType}
         />
       );
     }

@@ -10,13 +10,14 @@ interface TrialBillingProps {
   docId: string;
   onboardingData: unknown;
   onComplete: () => void;
+  planType?: "student" | "premium";
 }
 
-const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingProps) => {
+const TrialBilling = ({ email, docId, onComplete: _onComplete, planType = "student" }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(planType === "premium" ? "monthly" : "monthly");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +94,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
-        { body: { userId, email, promoCode: promoCode.trim() || undefined, billingPeriod } }
+        { body: { userId, email, promoCode: promoCode.trim() || undefined, billingPeriod, planType } }
       );
 
       if (fnError || !data?.url) {
@@ -180,8 +181,12 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
               <div className="space-y-2 pt-1">
                 {[
-                  billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
-                  "Access all piano course modules",
+                  planType === "premium"
+                    ? "$29/month, billed today"
+                    : billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
+                  planType === "premium"
+                    ? "Unlimited AI Tutor with voice conversations"
+                    : "Access all piano course modules",
                   "Cancel anytime from Stripe Customer Portal",
                 ].map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -195,30 +200,34 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
           {/* Right — pricing + CTA */}
           <Card className="p-6 flex flex-col justify-center gap-6">
-            <div className="flex rounded-lg border border-border p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => setBillingPeriod("monthly")}
-                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
-                  billingPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingPeriod("yearly")}
-                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
-                  billingPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Yearly
-              </button>
-            </div>
+            {planType !== "premium" && (
+              <div className="flex rounded-lg border border-border p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setBillingPeriod("monthly")}
+                  className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                    billingPeriod === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingPeriod("yearly")}
+                  className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                    billingPeriod === "yearly" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Yearly
+                </button>
+              </div>
+            )}
 
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-1">Subscribe</h2>
-              {billingPeriod === "yearly" ? (
+              <h2 className="text-2xl font-bold mb-1">{planType === "premium" ? "Premium Plan" : "Subscribe"}</h2>
+              {planType === "premium" ? (
+                <p className="text-4xl font-black mt-2">$29<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+              ) : billingPeriod === "yearly" ? (
                 <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
               ) : (
                 <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
@@ -245,7 +254,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete }: TrialBillingPro
 
             <p className="text-xs text-center text-muted-foreground">
               You'll be redirected to Stripe's secure checkout to enter your card details.
-              Your card is charged {billingPeriod === "yearly" ? "$199/year" : "$17/month"}, starting today.
+              Your card is charged {planType === "premium" ? "$29/month" : billingPeriod === "yearly" ? "$199/year" : "$17/month"}, starting today.
             </p>
           </Card>
         </div>

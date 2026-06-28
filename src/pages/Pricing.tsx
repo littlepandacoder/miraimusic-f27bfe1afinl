@@ -44,7 +44,12 @@ const Pricing = () => {
 
   const handleStudentCTA = () => {
     if (user && roles.length > 0) navigate("/dashboard");
-    else navigate("/signup");
+    else navigate("/signup?plan=student");
+  };
+
+  const handlePremiumCTA = () => {
+    if (user && roles.includes("student")) navigate("/dashboard?upgrade=premium");
+    else navigate("/signup?plan=premium");
   };
 
   const handleTeacherCTA = () => {
@@ -138,7 +143,7 @@ const Pricing = () => {
                 </ul>
                 <Button
                   className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm sm:text-base py-2 sm:py-3"
-                  onClick={() => navigate("/signup")}
+                  onClick={handlePremiumCTA}
                 >
                   Upgrade to Premium
                 </Button>
