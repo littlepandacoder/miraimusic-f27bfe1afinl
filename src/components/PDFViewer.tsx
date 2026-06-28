@@ -51,25 +51,34 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
   useEffect(() => {
     const loadPdf = async () => {
       try {
-        const pdf = await pdfjsLib.getDocument(fileUrl).promise;
-        setPdf(pdf);
-        setTotalPages(pdf.numPages);
-        renderPage(1, pdf);
+        console.log("Loading PDF from:", fileUrl);
+        const pdfDoc = await pdfjsLib.getDocument(fileUrl).promise;
+        console.log("PDF loaded:", pdfDoc.numPages, "pages");
+        setPdf(pdfDoc);
+        setTotalPages(pdfDoc.numPages);
+        await renderPage(1, pdfDoc);
+        console.log("Page 1 rendered");
       } catch (err) {
         console.error("Failed to load PDF:", err);
       } finally {
         setLoading(false);
       }
     };
-    loadPdf();
+    if (fileUrl) {
+      loadPdf();
+    }
   }, [fileUrl]);
 
   const renderPage = async (pageNum: number, pdfDoc: any) => {
     try {
+      console.log("Rendering page:", pageNum);
       const page = await pdfDoc.getPage(pageNum);
       const viewport = page.getViewport({ scale: 1.5 });
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas) {
+        console.error("Canvas ref not found");
+        return;
+      }
 
       canvas.width = viewport.width;
       canvas.height = viewport.height;
@@ -77,9 +86,12 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
       setPageHeight(viewport.height);
 
       const context = canvas.getContext("2d");
-      if (context) {
-        await page.render({ canvasContext: context, viewport }).promise;
+      if (!context) {
+        console.error("Canvas 2D context not found");
+        return;
       }
+      await page.render({ canvasContext: context, viewport }).promise;
+      console.log("Page rendered successfully");
       setLines([]);
     } catch (err) {
       console.error("Failed to render page:", err);
