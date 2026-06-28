@@ -27,7 +27,7 @@ export default function PDFViewerPage() {
           size="sm"
           onClick={() => window.close()}
           title="Close PDF viewer"
-          className="bg-white hover:bg-gray-100 text-purple-600 flex-shrink-0 ml-4"
+          className="bg-pink-500 hover:bg-pink-600 text-white flex-shrink-0 ml-4"
         >
           <X className="w-5 h-5" />
         </Button>
