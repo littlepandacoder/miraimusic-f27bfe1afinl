@@ -13,11 +13,12 @@ interface TrialBillingProps {
   planType?: "student" | "premium";
 }
 
-const TrialBilling = ({ email, docId, onComplete: _onComplete, planType = "student" }: TrialBillingProps) => {
+const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initialPlanType = "student" }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(planType === "premium" ? "monthly" : "monthly");
+  const [planType, setPlanType] = useState<"student" | "premium">(initialPlanType);
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -180,15 +181,23 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType = "stude
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
               <div className="space-y-2 pt-1">
-                {[
-                  planType === "premium"
-                    ? "$29/month, billed today"
-                    : billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
-                  planType === "premium"
-                    ? "Unlimited AI Tutor with voice conversations"
-                    : "Access all piano course modules",
-                  "Cancel anytime from Stripe Customer Portal",
-                ].map((f) => (
+                {(planType === "premium"
+                  ? [
+                      "$29/month, billed today",
+                      "Unlimited AI Tutor with voice",
+                      "Access all piano course modules",
+                      "Advanced progress analytics",
+                      "Priority support",
+                      "Cancel anytime from Stripe Customer Portal",
+                    ]
+                  : [
+                      billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
+                      "Access all piano course modules",
+                      "Gamified learning & quizzes",
+                      "Progress tracking",
+                      "Cancel anytime from Stripe Customer Portal",
+                    ]
+                ).map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Check size={14} className="text-green-500 shrink-0" />
                     {f}
@@ -200,7 +209,30 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType = "stude
 
           {/* Right — pricing + CTA */}
           <Card className="p-6 flex flex-col justify-center gap-6">
-            {planType !== "premium" && (
+            {/* Plan selector */}
+            <div className="flex rounded-lg border border-border p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setPlanType("student")}
+                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                  planType === "student" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlanType("premium")}
+                className={`flex-1 py-2 rounded-md text-sm font-bold transition-colors ${
+                  planType === "premium" ? "bg-purple-500 text-white" : "text-muted-foreground"
+                }`}
+              >
+                Pro
+              </button>
+            </div>
+
+            {/* Billing period selector - only for student */}
+            {planType === "student" && (
               <div className="flex rounded-lg border border-border p-1 gap-1">
                 <button
                   type="button"
