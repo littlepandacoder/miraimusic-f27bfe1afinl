@@ -7,15 +7,13 @@ import {
   Download,
   FileText,
   Archive,
-  Filter,
-  ChevronRight,
+  Eye,
   Loader,
   AlertCircle,
 } from "lucide-react";
+import { PDFViewer } from "./PDFViewer";
 import {
   getAvailableResources,
-  getResourcesByCategory,
-  searchResources,
   recordDownload,
   type LibraryResource,
 } from "@/lib/libraryService";
@@ -38,6 +36,7 @@ export function StudentLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [viewingPdf, setViewingPdf] = useState<LibraryResource | null>(null);
 
   // Load resources on mount
   useEffect(() => {
@@ -294,23 +293,34 @@ export function StudentLibrary() {
                         </div>
                       </div>
 
-                      <Button
-                        onClick={() => handleDownload(resource)}
-                        disabled={downloading === resource.id}
-                        className="gap-2 flex-shrink-0"
-                      >
-                        {downloading === resource.id ? (
-                          <>
-                            <Loader className="w-4 h-4 animate-spin" />
-                            Downloading...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4" />
-                            Download
-                          </>
+                      <div className="flex gap-2 flex-shrink-0">
+                        {resource.resource_type === "pdf" && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setViewingPdf(resource)}
+                            className="gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
                         )}
-                      </Button>
+
+                        <Button
+                          onClick={() => handleDownload(resource)}
+                          disabled={downloading === resource.id}
+                          className="gap-2"
+                        >
+                          {downloading === resource.id ? (
+                            <>
+                              <Loader className="w-4 h-4 animate-spin" />
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -319,6 +329,19 @@ export function StudentLibrary() {
           )}
         </div>
       </div>
+
+      {/* PDF Viewer Modal */}
+      {viewingPdf && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <PDFViewer
+              fileUrl={viewingPdf.file_url}
+              fileName={viewingPdf.file_name}
+              onClose={() => setViewingPdf(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
