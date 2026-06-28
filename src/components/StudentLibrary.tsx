@@ -82,23 +82,19 @@ export function StudentLibrary() {
     try {
       setDownloading(resource.id);
 
-      // Add ?download=true to force download instead of viewing
-      const downloadUrl = `${resource.file_url}?download=true`;
-
-      // Fetch the file as blob to force download
-      const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Use simple approach: create link and click
       const link = document.createElement("a");
-      link.href = url;
+      link.href = resource.file_url;
       link.download = resource.file_name;
-      link.style.display = "none";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      // Wait a bit then remove
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
 
       // Record the download in background (don't block if fails)
       recordDownload(resource.id).catch((err) => {
