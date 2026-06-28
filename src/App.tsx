@@ -36,6 +36,8 @@ import RhythmQuizPage from "./pages/RhythmQuizPage";
 import PianoTheoryPage from "./pages/PianoTheoryPage";
 import StudentProfile from "./pages/StudentProfile";
 import ChordProgressionQuizPage from "./pages/ChordProgressionQuizPage";
+import ScaleBuilderQuizPage from "./pages/ScaleBuilderQuizPage";
+import LibraryPage from "./pages/LibraryPage";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,8 @@ const App = () => (
             <Route path="/piano-room" element={<PianoRoomPage />} />
             <Route path="/rhythm-quiz" element={<RhythmQuizPage />} />
             <Route path="/piano-theory-game" element={<PianoTheoryPage />} />
+            <Route path="/scale-builder-quiz" element={<ScaleBuilderQuizPage />} />
+            <Route path="/library" element={<LibraryPage />} />
             {/* Affiliate program */}
             <Route path="/affiliate" element={<AffiliateLanding />} />
             <Route path="/affiliate-signup" element={<AffiliateSignup />} />

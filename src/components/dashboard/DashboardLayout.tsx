@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Film,
   Lock,
+  Library,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -83,6 +84,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
     { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
     { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false },
+    { href: "/scale-builder-quiz",   icon: Gamepad2,      label: "Scale Builder", external: false },
     { href: "/note-quiz.html",          icon: Gamepad2,      label: "Note Quiz",     external: true },
     { href: "/musical-rest-quiz.html",  icon: Gamepad2,      label: "Rest Quiz",          external: true },
     { href: "/chord-boss-battle.html",  icon: Gamepad2,      label: "Boss Battle",  external: true },
@@ -94,6 +96,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)" },
+    { href: "/scale-builder-quiz",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.scaleBuilder",  shadow: "0 0 14px 4px rgba(168,85,247,0.55)" },
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
     { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
     { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",  labelKey: "dashboard.nav.chordBoss",  shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
@@ -113,6 +116,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/slots",           icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
         { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
+        { href: "/library",                   icon: Library,       label: "Resource Library" },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
         { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },
         { href: "/dashboard/assignments",     icon: Users,         label: "Teacher Assignment" },
@@ -129,7 +133,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/schedule",     icon: Calendar,        label: t("dashboard.nav.schedule") },
         { href: "/dashboard/slots",        icon: ClipboardList,   label: t("dashboard.nav.mySlots") },
         { href: "/dashboard/foundation",   icon: Gamepad2,        label: t("dashboard.nav.foundationModules") },
-        { href: "/chord-progression-quiz",   icon: Gamepad2,      label: "Chord Progressions" },
+        { href: "/library",                icon: Library,         label: "Resource Library" },
         { href: "/dashboard/chat",         icon: MessageSquare,   label: "Chat" },
         ...gameItems,
       ];
@@ -138,7 +142,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     return [
       ...baseItems,
       { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundation") },
-      { href: "/chord-progression-quiz",   icon: Gamepad2,      label: "Chord Progressions" },
+      { href: "/library",                icon: Library,       label: "Resource Library" },
+      { href: "/scale-builder-quiz",   icon: Gamepad2,      label: "Scale Builder" },
       { href: "/dashboard/resources",    icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
       { href: "/dashboard/chat",         icon: MessageSquare, label: "Chat with Teacher" },
     ];

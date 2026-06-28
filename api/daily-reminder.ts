@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
+import { createRateLimiter } from "./middleware/rateLimiter";
 
 webpush.setVapidDetails(
   "mailto:jkwong.official@gmail.com",
@@ -13,7 +14,20 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Rate limiter for cron: 10 requests per hour
+// Using a custom key generator to limit by endpoint, not IP
+const cronRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10,
+  keyGenerator: () => "cron:daily-reminder", // Single key for this cron job
+});
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Apply rate limiting to prevent abuse
+  if (!cronRateLimiter(req, res)) {
+    return;
+  }
+
   // Vercel sets Authorization: Bearer <CRON_SECRET> on cron invocations
   const secret = process.env.CRON_SECRET;
   if (secret && req.headers.authorization !== `Bearer ${secret}`) {

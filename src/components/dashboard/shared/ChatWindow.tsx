@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TextWithLinks } from "@/lib/linkParser";
 
 interface Message {
   id: string;
@@ -222,7 +223,9 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
                         : "bg-secondary text-foreground rounded-bl-sm"
                     } ${msg.pending ? "opacity-60" : "opacity-100"}`}
                   >
-                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+                      <TextWithLinks content={msg.content} />
+                    </p>
                     <p
                       className={`text-[10px] mt-1 ${
                         mine ? "text-primary-foreground/60" : "text-muted-foreground"
