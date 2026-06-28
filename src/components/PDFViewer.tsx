@@ -160,9 +160,9 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
   }
 
   return (
-    <div className="w-full bg-white rounded-lg border border-gray-200">
+    <div className="w-full h-full bg-white flex flex-col">
       {/* Toolbar */}
-      <div className="bg-gray-50 border-b p-4 space-y-3">
+      <div className="bg-gray-50 border-b p-4 space-y-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-lg">{fileName}</h3>
           {onClose && (
@@ -287,49 +287,51 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
       </div>
 
       {/* PDF Viewer */}
-      <div className="flex justify-center bg-gray-100 p-4 overflow-auto max-h-[600px]">
-        <div className="relative bg-white shadow" style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}>
+      <div className="flex-1 flex justify-center bg-gray-100 overflow-auto">
+        <div className="relative bg-white" style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}>
           <canvas
             ref={canvasRef}
-            style={{ display: "block", maxWidth: "100%" }}
+            style={{ display: "block", width: "auto", height: "auto" }}
           />
 
-          <Stage
-            ref={stageRef}
-            width={pageWidth}
-            height={pageHeight}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              cursor: tool === "eraser" ? "grab" : "crosshair",
-            }}
-          >
-            <Layer>
-              {lines.map((line, idx) => (
-                <Line
-                  key={idx}
-                  points={line.points}
-                  stroke={
-                    line.tool === "eraser"
-                      ? "rgba(255,255,255,0.8)"
-                      : line.color
-                  }
-                  strokeWidth={line.width}
-                  lineCap="round"
-                  lineJoin="round"
-                  opacity={line.tool === "highlighter" ? 0.3 : 1}
-                  globalCompositeOperation={
-                    line.tool === "eraser" ? "destination-out" : "source-over"
-                  }
-                />
-              ))}
-            </Layer>
-          </Stage>
+          {canvasRef.current && (
+            <Stage
+              ref={stageRef}
+              width={pageWidth}
+              height={pageHeight}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                cursor: tool === "eraser" ? "grab" : "crosshair",
+              }}
+            >
+              <Layer>
+                {lines.map((line, idx) => (
+                  <Line
+                    key={idx}
+                    points={line.points}
+                    stroke={
+                      line.tool === "eraser"
+                        ? "rgba(255,255,255,0.8)"
+                        : line.color
+                    }
+                    strokeWidth={line.width}
+                    lineCap="round"
+                    lineJoin="round"
+                    opacity={line.tool === "highlighter" ? 0.3 : 1}
+                    globalCompositeOperation={
+                      line.tool === "eraser" ? "destination-out" : "source-over"
+                    }
+                  />
+                ))}
+              </Layer>
+            </Stage>
+          )}
         </div>
       </div>
     </div>

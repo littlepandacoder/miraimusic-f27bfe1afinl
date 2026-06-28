@@ -20,26 +20,24 @@ export default function PDFViewerPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      <div className="bg-white border-b p-3 flex justify-between items-center">
-        <h1 className="font-semibold text-lg">{decodeURIComponent(fileName)}</h1>
+    <div className="w-screen h-screen bg-gray-50 flex flex-col">
+      <div className="bg-white border-b p-3 flex justify-between items-center flex-shrink-0">
+        <h1 className="font-semibold text-lg truncate flex-1">{decodeURIComponent(fileName)}</h1>
         <Button
           size="sm"
           onClick={() => window.close()}
           title="Close PDF viewer"
-          className="bg-pink-500 hover:bg-pink-600 text-white"
+          className="bg-pink-500 hover:bg-pink-600 text-white flex-shrink-0 ml-4"
         >
           <X className="w-5 h-5" />
         </Button>
       </div>
-      <div className="p-4">
-        <div className="max-w-6xl mx-auto">
-          <PDFViewer
-            fileUrl={decodeURIComponent(fileUrl)}
-            fileName={decodeURIComponent(fileName)}
-            onClose={() => window.close()}
-          />
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <PDFViewer
+          fileUrl={decodeURIComponent(fileUrl)}
+          fileName={decodeURIComponent(fileName)}
+          onClose={() => window.close()}
+        />
       </div>
     </div>
   );
