@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { useUpgradeSubscription } from "@/hooks/useUpgradeSubscription";
 import { Mic, MicOff, Volume2, VolumeX, Loader2, Lock, Crown } from "lucide-react";
 
 const AGENT_ID = "agent_7401krc6fjd4e1hvvce2m7mn0ss0";
@@ -12,7 +14,9 @@ const AGENT_ID = "agent_7401krc6fjd4e1hvvce2m7mn0ss0";
 const AITutor = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const subscriptionStatus = useSubscriptionStatus();
+  const { upgrade, loading: upgrading } = useUpgradeSubscription();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -101,6 +105,15 @@ const AITutor = () => {
 
   // Show upgrade prompt if not Premium
   if (!hasPremium) {
+    const handleUpgrade = async () => {
+      if (!user?.id) return;
+      const success = await upgrade(user.id);
+      if (success) {
+        // Refresh subscription status
+        window.location.reload();
+      }
+    };
+
     return (
       <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/30">
         <CardHeader>
@@ -151,11 +164,24 @@ const AITutor = () => {
               <p className="text-xs text-muted-foreground mb-4">Cancel anytime</p>
               <Button
                 className="w-full bg-purple-500 hover:bg-purple-600 text-white h-12 font-bold"
-                onClick={() => window.location.href = "/dashboard/account?upgrade=premium"}
+                onClick={handleUpgrade}
+                disabled={upgrading}
               >
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade to Musicable Pro
+                {upgrading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Upgrading...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade Now
+                  </>
+                )}
               </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Your plan will be upgraded immediately. You'll be charged $12 for the remainder of this billing period.
+              </p>
             </div>
           </div>
         </CardContent>

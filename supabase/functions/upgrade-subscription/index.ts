@@ -1,12 +1,6 @@
-/**
- * upgrade-subscription
- *
- * Upgrades a user from trial ($8) plan to regular ($17) plan
- * Prorates the difference, charging only $9 for the upgrade
- * Uses Stripe's proration system to handle the credit from the trial period
- */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,72 +13,104 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email } = await req.json();
+    const { userId } = await req.json();
 
-    if (!userId || !email) {
-      throw new Error("userId and email are required");
+    if (!userId) {
+      throw new Error("userId is required");
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("Stripe is not configured");
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2024-06-20",
     });
 
-    const priceId = Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
+    // Get the Pro price ID
+    const proPriceId = Deno.env.get("STRIPE_PREMIUM_PRICE_ID") ?? "price_1TnRLjB8UWyR18ZVFWzFrHdY";
 
-    // Find customer by email
-    const customers = await stripe.customers.list({ email, limit: 1 });
-    const customerId = customers.data[0]?.id;
+    // Get user's current subscription from Supabase
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    if (!customerId) {
-      throw new Error("Customer not found. Please ensure you have an active trial subscription.");
-    }
+    const { data: subData, error: subError } = await supabaseAdmin
+      .from("user_subscriptions")
+      .select("subscription_id, plan_id")
+      .eq("user_id", userId)
+      .single();
 
-    // Find active subscription for this customer
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    const subscription = subscriptions.data[0];
-
-    if (!subscription) {
+    if (subError || !subData?.subscription_id) {
       throw new Error("No active subscription found");
     }
 
-    // Remove the trial discount coupon and update the subscription
-    // This will trigger proration with the $9 additional charge
-    await stripe.subscriptions.update(subscription.id, {
-      discounts: [], // Remove all discounts (this removes the FIRST_MONTH coupon)
-      proration_behavior: "create_prorations", // Create prorations for the change
-      metadata: { userId, planType: "student_upgraded" },
-    });
+    // Check if already on Pro plan
+    if (subData.plan_id === "premium" || subData.plan_id === "pro") {
+      return new Response(
+        JSON.stringify({ error: "Already on Pro plan" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
 
-    // If the subscription update succeeded, create an invoice to collect the remaining balance
-    // Stripe will automatically charge the difference
-    const invoice = await stripe.invoices.create({
-      customer: customerId,
-      subscription: subscription.id,
-      auto_advance: true, // Automatically finalize and attempt payment
-    });
+    // Get current subscription to get the current line item
+    const subscription = await stripe.subscriptions.retrieve(subData.subscription_id);
 
-    return new Response(JSON.stringify({
-      success: true,
-      subscriptionId: subscription.id,
-      invoiceId: invoice.id,
-      message: "Subscription upgraded successfully. You will be charged $9 for the remaining balance.",
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    if (!subscription || subscription.items.data.length === 0) {
+      throw new Error("Subscription not found or has no items");
+    }
+
+    // Update subscription: replace old price with Pro price
+    // This will prorate the charge immediately
+    const updatedSubscription = await stripe.subscriptions.update(
+      subData.subscription_id,
+      {
+        items: [
+          {
+            id: subscription.items.data[0].id,
+            price: proPriceId,
+          },
+        ],
+        proration_behavior: "always_invoice", // Create invoice immediately for the difference
+      }
+    );
+
+    // Update plan_id in Supabase
+    const { error: updateError } = await supabaseAdmin
+      .from("user_subscriptions")
+      .update({ plan_id: "premium" })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Failed to update Supabase:", updateError);
+      // Continue anyway - Stripe was updated successfully
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        subscriptionId: updatedSubscription.id,
+        newPrice: proPriceId,
+        message: "Upgraded to Pro plan successfully",
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
   } catch (err: any) {
     console.error("[upgrade-subscription]", err.message);
-    return new Response(JSON.stringify({
-      success: false,
-      error: err.message
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
