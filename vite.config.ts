@@ -24,5 +24,11 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     sourcemap: false,
+    target: "esnext",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
+    },
   },
 }));
