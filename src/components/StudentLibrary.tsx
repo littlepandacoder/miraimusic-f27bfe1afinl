@@ -11,7 +11,6 @@ import {
   Loader,
   AlertCircle,
 } from "lucide-react";
-import { PDFViewer } from "./PDFViewer";
 import {
   getAvailableResources,
   recordDownload,
@@ -36,7 +35,11 @@ export function StudentLibrary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [viewingPdf, setViewingPdf] = useState<LibraryResource | null>(null);
+
+  const handleViewPdf = (resource: LibraryResource) => {
+    const url = `/pdf-viewer?url=${encodeURIComponent(resource.file_url)}&name=${encodeURIComponent(resource.file_name)}`;
+    window.open(url, "_blank");
+  };
 
   // Load resources on mount
   useEffect(() => {
@@ -294,7 +297,7 @@ export function StudentLibrary() {
                         {resource.resource_type === "pdf" && (
                           <Button
                             variant="outline"
-                            onClick={() => setViewingPdf(resource)}
+                            onClick={() => handleViewPdf(resource)}
                             className="gap-2"
                           >
                             <Eye className="w-4 h-4" />
@@ -327,18 +330,6 @@ export function StudentLibrary() {
         </div>
       </div>
 
-      {/* PDF Viewer Modal */}
-      {viewingPdf && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <PDFViewer
-              fileUrl={viewingPdf.file_url}
-              fileName={viewingPdf.file_name}
-              onClose={() => setViewingPdf(null)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,6 +10,8 @@ import {
   ChevronRight,
   X,
   Trash2,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -44,6 +46,7 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
   const [color, setColor] = useState("#FF0000");
   const [brushWidth, setBrushWidth] = useState(2);
   const [loading, setLoading] = useState(true);
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     const loadPdf = async () => {
@@ -129,6 +132,14 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
     setLines([]);
   };
 
+  const handleZoomIn = () => {
+    setZoom((z) => Math.min(z + 0.2, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((z) => Math.max(z - 0.2, 0.5));
+  };
+
   const handleDownloadAnnotated = async () => {
     try {
       const stage = stageRef.current;
@@ -202,6 +213,16 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
             <Trash2 className="w-4 h-4 mr-1" />
             Clear
           </Button>
+
+          <div className="flex items-center gap-1 ml-auto">
+            <Button size="sm" variant="outline" onClick={handleZoomOut}>
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-medium px-3">{Math.round(zoom * 100)}%</span>
+            <Button size="sm" variant="outline" onClick={handleZoomIn}>
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Options */}
@@ -267,7 +288,7 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
 
       {/* PDF Viewer */}
       <div className="flex justify-center bg-gray-100 p-4 overflow-auto max-h-[600px]">
-        <div className="relative bg-white shadow">
+        <div className="relative bg-white shadow" style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}>
           <canvas
             ref={canvasRef}
             style={{ display: "block", maxWidth: "100%" }}
