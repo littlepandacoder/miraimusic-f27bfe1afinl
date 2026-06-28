@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useGameAudioInput } from "@/hooks/useGameAudioInput";
+import { useMetronome } from "@/hooks/useMetronome";
 import { Button } from "@/components/ui/button";
 import { FeaturePaywallModal } from "./FeaturePaywallModal";
 import { Mic, MicOff, Music2 } from "lucide-react";
@@ -18,6 +19,14 @@ export function PianoHeroWrapper() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [metronomeEnabled, setMetronomeEnabled] = useState(false);
   const [metronomeBPM, setMetronomeBPM] = useState(120);
+  const [gameMode, setGameMode] = useState<"wait" | "normal">("wait");
+
+  // Initialize metronome with Web Audio API
+  useMetronome({
+    enabled: metronomeEnabled,
+    bpm: metronomeBPM,
+    isNormalMode: gameMode === "normal",
+  });
 
   const {
     isListening,
@@ -83,6 +92,17 @@ export function PianoHeroWrapper() {
         case "REQUEST_AUDIO_INPUT":
           // Game is requesting audio input
           startAudioInput();
+          break;
+        case "GAME_MODE":
+          // Game mode changed (wait or normal)
+          console.log("Game mode:", event.data.mode);
+          setGameMode(event.data.mode);
+          break;
+        case "SONG_START":
+          // Song started in normal mode - enable metronome if it was on
+          if (event.data.mode === "normal" && metronomeEnabled) {
+            console.log("Song started, metronome synced");
+          }
           break;
       }
     };
