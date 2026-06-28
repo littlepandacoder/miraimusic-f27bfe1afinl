@@ -143,7 +143,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
       ...baseItems,
       { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundation") },
       { href: "/library",                icon: Library,       label: "Resource Library" },
-      { href: "/scale-builder-quiz",   icon: Gamepad2,      label: "Scale Builder" },
       { href: "/dashboard/resources",    icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
       { href: "/dashboard/chat",         icon: MessageSquare, label: "Chat with Teacher" },
     ];
