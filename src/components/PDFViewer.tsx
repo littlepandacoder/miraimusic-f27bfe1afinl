@@ -3,11 +3,7 @@ import { Stage, Layer, Line } from "react-konva";
 import * as pdfjsLib from "pdfjs-dist";
 import {
   Download,
-  Pen,
-  Eraser,
-  Highlighter,
   X,
-  Trash2,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -115,86 +111,16 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
           )}
         </div>
 
-        {/* Tools */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={tool === "pen" ? "default" : "outline"}
-            onClick={() => setTool("pen")}
-          >
-            <Pen className="w-4 h-4 mr-1" />
-            Pen
+        {/* Zoom Controls */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={handleZoomOut}>
+            <ZoomOut className="w-4 h-4" />
           </Button>
-
-          <Button
-            size="sm"
-            variant={tool === "highlighter" ? "default" : "outline"}
-            onClick={() => setTool("highlighter")}
-          >
-            <Highlighter className="w-4 h-4 mr-1" />
-            Highlight
+          <span className="text-sm font-medium px-3">{Math.round(zoom * 100)}%</span>
+          <Button size="sm" variant="outline" onClick={handleZoomIn}>
+            <ZoomIn className="w-4 h-4" />
           </Button>
-
-          <Button
-            size="sm"
-            variant={tool === "eraser" ? "default" : "outline"}
-            onClick={() => setTool("eraser")}
-          >
-            <Eraser className="w-4 h-4 mr-1" />
-            Eraser
-          </Button>
-
-          <Button
-            size="sm"
-            variant={tool === "view" ? "default" : "outline"}
-            onClick={() => setTool("view")}
-          >
-            View
-          </Button>
-
-          <Button size="sm" variant="destructive" onClick={handleClear}>
-            <Trash2 className="w-4 h-4 mr-1" />
-            Clear
-          </Button>
-
-          <div className="flex items-center gap-1 ml-auto">
-            <Button size="sm" variant="outline" onClick={handleZoomOut}>
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <span className="text-sm font-medium px-3">{Math.round(zoom * 100)}%</span>
-            <Button size="sm" variant="outline" onClick={handleZoomIn}>
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
-
-        {/* Options */}
-        {tool !== "view" && (
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Color:</label>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Size:</label>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={brushWidth}
-                onChange={(e) => setBrushWidth(Number(e.target.value))}
-                className="w-24"
-              />
-              <span className="text-xs">{brushWidth}px</span>
-            </div>
-          </div>
-        )}
 
         {/* Download */}
         <div className="flex justify-end">
