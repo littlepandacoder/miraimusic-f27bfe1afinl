@@ -137,31 +137,35 @@ export function PianoHeroWrapper() {
       />
 
       {/* Audio Input & Metronome Controls Overlay */}
-      {showAudioControls && (
+      {subscription.hasActiveSubscription && (
         <div className="fixed top-20 right-4 z-40 space-y-2">
-          {/* Mic Status */}
-          {!isListening && (
-            <Button
-              onClick={startAudioInput}
-              size="sm"
-              className="gap-2"
-              variant="outline"
-            >
-              <Mic className="w-4 h-4" />
-              Enable Mic
-            </Button>
-          )}
+          {/* Mic Status - Only show when audio controls are ready */}
+          {showAudioControls && (
+            <>
+              {!isListening && (
+                <Button
+                  onClick={startAudioInput}
+                  size="sm"
+                  className="gap-2"
+                  variant="outline"
+                >
+                  <Mic className="w-4 h-4" />
+                  Enable Mic
+                </Button>
+              )}
 
-          {isListening && (
-            <Button
-              onClick={stopAudioInput}
-              size="sm"
-              className="gap-2 bg-red-500/20 hover:bg-red-500/30"
-              variant="outline"
-            >
-              <MicOff className="w-4 h-4 text-red-500" />
-              Disable Mic
-            </Button>
+              {isListening && (
+                <Button
+                  onClick={stopAudioInput}
+                  size="sm"
+                  className="gap-2 bg-red-500/20 hover:bg-red-500/30"
+                  variant="outline"
+                >
+                  <MicOff className="w-4 h-4 text-red-500" />
+                  Disable Mic
+                </Button>
+              )}
+            </>
           )}
 
           {/* Current Note Display */}
