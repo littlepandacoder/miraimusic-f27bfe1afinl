@@ -4,7 +4,7 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useGameAudioInput } from "@/hooks/useGameAudioInput";
 import { Button } from "@/components/ui/button";
 import { FeaturePaywallModal } from "./FeaturePaywallModal";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Music2 } from "lucide-react";
 
 /**
  * React wrapper for Piano Hero game with audio input support
@@ -16,6 +16,8 @@ export function PianoHeroWrapper() {
   const { user } = useAuth();
   const subscription = useSubscriptionStatus();
   const [showPaywall, setShowPaywall] = useState(false);
+  const [metronomeEnabled, setMetronomeEnabled] = useState(false);
+  const [metronomeBPM, setMetronomeBPM] = useState(120);
 
   const {
     isListening,
@@ -27,6 +29,35 @@ export function PianoHeroWrapper() {
   } = useGameAudioInput({
     gameWindowRef: gameFrameRef,
   });
+
+  // Send metronome settings to game
+  const sendMetronomeUpdate = (enabled: boolean, bpm: number) => {
+    if (gameFrameRef.current?.contentWindow) {
+      gameFrameRef.current.contentWindow.postMessage(
+        {
+          type: "SET_METRONOME",
+          enabled,
+          bpm,
+        },
+        "*"
+      );
+    }
+  };
+
+  // Handle metronome toggle
+  const handleMetronomeToggle = () => {
+    const newState = !metronomeEnabled;
+    setMetronomeEnabled(newState);
+    sendMetronomeUpdate(newState, metronomeBPM);
+  };
+
+  // Handle BPM change
+  const handleBPMChange = (newBPM: number) => {
+    setMetronomeBPM(newBPM);
+    if (metronomeEnabled) {
+      sendMetronomeUpdate(true, newBPM);
+    }
+  };
 
   // Check subscription and show paywall if needed
   useEffect(() => {
@@ -105,7 +136,7 @@ export function PianoHeroWrapper() {
         allow="microphone"
       />
 
-      {/* Audio Input Controls Overlay */}
+      {/* Audio Input & Metronome Controls Overlay */}
       {showAudioControls && (
         <div className="fixed top-20 right-4 z-40 space-y-2">
           {/* Mic Status */}
@@ -145,6 +176,60 @@ export function PianoHeroWrapper() {
               )}
             </div>
           )}
+
+          {/* Metronome Controls */}
+          <div className="bg-card border border-border rounded-lg p-3 space-y-2 backdrop-blur w-48">
+            <div className="flex items-center gap-2">
+              <Music2 className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Metronome</span>
+            </div>
+
+            {/* Metronome Toggle */}
+            <Button
+              onClick={handleMetronomeToggle}
+              size="sm"
+              className="w-full"
+              variant={metronomeEnabled ? "default" : "outline"}
+            >
+              {metronomeEnabled ? "Metronome: ON" : "Metronome: OFF"}
+            </Button>
+
+            {/* BPM Slider */}
+            <div className="space-y-1">
+              <label className="text-xs font-medium">
+                BPM: <span className="text-primary">{metronomeBPM}</span>
+              </label>
+              <input
+                type="range"
+                min="40"
+                max="200"
+                value={metronomeBPM}
+                onChange={(e) => handleBPMChange(Number(e.target.value))}
+                className="w-full"
+                disabled={!metronomeEnabled}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>40</span>
+                <span>200</span>
+              </div>
+            </div>
+
+            {/* Quick BPM Buttons */}
+            <div className="grid grid-cols-3 gap-1">
+              {[60, 120, 180].map((bpm) => (
+                <Button
+                  key={bpm}
+                  size="sm"
+                  variant={metronomeBPM === bpm ? "default" : "outline"}
+                  onClick={() => handleBPMChange(bpm)}
+                  disabled={!metronomeEnabled}
+                  className="text-xs"
+                >
+                  {bpm}
+                </Button>
+              ))}
+            </div>
+          </div>
 
           {/* Error Display */}
           {error && (
