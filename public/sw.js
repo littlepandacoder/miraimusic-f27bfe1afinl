@@ -1,4 +1,4 @@
-const CACHE = 'musicable-v2';
+const CACHE = 'musicable-v3';
 
 const PRECACHE = ['/', '/index.html', '/logo.png'];
 
