@@ -34,6 +34,8 @@ import PianoHeroPage from "./pages/PianoHeroPage";
 import PianoRoomPage from "./pages/PianoRoomPage";
 import RhythmQuizPage from "./pages/RhythmQuizPage";
 import PianoTheoryPage from "./pages/PianoTheoryPage";
+import StudentProfile from "./pages/StudentProfile";
+import ChordProgressionQuizPage from "./pages/ChordProgressionQuizPage";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,8 @@ const App = () => (
             <Route path="/teacher-signup" element={<TeacherSignup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
+            <Route path="/profile" element={<StudentProfile />} />
+            <Route path="/chord-progression-quiz" element={<ChordProgressionQuizPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/terms" element={<Terms />} />
