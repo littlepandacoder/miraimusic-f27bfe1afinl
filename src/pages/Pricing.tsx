@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Zap, ShieldCheck, GraduationCap, Users } from "lucide-react";
+import { Check, Zap, ShieldCheck, GraduationCap, Users, Mic } from "lucide-react";
 
 const studentFeatures = [
   "$17/month or $199/year — cancel anytime",
@@ -15,6 +15,16 @@ const studentFeatures = [
   "1-on-1 live lessons with teachers",
   "Priority lesson booking",
   "Community access",
+];
+
+const premiumFeatures = [
+  "$29/month — AI Tutor plan",
+  "Everything in Student plan",
+  "AI Tutor with Voice — unlimited conversations",
+  "Real-time voice feedback & guidance",
+  "Advanced progress analytics",
+  "Priority support",
+  "Ad-free experience",
 ];
 
 const teacherFeatures = [
@@ -61,7 +71,7 @@ const Pricing = () => {
             </p>
           </div>
 
-          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
 
             {/* Student Plan */}
             <Card className="relative bg-card border-primary ring-2 ring-primary/20 flex flex-col">
@@ -95,6 +105,45 @@ const Pricing = () => {
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck className="w-3 h-3 text-primary" /> Secure via Stripe
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Premium AI Tutor Plan */}
+            <Card className="relative bg-card border-purple-500/30 ring-2 ring-purple-500/20 flex flex-col md:scale-105">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-purple-500 text-white text-xs font-bold whitespace-nowrap">
+                AI Tutor
+              </div>
+              <CardHeader className="pb-4 text-center pt-6 sm:pt-8">
+                <div className="flex justify-center mb-2">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                    <Mic className="w-5 h-5 text-purple-400" />
+                  </div>
+                </div>
+                <CardTitle className="text-lg sm:text-xl font-black mb-1">Premium</CardTitle>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-3xl sm:text-4xl font-black">$29</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground">/month</span>
+                </div>
+                <p className="text-muted-foreground text-xs mt-1">AI Tutor with Voice included</p>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col space-y-4 sm:space-y-6">
+                <ul className="space-y-2 flex-1">
+                  {premiumFeatures.map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm sm:text-base py-2 sm:py-3"
+                  onClick={() => navigate("/signup")}
+                >
+                  Upgrade to Premium
+                </Button>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <ShieldCheck className="w-3 h-3 text-purple-400" /> Secure via Stripe · Cancel anytime
                 </div>
               </CardContent>
             </Card>
