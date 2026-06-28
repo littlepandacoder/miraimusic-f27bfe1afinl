@@ -92,6 +92,8 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
         return;
       }
 
+      console.log("[TrialBilling] Creating checkout with planType:", planType);
+
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
@@ -99,6 +101,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
       );
 
       if (fnError || !data?.url) {
+        console.error("[TrialBilling] Checkout error:", fnError, data);
         setError("Could not start checkout. Please try again.");
         setLoading(false);
         return;
@@ -106,10 +109,12 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
 
       // 3 ── Save pending state to Firestore (non-blocking)
       try {
-        await saveSubscriptionInfo(docId, "stripe_pending", "trial");
+        await saveSubscriptionInfo(docId, "stripe_pending", planType);
       } catch {
         // Non-fatal
       }
+
+      console.log("[TrialBilling] Redirecting to checkout URL");
 
       // 4 ── Redirect to Stripe Checkout
       window.location.href = data.url;
@@ -255,16 +260,27 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
               </div>
             )}
 
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-1">{planType === "premium" ? "Premium Plan" : "Subscribe"}</h2>
+            <div className="text-center bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4">
+              <h2 className="text-lg font-bold mb-1">
+                {planType === "premium" ? "🎵 Musicable Pro" : "Student Plan"}
+              </h2>
               {planType === "premium" ? (
-                <p className="text-4xl font-black mt-2">$29<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+                <>
+                  <p className="text-4xl font-black mt-2">$29<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+                  <p className="text-xs text-green-600 font-semibold mt-2">Includes AI Tutor with Voice</p>
+                </>
               ) : billingPeriod === "yearly" ? (
-                <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
+                <>
+                  <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Billed annually, saves $5/month</p>
+                </>
               ) : (
-                <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+                <>
+                  <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Standard access</p>
+                </>
               )}
-              <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
+              <p className="text-sm text-muted-foreground mt-3">Cancel anytime</p>
             </div>
 
             <Button
