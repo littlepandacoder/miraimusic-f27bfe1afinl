@@ -82,16 +82,18 @@ export function StudentLibrary() {
     try {
       setDownloading(resource.id);
 
-      // Record the download
-      await recordDownload(resource.id);
-
-      // Trigger download
+      // Trigger download (priority - don't block on counter)
       const link = document.createElement("a");
       link.href = resource.file_url;
       link.download = resource.file_name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Record the download in background (don't block if fails)
+      recordDownload(resource.id).catch((err) => {
+        console.warn("Failed to record download:", err);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Download failed");
     } finally {
