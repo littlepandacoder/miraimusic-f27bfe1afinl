@@ -6,8 +6,6 @@ import {
   Pen,
   Eraser,
   Highlighter,
-  ChevronLeft,
-  ChevronRight,
   X,
   Trash2,
   ZoomIn,
@@ -198,35 +196,11 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
           </div>
         )}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            <span className="text-sm font-medium px-3">
-              Page {currentPage} / {totalPages}
-            </span>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <Button size="sm" onClick={handleDownloadAnnotated}>
+        {/* Download */}
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => window.open(fileUrl, "_blank")}>
             <Download className="w-4 h-4 mr-1" />
-            Download
+            Download PDF
           </Button>
         </div>
       </div>
