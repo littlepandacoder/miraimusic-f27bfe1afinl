@@ -256,49 +256,75 @@ export async function uploadResource(
   const sanitizedFilename = sanitizeFilename(file.name);
   const filePath = `resources/${timestamp}-${randomStr}-${sanitizedFilename}`;
 
-  // Upload to Supabase Storage
-  const { error: uploadError } = await supabase.storage
-    .from("library-resources")
-    .upload(filePath, file, {
-      upsert: false,
-      contentType: file.type,
-    });
+  // Simulate progress updates (10% -> 90% during upload, 100% when done)
+  let progressInterval: NodeJS.Timeout | null = null;
+  let currentProgress = 10;
 
-  if (uploadError) throw uploadError;
-
-  // Get public URL
-  const { data: urlData } = supabase.storage
-    .from("library-resources")
-    .getPublicUrl(filePath);
-
-  // Create database entry
-  const { data: resourceData, error: dbError } = await supabase
-    .from("library_resources")
-    .insert([
-      {
-        title: metadata.title,
-        description: metadata.description,
-        file_url: urlData.publicUrl,
-        file_name: file.name,
-        file_size: file.size,
-        resource_type: file.type === "application/pdf" ? "pdf" : "zip",
-        access_level: metadata.accessLevel,
-        category: metadata.category,
-        uploaded_by: user.id,
-        tags: metadata.tags || [],
-        download_count: 0,
-        is_active: true,
-      },
-    ])
-    .select();
-
-  if (dbError) {
-    // Clean up uploaded file if DB insert fails
-    await supabase.storage.from("library-resources").remove([filePath]);
-    throw dbError;
+  if (onProgress) {
+    onProgress({ loaded: 0, total: file.size, percentage: 10 });
+    progressInterval = setInterval(() => {
+      if (currentProgress < 90) {
+        currentProgress += Math.random() * 30; // Random increment
+        if (currentProgress > 90) currentProgress = 90;
+        onProgress({ loaded: Math.floor((currentProgress / 100) * file.size), total: file.size, percentage: Math.floor(currentProgress) });
+      }
+    }, 200); // Update every 200ms
   }
 
-  return resourceData[0] as LibraryResource;
+  try {
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from("library-resources")
+      .upload(filePath, file, {
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) throw uploadError;
+
+    // Update to 100% when upload completes
+    if (onProgress) {
+      onProgress({ loaded: file.size, total: file.size, percentage: 100 });
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("library-resources")
+      .getPublicUrl(filePath);
+
+    // Create database entry
+    const { data: resourceData, error: dbError } = await supabase
+      .from("library_resources")
+      .insert([
+        {
+          title: metadata.title,
+          description: metadata.description,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          resource_type: file.type === "application/pdf" ? "pdf" : "zip",
+          access_level: metadata.accessLevel,
+          category: metadata.category,
+          uploaded_by: user.id,
+          tags: metadata.tags || [],
+          download_count: 0,
+          is_active: true,
+        },
+      ])
+      .select();
+
+    if (dbError) {
+      // Clean up uploaded file if DB insert fails
+      await supabase.storage.from("library-resources").remove([filePath]);
+      throw dbError;
+    }
+
+    return resourceData[0] as LibraryResource;
+  } finally {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+    }
+  }
 }
 
 /**

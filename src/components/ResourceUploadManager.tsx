@@ -61,6 +61,7 @@ export function ResourceUploadManager() {
     tags: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -133,6 +134,7 @@ export function ResourceUploadManager() {
 
     try {
       setUploading(true);
+      setUploadProgress(0);
       setUploadError(null);
       setUploadSuccess(false);
 
@@ -145,9 +147,12 @@ export function ResourceUploadManager() {
           .split(",")
           .map((t) => t.trim())
           .filter((t) => t),
+      }, (progress) => {
+        setUploadProgress(Math.round(progress.percentage));
       });
 
       setUploadSuccess(true);
+      setUploadProgress(0);
       resetForm();
       await loadHistory();
 
@@ -155,6 +160,7 @@ export function ResourceUploadManager() {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
+      setUploadProgress(0);
     } finally {
       setUploading(false);
     }
@@ -387,11 +393,26 @@ export function ResourceUploadManager() {
             </div>
           )}
 
+          {uploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Uploading...</span>
+                <span className="text-sm font-semibold text-primary">{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-primary h-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <Button onClick={handleUpload} disabled={uploading || !selectedFile} className="w-full">
             {uploading ? (
               <>
                 <Loader className="w-4 h-4 animate-spin mr-2" />
-                Uploading...
+                Uploading... {uploadProgress}%
               </>
             ) : (
               <>
