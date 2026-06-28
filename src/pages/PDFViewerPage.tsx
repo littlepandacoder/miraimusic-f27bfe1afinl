@@ -24,10 +24,10 @@ export default function PDFViewerPage() {
       <div className="bg-white border-b p-3 flex justify-between items-center">
         <h1 className="font-semibold text-lg">{decodeURIComponent(fileName)}</h1>
         <Button
-          variant="ghost"
           size="sm"
           onClick={() => window.close()}
           title="Close PDF viewer"
+          className="bg-pink-500 hover:bg-pink-600 text-white"
         >
           <X className="w-5 h-5" />
         </Button>

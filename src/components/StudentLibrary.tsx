@@ -37,8 +37,9 @@ export function StudentLibrary() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const handleViewPdf = (resource: LibraryResource) => {
-    const url = `/pdf-viewer?url=${encodeURIComponent(resource.file_url)}&name=${encodeURIComponent(resource.file_name)}`;
-    window.open(url, "_blank");
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}/pdf-viewer?url=${encodeURIComponent(resource.file_url)}&name=${encodeURIComponent(resource.file_name)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   // Load resources on mount
