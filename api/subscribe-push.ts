@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { createRateLimiter, RateLimitPresets } from "./middleware/rateLimiter.ts";
+import { createRateLimiter, RateLimitPresets } from "./middleware/rateLimiter";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,

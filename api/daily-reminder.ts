@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import webpush from "web-push";
 import { createClient } from "@supabase/supabase-js";
-import { createRateLimiter } from "./middleware/rateLimiter.ts";
+import { createRateLimiter } from "./middleware/rateLimiter";
 
 webpush.setVapidDetails(
   "mailto:jkwong.official@gmail.com",
