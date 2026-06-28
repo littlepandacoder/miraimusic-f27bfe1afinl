@@ -82,13 +82,19 @@ export function StudentLibrary() {
     try {
       setDownloading(resource.id);
 
-      // Trigger download (priority - don't block on counter)
+      // Fetch the file as blob to force download
+      const response = await fetch(resource.file_url);
+      if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.href = resource.file_url;
+      link.href = url;
       link.download = resource.file_name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       // Record the download in background (don't block if fails)
       recordDownload(resource.id).catch((err) => {
