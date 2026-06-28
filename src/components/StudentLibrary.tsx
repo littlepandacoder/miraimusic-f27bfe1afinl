@@ -10,7 +10,6 @@ import {
   Eye,
   Loader,
   AlertCircle,
-  Filter,
 } from "lucide-react";
 import { PDFViewer } from "./PDFViewer";
 import {
@@ -162,10 +161,7 @@ export function StudentLibrary() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Filter className="w-5 h-5" />
-                Categories
-              </CardTitle>
+              <CardTitle className="text-lg">Categories</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <button
