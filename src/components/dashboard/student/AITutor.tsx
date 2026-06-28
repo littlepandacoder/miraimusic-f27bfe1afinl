@@ -23,23 +23,32 @@ const AITutor = () => {
   const patchWsSend = () => {
     const orig = WebSocket.prototype.send;
     (WebSocket.prototype as any).send = function (this: WebSocket, data: unknown) {
-      if (this.readyState >= WebSocket.CLOSING) return;
-      return orig.call(this, data);
+      if (this.readyState >= WebSocket.CLOSING) {
+        console.warn("[AITutor] WebSocket already closing, ignoring send");
+        return;
+      }
+      try {
+        return orig.call(this, data);
+      } catch (e) {
+        console.error("[AITutor] WebSocket send error:", e);
+      }
     };
-    setTimeout(() => { WebSocket.prototype.send = orig; }, 500);
+    setTimeout(() => { WebSocket.prototype.send = orig; }, 1000);
   };
 
   const conversation = useConversation({
     onConnect: () => {
       setIsConnecting(false);
+      console.log("[AITutor] Connected to agent");
       toast({ title: t("aiTutor.connected"), description: t("aiTutor.connectedDesc") });
     },
     onDisconnect: () => {
+      console.log("[AITutor] Disconnected from agent");
       stopMic();
       toast({ title: t("aiTutor.disconnected"), description: t("aiTutor.disconnectedDesc") });
     },
     onError: (error) => {
-      console.error("Tutor error:", error);
+      console.error("[AITutor] Conversation error:", error);
       stopMic();
       setIsConnecting(false);
       toast({
@@ -68,9 +77,14 @@ const AITutor = () => {
   }, [conversation, toast, t]);
 
   const stopConversation = useCallback(async () => {
-    patchWsSend();
-    stopMic();
-    await conversation.endSession();
+    try {
+      patchWsSend();
+      stopMic();
+      await conversation.endSession();
+    } catch (error) {
+      console.error("[AITutor] Error stopping conversation:", error);
+      stopMic();
+    }
   }, [conversation]);
 
   const toggleMute = useCallback(async () => {
