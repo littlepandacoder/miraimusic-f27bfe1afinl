@@ -152,14 +152,25 @@ export const profileService = {
       throw new Error("Unauthorized");
     }
 
-    const { data, error } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id, amount_cents, currency, status, description, invoice_url, receipt_url, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+      if (error) {
+        console.error("[profileService] getPaymentHistory error:", error);
+        // Return empty array on error - user can view in Stripe portal
+        return [];
+      }
+
+      return data || [];
+    } catch (err) {
+      console.error("[profileService] getPaymentHistory exception:", err);
+      // Return empty array on exception - user can view in Stripe portal
+      return [];
+    }
   },
 
   async getSubscriptionInfo(userId: string): Promise<SubscriptionInfo | null> {

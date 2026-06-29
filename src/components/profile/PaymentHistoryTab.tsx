@@ -1,6 +1,8 @@
-import { Download, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Download, FileText, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/useAuth";
+import { useBillingPortal } from "@/hooks/useBillingPortal";
 
 interface Payment {
   id: string;
@@ -18,14 +20,29 @@ interface PaymentHistoryTabProps {
 }
 
 const PaymentHistoryTab = ({ payments }: PaymentHistoryTabProps) => {
+  const { user } = useAuth();
+  const { openPortal, loading: portalLoading } = useBillingPortal();
+
   if (!payments || payments.length === 0) {
     return (
-      <div className="bg-card rounded-lg border border-border p-8 text-center">
-        <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Payment History</h3>
-        <p className="text-muted-foreground">
-          You don't have any payments yet.
-        </p>
+      <div className="bg-card rounded-lg border border-border p-8">
+        <div className="text-center space-y-4">
+          <FileText className="w-12 h-12 text-muted-foreground mx-auto" />
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Payment History</h3>
+            <p className="text-muted-foreground mb-6">
+              View your complete payment history and download invoices in the Stripe Billing Portal
+            </p>
+            <Button
+              onClick={() => user?.id && openPortal(user.id)}
+              disabled={portalLoading || !user?.id}
+              className="gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open Billing Portal
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
