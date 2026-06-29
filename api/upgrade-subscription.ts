@@ -6,8 +6,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const STRIPE_API_KEY = process.env.STRIPE_API_KEY!;
-const STRIPE_PREMIUM_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID!;
+const STRIPE_API_KEY = process.env.STRIPE_API_KEY;
+const STRIPE_PREMIUM_PRICE_ID = process.env.STRIPE_PREMIUM_PRICE_ID;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
@@ -20,8 +20,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing userId" });
   }
 
-  if (!STRIPE_API_KEY || !STRIPE_PREMIUM_PRICE_ID) {
-    return res.status(500).json({ error: "Missing Stripe configuration" });
+  if (!STRIPE_API_KEY) {
+    console.error("[upgrade-subscription] Missing STRIPE_API_KEY environment variable");
+    return res.status(500).json({ error: "Server configuration error: Missing Stripe API key" });
+  }
+
+  if (!STRIPE_PREMIUM_PRICE_ID) {
+    console.error("[upgrade-subscription] Missing STRIPE_PREMIUM_PRICE_ID environment variable");
+    return res.status(500).json({ error: "Server configuration error: Missing premium price ID" });
   }
 
   try {

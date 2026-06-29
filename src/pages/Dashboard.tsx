@@ -142,7 +142,7 @@ const Dashboard = () => {
           .eq("user_id", user.id)
           // Accept both active subscriptions and active trials, but exclude paused
           .in("status", ["active", "trialing"])
-          .is("paused_at", null)
+          .isNull("paused_at")
           .limit(1)
           .maybeSingle();
 
