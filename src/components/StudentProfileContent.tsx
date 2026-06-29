@@ -49,24 +49,24 @@ const StudentProfileContent = ({ userId }: StudentProfileContentProps) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center py-8 md:py-12">
+        <Loader2 className="w-6 md:w-8 h-6 md:h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 mb-6">
-        <TabsTrigger value="account">Account</TabsTrigger>
-        <TabsTrigger value="subscription">Subscription</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 mb-4 md:mb-6">
+        <TabsTrigger value="account" className="text-xs md:text-sm">Account</TabsTrigger>
+        <TabsTrigger value="subscription" className="text-xs md:text-sm">Subscription</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="account" className="space-y-6">
+      <TabsContent value="account" className="space-y-4 md:space-y-6">
         <AccountSettingsTab profile={profile} userId={userId} onProfileUpdate={setProfile} />
       </TabsContent>
 
-      <TabsContent value="subscription" className="space-y-6">
+      <TabsContent value="subscription" className="space-y-4 md:space-y-6">
         <SubscriptionTab subscription={subscription} userId={userId} />
       </TabsContent>
     </Tabs>

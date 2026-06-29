@@ -45,13 +45,13 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
 
   if (!subscription) {
     return (
-      <div className="bg-card rounded-lg border border-border p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Active Subscription</h3>
-        <p className="text-muted-foreground mb-6">
+      <div className="bg-card rounded-lg border border-border p-4 md:p-8 text-center">
+        <AlertCircle className="w-10 md:w-12 h-10 md:h-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
+        <h3 className="text-base md:text-lg font-semibold mb-2">No Active Subscription</h3>
+        <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">
           You don't have an active subscription yet.
         </p>
-        <Button>Upgrade to Premium</Button>
+        <Button className="w-full sm:w-auto">Upgrade to Premium</Button>
       </div>
     );
   }
@@ -64,23 +64,23 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
   const createdAt = new Date(subscription.created_at);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Status Card */}
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
+      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-4">
+          <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0">
             {isActive && (
-              <CheckCircle className="w-6 h-6 text-green-500 mt-1 shrink-0" />
+              <CheckCircle className="w-5 md:w-6 h-5 md:h-6 text-green-500 mt-0.5 md:mt-1 shrink-0" />
             )}
             {isCancelled && (
-              <AlertCircle className="w-6 h-6 text-yellow-500 mt-1 shrink-0" />
+              <AlertCircle className="w-5 md:w-6 h-5 md:h-6 text-yellow-500 mt-0.5 md:mt-1 shrink-0" />
             )}
 
-            <div>
-              <h3 className="text-lg font-semibold mb-1">
+            <div className="min-w-0">
+              <h3 className="text-base md:text-lg font-semibold mb-1">
                 {isActive ? "Active Subscription" : "Cancelled Subscription"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 {isActive
                   ? "Your subscription is active and you have full access to premium features."
                   : "Your subscription has been cancelled but you retain access until the end of your billing period."}
@@ -89,7 +89,7 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
           </div>
 
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+            className={`px-2 md:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${
               isActive
                 ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
                 : "bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"
@@ -101,38 +101,38 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
       </div>
 
       {/* Subscription Details */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold mb-4">Subscription Details</h3>
+      <div className="bg-card rounded-lg border border-border p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Subscription Details</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Plan</p>
-            <p className="font-medium">Premium Plan</p>
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">Plan</p>
+            <p className="text-sm md:text-base font-medium">Premium Plan</p>
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Subscription ID</p>
-            <p className="font-medium text-xs font-mono break-all">
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">Subscription ID</p>
+            <p className="text-xs font-mono break-all">
               {subscription.subscription_id}
             </p>
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Started On</p>
-            <p className="font-medium">{format(createdAt, "MMM d, yyyy")}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">Started On</p>
+            <p className="text-sm md:text-base font-medium">{format(createdAt, "MMM d, yyyy")}</p>
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Status</p>
-            <p className="font-medium capitalize">{subscription.status}</p>
+            <p className="text-xs md:text-sm text-muted-foreground mb-1">Status</p>
+            <p className="text-sm md:text-base font-medium capitalize">{subscription.status}</p>
           </div>
 
           {subscription.cancel_at_period_end && (
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+            <div className="sm:col-span-2">
+              <div className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-2 md:p-3">
                 <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-500 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200">
+                  <p className="text-xs md:text-sm font-medium text-yellow-900 dark:text-yellow-200">
                     Access ends at billing period end
                   </p>
                   <p className="text-xs text-yellow-700 dark:text-yellow-300">
@@ -145,15 +145,15 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
 
           {cancelledAt && (
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Cancelled On</p>
-              <p className="font-medium">{format(cancelledAt, "MMM d, yyyy")}</p>
+              <p className="text-xs md:text-sm text-muted-foreground mb-1">Cancelled On</p>
+              <p className="text-sm md:text-base font-medium">{format(cancelledAt, "MMM d, yyyy")}</p>
             </div>
           )}
 
           {subscription.cancellation_reason && (
-            <div className="md:col-span-2">
-              <p className="text-sm text-muted-foreground mb-1">Cancellation Reason</p>
-              <p className="font-medium text-sm">{subscription.cancellation_reason}</p>
+            <div className="sm:col-span-2">
+              <p className="text-xs md:text-sm text-muted-foreground mb-1">Cancellation Reason</p>
+              <p className="text-xs md:text-sm font-medium">{subscription.cancellation_reason}</p>
             </div>
           )}
         </div>
@@ -161,11 +161,11 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
 
       {/* Actions */}
       {isActive && (
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-900 p-6">
-          <h3 className="text-lg font-semibold mb-2 text-red-900 dark:text-red-100">
+        <div className="bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-900 p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-2 text-red-900 dark:text-red-100">
             Cancel Subscription
           </h3>
-          <p className="text-sm text-red-800 dark:text-red-200 mb-4">
+          <p className="text-xs md:text-sm text-red-800 dark:text-red-200 mb-4">
             Cancelling your subscription will end your access to premium features at the end of
             your current billing period. Your data will be preserved.
           </p>
@@ -173,7 +173,7 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
             variant="destructive"
             onClick={() => setShowCancellationDialog(true)}
             disabled={isLoadingCancel}
-            className="flex items-center gap-2"
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
           >
             {isLoadingCancel && <Loader2 className="w-4 h-4 animate-spin" />}
             Cancel Subscription
@@ -182,18 +182,18 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
       )}
 
       {isActive && !subscription.cancel_at_period_end && (
-        <div className="bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-900 p-6">
-          <h3 className="text-lg font-semibold mb-2 text-green-900 dark:text-green-100">
+        <div className="bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-900 p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-2 text-green-900 dark:text-green-100">
             Manage Billing
           </h3>
-          <p className="text-sm text-green-800 dark:text-green-200 mb-4">
+          <p className="text-xs md:text-sm text-green-800 dark:text-green-200 mb-4">
             Update your payment method, view invoices, or pause your subscription.
           </p>
           <Button
             variant="outline"
             onClick={() => openPortal(userId)}
             disabled={portalLoading}
-            className="flex items-center gap-2"
+            className="w-full sm:w-auto flex items-center justify-center gap-2"
           >
             {portalLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Open Billing Portal
