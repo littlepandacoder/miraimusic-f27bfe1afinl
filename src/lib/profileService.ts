@@ -37,18 +37,39 @@ export const profileService = {
       throw new Error("Unauthorized");
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (error) throw error;
+      if (error) {
+        console.error("[profileService] getProfile error:", error);
+        return null;
+      }
 
-    return {
-      ...data,
-      email: authUser.user.email || "",
-    };
+      if (!data) {
+        // Profile doesn't exist yet, return minimal profile
+        return {
+          id: "",
+          user_id: userId,
+          email: authUser.user.email || "",
+          first_name: null,
+          last_name: null,
+          full_name: authUser.user.user_metadata?.full_name || "",
+          avatar_url: null,
+        };
+      }
+
+      return {
+        ...data,
+        email: authUser.user.email || "",
+      };
+    } catch (err) {
+      console.error("[profileService] getProfile exception:", err);
+      return null;
+    }
   },
 
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
@@ -57,24 +78,41 @@ export const profileService = {
       throw new Error("Unauthorized");
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({
-        first_name: updates.first_name,
-        last_name: updates.last_name,
-        full_name: updates.full_name,
-        avatar_url: updates.avatar_url,
-      })
-      .eq("user_id", userId)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: updates.first_name,
+          last_name: updates.last_name,
+          full_name: updates.full_name,
+          avatar_url: updates.avatar_url,
+        })
+        .eq("user_id", userId)
+        .select()
+        .maybeSingle();
 
-    if (error) throw error;
+      if (error) {
+        console.error("[profileService] updateProfile error:", error);
+        throw error;
+      }
 
-    return {
-      ...data,
-      email: authUser.user.email || "",
-    };
+      if (!data) {
+        return {
+          id: "",
+          user_id: userId,
+          email: authUser.user.email || "",
+          ...updates,
+        } as UserProfile;
+      }
+
+      return {
+        ...data,
+        email: authUser.user.email || "",
+      };
+    } catch (err) {
+      console.error("[profileService] updateProfile exception:", err);
+      throw err;
+    }
   },
 
   async updateEmail(userId: string, newEmail: string, password: string): Promise<void> {
