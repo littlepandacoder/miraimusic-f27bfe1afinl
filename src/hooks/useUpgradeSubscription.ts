@@ -29,6 +29,7 @@ export const useUpgradeSubscription = () => {
           description: message,
           variant: "destructive",
         });
+        setLoading(false);
         return false;
       }
 
@@ -37,6 +38,11 @@ export const useUpgradeSubscription = () => {
         description: "You've been upgraded to Musicable Pro. Enjoy unlimited AI Tutor!",
         variant: "default",
       });
+
+      // Refresh after 2 seconds to reflect the new subscription
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
 
       return true;
     } catch (err: any) {
@@ -47,9 +53,8 @@ export const useUpgradeSubscription = () => {
         description: message,
         variant: "destructive",
       });
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 
