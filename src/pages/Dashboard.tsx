@@ -140,44 +140,35 @@ const Dashboard = () => {
           .from("user_subscriptions")
           .select("id, status, paused_at")
           .eq("user_id", user.id)
-          // Accept both active subscriptions and active trials, but exclude paused
           .in("status", ["active", "trialing"])
-          .isNull("paused_at")
           .limit(1)
           .maybeSingle();
 
         if (cancelled) return;
         log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
+
         if (error) {
           warn("[dashboard] subscription query error:", error.message, "— roles present:", roles.length > 0);
           const result = roles.length > 0;
           writeSubCache(user.id, result);
           setSubscribed(result);
           setIsPaused(false);
-        } else {
-          const result = !!data;
-          log("[dashboard] subscribed:", result);
-          writeSubCache(user.id, result);
-          setSubscribed(result);
-          setIsPaused(false);
+          return;
         }
 
-        // Check if subscription exists but is paused
-        if (!data) {
-          const { data: pausedData } = await (supabase as any)
-            .from("user_subscriptions")
-            .select("id")
-            .eq("user_id", user.id)
-            .not("paused_at", "is", null)
-            .limit(1)
-            .maybeSingle();
-
-          if (!cancelled && pausedData) {
-            log("[dashboard] subscription is paused");
-            setSubscribed(false);
-            setIsPaused(true);
-          }
+        // Check if subscription is paused (filter in code instead of in query)
+        if (data && data.paused_at !== null) {
+          log("[dashboard] subscription is paused");
+          setSubscribed(false);
+          setIsPaused(true);
+          return;
         }
+
+        const result = !!data;
+        log("[dashboard] subscribed:", result);
+        writeSubCache(user.id, result);
+        setSubscribed(result);
+        setIsPaused(false);
       } catch (err) {
         if (!cancelled) {
           warn("[dashboard] subscription check threw:", err);
