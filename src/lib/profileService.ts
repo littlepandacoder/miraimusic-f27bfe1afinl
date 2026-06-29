@@ -133,7 +133,7 @@ export const profileService = {
     try {
       const { data, error } = await supabase
         .from("user_subscriptions")
-        .select("subscription_id, plan_id, status, created_at, cancelled_at, cancel_at_period_end")
+        .select("subscription_id, plan_id, status, created_at")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -142,7 +142,19 @@ export const profileService = {
         return null;
       }
 
-      return data || null;
+      // Map data to SubscriptionInfo interface with defaults
+      if (data) {
+        return {
+          subscription_id: data.subscription_id,
+          plan_id: data.plan_id,
+          status: data.status,
+          created_at: data.created_at,
+          cancelled_at: null,
+          cancel_at_period_end: false,
+        };
+      }
+
+      return null;
     } catch (err) {
       console.error("[profileService] getSubscriptionInfo exception:", err);
       return null;
