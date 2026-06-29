@@ -29,8 +29,8 @@ export const useBillingPortal = () => {
         return;
       }
 
-      // Redirect to Stripe billing portal
-      window.location.href = data.url;
+      // Open Stripe billing portal in a new tab
+      window.open(data.url, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       toast({
         title: "Error",

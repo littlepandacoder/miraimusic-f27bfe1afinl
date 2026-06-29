@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/lib/profileService";
 import AccountSettingsTab from "./profile/AccountSettingsTab";
 import SubscriptionTab from "./profile/SubscriptionTab";
-import PaymentHistoryTab from "./profile/PaymentHistoryTab";
 
 interface StudentProfileContentProps {
   userId: string;
@@ -58,10 +57,9 @@ const StudentProfileContent = ({ userId }: StudentProfileContentProps) => {
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-6">
+      <TabsList className="grid w-full grid-cols-2 mb-6">
         <TabsTrigger value="account">Account</TabsTrigger>
         <TabsTrigger value="subscription">Subscription</TabsTrigger>
-        <TabsTrigger value="payments">Billing</TabsTrigger>
       </TabsList>
 
       <TabsContent value="account" className="space-y-6">
@@ -70,10 +68,6 @@ const StudentProfileContent = ({ userId }: StudentProfileContentProps) => {
 
       <TabsContent value="subscription" className="space-y-6">
         <SubscriptionTab subscription={subscription} userId={userId} />
-      </TabsContent>
-
-      <TabsContent value="payments" className="space-y-6">
-        <PaymentHistoryTab payments={payments} />
       </TabsContent>
     </Tabs>
   );
