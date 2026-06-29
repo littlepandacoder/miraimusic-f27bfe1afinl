@@ -4,6 +4,7 @@ import { Loader2, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/lib/profileService";
+import { useBillingPortal } from "@/hooks/useBillingPortal";
 import CancellationDialog from "./CancellationDialog";
 
 interface SubscriptionTabProps {
@@ -15,6 +16,7 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
   const [isLoadingCancel, setIsLoadingCancel] = useState(false);
   const [showCancellationDialog, setShowCancellationDialog] = useState(false);
   const { toast } = useToast();
+  const { openPortal, loading: portalLoading } = useBillingPortal();
 
   const handleCancelConfirm = async (reason: string) => {
     try {
@@ -185,16 +187,16 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
             Manage Billing
           </h3>
           <p className="text-sm text-green-800 dark:text-green-200 mb-4">
-            Update your payment method or view invoices in your Stripe dashboard.
+            Update your payment method, view invoices, or pause your subscription.
           </p>
           <Button
             variant="outline"
-            onClick={() => {
-              // Could open Stripe customer portal
-              window.open("https://billing.stripe.com/p/login/", "_blank");
-            }}
+            onClick={() => openPortal(userId)}
+            disabled={portalLoading}
+            className="flex items-center gap-2"
           >
-            Go to Billing Portal
+            {portalLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Open Billing Portal
           </Button>
         </div>
       )}
