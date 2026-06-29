@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const useUpgradeSubscription = () => {
@@ -12,13 +11,18 @@ export const useUpgradeSubscription = () => {
     setError(null);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "upgrade-subscription",
-        { body: { userId } }
-      );
+      const response = await fetch("/api/upgrade-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
 
-      if (fnError || !data?.success) {
-        const message = data?.error || fnError?.message || "Failed to upgrade subscription";
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        const message = data.error || "Failed to upgrade subscription";
         setError(message);
         toast({
           title: "Upgrade Failed",
