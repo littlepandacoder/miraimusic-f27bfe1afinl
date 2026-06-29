@@ -130,14 +130,23 @@ export const profileService = {
       throw new Error("Unauthorized");
     }
 
-    const { data, error } = await supabase
-      .from("user_subscriptions")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("user_subscriptions")
+        .select("subscription_id, plan_id, status, created_at, cancelled_at, cancel_at_period_end")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error("[profileService] getSubscriptionInfo error:", error);
+        return null;
+      }
+
+      return data || null;
+    } catch (err) {
+      console.error("[profileService] getSubscriptionInfo exception:", err);
+      return null;
+    }
   },
 
   async cancelSubscription(
@@ -150,36 +159,44 @@ export const profileService = {
       throw new Error("Unauthorized");
     }
 
-    const { data: subscription, error: fetchError } = await supabase
-      .from("user_subscriptions")
-      .select("subscription_id")
-      .eq("user_id", userId)
-      .single();
+    try {
+      const { data: subscription, error: fetchError } = await supabase
+        .from("user_subscriptions")
+        .select("subscription_id")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (fetchError || !subscription) {
-      throw new Error("No active subscription found");
+      if (fetchError || !subscription) {
+        console.error("[profileService] cancelSubscription - no subscription found:", fetchError);
+        throw new Error("No active subscription found");
+      }
+
+      // Call edge function to cancel subscription with Stripe
+      const { error } = await supabase.functions.invoke("cancel-subscription", {
+        body: {
+          subscriptionId: subscription.subscription_id,
+          reason,
+          cancelAtPeriodEnd,
+        },
+      });
+
+      if (error) throw error;
+
+      // Update local record
+      const { error: updateError } = await supabase
+        .from("user_subscriptions")
+        .update({
+          cancelled_at: !cancelAtPeriodEnd ? new Date().toISOString() : null,
+          cancellation_reason: reason,
+          cancel_at_period_end: cancelAtPeriodEnd,
+          status: !cancelAtPeriodEnd ? "cancelled" : "active",
+        })
+        .eq("user_id", userId);
+
+      if (updateError) throw updateError;
+    } catch (err: any) {
+      console.error("[profileService] cancelSubscription error:", err);
+      throw err;
     }
-
-    // Call edge function to cancel subscription with Stripe
-    const { error } = await supabase.functions.invoke("cancel-subscription", {
-      body: {
-        subscriptionId: subscription.subscription_id,
-        reason,
-        cancelAtPeriodEnd,
-      },
-    });
-
-    if (error) throw error;
-
-    // Update local record
-    await supabase
-      .from("user_subscriptions")
-      .update({
-        cancelled_at: !cancelAtPeriodEnd ? new Date().toISOString() : null,
-        cancellation_reason: reason,
-        cancel_at_period_end: cancelAtPeriodEnd,
-        status: !cancelAtPeriodEnd ? "cancelled" : "active",
-      })
-      .eq("user_id", userId);
   },
 };
