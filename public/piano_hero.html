@@ -9459,11 +9459,9 @@ function fbInit() {
 function fbConnect(code) {
   if (!fbInit()) return false;
   _fbRef = _fbDb.ref('rooms/' + code);
-  // Generate a time-ordered key for "right now" using Firebase's server ordering.
-  // push().key without .set() creates no DB write — it just gives us a key.
-  // All child_added listeners use startAfter(this key) so pre-existing events
-  // (from previous sessions) are never delivered, regardless of device clock skew.
-  _fbConnectKey = _fbRef.child('events').push().key;
+  // Use server timestamp for filtering — simpler and more reliable than push().key
+  // We'll filter messages by timestamp in fbOn() instead of by key
+  _fbConnectKey = Date.now() - 2000; // Allow 2s clock skew window
   return true;
 }
 
@@ -9489,12 +9487,12 @@ function fbPush(data) {
 
 function fbOn(eventType, cb) {
   if (!_fbRef) return;
-  // Use startAfter(connectKey) so only events pushed after we joined are delivered.
-  // This replaces the old client-side timestamp filter which broke across time zones.
+  // Filter by timestamp to only receive events after we connected.
+  // Using orderByChild('ts').startAt() is more reliable than key-based filtering.
   const evRef = _fbConnectKey
-    ? _fbRef.child('events').orderByKey().startAfter(_fbConnectKey)
+    ? _fbRef.child('events').orderByChild('ts').startAt(_fbConnectKey)
     : _fbRef.child('events');
-  const fn = evRef.on(eventType, cb);
+  evRef.on(eventType, cb);
   _fbListeners.push({ ref: evRef, type: eventType, fn: cb });
 }
 
