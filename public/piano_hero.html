@@ -9459,9 +9459,9 @@ function fbInit() {
 function fbConnect(code) {
   if (!fbInit()) return false;
   _fbRef = _fbDb.ref('rooms/' + code);
-  // Use server timestamp for filtering — simpler and more reliable than push().key
-  // We'll filter messages by timestamp in fbOn() instead of by key
-  _fbConnectKey = Date.now() - 2000; // Allow 2s clock skew window
+  // Firebase child_added naturally only fires for NEW entries, not pre-existing ones
+  // So we don't need a filter key at all
+  _fbConnectKey = null;
   return true;
 }
 
@@ -9487,11 +9487,9 @@ function fbPush(data) {
 
 function fbOn(eventType, cb) {
   if (!_fbRef) return;
-  // Filter by timestamp to only receive events after we connected.
-  // Using orderByChild('ts').startAt() is more reliable than key-based filtering.
-  const evRef = _fbConnectKey
-    ? _fbRef.child('events').orderByChild('ts').startAt(_fbConnectKey)
-    : _fbRef.child('events');
+  // child_added naturally only fires for entries added AFTER listener is attached
+  // value event gets all existing data first, then updates. We'll filter that client-side.
+  const evRef = _fbRef.child('events');
   evRef.on(eventType, cb);
   _fbListeners.push({ ref: evRef, type: eventType, fn: cb });
 }
