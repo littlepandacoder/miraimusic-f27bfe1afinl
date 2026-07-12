@@ -10367,6 +10367,9 @@ function roomStudentHandleTeacher(e) {
     PIANO_END   = e.data.pianoEnd;
     recomputeKeyRange();
     kbSettingsRedrawAll();
+  } else if (type === 'leave' && e.data.role === 'teacher') {
+    // Teacher ended the class
+    showSessionEndedPopup();
   }
 }
 
@@ -10829,15 +10832,17 @@ function micDrawVU() {
 
 /* ── Leave / cleanup ─────────────────────────────────────── */
 function roomLeave() {
-  // Broadcast leave
-  const leaveMsg = { type:'leave', sender:ROOM.myId, name:ROOM.myName };
+  // Broadcast leave to both Firebase and BroadcastChannel
+  const leaveMsg = { type:'leave', sender:ROOM.myId, name:ROOM.myName, role:ROOM.role };
   fbPush(leaveMsg);
   ROOM.channel?.postMessage(leaveMsg);
 
-  ROOM.channel?.close();
-  ROOM.channel = null;
-
-  fbDisconnect();
+  // Give Firebase time to send the message before disconnecting
+  setTimeout(() => {
+    ROOM.channel?.close();
+    ROOM.channel = null;
+    fbDisconnect();
+  }, 100);
 
   clearInterval(ROOM.hbInterval);
   clearInterval(ROOM.cleanupInt);
@@ -10877,6 +10882,39 @@ function roomCopyLink() {
   }).catch(() => {
     prompt('Copy this link and share with students:', url);
   });
+}
+
+/* ── Session ended popup ─────────────────────────────────── */
+function showSessionEndedPopup() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;
+    z-index:10000;backdrop-filter:blur(4px)
+  `;
+
+  const box = document.createElement('div');
+  box.style.cssText = `
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:2rem;text-align:center;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,.3)
+  `;
+
+  box.innerHTML = `
+    <div style="font-size:3rem;margin-bottom:1rem">🛑</div>
+    <div style="font-size:1.5rem;font-weight:700;color:var(--off-white);margin-bottom:.5rem">Session Ended</div>
+    <div style="color:var(--muted);margin-bottom:1.5rem">The teacher has ended the class</div>
+    <button onclick="this.closest('div[style*=fixed]').remove(); roomLeave();"
+      style="background:var(--pink);color:white;border:none;padding:.75rem 1.5rem;
+      border-radius:8px;font-weight:700;cursor:pointer;font-size:1rem;
+      transition:all .2s"
+      onmouseover="this.style.background='#ff1a5e'"
+      onmouseout="this.style.background='var(--pink)'">
+      OK
+    </button>
+  `;
+
+  modal.appendChild(box);
+  document.body.appendChild(modal);
 }
 
 /* ── Piano canvas helpers ─────────────────────────────────── */
