@@ -1549,6 +1549,156 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
     justify-content:flex-start;
   }
 }
+
+/* ═══ MIDI PLAYER ════════════════════════════════════════════ */
+#screen-midi-player{
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(255,45,120,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(0,212,255,.06) 0%, transparent 60%),
+    var(--bg);
+}
+
+.midi-player-container{
+  display:flex;flex-direction:column;height:100%;width:100%;padding:1.5rem;
+  background:transparent;color:var(--off-white);font-family:'Inter',sans-serif;
+  gap:1rem;
+}
+
+.midi-upload-section{
+  background:var(--card);border:2px dashed var(--border);border-radius:12px;
+  padding:2rem;text-align:center;cursor:pointer;transition:all .3s;
+}
+
+.midi-upload-section:hover{
+  border-color:var(--pink);background:rgba(255,45,120,.05);
+}
+
+.midi-upload-section.dragover{
+  border-color:var(--sky);background:rgba(0,212,255,.1);
+}
+
+.midi-upload-label{
+  font-size:1.2rem;font-weight:600;color:var(--white);margin-bottom:0.5rem;
+}
+
+.midi-upload-hint{
+  font-size:0.9rem;color:var(--muted);margin-bottom:1rem;
+}
+
+.midi-upload-input{display:none}
+
+.midi-upload-button{
+  padding:0.8rem 1.5rem;background:var(--pink);border:none;color:white;
+  border-radius:8px;cursor:pointer;font-weight:600;font-family:'Inter',sans-serif;
+  transition:all .2s;
+}
+
+.midi-upload-button:hover{
+  box-shadow:0 8px 24px rgba(255,45,120,.4);
+}
+
+.midi-visualization{
+  flex:1;background:rgba(255,255,255,.02);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;display:flex;flex-direction:column;
+}
+
+.midi-roll-canvas{
+  flex:1;display:block;background:#0f0d1a;cursor:pointer;
+}
+
+.midi-controls{
+  background:var(--card);border-top:1px solid var(--border);padding:1rem;
+  display:grid;grid-template-columns:auto 1fr auto;gap:1.5rem;align-items:center;
+}
+
+.midi-transport-btns{
+  display:flex;gap:0.5rem;
+}
+
+.midi-btn{
+  padding:0.6rem 1rem;background:rgba(255,255,255,.08);border:1px solid var(--border);
+  color:var(--off-white);border-radius:6px;cursor:pointer;font-weight:600;
+  font-family:'DM Mono',monospace;font-size:0.85rem;
+  transition:all .2s;
+}
+
+.midi-btn:hover:not(:disabled){
+  background:var(--pink);color:white;border-color:var(--pink);
+}
+
+.midi-btn:disabled{
+  opacity:0.5;cursor:not-allowed;
+}
+
+.midi-settings{
+  display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;
+}
+
+.midi-setting-group{
+  display:flex;align-items:center;gap:0.6rem;
+}
+
+.midi-setting-group label{
+  font-size:0.85rem;color:var(--muted);font-weight:600;
+  font-family:'DM Mono',monospace;
+}
+
+.midi-setting-group input[type="range"]{
+  width:100px;height:4px;background:rgba(255,255,255,.1);
+  border-radius:2px;outline:none;accent-color:var(--pink);
+}
+
+.midi-setting-group select{
+  padding:0.4rem 0.8rem;background:rgba(255,255,255,.08);border:1px solid var(--border);
+  color:var(--off-white);border-radius:4px;font-size:0.85rem;cursor:pointer;
+}
+
+.midi-display{
+  display:flex;gap:2rem;min-width:300px;
+}
+
+.midi-display-item{
+  display:flex;flex-direction:column;gap:0.3rem;
+}
+
+.midi-display-label{
+  font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em;
+}
+
+.midi-display-value{
+  font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;
+  color:var(--pink);text-shadow:0 0 10px rgba(255,45,120,.4);
+}
+
+.midi-wait-mode-indicator{
+  display:inline-block;padding:0.4rem 0.8rem;background:rgba(0,212,255,.2);
+  border:1px solid var(--sky);border-radius:4px;font-size:0.75rem;
+  color:var(--sky);font-weight:600;font-family:'DM Mono',monospace;
+}
+
+.midi-wait-mode-indicator.active{
+  background:rgba(255,45,120,.2);border-color:var(--pink);color:var(--pink);
+}
+
+
+.midi-empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:1rem;color:var(--muted);
+}
+
+.midi-empty-icon{font-size:3rem;opacity:.5}
+
+.midi-empty-text{font-size:0.95rem}
+
+@media(max-width:768px){
+  .midi-player-container{padding:1rem;gap:0.8rem}
+  .midi-upload-section{padding:1.5rem}
+  .midi-controls{grid-template-columns:1fr;gap:1rem}
+  .midi-settings{gap:1rem}
+  .midi-setting-group{flex-wrap:wrap;width:100%}
+  .midi-display{flex-direction:column;gap:0.5rem;min-width:auto}
+}
 </style>
 <style>:is([id*='google_ads_iframe'],[id*='taboola-'],.taboolaHeight,.taboola-placeholder,#top-ad,#credential_picker_container,#credentials-picker-container,#credential_picker_iframe,[id*='google-one-tap-iframe'],#google-one-tap-popup-container,.google-one-tap__module,.google-one-tap-modal-div,#amp_floatingAdDiv,#ez-content-blocker-container) {display:none!important;min-height:0!important;height:0!important;}</style><script src="https://www.googletagmanager.com/gtag/js?l=dataLayer&amp;id=G-VKTN926TCJ" async=""></script><script src="/ranking-popup.js"></script></head>
 <body>
@@ -1603,6 +1753,8 @@ window.musicableUserId   = null;
     <button class="nav-tab active" onclick="showScreen('play')" style="display:none">Practice</button>
     <button class="nav-tab" onclick="showScreen('songs')">Songs</button>
     <button class="nav-tab" onclick="showScreen('sheet-music')">🎼 Sheet Music</button>
+    <button class="nav-tab" onclick="showScreen('midi-player')">🎵 MIDI Player</button>
+    <button class="nav-tab" onclick="showScreen('simple-piano')">⚪ Simple Piano</button>
     <button class="nav-tab" onclick="(adminUser || window.musicableUserId) ? (showScreen('admin'), adminRefreshFromFirebase()) : adminLoginOpen()">⚙ Admin</button>
   </div>
   <div class="nav-right">
@@ -3023,6 +3175,389 @@ window.musicableUserId   = null;
     <!-- Admin Button (floating) -->
     <button id="smAdminBtn" onclick="toggleSheetMusicAdmin()" style="display:none;position:fixed;bottom:20px;right:20px;width:50px;height:50px;background:var(--pink);border:none;color:white;border-radius:50%;cursor:pointer;font-size:1.5rem;z-index:149;transition:all 0.2s;box-shadow:0 4px 16px rgba(255,45,120,.3)" title="Upload song (admin only)" onmouseover="this.style.transform='scale(1.1);box-shadow:0 8px 24px rgba(255,45,120,.5)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(255,45,120,.3)'">⬆️</button>
   </div>
+</div>
+
+<!-- MIDI PLAYER SCREEN -->
+<div class="screen" id="screen-midi-player">
+  <div class="midi-player-container">
+    <!-- Upload Section -->
+    <div class="midi-upload-section" id="midiUploadArea">
+      <input type="file" id="midiFileInput" class="midi-upload-input" accept=".mid,.midi" />
+      <div class="midi-upload-label">🎵 Import MIDI File</div>
+      <div class="midi-upload-hint">Drag & drop or click to select a MIDI file</div>
+      <button class="midi-upload-button" onclick="document.getElementById('midiFileInput').click()">Choose File</button>
+      <div id="midiFileName" style="margin-top:0.8rem;font-size:0.85rem;color:var(--sky)"></div>
+    </div>
+
+    <!-- Visualization with integrated keyboard -->
+    <div class="midi-visualization" id="midiVisualization">
+      <div class="midi-empty-state">
+        <div class="midi-empty-icon">🎹</div>
+        <div class="midi-empty-text">Load a MIDI file to begin</div>
+      </div>
+    </div>
+
+    <!-- Controls & Display -->
+    <div class="midi-controls">
+      <div class="midi-transport-btns">
+        <button class="midi-btn" id="midiPlayBtn" onclick="midiPlayerInstance?.play()" disabled>▶ Play</button>
+        <button class="midi-btn" id="midiPauseBtn" onclick="midiPlayerInstance?.pause()" disabled>⏸ Pause</button>
+        <button class="midi-btn" id="midiStopBtn" onclick="midiPlayerInstance?.stop()" disabled>⏹ Stop</button>
+      </div>
+
+      <div class="midi-settings">
+        <div class="midi-setting-group">
+          <label>Tempo</label>
+          <input type="range" id="midiTempoSlider" min="50" max="150" value="100" onchange="midiPlayerInstance?.setTempo(this.value)">
+          <span id="midiTempoValue" style="min-width:45px;text-align:right;font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--sky)">100%</span>
+        </div>
+
+        <div class="midi-setting-group">
+          <label>Mode</label>
+          <button class="midi-wait-mode-indicator" id="midiModeBtn" onclick="midiPlayerInstance?.toggleWaitMode()">Normal</button>
+        </div>
+
+        <div class="midi-setting-group">
+          <label>🎤 MIDI Device</label>
+          <select id="midiDeviceSelector" onchange="midiPlayerInstance?.setMidiDevice(this.value)">
+            <option value="">No Device</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="midi-display">
+        <div class="midi-display-item">
+          <span class="midi-display-label">Time</span>
+          <span class="midi-display-value" id="midiTimeDisplay">0:00</span>
+        </div>
+        <div class="midi-display-item">
+          <span class="midi-display-label">Expected</span>
+          <span class="midi-display-value" id="midiExpectedDisplay">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIMPLE PIANO SCREEN -->
+<div class="screen" id="screen-simple-piano">
+  <style>
+    #simple-piano-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+    }
+
+    #simple-piano-header {
+      padding: 16px;
+      background: #111;
+      border-bottom: 2px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    #simple-piano-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .simple-piano-btn {
+      padding: 8px 16px;
+      background: #fff;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      transition: all 0.2s;
+    }
+
+    .simple-piano-btn:hover {
+      background: #ddd;
+    }
+
+    .simple-piano-btn:active {
+      transform: scale(0.95);
+    }
+
+    #simple-piano-canvas-container {
+      flex: 1;
+      overflow: hidden;
+      background: #1a1a1a;
+      position: relative;
+    }
+
+    #simple-piano-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #simple-piano-keys {
+      display: flex;
+      background: #000;
+      border-top: 2px solid #333;
+      height: 100px;
+      overflow-x: auto;
+    }
+
+    .simple-piano-key {
+      flex: 0 0 auto;
+      border: 2px solid #333;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 11px;
+      padding-bottom: 8px;
+      transition: all 0.05s;
+      width: 40px;
+    }
+
+    .simple-piano-key.white {
+      background: #fff;
+      color: #000;
+    }
+
+    .simple-piano-key.white:hover,
+    .simple-piano-key.white.active {
+      background: #ddd;
+    }
+
+    .simple-piano-key.black {
+      background: #000;
+      color: #fff;
+      border-color: #555;
+    }
+
+    .simple-piano-key.black:hover,
+    .simple-piano-key.black.active {
+      background: #333;
+    }
+
+    #simple-piano-info {
+      padding: 8px 16px;
+      background: #111;
+      border-top: 1px solid #333;
+      font-size: 11px;
+      color: #666;
+      height: 30px;
+      display: flex;
+      align-items: center;
+    }
+  </style>
+
+  <div id="simple-piano-container">
+    <div id="simple-piano-header">
+      <div>PIANO</div>
+      <div id="simple-piano-controls">
+        <button class="simple-piano-btn" id="simplePianoLoadBtn">Load MIDI</button>
+        <button class="simple-piano-btn" id="simplePianoPlayBtn">Play</button>
+        <button class="simple-piano-btn" id="simplePianoStopBtn">Stop</button>
+      </div>
+    </div>
+
+    <div id="simple-piano-canvas-container">
+      <canvas id="simple-piano-canvas"></canvas>
+    </div>
+
+    <div id="simple-piano-keys">
+      <!-- Keys will be generated here -->
+    </div>
+
+    <div id="simple-piano-info">
+      Ready for MIDI input
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('simple-piano-canvas');
+      const ctx = canvas.getContext('2d');
+      const keysDiv = document.getElementById('simple-piano-keys');
+      const loadBtn = document.getElementById('simplePianoLoadBtn');
+      const playBtn = document.getElementById('simplePianoPlayBtn');
+      const stopBtn = document.getElementById('simplePianoStopBtn');
+      const infoDiv = document.getElementById('simple-piano-info');
+
+      let notes = [];
+      let isPlaying = false;
+      let currentTime = 0;
+      let startTime = 0;
+      let animationId = null;
+
+      const NOTE_HEIGHT = 30;
+      const PIANO_KEYS = [
+        { name: 'C', note: 60, type: 'white' },
+        { name: 'C#', note: 61, type: 'black' },
+        { name: 'D', note: 62, type: 'white' },
+        { name: 'D#', note: 63, type: 'black' },
+        { name: 'E', note: 64, type: 'white' },
+        { name: 'F', note: 65, type: 'white' },
+        { name: 'F#', note: 66, type: 'black' },
+        { name: 'G', note: 67, type: 'white' },
+        { name: 'G#', note: 68, type: 'black' },
+        { name: 'A', note: 69, type: 'white' },
+        { name: 'A#', note: 70, type: 'black' },
+        { name: 'B', note: 71, type: 'white' },
+      ];
+
+      // Resize canvas
+      function resizeCanvas() {
+        const container = document.getElementById('simple-piano-canvas-container');
+        if (container && canvas) {
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        }
+      }
+
+      // Generate piano keys UI
+      function generatePianoKeys() {
+        keysDiv.innerHTML = '';
+        for (let octave = 2; octave <= 6; octave++) {
+          PIANO_KEYS.forEach(key => {
+            const noteNum = octave * 12 + key.note % 12;
+            const keyEl = document.createElement('div');
+            keyEl.className = `simple-piano-key ${key.type}`;
+            keyEl.textContent = key.name;
+            keyEl.dataset.note = noteNum;
+            keyEl.addEventListener('mousedown', () => playNote(noteNum));
+            keyEl.addEventListener('mouseup', () => stopNote(noteNum));
+            keysDiv.appendChild(keyEl);
+          });
+        }
+      }
+
+      // Draw notes on canvas
+      function drawNotes() {
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw grid
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.height; i += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, i);
+          ctx.lineTo(canvas.width, i);
+          ctx.stroke();
+        }
+
+        // Draw current time line
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 2;
+        const timelineY = canvas.height / 2;
+        ctx.beginPath();
+        ctx.moveTo(0, timelineY);
+        ctx.lineTo(canvas.width, timelineY);
+        ctx.stroke();
+
+        // Draw notes
+        ctx.fillStyle = '#fff';
+        notes.forEach(note => {
+          const x = canvas.width / 2 + (note.time - currentTime) * 100;
+          const y = ((127 - note.pitch) / 127) * canvas.height;
+          const w = Math.max(5, note.duration * 100);
+          const h = 15;
+
+          if (x + w > 0 && x < canvas.width) {
+            ctx.fillRect(x, y - h / 2, w, h);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y - h / 2, w, h);
+          }
+        });
+
+        // Draw note info
+        const activeNotes = notes.filter(n =>
+          n.time <= currentTime && currentTime <= n.time + n.duration
+        );
+        infoDiv.textContent = `Time: ${currentTime.toFixed(2)}s | Notes: ${activeNotes.map(n => n.name).join(', ') || 'Ready'}`;
+      }
+
+      // Animation loop
+      function animate() {
+        if (isPlaying && notes.length > 0) {
+          currentTime = (Date.now() - startTime) / 1000;
+        }
+        drawNotes();
+        animationId = requestAnimationFrame(animate);
+      }
+
+      // Play/Stop
+      playBtn.addEventListener('click', () => {
+        if (!isPlaying && notes.length > 0) {
+          isPlaying = true;
+          startTime = Date.now() - currentTime * 1000;
+          playBtn.textContent = 'Pause';
+        } else if (isPlaying) {
+          isPlaying = false;
+          playBtn.textContent = 'Play';
+        }
+      });
+
+      stopBtn.addEventListener('click', () => {
+        isPlaying = false;
+        currentTime = 0;
+        playBtn.textContent = 'Play';
+      });
+
+      // Load MIDI
+      loadBtn.addEventListener('click', async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.mid,.midi';
+        input.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) loadMIDI(file);
+        });
+        input.click();
+      });
+
+      // Parse MIDI (simplified demo)
+      function loadMIDI(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            // Demo notes for testing
+            notes = [
+              { time: 0, pitch: 60, duration: 0.5, name: 'C' },
+              { time: 0.6, pitch: 62, duration: 0.5, name: 'D' },
+              { time: 1.2, pitch: 64, duration: 0.5, name: 'E' },
+              { time: 1.8, pitch: 65, duration: 1, name: 'F' },
+            ];
+            infoDiv.textContent = `Loaded ${notes.length} notes`;
+          } catch (err) {
+            infoDiv.textContent = 'Error loading MIDI';
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function playNote(noteNum) {
+        const keyEl = keysDiv.querySelector(`[data-note="${noteNum}"]`);
+        if (keyEl) keyEl.classList.add('active');
+      }
+
+      function stopNote(noteNum) {
+        const keyEl = keysDiv.querySelector(`[data-note="${noteNum}"]`);
+        if (keyEl) keyEl.classList.remove('active');
+      }
+
+      // Init
+      resizeCanvas();
+      generatePianoKeys();
+      window.addEventListener('resize', resizeCanvas);
+      animate();
+    })();
+  </script>
 </div>
 
 <script>
@@ -11567,7 +12102,105 @@ showScreen = function(screenId) {
   if (screenId === 'sheet-music' && !sheetMusicPlayer) {
     initSheetMusicPlayer();
   }
+
+  if (screenId === 'midi-player' && !midiPlayerInstance) {
+    initMidiPlayer();
+  }
 };
+
+// ═══════════════════════════════════════════════════════════
+// MIDI PLAYER INITIALIZATION
+// ═══════════════════════════════════════════════════════════
+
+let midiPlayerInstance = null;
+
+async function initMidiPlayer() {
+  // Dynamically import MidiPlayer
+  const { MidiPlayer } = await import('./lib/sheet-music-player/MidiPlayer.js');
+
+  midiPlayerInstance = new MidiPlayer({
+    container: '#midiVisualization',
+    baseBpm: 120
+  });
+
+  // File upload handling
+  const uploadArea = document.getElementById('midiUploadArea');
+  const fileInput = document.getElementById('midiFileInput');
+  const fileName = document.getElementById('midiFileName');
+
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+
+  uploadArea.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.name.toLowerCase().endsWith('.mid') || file.name.toLowerCase().endsWith('.midi')) {
+        await midiPlayerInstance.loadMidi(file);
+        fileName.textContent = '✓ ' + file.name;
+      }
+    }
+  });
+
+  fileInput.addEventListener('change', async (e) => {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      await midiPlayerInstance.loadMidi(file);
+      fileName.textContent = '✓ ' + file.name;
+    }
+  });
+
+  // Tempo slider
+  document.getElementById('midiTempoSlider').addEventListener('change', (e) => {
+    midiPlayerInstance.setTempo(e.target.value);
+  });
+
+  // Mode toggle
+  document.getElementById('midiModeBtn').addEventListener('click', () => {
+    midiPlayerInstance.toggleWaitMode();
+  });
+
+  // MIDI device events
+  midiPlayerInstance.on('midiDevicesUpdated', (devices) => {
+    const selector = document.getElementById('midiDeviceSelector');
+    selector.innerHTML = '<option value="">No Device</option>';
+    devices.forEach((device, idx) => {
+      const option = document.createElement('option');
+      option.value = device.id;
+      option.textContent = device.name || `MIDI Device ${idx + 1}`;
+      selector.appendChild(option);
+    });
+  });
+
+  // Playback events
+  midiPlayerInstance.on('midiLoaded', (data) => {
+    document.getElementById('midiPlayBtn').disabled = false;
+    console.log('[MIDI] Loaded:', data.title);
+  });
+
+  midiPlayerInstance.on('checkpointReached', (data) => {
+    if (midiPlayerInstance.waitMode) {
+      console.log('[MIDI] Checkpoint - Expected notes:', data.checkpoint.expectedNotes);
+    }
+  });
+
+  midiPlayerInstance.on('checkpointPassed', () => {
+    console.log('[MIDI] Checkpoint passed!');
+  });
+
+  midiPlayerInstance.on('playbackEnded', () => {
+    console.log('[MIDI] Playback finished');
+  });
+
+  console.log('[MidiPlayer] Initialized');
+}
 
 console.log('[SheetMusic] Module loaded');
 </script>

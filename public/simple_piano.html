@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Piano</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: monospace;
+      overflow: hidden;
+    }
+
+    #container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #header {
+      padding: 20px;
+      background: #111;
+      border-bottom: 2px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #title {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    #controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #fff;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    #canvas-container {
+      flex: 1;
+      overflow: hidden;
+      background: #1a1a1a;
+      position: relative;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #piano {
+      display: flex;
+      background: #000;
+      border-top: 2px solid #333;
+      height: 120px;
+    }
+
+    .piano-key {
+      flex: 1;
+      border: 2px solid #333;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 12px;
+      padding-bottom: 10px;
+      transition: all 0.05s;
+    }
+
+    .piano-key.white {
+      background: #fff;
+      color: #000;
+    }
+
+    .piano-key.white:hover,
+    .piano-key.white.active {
+      background: #ddd;
+    }
+
+    .piano-key.black {
+      background: #000;
+      color: #fff;
+      border-color: #555;
+    }
+
+    .piano-key.black:hover,
+    .piano-key.black.active {
+      background: #333;
+    }
+
+    #info {
+      padding: 10px 20px;
+      background: #111;
+      border-top: 1px solid #333;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="header">
+      <div id="title">PIANO</div>
+      <div id="controls">
+        <button id="loadBtn">Load MIDI</button>
+        <button id="playBtn">Play</button>
+        <button id="stopBtn">Stop</button>
+      </div>
+    </div>
+
+    <div id="canvas-container">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="piano">
+      <!-- White and black keys will be generated here -->
+    </div>
+
+    <div id="info">
+      Ready for MIDI input
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const pianoDiv = document.getElementById('piano');
+    const loadBtn = document.getElementById('loadBtn');
+    const playBtn = document.getElementById('playBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const infoDiv = document.getElementById('info');
+
+    let notes = [];
+    let isPlaying = false;
+    let currentTime = 0;
+    let startTime = 0;
+    let animationId = null;
+
+    const NOTE_HEIGHT = 30;
+    const PIANO_KEYS = [
+      { name: 'C', note: 60, type: 'white' },
+      { name: 'C#', note: 61, type: 'black' },
+      { name: 'D', note: 62, type: 'white' },
+      { name: 'D#', note: 63, type: 'black' },
+      { name: 'E', note: 64, type: 'white' },
+      { name: 'F', note: 65, type: 'white' },
+      { name: 'F#', note: 66, type: 'black' },
+      { name: 'G', note: 67, type: 'white' },
+      { name: 'G#', note: 68, type: 'black' },
+      { name: 'A', note: 69, type: 'white' },
+      { name: 'A#', note: 70, type: 'black' },
+      { name: 'B', note: 71, type: 'white' },
+    ];
+
+    const KEY_MAP = {
+      'c': 60, 'x': 61, 'd': 62, 'e': 63, 'r': 64,
+      'f': 65, 'g': 66, 'h': 67, 'u': 68, 'j': 69,
+      'k': 70, 'l': 71, 'q': 72, '2': 73, 'w': 74
+    };
+
+    // Resize canvas
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+
+    // Generate piano keys UI
+    function generatePianoKeys() {
+      pianoDiv.innerHTML = '';
+      for (let octave = 2; octave <= 6; octave++) {
+        PIANO_KEYS.forEach(key => {
+          const noteNum = octave * 12 + key.note % 12;
+          const keyEl = document.createElement('div');
+          keyEl.className = `piano-key ${key.type}`;
+          keyEl.textContent = key.name;
+          keyEl.dataset.note = noteNum;
+          keyEl.addEventListener('mousedown', () => playNote(noteNum));
+          keyEl.addEventListener('mouseup', () => stopNote(noteNum));
+          pianoDiv.appendChild(keyEl);
+        });
+      }
+    }
+
+    // Draw notes on canvas
+    function drawNotes() {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < canvas.height; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+      }
+
+      // Draw current time line
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      const timelineY = canvas.height / 2;
+      ctx.beginPath();
+      ctx.moveTo(0, timelineY);
+      ctx.lineTo(canvas.width, timelineY);
+      ctx.stroke();
+
+      // Draw notes
+      ctx.fillStyle = '#fff';
+      notes.forEach(note => {
+        const x = canvas.width / 2 + (note.time - currentTime) * 100;
+        const y = ((127 - note.pitch) / 127) * canvas.height;
+        const w = note.duration * 100;
+        const h = 15;
+
+        if (x + w > 0 && x < canvas.width) {
+          ctx.fillRect(x, y - h / 2, w, h);
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y - h / 2, w, h);
+        }
+      });
+
+      // Draw note info
+      const activeNotes = notes.filter(n =>
+        n.time <= currentTime && currentTime <= n.time + n.duration
+      );
+      infoDiv.textContent = `Time: ${currentTime.toFixed(2)}s | Notes: ${activeNotes.map(n => n.name).join(', ') || 'None'}`;
+    }
+
+    // Animation loop
+    function animate() {
+      if (isPlaying) {
+        currentTime = (Date.now() - startTime) / 1000;
+      }
+      drawNotes();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Play/Stop
+    playBtn.addEventListener('click', () => {
+      if (!isPlaying && notes.length > 0) {
+        isPlaying = true;
+        startTime = Date.now() - currentTime * 1000;
+        playBtn.textContent = 'Pause';
+      } else if (isPlaying) {
+        isPlaying = false;
+        playBtn.textContent = 'Play';
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      isPlaying = false;
+      currentTime = 0;
+      playBtn.textContent = 'Play';
+    });
+
+    // Load MIDI
+    loadBtn.addEventListener('click', async () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.mid,.midi';
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) loadMIDI(file);
+      });
+      input.click();
+    });
+
+    // Parse MIDI (simplified)
+    function loadMIDI(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          // For now, create demo notes
+          notes = [
+            { time: 0, pitch: 60, duration: 0.5, name: 'C' },
+            { time: 0.6, pitch: 62, duration: 0.5, name: 'D' },
+            { time: 1.2, pitch: 64, duration: 0.5, name: 'E' },
+            { time: 1.8, pitch: 65, duration: 1, name: 'F' },
+          ];
+          infoDiv.textContent = `Loaded ${notes.length} notes`;
+        } catch (err) {
+          infoDiv.textContent = 'Error loading MIDI';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Keyboard input
+    document.addEventListener('keydown', (e) => {
+      const note = KEY_MAP[e.key.toLowerCase()];
+      if (note) playNote(note);
+    });
+
+    document.addEventListener('keyup', (e) => {
+      const note = KEY_MAP[e.key.toLowerCase()];
+      if (note) stopNote(note);
+    });
+
+    function playNote(noteNum) {
+      const keyEl = pianoDiv.querySelector(`[data-note="${noteNum}"]`);
+      if (keyEl) keyEl.classList.add('active');
+    }
+
+    function stopNote(noteNum) {
+      const keyEl = pianoDiv.querySelector(`[data-note="${noteNum}"]`);
+      if (keyEl) keyEl.classList.remove('active');
+    }
+
+    // Init
+    resizeCanvas();
+    generatePianoKeys();
+    window.addEventListener('resize', resizeCanvas);
+    animate();
+  </script>
+</body>
+</html>
