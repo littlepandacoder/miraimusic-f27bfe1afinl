@@ -11832,16 +11832,17 @@ if (location.hash === '#room') {
 // Import Sheet Music Player modules
 import { SheetMusicPlayer } from './lib/sheet-music-player/SheetMusicPlayer.js';
 
-let sheetMusicPlayer = null;
+// Expose to window so it's accessible from onclick handlers
+window.sheetMusicPlayer = null;
 
 // Initialize Sheet Music Player
-async function initSheetMusicPlayer() {
-  sheetMusicPlayer = new SheetMusicPlayer({
+window.initSheetMusicPlayer = async function() {
+  window.sheetMusicPlayer = new SheetMusicPlayer({
     containerSelector: '#screen-sheet-music',
     scoreContainer: '#score-renderer'
   });
 
-  await sheetMusicPlayer.initialize();
+  await window.sheetMusicPlayer.initialize();
 
   // Load demo song list from Supabase
   loadSheetMusicSongs();
@@ -11855,12 +11856,12 @@ async function initSheetMusicPlayer() {
     tempoSlider.addEventListener('input', (e) => {
       const tempo = parseInt(e.target.value);
       document.getElementById('smTempoValue').textContent = tempo + '%';
-      if (sheetMusicPlayer?.playbackEngine) {
-        sheetMusicPlayer.playbackEngine.setTempo(tempo);
+      if (window.sheetMusicPlayer?.playbackEngine) {
+        window.sheetMusicPlayer.playbackEngine.setTempo(tempo);
       }
     });
   }
-}
+};
 
 // Load available songs from Supabase
 async function loadSheetMusicSongs() {
@@ -11905,21 +11906,27 @@ window.sheetMusicLoadSelected = async function() {
     return;
   }
 
+  if (!window.sheetMusicPlayer) {
+    alert('Sheet Music Player not initialized. Please refresh the page.');
+    return;
+  }
+
   try {
     const song = JSON.parse(selector.value);
-    await sheetMusicPlayer?.loadSong(song);
+    await window.sheetMusicPlayer.loadSong(song);
   } catch (error) {
     console.error('[SheetMusic] Failed to load song:', error);
+    alert('Error loading song: ' + error.message);
   }
 };
 
 // Toggle between Normal and Wait modes
 window.toggleSheetMusicMode = function() {
-  if (!sheetMusicPlayer) return;
+  if (!window.sheetMusicPlayer) return;
 
-  const newMode = sheetMusicPlayer.mode === 'normal' ? 'wait' : 'normal';
-  sheetMusicPlayer.mode = newMode;
-  sheetMusicPlayer.playbackEngine.mode = newMode;
+  const newMode = window.sheetMusicPlayer.mode === 'normal' ? 'wait' : 'normal';
+  window.sheetMusicPlayer.mode = newMode;
+  window.sheetMusicPlayer.playbackEngine.mode = newMode;
 
   const label = document.getElementById('smModeLabel');
   if (label) {
@@ -12201,6 +12208,19 @@ async function initMidiPlayer() {
 
   console.log('[MidiPlayer] Initialized');
 }
+
+// Initialize Sheet Music Player on page load
+window.addEventListener('load', () => {
+  try {
+    if (window.initSheetMusicPlayer) {
+      window.initSheetMusicPlayer().catch(err => {
+        console.error('[SheetMusic] Initialization failed:', err);
+      });
+    }
+  } catch (err) {
+    console.error('[SheetMusic] Init error:', err);
+  }
+});
 
 console.log('[SheetMusic] Module loaded');
 </script>
