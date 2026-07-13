@@ -2305,6 +2305,49 @@ window.musicableUserId   = null;
   </div>
 </div>
 
+<!-- SHEET MUSIC VIEWER MODAL -->
+<div id="sheetMusicModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:500;overflow-y:auto" onclick="if(event.target.id==='sheetMusicModal') closeSheetMusicModal()">
+  <div style="max-width:1000px;margin:2rem auto;background:var(--card);border:2px solid var(--pink);border-radius:12px;padding:2rem;position:relative">
+    <!-- Close button -->
+    <button onclick="closeSheetMusicModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--off-white);font-size:1.5rem;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center">✕</button>
+
+    <!-- Title -->
+    <div style="font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:var(--pink);margin-bottom:1.5rem" id="smModalTitle">Sheet Music</div>
+
+    <!-- MuseScore Embed Container -->
+    <div id="smEmbedContainer" style="background:rgba(0,0,0,.3);border-radius:8px;padding:1rem;margin-bottom:2rem;min-height:450px;display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.9rem">
+        <div style="margin-bottom:1rem">No sheet music available for this song</div>
+        <div style="font-size:0.8rem;color:var(--muted)">Admin can add MuseScore link</div>
+      </div>
+    </div>
+
+    <!-- Admin Section: Add/Edit MuseScore URL -->
+    <div id="smAdminSection" style="display:none;background:rgba(255,45,120,.08);border:2px dashed var(--pink);border-radius:8px;padding:1.5rem">
+      <div style="font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:600;color:var(--pink);margin-bottom:1rem">⚙ Admin: Add Sheet Music</div>
+      <div style="display:grid;gap:1rem">
+        <div>
+          <label style="display:block;font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem">MuseScore Embed URL *</label>
+          <input id="smEmbedUrl" type="text" placeholder="https://musescore.com/user/12345/scores/67890/embed"
+            style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:0.8rem;color:var(--off-white);font-family:'DM Mono',monospace;font-size:0.85rem;box-sizing:border-box">
+          <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);margin-top:0.4rem">Paste the embed src URL from MuseScore</div>
+        </div>
+        <div style="display:flex;gap:0.8rem">
+          <button id="smSaveBtn" onclick="saveSheetMusicUrl()" style="flex:1;padding:0.8rem;background:var(--pink);border:none;color:white;border-radius:6px;font-weight:600;cursor:pointer;font-family:'DM Mono',monospace">Save</button>
+          <button onclick="closeSheetMusicModal()" style="flex:1;padding:0.8rem;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--off-white);border-radius:6px;font-weight:600;cursor:pointer;font-family:'DM Mono',monospace">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Section: Play Button -->
+    <div id="smUserSection" style="display:none;text-align:center">
+      <button onclick="playSongFromModal()" style="padding:1rem 2rem;background:var(--pink);border:none;color:white;border-radius:8px;font-weight:600;cursor:pointer;font-family:'DM Mono',monospace;font-size:1rem">
+        ▶ Play This Song
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- SCREEN 2: GAME -->
 <div class="screen" id="screen-game">
   <div class="game-layout">
@@ -5129,11 +5172,18 @@ function buildSongCardHtml(song) {
         <button class="mode-btn" id="mode-wait-${song.id}"
           onclick="setCardMode('${song.id}','wait')">⏸ Wait Mode</button>
       </div>
-      <button class="play-song-btn" id="play-btn-${song.id}"
-        onclick="selectSong('${song.id}')"
-        style="background:${song.color}">
-        ▶ Play
-      </button>
+      <div style="display:flex;gap:0.5rem">
+        <button class="play-song-btn" id="play-btn-${song.id}"
+          onclick="selectSong('${song.id}')"
+          style="background:${song.color};flex:1">
+          ▶ Play
+        </button>
+        <button class="play-song-btn" id="sheet-btn-${song.id}"
+          onclick="openSheetMusicModal('${song.id}')"
+          style="background:rgba(${hexToRgb(song.color)},.6);flex:0.4;font-size:1.2rem;padding:0.5rem" title="View sheet music">
+          🎼
+        </button>
+      </div>
     </div>`;
 }
 
@@ -5841,6 +5891,93 @@ function updateModalMidiList() {
     optEl.classList.remove('disabled');
   }
 }
+
+// Sheet Music Modal Functions
+window.currentSheetSongId = null;
+
+window.openSheetMusicModal = function(songId) {
+  const song = SONGS.find(s => s.id === songId);
+  if (!song) return;
+
+  window.currentSheetSongId = songId;
+
+  // Set title
+  document.getElementById('smModalTitle').textContent = song.name + ' - Sheet Music';
+
+  // Check if user is admin
+  const isAdmin = window.musicableUserRole === 'admin' || window.musicableUserRole === 'teacher';
+  const adminSection = document.getElementById('smAdminSection');
+  const userSection = document.getElementById('smUserSection');
+
+  if (isAdmin) {
+    adminSection.style.display = 'block';
+    userSection.style.display = 'none';
+  } else {
+    adminSection.style.display = 'none';
+    userSection.style.display = 'block';
+  }
+
+  // Load and display MuseScore embed URL
+  const embedUrl = localStorage.getItem(`song_sheet_${songId}`);
+  const container = document.getElementById('smEmbedContainer');
+
+  if (embedUrl) {
+    container.innerHTML = `<iframe id="score-iframe" width="100%" height="500" src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
+    document.getElementById('smEmbedUrl').value = embedUrl;
+  } else {
+    if (isAdmin) {
+      container.innerHTML = `<div style="text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.9rem">
+        <div style="margin-bottom:1rem">No sheet music added yet</div>
+        <div style="font-size:0.8rem;color:var(--muted)">Add a MuseScore embed URL below to get started</div>
+      </div>`;
+      document.getElementById('smEmbedUrl').value = '';
+    } else {
+      container.innerHTML = `<div style="text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.9rem">
+        <div style="margin-bottom:1rem">No sheet music available for this song</div>
+        <div style="font-size:0.8rem;color:var(--muted)">Check back later or contact your teacher</div>
+      </div>`;
+    }
+  }
+
+  // Show modal
+  document.getElementById('sheetMusicModal').style.display = 'block';
+};
+
+window.closeSheetMusicModal = function() {
+  document.getElementById('sheetMusicModal').style.display = 'none';
+  window.currentSheetSongId = null;
+};
+
+window.saveSheetMusicUrl = function() {
+  if (!window.currentSheetSongId) return;
+
+  const embedUrl = document.getElementById('smEmbedUrl').value.trim();
+  if (!embedUrl) {
+    alert('Please enter a MuseScore embed URL');
+    return;
+  }
+
+  // Validate it's a MuseScore URL
+  if (!embedUrl.includes('musescore.com')) {
+    alert('Please enter a valid MuseScore embed URL');
+    return;
+  }
+
+  // Save to localStorage
+  localStorage.setItem(`song_sheet_${window.currentSheetSongId}`, embedUrl);
+
+  // Update display
+  const container = document.getElementById('smEmbedContainer');
+  container.innerHTML = `<iframe id="score-iframe" width="100%" height="500" src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
+
+  alert('Sheet music saved!');
+};
+
+window.playSongFromModal = function() {
+  if (!window.currentSheetSongId) return;
+  document.getElementById('sheetMusicModal').style.display = 'none';
+  selectSong(window.currentSheetSongId);
+};
 
 function setModalMode(mode) {
   modal.selectedMode = mode;
