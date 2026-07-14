@@ -10063,6 +10063,8 @@ const ROOM = {
   myNotes:      new Set(),
   hbInterval:   null,
   cleanupInt:   null,
+  teacherCanvas: null,  // cached for student side note drawing
+  teacherCtx:    null,  // cached for student side note drawing
 };
 
 /* ── Helpers ──────────────────────────────────────────────── */
@@ -10443,11 +10445,25 @@ function roomStudentJoinConfirmed(codeRaw, nameRaw, firebaseConnected) {
 
   // Init canvases
   roomInitPiano('studentPianoCanvas', 'student');
-  setTimeout(() => {
+
+  // Initialize teacher remote piano canvas - cache it for incoming notes
+  const initTeacherCanvas = () => {
     const tc = document.getElementById('teacherRemotePiano');
-    const tCtx = tc?.getContext('2d');
-    if (tc && tCtx) { roomSizePiano(tc); roomDrawPiano(tc, tCtx, new Set(), true); }
-  }, 80);
+    if (tc) {
+      roomSizePiano(tc);
+      const tCtx = tc.getContext('2d');
+      if (tCtx) {
+        roomDrawPiano(tc, tCtx, new Set(), true);
+        // Cache canvas for use in message handler
+        ROOM.teacherCanvas = tc;
+        ROOM.teacherCtx = tCtx;
+      }
+    }
+  };
+
+  // Initialize immediately and again after DOM settles
+  initTeacherCanvas();
+  setTimeout(initTeacherCanvas, 100);
 
   // Heartbeat
   ROOM.hbInterval = setInterval(() => {
@@ -10465,8 +10481,21 @@ function roomStudentHandleTeacher(e) {
   // Filter out student-role heartbeats but allow note events from anyone in the room
   if (type === 'heartbeat' && e.data.role === 'student') return;
 
-  const tc   = document.getElementById('teacherRemotePiano');
-  const tCtx = tc?.getContext('2d');
+  // Use cached canvas, or reinitialize if needed
+  let tc = ROOM.teacherCanvas;
+  let tCtx = ROOM.teacherCtx;
+
+  if (!tc || !tCtx) {
+    tc = document.getElementById('teacherRemotePiano');
+    if (tc) {
+      roomSizePiano(tc);
+      tCtx = tc.getContext('2d');
+      if (tCtx) {
+        ROOM.teacherCanvas = tc;
+        ROOM.teacherCtx = tCtx;
+      }
+    }
+  }
 
   if (type === 'note_on' && midi != null) {
     // Could be teacher note or echoed student note — always play at full volume
