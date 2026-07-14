@@ -10210,7 +10210,7 @@ function roomTeacherHandleMsg(e) {
       st.heldNotes.add(midi);
       // Always play audio at full volume so teacher can hear student
       playPianoNote(midi, 0.5);
-      if (!st.hidden) {
+      if (!st.hidden && st.canvas && st.ctx) {
         roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
         roomAddNotePill('studentPianoNotes-' + sender, midi, false);
       }
@@ -10219,7 +10219,7 @@ function roomTeacherHandleMsg(e) {
     const st = ROOM.students.get(sender);
     if (st) {
       st.heldNotes.delete(midi);
-      if (!st.hidden) {
+      if (!st.hidden && st.canvas && st.ctx) {
         roomDrawPiano(st.canvas, st.ctx, st.heldNotes, false);
       }
     }
@@ -10297,8 +10297,11 @@ function roomTeacherAddStudent(sid, name) {
   container.appendChild(wrap);
 
   const canvas = document.getElementById('studentPiano-' + sid);
-  const ctx    = canvas.getContext('2d');
-  setTimeout(() => { roomSizePiano(canvas); roomDrawPiano(canvas, ctx, new Set(), false); }, 50);
+
+  // Size canvas FIRST, then get context (resizing invalidates context)
+  roomSizePiano(canvas);
+  const ctx = canvas.getContext('2d');
+  roomDrawPiano(canvas, ctx, new Set(), false);
 
   ROOM.students.set(sid, { name, canvas, ctx, heldNotes: new Set(), lastSeen: Date.now(), hidden: false });
 
