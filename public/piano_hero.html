@@ -10063,8 +10063,10 @@ const ROOM = {
   myNotes:      new Set(),
   hbInterval:   null,
   cleanupInt:   null,
-  teacherCanvas: null,  // cached for student side note drawing
-  teacherCtx:    null,  // cached for student side note drawing
+  teacherCanvas: null,  // cached for student side teacher note drawing
+  teacherCtx:    null,  // cached for student side teacher note drawing
+  myCanvas:      null,  // cached for my own note drawing (MIDI, keyboard)
+  myCtx:         null,  // cached for my own note drawing (MIDI, keyboard)
 };
 
 /* ── Helpers ──────────────────────────────────────────────── */
@@ -11161,17 +11163,31 @@ function roomHandleMidiNoteOn(midi) {
 
   ROOM.myNotes.add(midi);
   const isT     = ROOM.role === 'teacher';
-  const cId     = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
   const notesId = isT ? 'teacherRecentNotes' : 'studentRecentNotes';
-  const canvas  = document.getElementById(cId);
+
+  // ── Get canvas and context ──
+  let canvas, ctx;
+  if (isT) {
+    canvas = document.getElementById('teacherPianoCanvas');
+    // Cache for teacher
+    if (!ROOM.myCanvas) ROOM.myCanvas = canvas;
+    if (!ROOM.myCtx || !isCanvasValid(ROOM.myCtx)) {
+      ROOM.myCtx = canvas?.getContext('2d');
+    }
+    ctx = ROOM.myCtx;
+  } else {
+    canvas = document.getElementById('studentPianoCanvas');
+    // Cache for student
+    if (!ROOM.myCanvas) ROOM.myCanvas = canvas;
+    if (!ROOM.myCtx || !isCanvasValid(ROOM.myCtx)) {
+      ROOM.myCtx = canvas?.getContext('2d');
+    }
+    ctx = ROOM.myCtx;
+  }
 
   // ── Always draw locally so keyboard/MIDI always lights up keys ──
-  if (canvas) {
-    if (isT) {
-      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, true);
-    } else {
-      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, false);
-    }
+  if (canvas && ctx) {
+    roomDrawPiano(canvas, ctx, ROOM.myNotes, isT);
   }
   roomAddNotePill(notesId, midi, isT);
   if (!isT) roomShowFeedback('studentFeedback', NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1));
@@ -11186,23 +11202,37 @@ function roomHandleMidiNoteOff(midi) {
   if (!ROOM.role) return;
 
   ROOM.myNotes.delete(midi);
-  const isT    = ROOM.role === 'teacher';
-  const cId    = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
-  const canvas = document.getElementById(cId);
+  const isT = ROOM.role === 'teacher';
+
+  // ── Get cached canvas and context ──
+  let canvas = ROOM.myCanvas;
+  let ctx = ROOM.myCtx;
+
+  // Fall back to getting fresh if cache lost
+  if (!canvas) {
+    const cId = isT ? 'teacherPianoCanvas' : 'studentPianoCanvas';
+    canvas = document.getElementById(cId);
+    ROOM.myCanvas = canvas;
+  }
+  if (!ctx || !isCanvasValid(ctx)) {
+    ctx = canvas?.getContext('2d');
+    ROOM.myCtx = ctx;
+  }
 
   // ── Always redraw locally ──
-  if (canvas) {
-    if (isT) {
-      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, true);
-    } else {
-      roomDrawPiano(canvas, canvas.getContext('2d'), ROOM.myNotes, false);
-    }
+  if (canvas && ctx) {
+    roomDrawPiano(canvas, ctx, ROOM.myNotes, isT);
   }
 
   // ── Broadcast to remote peers (only if connected) ──
   const msg = { type:'note_off', midi, sender:ROOM.myId, name:ROOM.myName, role: isT ? 'teacher' : 'student' };
   if (_fbRef)        fbPush(msg);
   if (ROOM.channel)  ROOM.channel.postMessage(msg);
+}
+
+// Helper to check if canvas 2D context is still valid
+function isCanvasValid(ctx) {
+  return ctx && ctx.canvas && ctx.canvas.width > 0 && ctx.canvas.height > 0;
 }
 
 /* ── Draw a room piano canvas ────────────────────────────── */
