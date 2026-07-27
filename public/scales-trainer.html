@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scales & Arpeggios Trainer — Musicable</title>
+<style>
+  :root {
+    --primary: #5a45c4;
+    --primary-light: #7a65e4;
+    --primary-dark: #3d2a8f;
+    --accent-blue: #00d4ff;
+    --accent-pink: #ff2d78;
+    --accent-green: #39d98a;
+    --accent-gold: #ffc107;
+    --bg-dark: #0f0a1a;
+    --bg-card: #1a1428;
+    --border-line: #2d2540;
+    --text-primary: #f5f2ec;
+    --text-secondary: #a89bb5;
+    --text-muted: #6b7280;
+    --shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, #1a0f2e 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+
+  .mode-selector {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .mode-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--border-line);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .mode-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .mode-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 0 20px rgba(90, 69, 196, 0.4);
+  }
+
+  .grade-filter {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .grade-badge {
+    padding: 8px 16px;
+    border: 1px solid var(--border-line);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .grade-badge:hover,
+  .grade-badge.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .content-wrapper {
+    display: grid;
+    gap: 24px;
+  }
+
+  .scale-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .scale-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
+    border: 1px solid var(--border-line);
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scale-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(90, 69, 196, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .scale-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(90, 69, 196, 0.3);
+    transform: translateY(-4px);
+  }
+
+  .scale-card-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .scale-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .scale-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .scale-grade {
+    background: var(--primary);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .scale-type {
+    display: inline-block;
+    background: var(--border-line);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  .scale-notes {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .scale-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    padding: 4px 10px;
+    background: rgba(90, 69, 196, 0.2);
+    border: 1px solid rgba(90, 69, 196, 0.4);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--accent-blue);
+  }
+
+  .scale-progress {
+    margin-bottom: 16px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--border-line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+    transition: width 0.3s ease;
+  }
+
+  .scale-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-small {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid var(--border-line);
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-small:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+    color: white;
+  }
+
+  /* Quiz Mode */
+  .quiz-container {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
+    border: 1px solid var(--border-line);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .quiz-header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .quiz-progress {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+
+  .quiz-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-line);
+    transition: all 0.3s ease;
+  }
+
+  .quiz-dot.active {
+    background: var(--primary);
+  }
+
+  .quiz-dot.correct {
+    background: var(--accent-green);
+  }
+
+  .quiz-dot.incorrect {
+    background: var(--accent-pink);
+  }
+
+  .quiz-question {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .quiz-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .quiz-option {
+    padding: 16px;
+    background: transparent;
+    border: 2px solid var(--border-line);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+  }
+
+  .quiz-option:hover:not(:disabled) {
+    border-color: var(--primary);
+  }
+
+  .quiz-option.selected {
+    border-color: var(--primary);
+    background: rgba(90, 69, 196, 0.2);
+  }
+
+  .quiz-option.correct {
+    border-color: var(--accent-green);
+    background: rgba(57, 217, 138, 0.2);
+  }
+
+  .quiz-option.incorrect {
+    border-color: var(--accent-pink);
+    background: rgba(255, 45, 120, 0.2);
+  }
+
+  .quiz-option:disabled {
+    cursor: default;
+  }
+
+  .quiz-score {
+    text-align: center;
+    margin-top: 32px;
+  }
+
+  .score-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--accent-green);
+  }
+
+  .score-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  /* Challenge Mode */
+  .challenge-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .challenge-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  .challenge-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .challenge-desc {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  .challenge-btn {
+    padding: 12px 24px;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .challenge-btn:hover {
+    background: var(--primary-light);
+  }
+
+  /* Speed Challenge */
+  .speed-timer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(90, 69, 196, 0.1);
+    border-radius: 10px;
+  }
+
+  .timer {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+
+  .score-display {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* Leaderboard */
+  .leaderboard-table {
+    width: 100%;
+    background: transparent;
+    border-collapse: collapse;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-line);
+  }
+
+  .leaderboard-table th {
+    background: rgba(90, 69, 196, 0.1);
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .leaderboard-table td {
+    color: var(--text-secondary);
+  }
+
+  .leaderboard-rank {
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .leaderboard-name {
+    color: var(--text-primary);
+  }
+
+  .leaderboard-score {
+    color: var(--accent-green);
+    font-weight: 600;
+  }
+
+  /* Piano Keyboard */
+  .keyboard-display {
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  .piano-key {
+    display: inline-block;
+    margin: 0 2px;
+    text-align: center;
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+
+  .piano-key.white {
+    width: 30px;
+    height: 100px;
+    background: #f5f2ec;
+    color: #1d1d1b;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .piano-key.black {
+    width: 20px;
+    height: 60px;
+    background: #1d1d1b;
+    color: #f5f2ec;
+    border: 1px solid #000;
+    border-radius: 3px;
+    position: relative;
+    top: -40px;
+    margin-left: -15px;
+    margin-right: -5px;
+  }
+
+  .piano-key.active {
+    box-shadow: 0 0 12px rgba(90, 69, 196, 0.6) inset;
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
+    border: 1px solid var(--border-line);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
+    border: 1px solid var(--border-line);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Animations */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  .scale-card {
+    animation: slideIn 0.3s ease forwards;
+  }
+
+  .celebration {
+    animation: pulse 0.6s ease-out;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🎹 Scales & Arpeggios Trainer</h1>
+    <p>Master scales and arpeggios for every piano grade</p>
+  </div>
+
+  <div class="mode-selector">
+    <button class="mode-btn active" onclick="switchMode('learn')">📚 Learn</button>
+    <button class="mode-btn" onclick="switchMode('quiz')">❓ Quiz</button>
+    <button class="mode-btn" onclick="switchMode('challenge')">⚡ Challenge</button>
+    <button class="mode-btn" onclick="switchMode('progress')">📈 Progress</button>
+  </div>
+
+  <div class="grade-filter" id="gradeFilter"></div>
+
+  <div class="content-wrapper" id="content"></div>
+</div>
+
+<div class="modal" id="playerModal">
+  <div class="modal-content" style="position: relative;">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-header" id="modalTitle"></div>
+    <div id="modalBody"></div>
+    <div style="margin-top: 24px;">
+      <button class="btn-small btn-primary" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Data structure for all scales/arpeggios by grade
+const SCALES_DATA = [
+  // Grade 1-2
+  {
+    id: 'c-major-1', grade: '1-2', type: 'Major Scale', title: 'C Major', notes: 'C D E F G A B C',
+    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'white-keys', 'hands-together'],
+    knots: 'No black keys to worry about — just white keys in order.'
+  },
+  {
+    id: 'g-major-1', grade: '1-2', type: 'Major Scale', title: 'G Major', notes: 'G A B C D E F# G',
+    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'one-sharp', 'hands-together'],
+    knots: 'Just one black key: F#. Practice the F# → G crossing.'
+  },
+  {
+    id: 'f-major-1', grade: '1-2', type: 'Major Scale', title: 'F Major', notes: 'F G A Bb C D E F',
+    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'one-flat', 'hands-together'],
+    knots: 'One black key: Bb. Watch the Bb transition from A.'
+  },
+
+  // Grade 2-3
+  {
+    id: 'd-major-2', grade: '2-3', type: 'Major Scale', title: 'D Major', notes: 'D E F# G A B C# D',
+    hands: 'parallel', difficulty: 'easy', tags: ['major', 'two-sharps', 'hands-together'],
+    knots: 'Two sharps: F# and C#. Fingering shape: RH 1-2-3-1-2-3-4-5'
+  },
+  {
+    id: 'bb-major-2', grade: '2-3', type: 'Major Scale', title: 'Bb Major', notes: 'Bb C D Eb F G A Bb',
+    hands: 'parallel', difficulty: 'easy', tags: ['major', 'two-flats', 'hands-together'],
+    knots: 'Two flats: Bb and Eb. Smooth black key transitions.'
+  },
+  {
+    id: 'a-minor-2', grade: '2-3', type: 'Minor Scale', title: 'A Natural Minor', notes: 'A B C D E F G A',
+    hands: 'parallel', difficulty: 'easy', tags: ['minor', 'relative-minor', 'hands-together'],
+    knots: 'No sharps or flats. Relative minor of C major — same white keys.'
+  },
+
+  // Grade 3-4
+  {
+    id: 'a-major-3', grade: '3-4', type: 'Major Scale', title: 'A Major', notes: 'A B C# D E F# G# A',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'three-sharps', 'hands-together'],
+    knots: 'Three sharps: F#, C#, G#. Common hand shape with thumb crossovers.'
+  },
+  {
+    id: 'eb-major-3', grade: '3-4', type: 'Major Scale', title: 'Eb Major', notes: 'Eb F G Ab Bb C D Eb',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'three-flats', 'hands-together'],
+    knots: 'Three flats: Bb, Eb, Ab. Watch Ab and Bb coordination.'
+  },
+  {
+    id: 'e-minor-3', grade: '3-4', type: 'Minor Scale', title: 'E Natural Minor', notes: 'E F# G A B C D E',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['minor', 'hands-together'],
+    knots: 'One sharp: F#. Relative minor of G major.'
+  },
+  {
+    id: 'db-major-arp-3', grade: '3-4', type: 'Arpeggio', title: 'Db Major Arpeggio', notes: 'Db F Ab Db F',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['arpeggio', 'hands-together'],
+    knots: 'Root position: Db (root), F (3rd), Ab (5th). Fingering: 2-3-5'
+  },
+
+  // Grade 4-5
+  {
+    id: 'e-major-4', grade: '4-5', type: 'Major Scale', title: 'E Major', notes: 'E F# G# A B C# D# E',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'four-sharps', 'hands-together'],
+    knots: 'Four sharps. More complex fingering patterns with thumb crossovers.'
+  },
+  {
+    id: 'ab-major-4', grade: '4-5', type: 'Major Scale', title: 'Ab Major', notes: 'Ab Bb C Db Eb F G Ab',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'four-flats', 'hands-together'],
+    knots: 'Four flats. The Db and Eb coordination is key.'
+  },
+  {
+    id: 'b-minor-4', grade: '4-5', type: 'Minor Scale', title: 'B Harmonic Minor', notes: 'B C# D E F# G A# B',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['minor', 'harmonic', 'hands-together'],
+    knots: 'Two sharps, plus raised 7th (A#). Creates that eastern flavor.'
+  },
+  {
+    id: 'c-minor-arp-4', grade: '4-5', type: 'Arpeggio', title: 'C Minor Arpeggio', notes: 'C Eb G C',
+    hands: 'parallel', difficulty: 'intermediate', tags: ['arpeggio', 'minor', 'hands-together'],
+    knots: 'Root on a white key, 3rd and 5th on black keys. Fingering: 1-3-5 right hand'
+  },
+
+  // Grade 5+
+  {
+    id: 'b-major-5', grade: '5-6', type: 'Major Scale', title: 'B Major', notes: 'B C# D# E F# G# A# B',
+    hands: 'parallel', difficulty: 'advanced', tags: ['major', 'five-sharps', 'hands-together'],
+    knots: 'Five sharps! Lots of black keys. Requires smooth thumb transitions.'
+  },
+  {
+    id: 'gb-major-5', grade: '5-6', type: 'Major Scale', title: 'Gb Major', notes: 'Gb Ab Bb Cb Db Eb F Gb',
+    hands: 'parallel', difficulty: 'advanced', tags: ['major', 'six-flats', 'hands-together'],
+    knots: 'Six flats. Mostly black keys — very slippery!'
+  },
+  {
+    id: 'gsharp-minor-5', grade: '5-6', type: 'Minor Scale', title: 'G# Harmonic Minor', notes: 'G# A# B C# D# E F# G#',
+    hands: 'parallel', difficulty: 'advanced', tags: ['minor', 'harmonic', 'hands-together'],
+    knots: 'Three sharps, then F#x (sounds like G). Enharmonic nightmare!'
+  },
+  {
+    id: 'diminished-arp-5', grade: '5-6', type: 'Arpeggio', title: 'Diminished 7th on B', notes: 'B D F Ab',
+    hands: 'parallel', difficulty: 'advanced', tags: ['arpeggio', 'diminished', 'hands-together'],
+    knots: 'Equal minor thirds. Clean 1-2-3-5 pattern. Same shape repeats every 3 semitones.'
+  },
+];
+
+let currentMode = 'learn';
+let currentGrade = 'all';
+let userStats = loadStats();
+let quizState = { current: 0, answers: [], score: 0 };
+let selectedScale = null;
+
+function loadStats() {
+  const saved = localStorage.getItem('scaleStats');
+  return saved ? JSON.parse(saved) : {
+    practiced: {},
+    quizScores: [],
+    timeSpent: {},
+    lastActive: Date.now()
+  };
+}
+
+function saveStats() {
+  localStorage.setItem('scaleStats', JSON.stringify(userStats));
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function initGradeFilter() {
+  const grades = ['all', '1-2', '2-3', '3-4', '4-5', '5-6'];
+  const filter = document.getElementById('gradeFilter');
+  filter.innerHTML = grades.map(g =>
+    `<button class="grade-badge ${g === 'all' ? 'active' : ''}" onclick="filterGrade('${g}')">${g === 'all' ? 'All Grades' : 'Grade ' + g}</button>`
+  ).join('');
+}
+
+function filterGrade(grade) {
+  currentGrade = grade;
+  document.querySelectorAll('.grade-badge').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function getScalesByGrade() {
+  return currentGrade === 'all'
+    ? SCALES_DATA
+    : SCALES_DATA.filter(s => s.grade === currentGrade);
+}
+
+function renderLearnMode() {
+  const scales = getScalesByGrade();
+  return `
+    <div class="scale-grid">
+      ${scales.map(scale => `
+        <div class="scale-card" onclick="openScale('${scale.id}')">
+          <div class="scale-card-inner">
+            <div class="scale-header">
+              <div>
+                <h3 class="scale-title">${scale.title}</h3>
+                <span class="scale-type">${scale.type}</span>
+              </div>
+              <div class="scale-grade">Grade ${scale.grade}</div>
+            </div>
+            <div class="scale-notes">${scale.notes}</div>
+            <div class="scale-tags">
+              ${scale.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            </div>
+            <div class="scale-progress">
+              <div class="progress-label">
+                <span>Progress</span>
+                <span>${userStats.practiced[scale.id] || 0} practices</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${Math.min((userStats.practiced[scale.id] || 0) * 20, 100)}%"></div>
+              </div>
+            </div>
+            <div class="scale-actions">
+              <button class="btn-small btn-primary" onclick="playScale('${scale.id}', event)">▶ Play</button>
+              <button class="btn-small" onclick="openScale('${scale.id}', event)">Learn More</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderQuizMode() {
+  const scales = getScalesByGrade();
+  const quizLength = Math.min(10, scales.length);
+
+  if (quizState.current === 0) {
+    return `
+      <div style="text-align: center; margin-top: 40px;">
+        <h2 style="font-size: 24px; margin-bottom: 16px;">Ready for a quiz?</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">Test your knowledge with ${quizLength} questions</p>
+        <button class="challenge-btn" onclick="startQuiz()">Start Quiz</button>
+      </div>
+    `;
+  }
+
+  if (quizState.current >= quizLength) {
+    const score = quizState.answers.filter(a => a.correct).length;
+    const percent = Math.round((score / quizLength) * 100);
+    return `
+      <div class="quiz-container">
+        <div class="quiz-header">
+          <h2>Quiz Complete!</h2>
+        </div>
+        <div class="quiz-score celebration">
+          <div class="score-number">${score}/${quizLength}</div>
+          <div class="score-label">${percent}% Correct</div>
+        </div>
+        <div style="margin-top: 24px; text-align: center;">
+          <button class="btn-small btn-primary" style="margin-top: 16px;" onclick="resetQuiz()">Try Again</button>
+        </div>
+      </div>
+    `;
+  }
+
+  const scale = scales[quizState.current];
+  const quizTypes = [
+    { q: `What are the notes in ${scale.title}?`, type: 'notes' },
+    { q: `${scale.title} is a ${scale.type}. What is its grade?`, type: 'grade' },
+    { q: `How many sharps/flats does ${scale.title} have?`, type: 'key' }
+  ];
+
+  const question = quizTypes[quizState.current % quizTypes.length];
+  const options = generateQuizOptions(scale, question.type);
+
+  return `
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <div class="quiz-progress">
+          ${Array(quizLength).fill(0).map((_, i) => {
+            let className = 'quiz-dot';
+            if (i < quizState.current) {
+              className += quizState.answers[i]?.correct ? ' correct' : ' incorrect';
+            } else if (i === quizState.current) {
+              className += ' active';
+            }
+            return `<div class="${className}"></div>`;
+          }).join('')}
+        </div>
+        <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">
+          Question ${quizState.current + 1} of ${quizLength}
+        </div>
+      </div>
+      <div class="quiz-question">${question.q}</div>
+      <div class="quiz-options">
+        ${options.map((opt, i) => `
+          <button class="quiz-option" onclick="answerQuiz(${i}, ${opt.correct})">${opt.text}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function generateQuizOptions(scale, type) {
+  const options = [];
+
+  if (type === 'notes') {
+    options.push({ text: scale.notes, correct: true });
+    const wrongScales = SCALES_DATA.filter(s => s.id !== scale.id).slice(0, 3);
+    wrongScales.forEach(s => options.push({ text: s.notes, correct: false }));
+  } else if (type === 'grade') {
+    options.push({ text: `Grade ${scale.grade}`, correct: true });
+    const otherGrades = ['1-2', '2-3', '3-4', '4-5', '5-6'].filter(g => g !== scale.grade).slice(0, 3);
+    otherGrades.forEach(g => options.push({ text: `Grade ${g}`, correct: false }));
+  } else if (type === 'key') {
+    const keyInfo = scale.notes.includes('#') ? `${scale.notes.split(' ').filter(n => n.includes('#')).length} sharps` :
+                   scale.notes.includes('b') ? `${scale.notes.split(' ').filter(n => n.includes('b')).length} flats` : 'No sharps/flats';
+    options.push({ text: keyInfo, correct: true });
+    options.push({ text: `${Math.floor(Math.random() * 5)} sharps`, correct: false });
+    options.push({ text: `${Math.floor(Math.random() * 5)} flats`, correct: false });
+    options.push({ text: 'Both sharps and flats', correct: false });
+  }
+
+  return options.sort(() => Math.random() - 0.5);
+}
+
+function answerQuiz(idx, correct) {
+  quizState.answers.push({ idx, correct });
+  if (correct) {
+    userStats.quizScores.push({ scale: SCALES_DATA[quizState.current].id, score: 100, date: Date.now() });
+  }
+  saveStats();
+  quizState.current++;
+  render();
+}
+
+function startQuiz() {
+  quizState = { current: 0, answers: [], score: 0 };
+  render();
+}
+
+function resetQuiz() {
+  quizState = { current: 0, answers: [], score: 0 };
+  render();
+}
+
+function renderChallengeMode() {
+  return `
+    <div style="max-width: 600px; margin: 0 auto;">
+      <div class="challenge-card">
+        <div class="challenge-icon">⏱️</div>
+        <div class="challenge-title">Speed Challenge</div>
+        <div class="challenge-desc">Play as many scales as you can in 60 seconds</div>
+        <button class="challenge-btn" onclick="startSpeedChallenge()">Start</button>
+      </div>
+
+      <div class="challenge-card">
+        <div class="challenge-icon">🎯</div>
+        <div class="challenge-title">Perfect Play</div>
+        <div class="challenge-desc">Play 5 random scales without mistakes</div>
+        <button class="challenge-btn" onclick="startPerfectChallenge()">Start</button>
+      </div>
+
+      <div class="challenge-card">
+        <div class="challenge-icon">🔥</div>
+        <div class="challenge-title">Daily Challenge</div>
+        <div class="challenge-desc">Complete today's scale assignment</div>
+        <button class="challenge-btn" onclick="startDailyChallenge()">Start</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderProgressMode() {
+  const practiced = Object.values(userStats.practiced).reduce((a, b) => a + b, 0);
+  const quizzes = userStats.quizScores.length;
+  const avgScore = quizzes > 0 ? Math.round(userStats.quizScores.reduce((a, b) => a + b.score, 0) / quizzes) : 0;
+
+  return `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">${practiced}</div>
+        <div class="stat-label">Scales Practiced</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${quizzes}</div>
+        <div class="stat-label">Quizzes Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${avgScore}%</div>
+        <div class="stat-label">Average Quiz Score</div>
+      </div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%); border: 1px solid var(--border-line); border-radius: 16px; padding: 24px;">
+      <h3 style="margin-top: 0;">Most Practiced Scales</h3>
+      <table class="leaderboard-table">
+        <thead>
+          <tr>
+            <th>Scale</th>
+            <th>Practices</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(userStats.practiced)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([id, count], idx) => {
+              const scale = SCALES_DATA.find(s => s.id === id);
+              return `
+                <tr>
+                  <td class="leaderboard-name">${idx + 1}. ${scale?.title || 'Unknown'}</td>
+                  <td class="leaderboard-score">${count}</td>
+                </tr>
+              `;
+            })
+            .join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function render() {
+  const content = document.getElementById('content');
+
+  let html = '';
+  if (currentMode === 'learn') {
+    html = renderLearnMode();
+  } else if (currentMode === 'quiz') {
+    html = renderQuizMode();
+  } else if (currentMode === 'challenge') {
+    html = renderChallengeMode();
+  } else if (currentMode === 'progress') {
+    html = renderProgressMode();
+  }
+
+  content.innerHTML = html;
+}
+
+function openScale(scaleId, event) {
+  if (event) event.stopPropagation();
+  const scale = SCALES_DATA.find(s => s.id === scaleId);
+  if (!scale) return;
+
+  selectedScale = scale;
+  const modal = document.getElementById('playerModal');
+  document.getElementById('modalTitle').textContent = scale.title;
+  document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom: 20px;">
+      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">NOTES</div>
+      <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">${scale.notes}</div>
+
+      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">TIPS</div>
+      <div style="font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${scale.knots}</div>
+
+      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">PRACTICE TIPS</div>
+      <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
+        <li>Start slowly and gradually increase tempo</li>
+        <li>Practice hands separately, then together</li>
+        <li>Focus on smooth thumb crossovers</li>
+        <li>Use a metronome for rhythm accuracy</li>
+      </ul>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-small btn-primary" style="flex: 1;" onclick="recordPractice('${scale.id}')">✓ Mark Practiced</button>
+      <button class="btn-small" style="flex: 1;" onclick="playScale('${scale.id}', null)">▶ Hear It</button>
+    </div>
+  `;
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('playerModal').classList.remove('active');
+}
+
+function recordPractice(scaleId) {
+  if (!userStats.practiced[scaleId]) {
+    userStats.practiced[scaleId] = 0;
+  }
+  userStats.practiced[scaleId]++;
+  saveStats();
+  closeModal();
+  render();
+}
+
+function playScale(scaleId, event) {
+  if (event) event.stopPropagation();
+  const scale = SCALES_DATA.find(s => s.id === scaleId);
+  if (!scale) return;
+
+  // Play the scale using Web Audio API
+  const notes = scale.notes.split(' ');
+  let delay = 0;
+
+  notes.forEach((note, i) => {
+    setTimeout(() => playNote(note), delay);
+    delay += 300;
+  });
+}
+
+function playNote(noteName) {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const noteFreqs = {
+    'C': 261.63, 'C#': 277.18, 'Db': 277.18,
+    'D': 293.66, 'D#': 311.13, 'Eb': 311.13,
+    'E': 329.63, 'Fb': 329.63, 'E#': 349.23,
+    'F': 349.23, 'F#': 369.99, 'Gb': 369.99,
+    'G': 391.99, 'G#': 415.3, 'Ab': 415.3,
+    'A': 440, 'A#': 466.16, 'Bb': 466.16,
+    'B': 493.88, 'Cb': 493.88, 'B#': 523.25
+  };
+
+  // Handle octaves
+  let freq = noteFreqs[noteName.replace(/[0-9]/g, '')];
+  if (!freq) return;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.5);
+}
+
+function startSpeedChallenge() {
+  alert('Speed Challenge: Try to identify scales quickly! Coming soon.');
+}
+
+function startPerfectChallenge() {
+  alert('Perfect Play: Play scales without mistakes. Coming soon.');
+}
+
+function startDailyChallenge() {
+  alert('Daily Challenge: Complete the assignment. Coming soon.');
+}
+
+// Initialize
+initGradeFilter();
+render();
+</script>
+
+</body>
+</html>

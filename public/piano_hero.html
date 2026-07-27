@@ -11085,8 +11085,8 @@ function roomSizePiano(canvas) {
 function roomInitPiano(canvasId, who) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  roomSizePiano(canvas);
   setTimeout(() => {
-    roomSizePiano(canvas);
     const ctx = canvas.getContext('2d');
     roomDrawPiano(canvas, ctx, new Set(), who === 'teacher');
 
