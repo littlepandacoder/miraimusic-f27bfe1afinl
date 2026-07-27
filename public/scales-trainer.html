@@ -6,350 +6,572 @@
 <title>Scales & Arpeggios Trainer — Musicable</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
-:root{
-  --bg:#0a0812;--card:#151228;--card2:#1c1935;--ink:#e8ecf0;--sub:#a89bb5;
-  --line:#2d2540;--rh:#00d4ff;--rh-d:#0099cc;--lh:#ff2d78;--lh-d:#cc1a5c;
-  --accent:#5a45c4;--accentbg:#eeedfe;--musicable:#5a45c4;
+:root {
+  --bg: #0a0812;
+  --card: #151228;
+  --ink: #e8ecf0;
+  --sub: #a89bb5;
+  --line: #2d2540;
+  --rh: #00d4ff;
+  --lh: #ff2d78;
+  --accent: #5a45c4;
 }
-*{box-sizing:border-box;}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);}
-.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px;}
-h1{font-size:22px;font-weight:700;margin:0 0 4px;background:linear-gradient(135deg,#00d4ff,#ff2d78);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.lead{color:var(--sub);font-size:13px;margin:0 0 20px;}
-.grade-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
-.grade-btn{padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--sub);transition:all 0.2s;}
-.grade-btn:hover{border-color:var(--accent);color:var(--accent);}
-.grade-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
-.tab{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;color:var(--sub);transition:all 0.2s;}
-.tab:hover{border-color:var(--accent);}
-.tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
-.tab .cat{display:block;font-size:10px;color:var(--sub);font-weight:500;}
-.tab.active .cat{color:#a8d9ff;}
-.panel{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:24px;}
-.panel-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
-.panel-title{font-size:20px;font-weight:700;margin:0;color:var(--ink);}
-.panel-desc{font-size:13px;color:var(--sub);margin:4px 0 0;max-width:600px;}
-.badges{display:flex;gap:6px;flex-wrap:wrap;}
-.badge{font-size:11px;font-weight:600;padding:6px 11px;border-radius:20px;border:1px solid var(--line);}
-.b-dyn{background:rgba(255,45,120,0.15);color:#ff7fa8;border-color:rgba(255,45,120,0.3);}
-.b-art{background:rgba(0,212,255,0.15);color:#57e0ff;border-color:rgba(0,212,255,0.3);}
-.b-hand{background:rgba(90,69,196,0.15);color:#b39fdb;border-color:rgba(90,69,196,0.3);}
-.keyboard-wrap{overflow-x:auto;margin:20px 0;padding-bottom:8px;text-align:center;}
-canvas{display:block;margin:0 auto;border-radius:8px;background:#0a0812;}
-.legend{display:flex;gap:20px;font-size:12px;color:var(--sub);margin:16px 0 20px;}
-.legend span{display:inline-flex;align-items:center;gap:6px;}
-.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
-.controls{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
-button.play{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;}
-button.play:hover{background:#6d55d4;transform:translateY(-1px);}
-button.play:disabled{opacity:0.5;cursor:default;}
-button.reset{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;color:var(--sub);transition:all 0.2s;}
-button.reset:hover{border-color:var(--accent);color:var(--accent);}
-.tempo{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);}
-.tempo input{cursor:pointer;accent-color:var(--accent);}
-.hand-block{margin-bottom:18px;}
-.hand-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;color:var(--sub);}
-.note-row{display:flex;gap:6px;flex-wrap:wrap;}
-.note-card{min-width:50px;text-align:center;border-radius:8px;padding:8px 5px;font-size:12px;border:1px solid var(--line);background:var(--card);transition:all 0.2s;cursor:pointer;color:var(--ink);}
-.note-card:hover{border-color:var(--accent);}
-.note-card .nn{font-weight:600;display:block;}
-.note-card .fn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;margin-top:4px;}
-.note-card.rh .fn{background:var(--rh);}
-.note-card.lh .fn{background:var(--lh);}
-.note-card.current{outline:2px solid var(--accent);outline-offset:1px;background:rgba(90,69,196,0.2);}
-.note-text{font-size:12px;color:var(--sub);margin-top:18px;line-height:1.6;padding-top:18px;border-top:1px solid var(--line);}
-.footnote{font-size:11px;color:var(--sub);margin-top:28px;line-height:1.6;font-style:italic;}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+
+.container { display: flex; flex-direction: column; height: 100vh; }
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(10, 8, 18, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.header-left .icon {
+  font-size: 20px;
+}
+
+.title {
+  background: linear-gradient(135deg, var(--rh), var(--lh));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-small:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #6d55d4;
+}
+
+/* Main Content */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 280px;
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.sidebar-section {
+  margin-bottom: 24px;
+}
+
+.sidebar-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sub);
+  margin-bottom: 12px;
+}
+
+.scale-item {
+  padding: 10px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--sub);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.scale-item:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.scale-item.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.scale-item-name {
+  font-weight: 600;
+  display: block;
+}
+
+.scale-item-grade {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Piano Area */
+.piano-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  overflow: auto;
+}
+
+.piano-info {
+  margin-bottom: 20px;
+}
+
+.info-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.info-desc {
+  color: var(--sub);
+  font-size: 13px;
+}
+
+.info-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 4px 10px;
+  background: rgba(90, 69, 196, 0.15);
+  border: 1px solid rgba(90, 69, 196, 0.3);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rh);
+}
+
+.piano-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.piano-canvas-wrapper {
+  background: linear-gradient(135deg, rgba(10, 8, 18, 0.8), rgba(21, 18, 40, 0.8));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  max-height: 300px;
+}
+
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-play {
+  padding: 10px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-play:hover {
+  background: #6d55d4;
+}
+
+.tempo-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.tempo-control input {
+  width: 100px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.hand-info {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.hand-column {
+  flex: 1;
+}
+
+.hand-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sub);
+  margin-bottom: 8px;
+}
+
+.notes-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.note-badge {
+  padding: 6px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.note-badge.rh {
+  border-color: var(--rh);
+  color: var(--rh);
+}
+
+.note-badge.lh {
+  border-color: var(--lh);
+  color: var(--lh);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sub);
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>🎹 Scales & Arpeggios Trainer</h1>
-  <p class="lead">Master scales and arpeggios for every piano grade. Click a scale, then press Play to hear and watch the fingering.</p>
 
-  <div class="grade-selector" id="gradeSelector"></div>
-  <div class="tabs" id="tabs"></div>
-  <div class="panel" id="panel"></div>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <span class="icon">🎹</span>
+      <span class="title">Scales & Arpeggios Trainer</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-small" onclick="window.location.href='/dashboard'">← Dashboard</button>
+    </div>
+  </div>
 
-  <div class="footnote">
-    Standard fingering shown throughout. Traditional patterns used in most method books. Always confirm fingering with your teacher—some editions vary, especially for minor scales and unusual black-key arpeggios.
+  <!-- Main -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section" id="gradesSection"></div>
+      <div class="sidebar-section" id="scalesSection"></div>
+    </div>
+
+    <!-- Piano Area -->
+    <div class="piano-area">
+      <div class="piano-info">
+        <div class="info-title" id="scaleTitle"></div>
+        <div class="info-desc" id="scaleDesc"></div>
+        <div class="info-tags" id="scaleTags"></div>
+      </div>
+
+      <div class="piano-container">
+        <div class="piano-canvas-wrapper">
+          <canvas id="pianoCanvas"></canvas>
+        </div>
+
+        <div class="controls">
+          <button class="btn-play" onclick="playScale()">▶ Play</button>
+          <button class="btn-small btn-primary" onclick="resetScale()">Reset</button>
+          <div class="tempo-control">
+            <label>Tempo</label>
+            <input type="range" id="tempoSlider" min="200" max="900" value="450" step="50">
+          </div>
+        </div>
+
+        <div class="hand-info">
+          <div class="hand-column">
+            <div class="hand-label">Right Hand</div>
+            <div class="notes-list" id="rhNotes"></div>
+          </div>
+          <div class="hand-column">
+            <div class="hand-label">Left Hand</div>
+            <div class="notes-list" id="lhNotes"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// Polyfill for roundRect
-if(!CanvasRenderingContext2D.prototype.roundRect){
-  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
-    const t=this;t.beginPath();t.moveTo(x+r,y);t.lineTo(x+w-r,y);t.quadraticCurveTo(x+w,y,x+w,y+r);
-    t.lineTo(x+w,y+h-r);t.quadraticCurveTo(x+w,y+h,x+w-r,y+h);t.lineTo(x+r,y+h);
-    t.quadraticCurveTo(x,y+h,x,y+h-r);t.lineTo(x,y+r);t.quadraticCurveTo(x,y,x+r,y);
-  };
-}
+const SCALES = [
+  // Grade 1
+  { id: "c-major-1", grade: 1, title: "C Major", desc: "White keys only. Smooth hand position.", dyn: "p", art: "legato", rh: [{n:"C",m:60,f:1},{n:"D",m:62,f:2},{n:"E",m:64,f:3},{n:"F",m:65,f:1},{n:"G",m:67,f:2},{n:"A",m:69,f:3},{n:"B",m:71,f:4},{n:"C",m:72,f:5}], lh: [{n:"C",m:48,f:5},{n:"D",m:50,f:4},{n:"E",m:52,f:3},{n:"F",m:53,f:2},{n:"G",m:55,f:1},{n:"A",m:57,f:3},{n:"B",m:59,f:2},{n:"C",m:60,f:1}] },
+  { id: "g-major-1", grade: 1, title: "G Major", desc: "One sharp. F# position.", dyn: "f", art: "staccato", rh: [{n:"G",m:67,f:1},{n:"A",m:69,f:2},{n:"B",m:71,f:3},{n:"C",m:72,f:1},{n:"D",m:74,f:2},{n:"E",m:76,f:3},{n:"F#",m:78,f:4},{n:"G",m:79,f:5}], lh: [{n:"G",m:55,f:5},{n:"A",m:57,f:4},{n:"B",m:59,f:3},{n:"C",m:60,f:2},{n:"D",m:62,f:1},{n:"E",m:64,f:3},{n:"F#",m:66,f:2},{n:"G",m:67,f:1}] },
+  { id: "f-major-1", grade: 1, title: "F Major", desc: "One flat. Bb position.", dyn: "p", art: "legato", rh: [{n:"F",m:65,f:1},{n:"G",m:67,f:2},{n:"A",m:69,f:3},{n:"Bb",m:70,f:4},{n:"C",m:72,f:5},{n:"D",m:74,f:1},{n:"E",m:76,f:2},{n:"F",m:77,f:3}], lh: [{n:"F",m:53,f:5},{n:"G",m:55,f:4},{n:"A",m:57,f:3},{n:"Bb",m:58,f:2},{n:"C",m:60,f:1},{n:"D",m:62,f:4},{n:"E",m:64,f:3},{n:"F",m:65,f:2}] },
 
-const RH="rh", LH="lh";
-function n(midi,name,finger){return {midi,name,finger};}
+  // Grade 2
+  { id: "d-major-2", grade: 2, title: "D Major", desc: "Two sharps. F# and C# pattern.", dyn: "f", art: "staccato", rh: [{n:"D",m:62,f:1},{n:"E",m:64,f:2},{n:"F#",m:66,f:3},{n:"G",m:67,f:1},{n:"A",m:69,f:2},{n:"B",m:71,f:3},{n:"C#",m:73,f:4},{n:"D",m:74,f:5}], lh: [{n:"D",m:50,f:5},{n:"E",m:52,f:4},{n:"F#",m:54,f:3},{n:"G",m:55,f:2},{n:"A",m:57,f:1},{n:"B",m:59,f:3},{n:"C#",m:61,f:2},{n:"D",m:62,f:1}] },
+  { id: "bb-major-2", grade: 2, title: "Bb Major", desc: "Two flats. Bb and Eb.", dyn: "p", art: "legato", rh: [{n:"Bb",m:70,f:2},{n:"C",m:72,f:3},{n:"D",m:74,f:1},{n:"Eb",m:75,f:2},{n:"F",m:77,f:3},{n:"G",m:79,f:4},{n:"A",m:81,f:5},{n:"Bb",m:82,f:1}], lh: [{n:"Bb",m:58,f:4},{n:"C",m:60,f:3},{n:"D",m:62,f:2},{n:"Eb",m:63,f:1},{n:"F",m:65,f:4},{n:"G",m:67,f:3},{n:"A",m:69,f:2},{n:"Bb",m:70,f:1}] },
+  { id: "a-minor-2", grade: 2, title: "A Natural Minor", desc: "Relative minor of C major.", dyn: "f", art: "legato", rh: [{n:"A",m:69,f:1},{n:"B",m:71,f:2},{n:"C",m:72,f:3},{n:"D",m:74,f:1},{n:"E",m:76,f:2},{n:"F",m:77,f:3},{n:"G",m:79,f:4},{n:"A",m:81,f:5}], lh: [{n:"A",m:57,f:5},{n:"B",m:59,f:4},{n:"C",m:60,f:3},{n:"D",m:62,f:2},{n:"E",m:64,f:1},{n:"F",m:65,f:3},{n:"G",m:67,f:2},{n:"A",m:69,f:1}] },
 
-const items = [
-// GRADE 1
-{id:"g1-c-major",grade:1,cat:"Scale",title:"C Major",dyn:"p",art:"legato",hands:"parallel",desc:"White keys only. Both hands together, one octave apart.",
-rh:[n(60,"C4",1),n(62,"D4",2),n(64,"E4",3),n(65,"F4",1),n(67,"G4",2),n(69,"A4",3),n(71,"B4",4),n(72,"C5",5)],
-lh:[n(48,"C3",5),n(50,"D3",4),n(52,"E3",3),n(53,"F3",2),n(55,"G3",1),n(57,"A3",3),n(59,"B3",2),n(60,"C4",1)],
-note:"No black keys. Natural starting scale for all students. Focus on smooth hand position transitions and even tempo."
-},
-{id:"g1-g-major",grade:1,cat:"Scale",title:"G Major",dyn:"f",art:"staccato",hands:"parallel",desc:"One sharp (F#). Both hands ascend together.",
-rh:[n(67,"G4",1),n(69,"A4",2),n(71,"B4",3),n(72,"C5",1),n(74,"D5",2),n(76,"E5",3),n(78,"F#5",4),n(79,"G5",5)],
-lh:[n(55,"G3",5),n(57,"A3",4),n(59,"B3",3),n(60,"C4",2),n(62,"D4",1),n(64,"E4",3),n(66,"F#4",2),n(67,"G4",1)],
-note:"Watch the F# thumb position. Practice the black key transition slowly before adding tempo."
-},
-{id:"g1-f-major",grade:1,cat:"Scale",title:"F Major",dyn:"p",art:"legato",hands:"parallel",desc:"One flat (Bb). Thumb crosses to black key.",
-rh:[n(65,"F4",1),n(67,"G4",2),n(69,"A4",3),n(70,"Bb4",4),n(72,"C5",5),n(74,"D5",1),n(76,"E5",2),n(77,"F5",3)],
-lh:[n(53,"F3",5),n(55,"G3",4),n(57,"A3",3),n(58,"Bb3",2),n(60,"C4",1),n(62,"D4",4),n(64,"E4",3),n(65,"F4",2)],
-note:"Bb is the only accidental. Smooth black key entry—relax the hand before the flat note."
-},
-
-// GRADE 2
-{id:"g2-d-major",grade:2,cat:"Scale",title:"D Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Two sharps (F# and C#). Hands together.",
-rh:[n(62,"D4",1),n(64,"E4",2),n(66,"F#4",3),n(67,"G4",1),n(69,"A4",2),n(71,"B4",3),n(73,"C#5",4),n(74,"D5",5)],
-lh:[n(50,"D3",5),n(52,"E3",4),n(54,"F#3",3),n(55,"G3",2),n(57,"A3",1),n(59,"B3",3),n(61,"C#3",2),n(62,"D4",1)],
-note:"Pattern: RH 1-2-3-1-2-3-4-5. Two black keys in sequence—maintain consistent hand position."
-},
-{id:"g2-bb-major",grade:2,cat:"Scale",title:"Bb Major",dyn:"p",art:"legato",hands:"parallel",desc:"Two flats (Bb and Eb). Hands together.",
-rh:[n(70,"Bb4",2),n(72,"C5",3),n(74,"D5",1),n(75,"Eb5",2),n(77,"F5",3),n(79,"G5",4),n(81,"A5",5),n(82,"Bb5",1)],
-lh:[n(58,"Bb3",4),n(60,"C4",3),n(62,"D4",2),n(63,"Eb4",1),n(65,"F4",4),n(67,"G4",3),n(69,"A4",2),n(70,"Bb4",1)],
-note:"Thumb shifts to black keys. Watch Bb→Eb coordination; both involve thumb adjustment."
-},
-{id:"g2-a-minor",grade:2,cat:"Scale",title:"A Natural Minor",dyn:"f",art:"legato",hands:"parallel",desc:"No sharps or flats. Relative minor of C major.",
-rh:[n(69,"A4",1),n(71,"B4",2),n(72,"C5",3),n(74,"D5",1),n(76,"E5",2),n(77,"F5",3),n(79,"G5",4),n(81,"A5",5)],
-lh:[n(57,"A3",5),n(59,"B3",4),n(60,"C4",3),n(62,"D4",2),n(64,"E4",1),n(65,"F4",3),n(67,"G4",2),n(69,"A4",1)],
-note:"Same white keys as C major. Minor scales sound darker—maintain legato for smooth minor quality."
-},
-
-// GRADE 3
-{id:"g3-a-major",grade:3,cat:"Scale",title:"A Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Three sharps (F#, C#, G#). Hands together.",
-rh:[n(69,"A4",1),n(71,"B4",2),n(73,"C#5",3),n(74,"D5",1),n(76,"E5",2),n(78,"F#5",3),n(80,"G#5",4),n(81,"A5",5)],
-lh:[n(57,"A3",5),n(59,"B3",4),n(61,"C#3",3),n(62,"D3",2),n(64,"E3",1),n(66,"F#3",3),n(68,"G#3",2),n(69,"A3",1)],
-note:"Three sharps can be challenging. Practice F#, C#, G# positions separately before combining."
-},
-{id:"g3-eb-major",grade:3,cat:"Scale",title:"Eb Major",dyn:"p",art:"legato",hands:"parallel",desc:"Three flats (Bb, Eb, Ab). Hands together.",
-rh:[n(75,"Eb5",1),n(77,"F5",2),n(79,"G5",3),n(80,"Ab5",1),n(82,"Bb5",2),n(84,"C6",3),n(86,"D6",4),n(87,"Eb6",5)],
-lh:[n(63,"Eb4",5),n(65,"F4",4),n(67,"G4",3),n(68,"Ab4",2),n(70,"Bb4",1),n(72,"C5",3),n(74,"D5",2),n(75,"Eb5",1)],
-note:"All three flats require thumb shifts. Work slowly to establish smooth transitions between black and white keys."
-},
-
-// GRADE 4
-{id:"g4-e-major",grade:4,cat:"Scale",title:"E Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Four sharps (F#, C#, G#, D#). Hands together.",
-rh:[n(76,"E5",1),n(78,"F#5",2),n(80,"G#5",3),n(81,"A5",1),n(83,"B5",2),n(85,"C#6",3),n(87,"D#6",4),n(88,"E6",5)],
-lh:[n(64,"E4",5),n(66,"F#4",4),n(68,"G#4",3),n(69,"A4",2),n(71,"B4",1),n(73,"C#4",3),n(75,"D#4",2),n(76,"E4",1)],
-note:"Four sharps means mostly black keys. Consistent thumb positioning is essential for accuracy and speed."
-},
-{id:"g4-ab-major",grade:4,cat:"Scale",title:"Ab Major",dyn:"p",art:"legato",hands:"parallel",desc:"Four flats (Bb, Eb, Ab, Db). Hands together.",
-rh:[n(80,"Ab5",1),n(82,"Bb5",2),n(84,"C6",3),n(85,"Db6",1),n(87,"Eb6",2),n(89,"F6",3),n(91,"G6",4),n(92,"Ab6",5)],
-lh:[n(68,"Ab4",5),n(70,"Bb4",4),n(72,"C5",3),n(73,"Db5",2),n(75,"Eb5",1),n(77,"F5",3),n(79,"G5",2),n(80,"Ab5",1)],
-note:"All four flats! Both Db and Eb together in close position. Practice hands separately, then very slowly combined."
-}
+  // Grade 3
+  { id: "a-major-3", grade: 3, title: "A Major", desc: "Three sharps. F#, C#, G#.", dyn: "f", art: "staccato", rh: [{n:"A",m:69,f:1},{n:"B",m:71,f:2},{n:"C#",m:73,f:3},{n:"D",m:74,f:1},{n:"E",m:76,f:2},{n:"F#",m:78,f:3},{n:"G#",m:80,f:4},{n:"A",m:81,f:5}], lh: [{n:"A",m:57,f:5},{n:"B",m:59,f:4},{n:"C#",m:61,f:3},{n:"D",m:62,f:2},{n:"E",m:64,f:1},{n:"F#",m:66,f:3},{n:"G#",m:68,f:2},{n:"A",m:69,f:1}] },
+  { id: "eb-major-3", grade: 3, title: "Eb Major", desc: "Three flats. Bb, Eb, Ab.", dyn: "p", art: "legato", rh: [{n:"Eb",m:75,f:1},{n:"F",m:77,f:2},{n:"G",m:79,f:3},{n:"Ab",m:80,f:1},{n:"Bb",m:82,f:2},{n:"C",m:84,f:3},{n:"D",m:86,f:4},{n:"Eb",m:87,f:5}], lh: [{n:"Eb",m:63,f:5},{n:"F",m:65,f:4},{n:"G",m:67,f:3},{n:"Ab",m:68,f:2},{n:"Bb",m:70,f:1},{n:"C",m:72,f:3},{n:"D",m:74,f:2},{n:"Eb",m:75,f:1}] },
 ];
 
 let currentGrade = 1;
-let activeId = items[0].id;
-let playing = false;
-let timer = null;
+let selectedScale = SCALES[0];
 let audioCtx = null;
+let playing = false;
 
-function getItem(id){return items.find(i=>i.id===id);}
-
-function initGrades(){
-  const grades = [1,2,3,4];
-  const sel = document.getElementById("gradeSelector");
-  sel.innerHTML = grades.map(g=>`<button class="grade-btn ${g===currentGrade?'active':''}" onclick="selectGrade(${g})">Grade ${g}</button>`).join("");
+function init() {
+  renderGrades();
+  renderScales();
+  selectScale(SCALES[0]);
 }
 
-function selectGrade(g){
-  currentGrade = g;
-  document.querySelectorAll(".grade-btn").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-  activeId = items.find(i=>i.grade===g).id;
-  renderTabs();
+function renderGrades() {
+  const grades = [1, 2, 3];
+  const html = grades.map(g => `<button class="scale-item ${currentGrade === g ? 'active' : ''}" onclick="selectGrade(${g})"><span class="scale-item-name">Grade ${g}</span></button>`).join('');
+  document.getElementById('gradesSection').innerHTML = `<div class="sidebar-title">Grades</div>${html}`;
 }
 
-function buildTabs(){
-  const gradeItems = items.filter(i=>i.grade===currentGrade);
-  const tabs = document.getElementById("tabs");
-  tabs.innerHTML = "";
-  gradeItems.forEach(it=>{
-    const b = document.createElement("button");
-    b.className = "tab"+(it.id===activeId?" active":"");
-    b.innerHTML = '<span class="cat">'+it.cat+'</span>'+it.title;
-    b.onclick = ()=>{stopPlayback();activeId=it.id;renderTabs();};
-    tabs.appendChild(b);
-  });
+function renderScales() {
+  const scales = SCALES.filter(s => s.grade === currentGrade);
+  const html = scales.map(s => `<button class="scale-item ${selectedScale.id === s.id ? 'active' : ''}" onclick="selectScale(SCALES.find(x=>x.id==='${s.id}'))"><span class="scale-item-name">${s.title}</span><span class="scale-item-grade">Grade ${s.grade}</span></button>`).join('');
+  document.getElementById('scalesSection').innerHTML = `<div class="sidebar-title">Scales</div>${html}`;
 }
 
-function renderTabs(){
-  buildTabs();
-  renderPanel();
+function selectGrade(grade) {
+  currentGrade = grade;
+  selectedScale = SCALES.find(s => s.grade === grade);
+  renderGrades();
+  renderScales();
+  selectScale(selectedScale);
 }
 
-function renderPanel(){
-  const item = getItem(activeId);
-  const panel = document.getElementById("panel");
-  const handLabel = item.hands==="contrary"?"Contrary motion":"Hands together";
+function selectScale(scale) {
+  selectedScale = scale;
+  document.getElementById('scaleTitle').textContent = scale.title;
+  document.getElementById('scaleDesc').textContent = scale.desc;
+  document.getElementById('scaleTags').innerHTML = `<span class="tag">${scale.dyn}</span><span class="tag">${scale.art}</span><span class="tag">Hands Together</span>`;
 
-  panel.innerHTML =
-    '<div class="panel-head">'+
-      '<div><p class="panel-title">'+item.title+'</p><p class="panel-desc">'+item.desc+'</p></div>'+
-      '<div class="badges"><span class="badge b-dyn">'+item.dyn+'</span><span class="badge b-art">'+item.art+'</span><span class="badge b-hand">'+handLabel+'</span></div>'+
-    '</div>'+
-    '<div class="keyboard-wrap"><canvas id="kbcanvas"></canvas></div>'+
-    '<div class="legend"><span><span class="dot" style="background:#00d4ff"></span>Right hand</span><span><span class="dot" style="background:#ff2d78"></span>Left hand</span></div>'+
-    '<div class="controls">'+
-      '<button class="play" id="playBtn">▶ Play</button>'+
-      '<button class="reset" id="resetBtn">Reset</button>'+
-      '<div class="tempo"><label for="tempoSlider">Tempo</label><input type="range" id="tempoSlider" min="200" max="900" value="450" step="50" style="width:110px;"></div>'+
-    '</div>'+
-    '<div class="hand-block"><div class="hand-label">Right hand</div><div class="note-row" id="rhRow"></div></div>'+
-    '<div class="hand-block"><div class="hand-label">Left hand</div><div class="note-row" id="lhRow"></div></div>'+
-    '<p class="note-text">💡 '+item.note+'</p>';
+  document.getElementById('rhNotes').innerHTML = scale.rh.map(n => `<span class="note-badge rh">${n.n}</span>`).join('');
+  document.getElementById('lhNotes').innerHTML = scale.lh.map(n => `<span class="note-badge lh">${n.n}</span>`).join('');
 
-  const canvas = document.getElementById("kbcanvas");
-  if(!canvas) return;
-  canvas.width = Math.min(window.innerWidth - 40, 1200);
-  canvas.height = 160;
+  const canvas = document.getElementById('pianoCanvas');
+  canvas.width = 1200;
+  canvas.height = 200;
   const ctx = canvas.getContext('2d');
-  drawPianoKeyboard(canvas, ctx, item.rh, item.lh);
-  refreshNoteRows(item,-1);
-  document.getElementById("playBtn").onclick = ()=>playSequence(item);
-  document.getElementById("resetBtn").onclick = ()=>{
-    stopPlayback();
-    refreshNoteRows(item,-1);
-    const canvas = document.getElementById("kbcanvas");
-    if(canvas){
-      canvas.width = Math.min(window.innerWidth - 40, 1200);
-      canvas.height = 160;
-      const ctx = canvas.getContext('2d');
-      drawPianoKeyboard(canvas, ctx, item.rh, item.lh);
-    }
-  };
+  drawPiano(ctx, scale);
+  renderGrades();
+  renderScales();
 }
 
-function drawPianoKeyboard(canvas, ctx, rhNotes, lhNotes){
-  if(!ctx||!canvas) return;
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+function drawPiano(ctx, scale) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
   ctx.fillStyle = '#0a0812';
   ctx.fillRect(0, 0, W, H);
 
-  const lo=48, hi=84;
-  let whiteCount=0;
-  for(let m=lo;m<=hi;m++)if(![1,3,6,8,10].includes(m%12))whiteCount++;
+  const lo = 48, hi = 84;
+  let whiteCount = 0;
+  for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m%12)) whiteCount++;
 
-  const wkW = (W-2)/(whiteCount);
-  const wkH = H * 0.75;
-  const bkW = wkW * 0.6;
-  const bkH = H * 0.5;
+  const wkW = W / whiteCount, wkH = H * 0.8;
+  const bkW = wkW * 0.6, bkH = H * 0.5;
 
-  const rhMap={}, lhMap={};
-  rhNotes.forEach(nn=>rhMap[nn.midi]=nn.finger);
-  lhNotes.forEach(nn=>lhMap[nn.midi]=nn.finger);
+  const rhMap = {}, lhMap = {};
+  scale.rh.forEach(n => rhMap[n.m] = n);
+  scale.lh.forEach(n => lhMap[n.m] = n);
 
-  let wi=0;
-  for(let m=lo;m<=hi;m++){
-    if([1,3,6,8,10].includes(m%12))continue;
-    const x = wi*wkW+1;
-    let fill="#f5f2ec", stroke="#8b7c5c";
-    if(rhMap[m]){ fill="rgba(0,212,255,0.25)"; stroke="#00d4ff"; }
-    if(lhMap[m]){ fill=rhMap[m]?"rgba(155,124,232,0.25)":"rgba(255,45,120,0.25)"; stroke="#ff2d78"; }
+  // Draw white keys
+  let wi = 0;
+  for (let m = lo; m <= hi; m++) {
+    if ([1,3,6,8,10].includes(m%12)) continue;
+    const x = wi * wkW;
+
+    let fill = '#f5f2ec', stroke = '#8b7c5c';
+    if (rhMap[m]) { fill = 'rgba(0,212,255,0.3)'; stroke = '#00d4ff'; }
+    if (lhMap[m]) { fill = rhMap[m] ? 'rgba(155,124,232,0.3)' : 'rgba(255,45,120,0.3)'; stroke = '#ff2d78'; }
 
     ctx.fillStyle = fill;
     ctx.strokeStyle = stroke;
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(x, 2, wkW-2, wkH, 4);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillRect(x + 1, 1, wkW - 2, wkH);
+    ctx.strokeRect(x + 1, 1, wkW - 2, wkH);
 
-    if(rhMap[m]){
-      ctx.fillStyle = "#00d4ff";
+    const noteNum = m % 12;
+    const octave = Math.floor(m / 12) - 1;
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const noteName = noteNames[noteNum];
+
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '11px -apple-system';
+    ctx.textAlign = 'center';
+    ctx.fillText(noteName + octave, x + wkW / 2, wkH + 20);
+
+    if (rhMap[m]) {
+      ctx.fillStyle = '#00d4ff';
       ctx.beginPath();
-      ctx.arc(x+wkW/2, wkH-18, 9, 0, Math.PI*2);
+      ctx.arc(x + wkW / 2, wkH - 20, 7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#0a0812";
-      ctx.font = "bold 10px -apple-system";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(rhMap[m], x+wkW/2, wkH-18);
+      ctx.fillStyle = '#0a0812';
+      ctx.font = 'bold 9px -apple-system';
+      ctx.fillText(rhMap[m].f, x + wkW / 2, wkH - 17);
     }
-    if(lhMap[m]){
-      ctx.fillStyle = "#ff2d78";
+    if (lhMap[m]) {
+      ctx.fillStyle = '#ff2d78';
       ctx.beginPath();
-      ctx.arc(x+wkW/2, wkH-8, 9, 0, Math.PI*2);
+      ctx.arc(x + wkW / 2, wkH - 8, 7, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 10px -apple-system";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(lhMap[m], x+wkW/2, wkH-8);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px -apple-system';
+      ctx.fillText(lhMap[m].f, x + wkW / 2, wkH - 5);
     }
+
     wi++;
   }
 
-  for(let m=lo;m<hi;m++){
-    if(![1,3,6,8,10].includes(m%12))continue;
-    const oct=Math.floor(m/12),semis=m%12;
-    const blackFrac={1:0.68,3:1.72,6:3.65,8:4.63,10:5.65};
-    let wCountBeforeOctave=0;
-    for(let mm=lo;mm<oct*12;mm++)if(![1,3,6,8,10].includes(mm%12))wCountBeforeOctave++;
-    const x = (wCountBeforeOctave + blackFrac[semis])*wkW - bkW/2;
+  // Draw black keys
+  wi = 0;
+  const blackFrac = { 1: 0.68, 3: 1.72, 6: 3.65, 8: 4.63, 10: 5.65 };
+  for (let m = lo; m < hi; m++) {
+    if (![1,3,6,8,10].includes(m%12)) continue;
+    const oct = Math.floor(m / 12);
+    const semis = m % 12;
+    let wCountBeforeOctave = 0;
+    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBeforeOctave++;
+    const x = (wCountBeforeOctave + blackFrac[semis]) * wkW - bkW / 2;
 
-    let fill="#1a1620";
-    if(rhMap[m]&&lhMap[m])fill="#9d7ce8";
-    else if(rhMap[m])fill="#00d4ff";
-    else if(lhMap[m])fill="#ff2d78";
+    let fill = '#1a1620';
+    if (rhMap[m] && lhMap[m]) fill = '#9d7ce8';
+    else if (rhMap[m]) fill = '#00d4ff';
+    else if (lhMap[m]) fill = '#ff2d78';
 
     ctx.fillStyle = fill;
-    ctx.strokeStyle = "#000";
+    ctx.fillRect(x, 1, bkW, bkH);
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(x, 2, bkW, bkH, 2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.strokeRect(x, 1, bkW, bkH);
   }
 }
 
-function refreshNoteRows(item,currentIdx){
-  document.getElementById("rhRow").innerHTML=item.rh.map((nn,i)=>'<div class="note-card rh '+(i===currentIdx?'current':'')+'" ><span class="nn">'+nn.name+'</span><span class="fn">'+nn.finger+'</span></div>').join("");
-  document.getElementById("lhRow").innerHTML=item.lh.map((nn,i)=>'<div class="note-card lh '+(i===currentIdx?'current':'')+'" ><span class="nn">'+nn.name+'</span><span class="fn">'+nn.finger+'</span></div>').join("");
+function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+function playTone(freq, dur, gain) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.linearRampToValueAtTime(gain, now + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur / 1000);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + dur / 1000 + 0.02);
 }
 
-function midiToFreq(m){return 440*Math.pow(2,(m-69)/12);}
+function playScale() {
+  if (playing) { resetScale(); return; }
+  playing = true;
+  const step = Number(document.getElementById('tempoSlider').value);
+  const gain = selectedScale.dyn === 'f' ? 0.22 : 0.09;
+  const dur = selectedScale.art === 'staccato' ? step * 0.4 : step * 0.95;
 
-function playTone(freq,durMs,gainLevel){
-  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
-  osc.type="triangle";osc.frequency.value=freq;
-  const now=audioCtx.currentTime;
-  gain.gain.setValueAtTime(0.0001,now);gain.gain.linearRampToValueAtTime(gainLevel,now+0.015);gain.gain.exponentialRampToValueAtTime(0.0001,now+durMs/1000);
-  osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+durMs/1000+0.02);
+  const notes = selectedScale.rh.map((n, i) => ({ rh: n, lh: selectedScale.lh[i] }));
+  let i = 0;
+
+  const play = () => {
+    if (i >= notes.length) { playing = false; return; }
+    playTone(midiToFreq(notes[i].rh.m), dur, gain);
+    playTone(midiToFreq(notes[i].lh.m), dur, gain * 0.9);
+    i++;
+    setTimeout(play, step);
+  };
+  play();
 }
 
-function stopPlayback(){
-  playing=false;if(timer)clearTimeout(timer);const btn=document.getElementById("playBtn");if(btn)btn.textContent="▶ Play";
+function resetScale() {
+  playing = false;
+  selectScale(selectedScale);
 }
 
-function playSequence(item){
-  if(playing){stopPlayback();return;}
-  playing=true;document.getElementById("playBtn").textContent="■ Stop";
-  const stepMs=Number(document.getElementById("tempoSlider").value);
-  const gainLevel=item.dyn==="f"?0.22:0.09;const durMs=item.art==="staccato"?stepMs*0.4:stepMs*0.95;
-  const full=item.rh.map((nn,i)=>({rh:nn,lh:item.lh[i]}));let i=0;
-  function step(){
-    if(!playing||i>=full.length){stopPlayback();refreshNoteRows(item,-1);return;}
-    const pair=full[i];playTone(midiToFreq(pair.rh.midi),durMs,gainLevel);playTone(midiToFreq(pair.lh.midi),durMs,gainLevel*0.9);
-    refreshNoteRows(item,i);i++;timer=setTimeout(step,stepMs);
-  }
-  step();
-}
-
-initGrades();renderTabs();
+init();
 </script>
+
 </body>
 </html>
