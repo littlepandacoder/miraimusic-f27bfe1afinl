@@ -35,8 +35,8 @@ h1{font-size:22px;font-weight:700;margin:0 0 4px;background:linear-gradient(135d
 .b-dyn{background:rgba(255,45,120,0.15);color:#ff7fa8;border-color:rgba(255,45,120,0.3);}
 .b-art{background:rgba(0,212,255,0.15);color:#57e0ff;border-color:rgba(0,212,255,0.3);}
 .b-hand{background:rgba(90,69,196,0.15);color:#b39fdb;border-color:rgba(90,69,196,0.3);}
-.keyboard-wrap{overflow-x:auto;margin:20px 0;padding-bottom:8px;}
-svg{display:block;margin:0 auto;}
+.keyboard-wrap{overflow-x:auto;margin:20px 0;padding-bottom:8px;text-align:center;}
+canvas{display:block;margin:0 auto;border-radius:8px;background:#0a0812;}
 .legend{display:flex;gap:20px;font-size:12px;color:var(--sub);margin:16px 0 20px;}
 .legend span{display:inline-flex;align-items:center;gap:6px;}
 .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
@@ -77,6 +77,15 @@ button.reset:hover{border-color:var(--accent);color:var(--accent);}
 </div>
 
 <script>
+// Polyfill for roundRect
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    const t=this;t.beginPath();t.moveTo(x+r,y);t.lineTo(x+w-r,y);t.quadraticCurveTo(x+w,y,x+w,y+r);
+    t.lineTo(x+w,y+h-r);t.quadraticCurveTo(x+w,y+h,x+w-r,y+h);t.lineTo(x+r,y+h);
+    t.quadraticCurveTo(x,y+h,x,y+h-r);t.lineTo(x,y+r);t.quadraticCurveTo(x,y,x+r,y);
+  };
+}
+
 const RH="rh", LH="lh";
 function n(midi,name,finger){return {midi,name,finger};}
 
@@ -190,7 +199,7 @@ function renderPanel(){
       '<div><p class="panel-title">'+item.title+'</p><p class="panel-desc">'+item.desc+'</p></div>'+
       '<div class="badges"><span class="badge b-dyn">'+item.dyn+'</span><span class="badge b-art">'+item.art+'</span><span class="badge b-hand">'+handLabel+'</span></div>'+
     '</div>'+
-    '<div class="keyboard-wrap" id="kbwrap"></div>'+
+    '<div class="keyboard-wrap"><canvas id="kbcanvas"></canvas></div>'+
     '<div class="legend"><span><span class="dot" style="background:#00d4ff"></span>Right hand</span><span><span class="dot" style="background:#ff2d78"></span>Left hand</span></div>'+
     '<div class="controls">'+
       '<button class="play" id="playBtn">▶ Play</button>'+
@@ -201,47 +210,109 @@ function renderPanel(){
     '<div class="hand-block"><div class="hand-label">Left hand</div><div class="note-row" id="lhRow"></div></div>'+
     '<p class="note-text">💡 '+item.note+'</p>';
 
-  document.getElementById("kbwrap").innerHTML = drawKeyboard(item.rh,item.lh);
+  const canvas = document.getElementById("kbcanvas");
+  if(!canvas) return;
+  canvas.width = Math.min(window.innerWidth - 40, 1200);
+  canvas.height = 160;
+  const ctx = canvas.getContext('2d');
+  drawPianoKeyboard(canvas, ctx, item.rh, item.lh);
   refreshNoteRows(item,-1);
   document.getElementById("playBtn").onclick = ()=>playSequence(item);
-  document.getElementById("resetBtn").onclick = ()=>{stopPlayback();refreshNoteRows(item,-1);};
+  document.getElementById("resetBtn").onclick = ()=>{
+    stopPlayback();
+    refreshNoteRows(item,-1);
+    const canvas = document.getElementById("kbcanvas");
+    if(canvas){
+      canvas.width = Math.min(window.innerWidth - 40, 1200);
+      canvas.height = 160;
+      const ctx = canvas.getContext('2d');
+      drawPianoKeyboard(canvas, ctx, item.rh, item.lh);
+    }
+  };
 }
 
-function drawKeyboard(rhNotes,lhNotes){
-  const lo=48,hi=84;
-  const wkW=32,wkH=120,bkW=19,bkH=76;
+function drawPianoKeyboard(canvas, ctx, rhNotes, lhNotes){
+  if(!ctx||!canvas) return;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0812';
+  ctx.fillRect(0, 0, W, H);
+
+  const lo=48, hi=84;
   let whiteCount=0;
   for(let m=lo;m<=hi;m++)if(![1,3,6,8,10].includes(m%12))whiteCount++;
-  const width=whiteCount*wkW+2;
-  let svg='<svg viewBox="0 0 '+width+' '+(wkH+4)+'" width="'+Math.min(width,880)+'" height="'+(wkH+4)+'">';
-  const rhMap={},lhMap={};
+
+  const wkW = (W-2)/(whiteCount);
+  const wkH = H * 0.75;
+  const bkW = wkW * 0.6;
+  const bkH = H * 0.5;
+
+  const rhMap={}, lhMap={};
   rhNotes.forEach(nn=>rhMap[nn.midi]=nn.finger);
   lhNotes.forEach(nn=>lhMap[nn.midi]=nn.finger);
-  let wi=0,whiteRects="",blackRects="",labels="";
+
+  let wi=0;
   for(let m=lo;m<=hi;m++){
     if([1,3,6,8,10].includes(m%12))continue;
-    const x=wi*wkW+1;
-    let fill="#fff",stroke="#c9c7bf";
-    if(rhMap[m]){fill:"rgba(0,212,255,0.2)";stroke:"#00d4ff";}
-    if(lhMap[m]){fill=rhMap[m]?"rgba(255,45,120,0.15)":"rgba(255,45,120,0.1)";stroke:"#ff2d78";}
-    whiteRects+='<rect x="'+x+'" y="1" width="'+(wkW-2)+'" height="'+wkH+'" rx="3" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1"/>';
-    if(rhMap[m])labels+='<circle cx="'+(x+wkW/2-1)+'" cy="'+(wkH-24)+'" r="9" fill="#00d4ff"/><text x="'+(x+wkW/2-1)+'" y="'+(wkH-20)+'" font-size="10" font-weight="700" fill="#1d1d1b" text-anchor="middle">'+rhMap[m]+'</text>';
-    if(lhMap[m])labels+='<circle cx="'+(x+wkW/2-1)+'" cy="'+(wkH-42)+'" r="9" fill="#ff2d78"/><text x="'+(x+wkW/2-1)+'" y="'+(wkH-38)+'" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">'+lhMap[m]+'</text>';
+    const x = wi*wkW+1;
+    let fill="#f5f2ec", stroke="#8b7c5c";
+    if(rhMap[m]){ fill="rgba(0,212,255,0.25)"; stroke="#00d4ff"; }
+    if(lhMap[m]){ fill=rhMap[m]?"rgba(155,124,232,0.25)":"rgba(255,45,120,0.25)"; stroke="#ff2d78"; }
+
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x, 2, wkW-2, wkH, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    if(rhMap[m]){
+      ctx.fillStyle = "#00d4ff";
+      ctx.beginPath();
+      ctx.arc(x+wkW/2, wkH-18, 9, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = "#0a0812";
+      ctx.font = "bold 10px -apple-system";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(rhMap[m], x+wkW/2, wkH-18);
+    }
+    if(lhMap[m]){
+      ctx.fillStyle = "#ff2d78";
+      ctx.beginPath();
+      ctx.arc(x+wkW/2, wkH-8, 9, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px -apple-system";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(lhMap[m], x+wkW/2, wkH-8);
+    }
     wi++;
   }
+
   for(let m=lo;m<hi;m++){
     if(![1,3,6,8,10].includes(m%12))continue;
     const oct=Math.floor(m/12),semis=m%12;
     const blackFrac={1:0.68,3:1.72,6:3.65,8:4.63,10:5.65};
     let wCountBeforeOctave=0;
     for(let mm=lo;mm<oct*12;mm++)if(![1,3,6,8,10].includes(mm%12))wCountBeforeOctave++;
-    const x=1+(wCountBeforeOctave+blackFrac[semis])*wkW-bkW/2;
+    const x = (wCountBeforeOctave + blackFrac[semis])*wkW - bkW/2;
+
     let fill="#1a1620";
-    if(rhMap[m]&&lhMap[m])fill="#9d7ce8";else if(rhMap[m])fill="#00d4ff";else if(lhMap[m])fill="#ff2d78";
-    blackRects+='<rect x="'+x+'" y="1" width="'+bkW+'" height="'+bkH+'" rx="2" fill="'+fill+'"/>';
+    if(rhMap[m]&&lhMap[m])fill="#9d7ce8";
+    else if(rhMap[m])fill="#00d4ff";
+    else if(lhMap[m])fill="#ff2d78";
+
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(x, 2, bkW, bkH, 2);
+    ctx.fill();
+    ctx.stroke();
   }
-  svg+=whiteRects+blackRects+labels+'</svg>';
-  return svg;
 }
 
 function refreshNoteRows(item,currentIdx){
