@@ -2,746 +2,284 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scales & Arpeggios Trainer — Musicable</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    background: #f5f5f5;
-    color: #1d1d1b;
-    padding: 24px 20px;
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .header {
-    margin-bottom: 24px;
-  }
-
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 4px;
-  }
-
-  .subtitle {
-    color: #6b7280;
-    font-size: 14px;
-  }
-
-  /* Grade selector */
-  .grade-selector {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-  }
-
-  .grade-btn {
-    padding: 8px 16px;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-
-  .grade-btn:hover {
-    border-color: #5a45c4;
-    background: #f0edff;
-  }
-
-  .grade-btn.active {
-    background: #5a45c4;
-    border-color: #5a45c4;
-    color: white;
-  }
-
-  /* Tabs */
-  .tabs-wrapper {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid #e5e7eb;
-    overflow-x: auto;
-  }
-
-  .tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .tab {
-    padding: 10px 16px;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1d1d1b;
-    transition: all 0.2s;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .tab:hover {
-    border-color: #5a45c4;
-    background: #f0edff;
-  }
-
-  .tab.active {
-    background: #5a45c4;
-    border-color: #5a45c4;
-    color: white;
-  }
-
-  .tab-label {
-    font-size: 11px;
-    color: #6b7280;
-    display: block;
-  }
-
-  .tab-name {
-    display: block;
-    font-weight: 700;
-  }
-
-  /* Main content */
-  .content {
-    background: white;
-    border-radius: 12px;
-    padding: 32px;
-    border: 1px solid #e5e7eb;
-  }
-
-  .content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .content-left {
-    flex: 1;
-  }
-
-  .content-title {
-    font-size: 24px;
-    font-weight: 700;
-  }
-
-  .content-desc {
-    color: #6b7280;
-    font-size: 14px;
-    margin-top: 4px;
-  }
-
-  .badges {
-    display: flex;
-    gap: 8px;
-  }
-
-  .badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    border: 1px solid #e5e7eb;
-  }
-
-  .badge-dyn { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-  .badge-art { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-  .badge-hand { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
-
-  /* Piano keyboard */
-  .keyboard-display {
-    margin: 24px 0;
-    overflow-x: auto;
-    padding-bottom: 12px;
-  }
-
-  svg {
-    display: block;
-    margin: 0 auto;
-  }
-
-  .legend {
-    display: flex;
-    gap: 24px;
-    font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 24px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-  }
-
-  /* Controls */
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-  }
-
-  button {
-    padding: 10px 20px;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-
-  button:hover {
-    border-color: #5a45c4;
-    color: #5a45c4;
-  }
-
-  .btn-primary {
-    background: #5a45c4;
-    border-color: #5a45c4;
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background: #4a36a4;
-    border-color: #4a36a4;
-    color: white;
-  }
-
-  .tempo-control {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: #6b7280;
-  }
-
-  .tempo-control input {
-    width: 120px;
-    cursor: pointer;
-  }
-
-  /* Hand blocks */
-  .hand-block {
-    margin-bottom: 24px;
-  }
-
-  .hand-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b7280;
-    margin-bottom: 12px;
-  }
-
-  .note-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .note-card {
-    padding: 12px 16px;
-    border: 2px solid #e5e7eb;
-    border-radius: 10px;
-    text-align: center;
-    min-width: 60px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .note-card:hover {
-    border-color: #5a45c4;
-  }
-
-  .note-card.current {
-    border-color: #5a45c4;
-    background: #f0edff;
-  }
-
-  .note-name {
-    font-weight: 700;
-    font-size: 14px;
-    display: block;
-  }
-
-  .note-finger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    color: white;
-    font-size: 12px;
-    font-weight: 700;
-    margin-top: 6px;
-  }
-
-  .note-card.rh .note-finger { background: #3b82f6; }
-  .note-card.lh .note-finger { background: #f97316; }
-
-  /* Notes */
-  .note-text {
-    font-size: 13px;
-    color: #6b7280;
-    margin-top: 20px;
-    line-height: 1.6;
-    padding-top: 20px;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .hidden {
-    display: none;
-  }
+:root{
+  --bg:#faf9f6;--card:#ffffff;--ink:#1d1d1b;--sub:#6b6a66;
+  --line:#e4e2db;--rh:#2f6fed;--rh-d:#0c447c;--lh:#d85a30;--lh-d:#4a1b0c;
+  --accent:#534ab7;--accentbg:#eeedfe;
+  --musicable:#5a45c4;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px;}
+h1{font-size:22px;font-weight:700;margin:0 0 4px;color:var(--accent);}
+.lead{color:var(--sub);font-size:13px;margin:0 0 20px;}
+.grade-selector{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+.grade-btn{padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);transition:all 0.2s;}
+.grade-btn:hover{border-color:var(--accent);color:var(--accent);}
+.grade-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.tab{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px 14px;font-size:13px;cursor:pointer;color:var(--ink);transition:all 0.2s;}
+.tab:hover{border-color:var(--accent);}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.tab .cat{display:block;font-size:10px;color:var(--sub);font-weight:500;}
+.tab.active .cat{color:#dcdaf7;}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.panel-title{font-size:20px;font-weight:700;margin:0;}
+.panel-desc{font-size:13px;color:var(--sub);margin:4px 0 0;max-width:600px;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;}
+.badge{font-size:11px;font-weight:600;padding:6px 11px;border-radius:20px;border:1px solid var(--line);}
+.b-dyn{background:#faeeda;color:#633806;border-color:#f0d6a1;}
+.b-art{background:#e1f5ee;color:#085041;border-color:#bfe6d6;}
+.b-hand{background:#f1efe8;color:#444441;border-color:var(--line);}
+.keyboard-wrap{overflow-x:auto;margin:20px 0;padding-bottom:8px;}
+svg{display:block;margin:0 auto;}
+.legend{display:flex;gap:20px;font-size:12px;color:var(--sub);margin:16px 0 20px;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.controls{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+button.play{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+button.play:hover{background:#634ecf;transform:translateY(-1px);}
+button.play:disabled{opacity:0.5;cursor:default;}
+button.reset{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer;color:var(--ink);transition:all 0.2s;}
+button.reset:hover{border-color:var(--accent);color:var(--accent);}
+.tempo{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);}
+.tempo input{cursor:pointer;}
+.hand-block{margin-bottom:18px;}
+.hand-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;color:var(--sub);}
+.note-row{display:flex;gap:6px;flex-wrap:wrap;}
+.note-card{min-width:50px;text-align:center;border-radius:8px;padding:8px 5px;font-size:12px;border:1px solid var(--line);background:#fdfdfb;transition:all 0.2s;cursor:pointer;}
+.note-card:hover{border-color:var(--accent);}
+.note-card .nn{font-weight:600;display:block;}
+.note-card .fn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;margin-top:4px;}
+.note-card.rh .fn{background:var(--rh);}
+.note-card.lh .fn{background:var(--lh);}
+.note-card.current{outline:2px solid var(--accent);outline-offset:1px;background:#f5f0ff;}
+.note-text{font-size:12px;color:var(--sub);margin-top:18px;line-height:1.6;padding-top:18px;border-top:1px solid var(--line);}
+.footnote{font-size:11px;color:var(--sub);margin-top:28px;line-height:1.6;font-style:italic;}
 </style>
 </head>
 <body>
-
-<div class="container">
-  <div class="header">
-    <h1>Scales & Arpeggios — Set A</h1>
-    <p class="subtitle">Hands-together requirements, from memory. Click a scale, then press Play to hear and watch the fingering.</p>
-  </div>
+<div class="wrap">
+  <h1>🎹 Scales & Arpeggios Trainer</h1>
+  <p class="lead">Master scales and arpeggios for every piano grade. Click a scale, then press Play to hear and watch the fingering.</p>
 
   <div class="grade-selector" id="gradeSelector"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="panel"></div>
 
-  <div class="tabs-wrapper">
-    <div class="tabs" id="tabs"></div>
+  <div class="footnote">
+    Standard fingering shown throughout. Traditional patterns used in most method books. Always confirm fingering with your teacher—some editions vary, especially for minor scales and unusual black-key arpeggios.
   </div>
-
-  <div class="content" id="content"></div>
 </div>
 
 <script>
-// Updated data with individual grades (not ranges)
-const SCALES_DATA = [
-  // Grade 1
-  {
-    id: 'c-major-1', grade: 1, type: 'Major Scale', title: 'C Major', notes: 'C D E F G A B C',
-    hands: 'parallel', dyn: 'p', art: 'legato',
-    desc: 'Both hands ascend together, one octave apart.',
-    rh: [
-      {name: 'C', midi: 60, finger: 1},
-      {name: 'D', midi: 62, finger: 2},
-      {name: 'E', midi: 64, finger: 3},
-      {name: 'F', midi: 65, finger: 1},
-      {name: 'G', midi: 67, finger: 2},
-      {name: 'A', midi: 69, finger: 3},
-      {name: 'B', midi: 71, finger: 4},
-      {name: 'C', midi: 72, finger: 5}
-    ],
-    lh: [
-      {name: 'C', midi: 48, finger: 5},
-      {name: 'D', midi: 50, finger: 4},
-      {name: 'E', midi: 52, finger: 3},
-      {name: 'F', midi: 53, finger: 2},
-      {name: 'G', midi: 55, finger: 1},
-      {name: 'A', midi: 57, finger: 3},
-      {name: 'B', midi: 59, finger: 2},
-      {name: 'C', midi: 60, finger: 1}
-    ],
-    knots: 'No black keys. Natural fingering pattern for beginners.'
-  },
-  {
-    id: 'g-major-1', grade: 1, type: 'Major Scale', title: 'G Major', notes: 'G A B C D E F# G',
-    hands: 'parallel', dyn: 'f', art: 'staccato',
-    desc: 'One sharp (F#). Both hands ascend together.',
-    rh: [
-      {name: 'G', midi: 67, finger: 1},
-      {name: 'A', midi: 69, finger: 2},
-      {name: 'B', midi: 71, finger: 3},
-      {name: 'C', midi: 72, finger: 1},
-      {name: 'D', midi: 74, finger: 2},
-      {name: 'E', midi: 76, finger: 3},
-      {name: 'F#', midi: 78, finger: 4},
-      {name: 'G', midi: 79, finger: 5}
-    ],
-    lh: [
-      {name: 'G', midi: 55, finger: 5},
-      {name: 'A', midi: 57, finger: 4},
-      {name: 'B', midi: 59, finger: 3},
-      {name: 'C', midi: 60, finger: 2},
-      {name: 'D', midi: 62, finger: 1},
-      {name: 'E', midi: 64, finger: 3},
-      {name: 'F#', midi: 66, finger: 2},
-      {name: 'G', midi: 67, finger: 1}
-    ],
-    knots: 'Watch the F# thumb transition.'
-  },
-  {
-    id: 'f-major-1', grade: 1, type: 'Major Scale', title: 'F Major', notes: 'F G A Bb C D E F',
-    hands: 'parallel', dyn: 'p', art: 'legato',
-    desc: 'One flat (Bb). Both hands ascend together.',
-    rh: [
-      {name: 'F', midi: 65, finger: 1},
-      {name: 'G', midi: 67, finger: 2},
-      {name: 'A', midi: 69, finger: 3},
-      {name: 'Bb', midi: 70, finger: 4},
-      {name: 'C', midi: 72, finger: 5},
-      {name: 'D', midi: 74, finger: 1},
-      {name: 'E', midi: 76, finger: 2},
-      {name: 'F', midi: 77, finger: 3}
-    ],
-    lh: [
-      {name: 'F', midi: 53, finger: 5},
-      {name: 'G', midi: 55, finger: 4},
-      {name: 'A', midi: 57, finger: 3},
-      {name: 'Bb', midi: 58, finger: 2},
-      {name: 'C', midi: 60, finger: 1},
-      {name: 'D', midi: 62, finger: 4},
-      {name: 'E', midi: 64, finger: 3},
-      {name: 'F', midi: 65, finger: 2}
-    ],
-    knots: 'Bb is the only flat. Smooth hand position.'
-  },
+const RH="rh", LH="lh";
+function n(midi,name,finger){return {midi,name,finger};}
 
-  // Grade 2
-  {
-    id: 'd-major-2', grade: 2, type: 'Major Scale', title: 'D Major', notes: 'D E F# G A B C# D',
-    hands: 'parallel', dyn: 'f', art: 'staccato',
-    desc: 'Two sharps (F#, C#). Hands together.',
-    rh: [
-      {name: 'D', midi: 62, finger: 1},
-      {name: 'E', midi: 64, finger: 2},
-      {name: 'F#', midi: 66, finger: 3},
-      {name: 'G', midi: 67, finger: 1},
-      {name: 'A', midi: 69, finger: 2},
-      {name: 'B', midi: 71, finger: 3},
-      {name: 'C#', midi: 73, finger: 4},
-      {name: 'D', midi: 74, finger: 5}
-    ],
-    lh: [
-      {name: 'D', midi: 50, finger: 5},
-      {name: 'E', midi: 52, finger: 4},
-      {name: 'F#', midi: 54, finger: 3},
-      {name: 'G', midi: 55, finger: 2},
-      {name: 'A', midi: 57, finger: 1},
-      {name: 'B', midi: 59, finger: 3},
-      {name: 'C#', midi: 61, finger: 2},
-      {name: 'D', midi: 62, finger: 1}
-    ],
-    knots: 'F# and C# together. Standard RH 1-2-3-1-2-3-4-5 shape.'
-  },
-  {
-    id: 'bb-major-2', grade: 2, type: 'Major Scale', title: 'Bb Major', notes: 'Bb C D Eb F G A Bb',
-    hands: 'parallel', dyn: 'p', art: 'legato',
-    desc: 'Two flats (Bb, Eb). Hands together.',
-    rh: [
-      {name: 'Bb', midi: 70, finger: 2},
-      {name: 'C', midi: 72, finger: 3},
-      {name: 'D', midi: 74, finger: 1},
-      {name: 'Eb', midi: 75, finger: 2},
-      {name: 'F', midi: 77, finger: 3},
-      {name: 'G', midi: 79, finger: 4},
-      {name: 'A', midi: 81, finger: 5},
-      {name: 'Bb', midi: 82, finger: 1}
-    ],
-    lh: [
-      {name: 'Bb', midi: 58, finger: 4},
-      {name: 'C', midi: 60, finger: 3},
-      {name: 'D', midi: 62, finger: 2},
-      {name: 'Eb', midi: 63, finger: 1},
-      {name: 'F', midi: 65, finger: 4},
-      {name: 'G', midi: 67, finger: 3},
-      {name: 'A', midi: 69, finger: 2},
-      {name: 'Bb', midi: 70, finger: 1}
-    ],
-    knots: 'Two black keys in succession. Watch thumb crossovers.'
-  },
-  {
-    id: 'a-minor-2', grade: 2, type: 'Minor Scale', title: 'A Natural Minor', notes: 'A B C D E F G A',
-    hands: 'parallel', dyn: 'f', art: 'legato',
-    desc: 'No sharps or flats. Relative minor of C major.',
-    rh: [
-      {name: 'A', midi: 69, finger: 1},
-      {name: 'B', midi: 71, finger: 2},
-      {name: 'C', midi: 72, finger: 3},
-      {name: 'D', midi: 74, finger: 1},
-      {name: 'E', midi: 76, finger: 2},
-      {name: 'F', midi: 77, finger: 3},
-      {name: 'G', midi: 79, finger: 4},
-      {name: 'A', midi: 81, finger: 5}
-    ],
-    lh: [
-      {name: 'A', midi: 57, finger: 5},
-      {name: 'B', midi: 59, finger: 4},
-      {name: 'C', midi: 60, finger: 3},
-      {name: 'D', midi: 62, finger: 2},
-      {name: 'E', midi: 64, finger: 1},
-      {name: 'F', midi: 65, finger: 3},
-      {name: 'G', midi: 67, finger: 2},
-      {name: 'A', midi: 69, finger: 1}
-    ],
-    knots: 'Relative minor to C major. Same white keys as C.'
-  }
+const items = [
+// GRADE 1
+{id:"g1-c-major",grade:1,cat:"Scale",title:"C Major",dyn:"p",art:"legato",hands:"parallel",desc:"White keys only. Both hands together, one octave apart.",
+rh:[n(60,"C4",1),n(62,"D4",2),n(64,"E4",3),n(65,"F4",1),n(67,"G4",2),n(69,"A4",3),n(71,"B4",4),n(72,"C5",5)],
+lh:[n(48,"C3",5),n(50,"D3",4),n(52,"E3",3),n(53,"F3",2),n(55,"G3",1),n(57,"A3",3),n(59,"B3",2),n(60,"C4",1)],
+note:"No black keys. Natural starting scale for all students. Focus on smooth hand position transitions and even tempo."
+},
+{id:"g1-g-major",grade:1,cat:"Scale",title:"G Major",dyn:"f",art:"staccato",hands:"parallel",desc:"One sharp (F#). Both hands ascend together.",
+rh:[n(67,"G4",1),n(69,"A4",2),n(71,"B4",3),n(72,"C5",1),n(74,"D5",2),n(76,"E5",3),n(78,"F#5",4),n(79,"G5",5)],
+lh:[n(55,"G3",5),n(57,"A3",4),n(59,"B3",3),n(60,"C4",2),n(62,"D4",1),n(64,"E4",3),n(66,"F#4",2),n(67,"G4",1)],
+note:"Watch the F# thumb position. Practice the black key transition slowly before adding tempo."
+},
+{id:"g1-f-major",grade:1,cat:"Scale",title:"F Major",dyn:"p",art:"legato",hands:"parallel",desc:"One flat (Bb). Thumb crosses to black key.",
+rh:[n(65,"F4",1),n(67,"G4",2),n(69,"A4",3),n(70,"Bb4",4),n(72,"C5",5),n(74,"D5",1),n(76,"E5",2),n(77,"F5",3)],
+lh:[n(53,"F3",5),n(55,"G3",4),n(57,"A3",3),n(58,"Bb3",2),n(60,"C4",1),n(62,"D4",4),n(64,"E4",3),n(65,"F4",2)],
+note:"Bb is the only accidental. Smooth black key entry—relax the hand before the flat note."
+},
+
+// GRADE 2
+{id:"g2-d-major",grade:2,cat:"Scale",title:"D Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Two sharps (F# and C#). Hands together.",
+rh:[n(62,"D4",1),n(64,"E4",2),n(66,"F#4",3),n(67,"G4",1),n(69,"A4",2),n(71,"B4",3),n(73,"C#5",4),n(74,"D5",5)],
+lh:[n(50,"D3",5),n(52,"E3",4),n(54,"F#3",3),n(55,"G3",2),n(57,"A3",1),n(59,"B3",3),n(61,"C#3",2),n(62,"D4",1)],
+note:"Pattern: RH 1-2-3-1-2-3-4-5. Two black keys in sequence—maintain consistent hand position."
+},
+{id:"g2-bb-major",grade:2,cat:"Scale",title:"Bb Major",dyn:"p",art:"legato",hands:"parallel",desc:"Two flats (Bb and Eb). Hands together.",
+rh:[n(70,"Bb4",2),n(72,"C5",3),n(74,"D5",1),n(75,"Eb5",2),n(77,"F5",3),n(79,"G5",4),n(81,"A5",5),n(82,"Bb5",1)],
+lh:[n(58,"Bb3",4),n(60,"C4",3),n(62,"D4",2),n(63,"Eb4",1),n(65,"F4",4),n(67,"G4",3),n(69,"A4",2),n(70,"Bb4",1)],
+note:"Thumb shifts to black keys. Watch Bb→Eb coordination; both involve thumb adjustment."
+},
+{id:"g2-a-minor",grade:2,cat:"Scale",title:"A Natural Minor",dyn:"f",art:"legato",hands:"parallel",desc:"No sharps or flats. Relative minor of C major.",
+rh:[n(69,"A4",1),n(71,"B4",2),n(72,"C5",3),n(74,"D5",1),n(76,"E5",2),n(77,"F5",3),n(79,"G5",4),n(81,"A5",5)],
+lh:[n(57,"A3",5),n(59,"B3",4),n(60,"C4",3),n(62,"D4",2),n(64,"E4",1),n(65,"F4",3),n(67,"G4",2),n(69,"A4",1)],
+note:"Same white keys as C major. Minor scales sound darker—maintain legato for smooth minor quality."
+},
+
+// GRADE 3
+{id:"g3-a-major",grade:3,cat:"Scale",title:"A Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Three sharps (F#, C#, G#). Hands together.",
+rh:[n(69,"A4",1),n(71,"B4",2),n(73,"C#5",3),n(74,"D5",1),n(76,"E5",2),n(78,"F#5",3),n(80,"G#5",4),n(81,"A5",5)],
+lh:[n(57,"A3",5),n(59,"B3",4),n(61,"C#3",3),n(62,"D3",2),n(64,"E3",1),n(66,"F#3",3),n(68,"G#3",2),n(69,"A3",1)],
+note:"Three sharps can be challenging. Practice F#, C#, G# positions separately before combining."
+},
+{id:"g3-eb-major",grade:3,cat:"Scale",title:"Eb Major",dyn:"p",art:"legato",hands:"parallel",desc:"Three flats (Bb, Eb, Ab). Hands together.",
+rh:[n(75,"Eb5",1),n(77,"F5",2),n(79,"G5",3),n(80,"Ab5",1),n(82,"Bb5",2),n(84,"C6",3),n(86,"D6",4),n(87,"Eb6",5)],
+lh:[n(63,"Eb4",5),n(65,"F4",4),n(67,"G4",3),n(68,"Ab4",2),n(70,"Bb4",1),n(72,"C5",3),n(74,"D5",2),n(75,"Eb5",1)],
+note:"All three flats require thumb shifts. Work slowly to establish smooth transitions between black and white keys."
+},
+
+// GRADE 4
+{id:"g4-e-major",grade:4,cat:"Scale",title:"E Major",dyn:"f",art:"staccato",hands:"parallel",desc:"Four sharps (F#, C#, G#, D#). Hands together.",
+rh:[n(76,"E5",1),n(78,"F#5",2),n(80,"G#5",3),n(81,"A5",1),n(83,"B5",2),n(85,"C#6",3),n(87,"D#6",4),n(88,"E6",5)],
+lh:[n(64,"E4",5),n(66,"F#4",4),n(68,"G#4",3),n(69,"A4",2),n(71,"B4",1),n(73,"C#4",3),n(75,"D#4",2),n(76,"E4",1)],
+note:"Four sharps means mostly black keys. Consistent thumb positioning is essential for accuracy and speed."
+},
+{id:"g4-ab-major",grade:4,cat:"Scale",title:"Ab Major",dyn:"p",art:"legato",hands:"parallel",desc:"Four flats (Bb, Eb, Ab, Db). Hands together.",
+rh:[n(80,"Ab5",1),n(82,"Bb5",2),n(84,"C6",3),n(85,"Db6",1),n(87,"Eb6",2),n(89,"F6",3),n(91,"G6",4),n(92,"Ab6",5)],
+lh:[n(68,"Ab4",5),n(70,"Bb4",4),n(72,"C5",3),n(73,"Db5",2),n(75,"Eb5",1),n(77,"F5",3),n(79,"G5",2),n(80,"Ab5",1)],
+note:"All four flats! Both Db and Eb together in close position. Practice hands separately, then very slowly combined."
+}
 ];
 
 let currentGrade = 1;
-let selectedId = SCALES_DATA[0].id;
+let activeId = items[0].id;
+let playing = false;
+let timer = null;
 let audioCtx = null;
 
-function initGradeSelector() {
-  const grades = [1, 2, 3, 4, 5, 6];
-  const selector = document.getElementById('gradeSelector');
-  selector.innerHTML = grades.map(g =>
-    `<button class="grade-btn ${g === currentGrade ? 'active' : ''}" onclick="selectGrade(${g})">Grade ${g}</button>`
-  ).join('');
+function getItem(id){return items.find(i=>i.id===id);}
+
+function initGrades(){
+  const grades = [1,2,3,4];
+  const sel = document.getElementById("gradeSelector");
+  sel.innerHTML = grades.map(g=>`<button class="grade-btn ${g===currentGrade?'active':''}" onclick="selectGrade(${g})">Grade ${g}</button>`).join("");
 }
 
-function selectGrade(grade) {
-  currentGrade = grade;
-  document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+function selectGrade(g){
+  currentGrade = g;
+  document.querySelectorAll(".grade-btn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  activeId = items.find(i=>i.grade===g).id;
   renderTabs();
 }
 
-function getScalesByGrade() {
-  return SCALES_DATA.filter(s => s.grade === currentGrade);
+function buildTabs(){
+  const gradeItems = items.filter(i=>i.grade===currentGrade);
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  gradeItems.forEach(it=>{
+    const b = document.createElement("button");
+    b.className = "tab"+(it.id===activeId?" active":"");
+    b.innerHTML = '<span class="cat">'+it.cat+'</span>'+it.title;
+    b.onclick = ()=>{stopPlayback();activeId=it.id;renderTabs();};
+    tabs.appendChild(b);
+  });
 }
 
-function renderTabs() {
-  const scales = getScalesByGrade();
-  const tabs = document.getElementById('tabs');
-  tabs.innerHTML = scales.map(s => `
-    <button class="tab ${s.id === selectedId ? 'active' : ''}" onclick="selectScale('${s.id}')">
-      <span class="tab-label">${s.type}</span>
-      <span class="tab-name">${s.title}</span>
-    </button>
-  `).join('');
-  renderContent();
+function renderTabs(){
+  buildTabs();
+  renderPanel();
 }
 
-function selectScale(id) {
-  selectedId = id;
-  renderTabs();
+function renderPanel(){
+  const item = getItem(activeId);
+  const panel = document.getElementById("panel");
+  const handLabel = item.hands==="contrary"?"Contrary motion":"Hands together";
+
+  panel.innerHTML =
+    '<div class="panel-head">'+
+      '<div><p class="panel-title">'+item.title+'</p><p class="panel-desc">'+item.desc+'</p></div>'+
+      '<div class="badges"><span class="badge b-dyn">'+item.dyn+'</span><span class="badge b-art">'+item.art+'</span><span class="badge b-hand">'+handLabel+'</span></div>'+
+    '</div>'+
+    '<div class="keyboard-wrap" id="kbwrap"></div>'+
+    '<div class="legend"><span><span class="dot" style="background:#2f6fed"></span>Right hand</span><span><span class="dot" style="background:#d85a30"></span>Left hand</span></div>'+
+    '<div class="controls">'+
+      '<button class="play" id="playBtn">▶ Play</button>'+
+      '<button class="reset" id="resetBtn">Reset</button>'+
+      '<div class="tempo"><label for="tempoSlider">Tempo</label><input type="range" id="tempoSlider" min="200" max="900" value="450" step="50" style="width:110px;"></div>'+
+    '</div>'+
+    '<div class="hand-block"><div class="hand-label">Right hand</div><div class="note-row" id="rhRow"></div></div>'+
+    '<div class="hand-block"><div class="hand-label">Left hand</div><div class="note-row" id="lhRow"></div></div>'+
+    '<p class="note-text">💡 '+item.note+'</p>';
+
+  document.getElementById("kbwrap").innerHTML = drawKeyboard(item.rh,item.lh);
+  refreshNoteRows(item,-1);
+  document.getElementById("playBtn").onclick = ()=>playSequence(item);
+  document.getElementById("resetBtn").onclick = ()=>{stopPlayback();refreshNoteRows(item,-1);};
 }
 
-function renderContent() {
-  const scale = SCALES_DATA.find(s => s.id === selectedId);
-  if (!scale) return;
-
-  const content = document.getElementById('content');
-  const handLabel = scale.hands === 'contrary' ? 'Contrary motion' : 'Hands together';
-
-  content.innerHTML = `
-    <div class="content-header">
-      <div class="content-left">
-        <div class="content-title">${scale.title}</div>
-        <div class="content-desc">${scale.desc}</div>
-      </div>
-      <div class="badges">
-        <span class="badge badge-dyn">${scale.dyn}</span>
-        <span class="badge badge-art">${scale.art}</span>
-        <span class="badge badge-hand">${handLabel}</span>
-      </div>
-    </div>
-
-    <div class="keyboard-display" id="kbwrap"></div>
-
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background: #3b82f6;"></div>
-        <span>Right hand</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background: #f97316;"></div>
-        <span>Left hand</span>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="btn-primary" onclick="playScale()">▶ Play</button>
-      <button onclick="resetPlayback()">Reset</button>
-      <div class="tempo-control">
-        <label>Tempo</label>
-        <input type="range" id="tempoSlider" min="200" max="900" value="450" step="50" style="width:110px;">
-      </div>
-    </div>
-
-    <div class="hand-block">
-      <div class="hand-label">Right hand</div>
-      <div class="note-row" id="rhRow"></div>
-    </div>
-
-    <div class="hand-block">
-      <div class="hand-label">Left hand</div>
-      <div class="note-row" id="lhRow"></div>
-    </div>
-
-    <div class="note-text">${scale.knots}</div>
-  `;
-
-  drawKeyboard(scale.rh, scale.lh);
-  refreshNoteRows(scale, -1);
-}
-
-function drawKeyboard(rhNotes, lhNotes) {
-  const lo = 48, hi = 84;
-  const wkW = 32, wkH = 120, bkW = 19, bkH = 76;
-
-  let whiteCount = 0;
-  for (let m = lo; m <= hi; m++) {
-    if (![1,3,6,8,10].includes(m % 12)) whiteCount++;
-  }
-
-  const rhMap = {}, lhMap = {};
-  rhNotes.forEach(n => rhMap[n.midi] = n.finger);
-  lhNotes.forEach(n => lhMap[n.midi] = n.finger);
-
-  const width = whiteCount * wkW + 2;
-  let svg = `<svg viewBox="0 0 ${width} ${wkH+4}" width="${Math.min(width, 880)}" height="${wkH+4}">`;
-
-  let wi = 0, whiteRects = '', blackRects = '', labels = '';
-
-  for (let m = lo; m <= hi; m++) {
-    if ([1,3,6,8,10].includes(m % 12)) continue;
-    const x = wi * wkW + 1;
-    let fill = '#fff', stroke = '#c9c7bf';
-    if (rhMap[m]) { fill = '#dbe9fd'; stroke = '#0c447c'; }
-    if (lhMap[m]) { fill = rhMap[m] ? '#e9dcf6' : '#fbe1d3'; stroke = '#4a1b0c'; }
-
-    whiteRects += `<rect x="${x}" y="1" width="${wkW-2}" height="${wkH}" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
-
-    if (rhMap[m]) {
-      labels += `<circle cx="${x+wkW/2-1}" cy="${wkH-24}" r="9" fill="#2f6fed"/><text x="${x+wkW/2-1}" y="${wkH-20}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${rhMap[m]}</text>`;
-    }
-    if (lhMap[m]) {
-      labels += `<circle cx="${x+wkW/2-1}" cy="${wkH-42}" r="9" fill="#d85a30"/><text x="${x+wkW/2-1}" y="${wkH-38}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${lhMap[m]}</text>`;
-    }
+function drawKeyboard(rhNotes,lhNotes){
+  const lo=48,hi=84;
+  const wkW=32,wkH=120,bkW=19,bkH=76;
+  let whiteCount=0;
+  for(let m=lo;m<=hi;m++)if(![1,3,6,8,10].includes(m%12))whiteCount++;
+  const width=whiteCount*wkW+2;
+  let svg='<svg viewBox="0 0 '+width+' '+(wkH+4)+'" width="'+Math.min(width,880)+'" height="'+(wkH+4)+'">';
+  const rhMap={},lhMap={};
+  rhNotes.forEach(nn=>rhMap[nn.midi]=nn.finger);
+  lhNotes.forEach(nn=>lhMap[nn.midi]=nn.finger);
+  let wi=0,whiteRects="",blackRects="",labels="";
+  for(let m=lo;m<=hi;m++){
+    if([1,3,6,8,10].includes(m%12))continue;
+    const x=wi*wkW+1;
+    let fill="#fff",stroke="#c9c7bf";
+    if(rhMap[m]){fill="#dbe9fd";stroke="#0c447c";}
+    if(lhMap[m]){fill=rhMap[m]?"#e9dcf6":"#fbe1d3";stroke="#4a1b0c";}
+    whiteRects+='<rect x="'+x+'" y="1" width="'+(wkW-2)+'" height="'+wkH+'" rx="3" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1"/>';
+    if(rhMap[m])labels+='<circle cx="'+(x+wkW/2-1)+'" cy="'+(wkH-24)+'" r="9" fill="#2f6fed"/><text x="'+(x+wkW/2-1)+'" y="'+(wkH-20)+'" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">'+rhMap[m]+'</text>';
+    if(lhMap[m])labels+='<circle cx="'+(x+wkW/2-1)+'" cy="'+(wkH-42)+'" r="9" fill="#d85a30"/><text x="'+(x+wkW/2-1)+'" y="'+(wkH-38)+'" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">'+lhMap[m]+'</text>';
     wi++;
   }
-
-  for (let m = lo; m < hi; m++) {
-    if (![1,3,6,8,10].includes(m % 12)) continue;
-    const oct = Math.floor(m / 12);
-    const semis = m % 12;
-    const whiteOffsets = {0:0,2:1,4:2,5:3,7:4,9:5,11:6};
-    const blackFrac = {1:0.68,3:1.72,6:3.65,8:4.63,10:5.65};
-
-    let wCountBeforeOctave = 0;
-    for (let mm = lo; mm < oct * 12; mm++) {
-      if (![1,3,6,8,10].includes(mm % 12)) wCountBeforeOctave++;
-    }
-
-    const x = 1 + (wCountBeforeOctave + blackFrac[semis]) * wkW - bkW / 2;
-    let fill = '#2b2b29';
-    if (rhMap[m] && lhMap[m]) fill = '#6a4fae';
-    else if (rhMap[m]) fill = '#2f6fed';
-    else if (lhMap[m]) fill = '#d85a30';
-
-    blackRects += `<rect x="${x}" y="1" width="${bkW}" height="${bkH}" rx="2" fill="${fill}"/>`;
+  for(let m=lo;m<hi;m++){
+    if(![1,3,6,8,10].includes(m%12))continue;
+    const oct=Math.floor(m/12),semis=m%12;
+    const blackFrac={1:0.68,3:1.72,6:3.65,8:4.63,10:5.65};
+    let wCountBeforeOctave=0;
+    for(let mm=lo;mm<oct*12;mm++)if(![1,3,6,8,10].includes(mm%12))wCountBeforeOctave++;
+    const x=1+(wCountBeforeOctave+blackFrac[semis])*wkW-bkW/2;
+    let fill="#2b2b29";
+    if(rhMap[m]&&lhMap[m])fill="#6a4fae";else if(rhMap[m])fill="#2f6fed";else if(lhMap[m])fill="#d85a30";
+    blackRects+='<rect x="'+x+'" y="1" width="'+bkW+'" height="'+bkH+'" rx="2" fill="'+fill+'"/>';
   }
-
-  svg += whiteRects + blackRects + labels + '</svg>';
-  document.getElementById('kbwrap').innerHTML = svg;
+  svg+=whiteRects+blackRects+labels+'</svg>';
+  return svg;
 }
 
-function refreshNoteRows(scale, currentIdx) {
-  document.getElementById('rhRow').innerHTML = scale.rh.map((n, i) =>
-    `<div class="note-card rh ${i === currentIdx ? 'current' : ''}">
-      <span class="note-name">${n.name}</span>
-      <span class="note-finger">${n.finger}</span>
-    </div>`
-  ).join('');
-
-  document.getElementById('lhRow').innerHTML = scale.lh.map((n, i) =>
-    `<div class="note-card lh ${i === currentIdx ? 'current' : ''}">
-      <span class="note-name">${n.name}</span>
-      <span class="note-finger">${n.finger}</span>
-    </div>`
-  ).join('');
+function refreshNoteRows(item,currentIdx){
+  document.getElementById("rhRow").innerHTML=item.rh.map((nn,i)=>'<div class="note-card rh '+(i===currentIdx?'current':'')+'" ><span class="nn">'+nn.name+'</span><span class="fn">'+nn.finger+'</span></div>').join("");
+  document.getElementById("lhRow").innerHTML=item.lh.map((nn,i)=>'<div class="note-card lh '+(i===currentIdx?'current':'')+'" ><span class="nn">'+nn.name+'</span><span class="fn">'+nn.finger+'</span></div>').join("");
 }
 
-function midiToFreq(m) {
-  return 440 * Math.pow(2, (m - 69) / 12);
+function midiToFreq(m){return 440*Math.pow(2,(m-69)/12);}
+
+function playTone(freq,durMs,gainLevel){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  osc.type="triangle";osc.frequency.value=freq;
+  const now=audioCtx.currentTime;
+  gain.gain.setValueAtTime(0.0001,now);gain.gain.linearRampToValueAtTime(gainLevel,now+0.015);gain.gain.exponentialRampToValueAtTime(0.0001,now+durMs/1000);
+  osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+durMs/1000+0.02);
 }
 
-function playTone(freq, durMs, gainLevel) {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.frequency.value = freq;
-  osc.type = 'sine';
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  const now = audioCtx.currentTime;
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.linearRampToValueAtTime(gainLevel, now + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + durMs / 1000);
-
-  osc.start(now);
-  osc.stop(now + durMs / 1000 + 0.02);
+function stopPlayback(){
+  playing=false;if(timer)clearTimeout(timer);const btn=document.getElementById("playBtn");if(btn)btn.textContent="▶ Play";
 }
 
-function playScale() {
-  const scale = SCALES_DATA.find(s => s.id === selectedId);
-  if (!scale) return;
-
-  const stepMs = Number(document.getElementById('tempoSlider').value);
-  const gainLevel = scale.dyn === 'f' ? 0.22 : 0.09;
-  const durMs = scale.art === 'staccato' ? stepMs * 0.4 : stepMs * 0.95;
-
-  const full = scale.rh.map((n, i) => ({rh: n, lh: scale.lh[i]}));
-  let i = 0;
-
-  function step() {
-    if (i >= full.length) { resetPlayback(); return; }
-    const pair = full[i];
-    playTone(midiToFreq(pair.rh.midi), durMs, gainLevel);
-    playTone(midiToFreq(pair.lh.midi), durMs, gainLevel * 0.9);
-    refreshNoteRows(scale, i);
-    i++;
-    setTimeout(step, stepMs);
+function playSequence(item){
+  if(playing){stopPlayback();return;}
+  playing=true;document.getElementById("playBtn").textContent="■ Stop";
+  const stepMs=Number(document.getElementById("tempoSlider").value);
+  const gainLevel=item.dyn==="f"?0.22:0.09;const durMs=item.art==="staccato"?stepMs*0.4:stepMs*0.95;
+  const full=item.rh.map((nn,i)=>({rh:nn,lh:item.lh[i]}));let i=0;
+  function step(){
+    if(!playing||i>=full.length){stopPlayback();refreshNoteRows(item,-1);return;}
+    const pair=full[i];playTone(midiToFreq(pair.rh.midi),durMs,gainLevel);playTone(midiToFreq(pair.lh.midi),durMs,gainLevel*0.9);
+    refreshNoteRows(item,i);i++;timer=setTimeout(step,stepMs);
   }
-
   step();
 }
 
-function resetPlayback() {
-  const scale = SCALES_DATA.find(s => s.id === selectedId);
-  if (scale) refreshNoteRows(scale, -1);
-}
-
-// Initialize
-initGradeSelector();
-renderTabs();
+initGrades();renderTabs();
 </script>
-
 </body>
 </html>
