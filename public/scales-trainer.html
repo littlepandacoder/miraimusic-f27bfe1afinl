@@ -4,631 +4,328 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Scales & Arpeggios Trainer — Musicable</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 <style>
-  :root {
-    --primary: #5a45c4;
-    --primary-light: #7a65e4;
-    --primary-dark: #3d2a8f;
-    --accent-blue: #00d4ff;
-    --accent-pink: #ff2d78;
-    --accent-green: #39d98a;
-    --accent-gold: #ffc107;
-    --bg-dark: #0f0a1a;
-    --bg-card: #1a1428;
-    --border-line: #2d2540;
-    --text-primary: #f5f2ec;
-    --text-secondary: #a89bb5;
-    --text-muted: #6b7280;
-    --shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-
   * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 
   body {
-    margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, var(--bg-dark) 0%, #1a0f2e 100%);
-    color: var(--text-primary);
-    min-height: 100vh;
+    background: #f5f5f5;
+    color: #1d1d1b;
+    padding: 24px 20px;
   }
 
   .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 20px;
   }
 
   .header {
-    text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
 
-  .header h1 {
-    font-size: 32px;
+  h1 {
+    font-size: 28px;
     font-weight: 700;
-    margin: 0 0 8px;
-    background: linear-gradient(135deg, var(--accent-blue), var(--accent-pink));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    margin-bottom: 4px;
   }
 
-  .header p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 15px;
-  }
-
-  .mode-selector {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-  }
-
-  .mode-btn {
-    padding: 12px 24px;
-    border: 2px solid var(--border-line);
-    background: transparent;
-    color: var(--text-secondary);
-    border-radius: 10px;
-    cursor: pointer;
+  .subtitle {
+    color: #6b7280;
     font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
   }
 
-  .mode-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-
-  .mode-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-    box-shadow: 0 0 20px rgba(90, 69, 196, 0.4);
-  }
-
-  .grade-filter {
+  /* Grade selector */
+  .grade-selector {
     display: flex;
     gap: 8px;
-    justify-content: center;
     margin-bottom: 24px;
     flex-wrap: wrap;
   }
 
-  .grade-badge {
+  .grade-btn {
     padding: 8px 16px;
-    border: 1px solid var(--border-line);
-    background: transparent;
-    color: var(--text-secondary);
-    border-radius: 20px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.2s;
   }
 
-  .grade-badge:hover,
-  .grade-badge.active {
-    background: var(--primary);
-    border-color: var(--primary);
+  .grade-btn:hover {
+    border-color: #5a45c4;
+    background: #f0edff;
+  }
+
+  .grade-btn.active {
+    background: #5a45c4;
+    border-color: #5a45c4;
     color: white;
   }
 
-  .content-wrapper {
-    display: grid;
-    gap: 24px;
+  /* Tabs */
+  .tabs-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e5e7eb;
+    overflow-x: auto;
   }
 
-  .scale-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
-  .scale-card {
-    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
-    border: 1px solid var(--border-line);
-    border-radius: 16px;
-    padding: 24px;
+  .tab {
+    padding: 10px 16px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d1d1b;
+    transition: all 0.2s;
+    text-align: center;
+    white-space: nowrap;
   }
 
-  .scale-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 50%, rgba(90, 69, 196, 0.1) 0%, transparent 50%);
-    pointer-events: none;
+  .tab:hover {
+    border-color: #5a45c4;
+    background: #f0edff;
   }
 
-  .scale-card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 0 20px rgba(90, 69, 196, 0.3);
-    transform: translateY(-4px);
+  .tab.active {
+    background: #5a45c4;
+    border-color: #5a45c4;
+    color: white;
   }
 
-  .scale-card-inner {
-    position: relative;
-    z-index: 1;
+  .tab-label {
+    font-size: 11px;
+    color: #6b7280;
+    display: block;
   }
 
-  .scale-header {
+  .tab-name {
+    display: block;
+    font-weight: 700;
+  }
+
+  /* Main content */
+  .content {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .content-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
-  }
-
-  .scale-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-  }
-
-  .scale-grade {
-    background: var(--primary);
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  .scale-type {
-    display: inline-block;
-    background: var(--border-line);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    color: var(--text-secondary);
-    margin-bottom: 12px;
-  }
-
-  .scale-notes {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-    line-height: 1.6;
-  }
-
-  .scale-tags {
-    display: flex;
-    gap: 6px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
-    margin-bottom: 16px;
+    gap: 16px;
   }
 
-  .tag {
-    padding: 4px 10px;
-    background: rgba(90, 69, 196, 0.2);
-    border: 1px solid rgba(90, 69, 196, 0.4);
-    border-radius: 6px;
-    font-size: 11px;
-    color: var(--accent-blue);
-  }
-
-  .scale-progress {
-    margin-bottom: 16px;
-  }
-
-  .progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: var(--border-line);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
-    transition: width 0.3s ease;
-  }
-
-  .scale-actions {
-    display: flex;
-    gap: 10px;
-  }
-
-  .btn-small {
+  .content-left {
     flex: 1;
-    padding: 10px 16px;
-    border: 1px solid var(--border-line);
-    background: transparent;
-    color: var(--text-secondary);
-    border-radius: 8px;
-    cursor: pointer;
+  }
+
+  .content-title {
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .content-desc {
+    color: #6b7280;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .badges {
+    display: flex;
+    gap: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
   }
 
-  .btn-small:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+  .badge-dyn { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  .badge-art { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+  .badge-hand { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+
+  /* Piano keyboard */
+  .keyboard-display {
+    margin: 24px 0;
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+
+  svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 24px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 20px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    border-color: #5a45c4;
+    color: #5a45c4;
   }
 
   .btn-primary {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: #5a45c4;
+    border-color: #5a45c4;
     color: white;
   }
 
   .btn-primary:hover {
-    background: var(--primary-light);
-    border-color: var(--primary-light);
+    background: #4a36a4;
+    border-color: #4a36a4;
     color: white;
   }
 
-  /* Quiz Mode */
-  .quiz-container {
-    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
-    border: 1px solid var(--border-line);
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  .quiz-header {
-    margin-bottom: 32px;
-    text-align: center;
-  }
-
-  .quiz-progress {
+  .tempo-control {
     display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    justify-content: center;
-  }
-
-  .quiz-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border-line);
-    transition: all 0.3s ease;
-  }
-
-  .quiz-dot.active {
-    background: var(--primary);
-  }
-
-  .quiz-dot.correct {
-    background: var(--accent-green);
-  }
-
-  .quiz-dot.incorrect {
-    background: var(--accent-pink);
-  }
-
-  .quiz-question {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    text-align: center;
-  }
-
-  .quiz-options {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
     gap: 12px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .tempo-control input {
+    width: 120px;
+    cursor: pointer;
+  }
+
+  /* Hand blocks */
+  .hand-block {
     margin-bottom: 24px;
   }
 
-  .quiz-option {
-    padding: 16px;
-    background: transparent;
-    border: 2px solid var(--border-line);
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    transition: all 0.3s ease;
-  }
-
-  .quiz-option:hover:not(:disabled) {
-    border-color: var(--primary);
-  }
-
-  .quiz-option.selected {
-    border-color: var(--primary);
-    background: rgba(90, 69, 196, 0.2);
-  }
-
-  .quiz-option.correct {
-    border-color: var(--accent-green);
-    background: rgba(57, 217, 138, 0.2);
-  }
-
-  .quiz-option.incorrect {
-    border-color: var(--accent-pink);
-    background: rgba(255, 45, 120, 0.2);
-  }
-
-  .quiz-option:disabled {
-    cursor: default;
-  }
-
-  .quiz-score {
-    text-align: center;
-    margin-top: 32px;
-  }
-
-  .score-number {
-    font-size: 48px;
+  .hand-label {
+    font-size: 11px;
     font-weight: 700;
-    color: var(--accent-green);
-  }
-
-  .score-label {
-    color: var(--text-secondary);
-    font-size: 14px;
-  }
-
-  /* Challenge Mode */
-  .challenge-card {
-    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
-    border: 2px solid var(--primary);
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .challenge-icon {
-    font-size: 40px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
     margin-bottom: 12px;
   }
 
-  .challenge-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .challenge-desc {
-    color: var(--text-secondary);
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
-
-  .challenge-btn {
-    padding: 12px 24px;
-    background: var(--primary);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .challenge-btn:hover {
-    background: var(--primary-light);
-  }
-
-  /* Speed Challenge */
-  .speed-timer {
+  .note-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding: 16px;
-    background: rgba(90, 69, 196, 0.1);
-    border-radius: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
-  .timer {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent-blue);
-  }
-
-  .score-display {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
-  /* Leaderboard */
-  .leaderboard-table {
-    width: 100%;
-    background: transparent;
-    border-collapse: collapse;
-  }
-
-  .leaderboard-table th,
-  .leaderboard-table td {
+  .note-card {
     padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-line);
-  }
-
-  .leaderboard-table th {
-    background: rgba(90, 69, 196, 0.1);
-    font-weight: 700;
-    color: var(--text-secondary);
-  }
-
-  .leaderboard-table td {
-    color: var(--text-secondary);
-  }
-
-  .leaderboard-rank {
-    font-weight: 700;
-    color: var(--primary);
-  }
-
-  .leaderboard-name {
-    color: var(--text-primary);
-  }
-
-  .leaderboard-score {
-    color: var(--accent-green);
-    font-weight: 600;
-  }
-
-  /* Piano Keyboard */
-  .keyboard-display {
-    margin: 20px 0;
-    overflow-x: auto;
-  }
-
-  .piano-key {
-    display: inline-block;
-    margin: 0 2px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
     text-align: center;
-    font-size: 11px;
-    padding: 8px 4px;
+    min-width: 60px;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .piano-key.white {
-    width: 30px;
-    height: 100px;
-    background: #f5f2ec;
-    color: #1d1d1b;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  .note-card:hover {
+    border-color: #5a45c4;
   }
 
-  .piano-key.black {
-    width: 20px;
-    height: 60px;
-    background: #1d1d1b;
-    color: #f5f2ec;
-    border: 1px solid #000;
-    border-radius: 3px;
-    position: relative;
-    top: -40px;
-    margin-left: -15px;
-    margin-right: -5px;
+  .note-card.current {
+    border-color: #5a45c4;
+    background: #f0edff;
   }
 
-  .piano-key.active {
-    box-shadow: 0 0 12px rgba(90, 69, 196, 0.6) inset;
+  .note-name {
+    font-weight: 700;
+    font-size: 14px;
+    display: block;
   }
 
-  /* Modal */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
+  .note-finger {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .modal.active {
-    display: flex;
-  }
-
-  .modal-content {
-    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
-    border: 1px solid var(--border-line);
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  .modal-header {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 16px;
-  }
-
-  .modal-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: 24px;
-    cursor: pointer;
-  }
-
-  /* Stats */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-
-  .stat-card {
-    background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%);
-    border: 1px solid var(--border-line);
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-  }
-
-  .stat-number {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent-blue);
-    margin-bottom: 4px;
-  }
-
-  .stat-label {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: white;
     font-size: 12px;
-    color: var(--text-secondary);
+    font-weight: 700;
+    margin-top: 6px;
   }
 
-  /* Animations */
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .note-card.rh .note-finger { background: #3b82f6; }
+  .note-card.lh .note-finger { background: #f97316; }
+
+  /* Notes */
+  .note-text {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 20px;
+    line-height: 1.6;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
   }
 
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-
-  @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
-  }
-
-  .scale-card {
-    animation: slideIn 0.3s ease forwards;
-  }
-
-  .celebration {
-    animation: pulse 0.6s ease-out;
+  .hidden {
+    display: none;
   }
 </style>
 </head>
@@ -636,537 +333,414 @@
 
 <div class="container">
   <div class="header">
-    <h1>🎹 Scales & Arpeggios Trainer</h1>
-    <p>Master scales and arpeggios for every piano grade</p>
+    <h1>Scales & Arpeggios — Set A</h1>
+    <p class="subtitle">Hands-together requirements, from memory. Click a scale, then press Play to hear and watch the fingering.</p>
   </div>
 
-  <div class="mode-selector">
-    <button class="mode-btn active" onclick="switchMode('learn')">📚 Learn</button>
-    <button class="mode-btn" onclick="switchMode('quiz')">❓ Quiz</button>
-    <button class="mode-btn" onclick="switchMode('challenge')">⚡ Challenge</button>
-    <button class="mode-btn" onclick="switchMode('progress')">📈 Progress</button>
+  <div class="grade-selector" id="gradeSelector"></div>
+
+  <div class="tabs-wrapper">
+    <div class="tabs" id="tabs"></div>
   </div>
 
-  <div class="grade-filter" id="gradeFilter"></div>
-
-  <div class="content-wrapper" id="content"></div>
-</div>
-
-<div class="modal" id="playerModal">
-  <div class="modal-content" style="position: relative;">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-header" id="modalTitle"></div>
-    <div id="modalBody"></div>
-    <div style="margin-top: 24px;">
-      <button class="btn-small btn-primary" onclick="closeModal()">Got it</button>
-    </div>
-  </div>
+  <div class="content" id="content"></div>
 </div>
 
 <script>
-// Data structure for all scales/arpeggios by grade
+// Updated data with individual grades (not ranges)
 const SCALES_DATA = [
-  // Grade 1-2
+  // Grade 1
   {
-    id: 'c-major-1', grade: '1-2', type: 'Major Scale', title: 'C Major', notes: 'C D E F G A B C',
-    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'white-keys', 'hands-together'],
-    knots: 'No black keys to worry about — just white keys in order.'
+    id: 'c-major-1', grade: 1, type: 'Major Scale', title: 'C Major', notes: 'C D E F G A B C',
+    hands: 'parallel', dyn: 'p', art: 'legato',
+    desc: 'Both hands ascend together, one octave apart.',
+    rh: [
+      {name: 'C', midi: 60, finger: 1},
+      {name: 'D', midi: 62, finger: 2},
+      {name: 'E', midi: 64, finger: 3},
+      {name: 'F', midi: 65, finger: 1},
+      {name: 'G', midi: 67, finger: 2},
+      {name: 'A', midi: 69, finger: 3},
+      {name: 'B', midi: 71, finger: 4},
+      {name: 'C', midi: 72, finger: 5}
+    ],
+    lh: [
+      {name: 'C', midi: 48, finger: 5},
+      {name: 'D', midi: 50, finger: 4},
+      {name: 'E', midi: 52, finger: 3},
+      {name: 'F', midi: 53, finger: 2},
+      {name: 'G', midi: 55, finger: 1},
+      {name: 'A', midi: 57, finger: 3},
+      {name: 'B', midi: 59, finger: 2},
+      {name: 'C', midi: 60, finger: 1}
+    ],
+    knots: 'No black keys. Natural fingering pattern for beginners.'
   },
   {
-    id: 'g-major-1', grade: '1-2', type: 'Major Scale', title: 'G Major', notes: 'G A B C D E F# G',
-    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'one-sharp', 'hands-together'],
-    knots: 'Just one black key: F#. Practice the F# → G crossing.'
+    id: 'g-major-1', grade: 1, type: 'Major Scale', title: 'G Major', notes: 'G A B C D E F# G',
+    hands: 'parallel', dyn: 'f', art: 'staccato',
+    desc: 'One sharp (F#). Both hands ascend together.',
+    rh: [
+      {name: 'G', midi: 67, finger: 1},
+      {name: 'A', midi: 69, finger: 2},
+      {name: 'B', midi: 71, finger: 3},
+      {name: 'C', midi: 72, finger: 1},
+      {name: 'D', midi: 74, finger: 2},
+      {name: 'E', midi: 76, finger: 3},
+      {name: 'F#', midi: 78, finger: 4},
+      {name: 'G', midi: 79, finger: 5}
+    ],
+    lh: [
+      {name: 'G', midi: 55, finger: 5},
+      {name: 'A', midi: 57, finger: 4},
+      {name: 'B', midi: 59, finger: 3},
+      {name: 'C', midi: 60, finger: 2},
+      {name: 'D', midi: 62, finger: 1},
+      {name: 'E', midi: 64, finger: 3},
+      {name: 'F#', midi: 66, finger: 2},
+      {name: 'G', midi: 67, finger: 1}
+    ],
+    knots: 'Watch the F# thumb transition.'
   },
   {
-    id: 'f-major-1', grade: '1-2', type: 'Major Scale', title: 'F Major', notes: 'F G A Bb C D E F',
-    hands: 'parallel', difficulty: 'beginner', tags: ['major', 'one-flat', 'hands-together'],
-    knots: 'One black key: Bb. Watch the Bb transition from A.'
+    id: 'f-major-1', grade: 1, type: 'Major Scale', title: 'F Major', notes: 'F G A Bb C D E F',
+    hands: 'parallel', dyn: 'p', art: 'legato',
+    desc: 'One flat (Bb). Both hands ascend together.',
+    rh: [
+      {name: 'F', midi: 65, finger: 1},
+      {name: 'G', midi: 67, finger: 2},
+      {name: 'A', midi: 69, finger: 3},
+      {name: 'Bb', midi: 70, finger: 4},
+      {name: 'C', midi: 72, finger: 5},
+      {name: 'D', midi: 74, finger: 1},
+      {name: 'E', midi: 76, finger: 2},
+      {name: 'F', midi: 77, finger: 3}
+    ],
+    lh: [
+      {name: 'F', midi: 53, finger: 5},
+      {name: 'G', midi: 55, finger: 4},
+      {name: 'A', midi: 57, finger: 3},
+      {name: 'Bb', midi: 58, finger: 2},
+      {name: 'C', midi: 60, finger: 1},
+      {name: 'D', midi: 62, finger: 4},
+      {name: 'E', midi: 64, finger: 3},
+      {name: 'F', midi: 65, finger: 2}
+    ],
+    knots: 'Bb is the only flat. Smooth hand position.'
   },
 
-  // Grade 2-3
+  // Grade 2
   {
-    id: 'd-major-2', grade: '2-3', type: 'Major Scale', title: 'D Major', notes: 'D E F# G A B C# D',
-    hands: 'parallel', difficulty: 'easy', tags: ['major', 'two-sharps', 'hands-together'],
-    knots: 'Two sharps: F# and C#. Fingering shape: RH 1-2-3-1-2-3-4-5'
+    id: 'd-major-2', grade: 2, type: 'Major Scale', title: 'D Major', notes: 'D E F# G A B C# D',
+    hands: 'parallel', dyn: 'f', art: 'staccato',
+    desc: 'Two sharps (F#, C#). Hands together.',
+    rh: [
+      {name: 'D', midi: 62, finger: 1},
+      {name: 'E', midi: 64, finger: 2},
+      {name: 'F#', midi: 66, finger: 3},
+      {name: 'G', midi: 67, finger: 1},
+      {name: 'A', midi: 69, finger: 2},
+      {name: 'B', midi: 71, finger: 3},
+      {name: 'C#', midi: 73, finger: 4},
+      {name: 'D', midi: 74, finger: 5}
+    ],
+    lh: [
+      {name: 'D', midi: 50, finger: 5},
+      {name: 'E', midi: 52, finger: 4},
+      {name: 'F#', midi: 54, finger: 3},
+      {name: 'G', midi: 55, finger: 2},
+      {name: 'A', midi: 57, finger: 1},
+      {name: 'B', midi: 59, finger: 3},
+      {name: 'C#', midi: 61, finger: 2},
+      {name: 'D', midi: 62, finger: 1}
+    ],
+    knots: 'F# and C# together. Standard RH 1-2-3-1-2-3-4-5 shape.'
   },
   {
-    id: 'bb-major-2', grade: '2-3', type: 'Major Scale', title: 'Bb Major', notes: 'Bb C D Eb F G A Bb',
-    hands: 'parallel', difficulty: 'easy', tags: ['major', 'two-flats', 'hands-together'],
-    knots: 'Two flats: Bb and Eb. Smooth black key transitions.'
+    id: 'bb-major-2', grade: 2, type: 'Major Scale', title: 'Bb Major', notes: 'Bb C D Eb F G A Bb',
+    hands: 'parallel', dyn: 'p', art: 'legato',
+    desc: 'Two flats (Bb, Eb). Hands together.',
+    rh: [
+      {name: 'Bb', midi: 70, finger: 2},
+      {name: 'C', midi: 72, finger: 3},
+      {name: 'D', midi: 74, finger: 1},
+      {name: 'Eb', midi: 75, finger: 2},
+      {name: 'F', midi: 77, finger: 3},
+      {name: 'G', midi: 79, finger: 4},
+      {name: 'A', midi: 81, finger: 5},
+      {name: 'Bb', midi: 82, finger: 1}
+    ],
+    lh: [
+      {name: 'Bb', midi: 58, finger: 4},
+      {name: 'C', midi: 60, finger: 3},
+      {name: 'D', midi: 62, finger: 2},
+      {name: 'Eb', midi: 63, finger: 1},
+      {name: 'F', midi: 65, finger: 4},
+      {name: 'G', midi: 67, finger: 3},
+      {name: 'A', midi: 69, finger: 2},
+      {name: 'Bb', midi: 70, finger: 1}
+    ],
+    knots: 'Two black keys in succession. Watch thumb crossovers.'
   },
   {
-    id: 'a-minor-2', grade: '2-3', type: 'Minor Scale', title: 'A Natural Minor', notes: 'A B C D E F G A',
-    hands: 'parallel', difficulty: 'easy', tags: ['minor', 'relative-minor', 'hands-together'],
-    knots: 'No sharps or flats. Relative minor of C major — same white keys.'
-  },
-
-  // Grade 3-4
-  {
-    id: 'a-major-3', grade: '3-4', type: 'Major Scale', title: 'A Major', notes: 'A B C# D E F# G# A',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'three-sharps', 'hands-together'],
-    knots: 'Three sharps: F#, C#, G#. Common hand shape with thumb crossovers.'
-  },
-  {
-    id: 'eb-major-3', grade: '3-4', type: 'Major Scale', title: 'Eb Major', notes: 'Eb F G Ab Bb C D Eb',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'three-flats', 'hands-together'],
-    knots: 'Three flats: Bb, Eb, Ab. Watch Ab and Bb coordination.'
-  },
-  {
-    id: 'e-minor-3', grade: '3-4', type: 'Minor Scale', title: 'E Natural Minor', notes: 'E F# G A B C D E',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['minor', 'hands-together'],
-    knots: 'One sharp: F#. Relative minor of G major.'
-  },
-  {
-    id: 'db-major-arp-3', grade: '3-4', type: 'Arpeggio', title: 'Db Major Arpeggio', notes: 'Db F Ab Db F',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['arpeggio', 'hands-together'],
-    knots: 'Root position: Db (root), F (3rd), Ab (5th). Fingering: 2-3-5'
-  },
-
-  // Grade 4-5
-  {
-    id: 'e-major-4', grade: '4-5', type: 'Major Scale', title: 'E Major', notes: 'E F# G# A B C# D# E',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'four-sharps', 'hands-together'],
-    knots: 'Four sharps. More complex fingering patterns with thumb crossovers.'
-  },
-  {
-    id: 'ab-major-4', grade: '4-5', type: 'Major Scale', title: 'Ab Major', notes: 'Ab Bb C Db Eb F G Ab',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['major', 'four-flats', 'hands-together'],
-    knots: 'Four flats. The Db and Eb coordination is key.'
-  },
-  {
-    id: 'b-minor-4', grade: '4-5', type: 'Minor Scale', title: 'B Harmonic Minor', notes: 'B C# D E F# G A# B',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['minor', 'harmonic', 'hands-together'],
-    knots: 'Two sharps, plus raised 7th (A#). Creates that eastern flavor.'
-  },
-  {
-    id: 'c-minor-arp-4', grade: '4-5', type: 'Arpeggio', title: 'C Minor Arpeggio', notes: 'C Eb G C',
-    hands: 'parallel', difficulty: 'intermediate', tags: ['arpeggio', 'minor', 'hands-together'],
-    knots: 'Root on a white key, 3rd and 5th on black keys. Fingering: 1-3-5 right hand'
-  },
-
-  // Grade 5+
-  {
-    id: 'b-major-5', grade: '5-6', type: 'Major Scale', title: 'B Major', notes: 'B C# D# E F# G# A# B',
-    hands: 'parallel', difficulty: 'advanced', tags: ['major', 'five-sharps', 'hands-together'],
-    knots: 'Five sharps! Lots of black keys. Requires smooth thumb transitions.'
-  },
-  {
-    id: 'gb-major-5', grade: '5-6', type: 'Major Scale', title: 'Gb Major', notes: 'Gb Ab Bb Cb Db Eb F Gb',
-    hands: 'parallel', difficulty: 'advanced', tags: ['major', 'six-flats', 'hands-together'],
-    knots: 'Six flats. Mostly black keys — very slippery!'
-  },
-  {
-    id: 'gsharp-minor-5', grade: '5-6', type: 'Minor Scale', title: 'G# Harmonic Minor', notes: 'G# A# B C# D# E F# G#',
-    hands: 'parallel', difficulty: 'advanced', tags: ['minor', 'harmonic', 'hands-together'],
-    knots: 'Three sharps, then F#x (sounds like G). Enharmonic nightmare!'
-  },
-  {
-    id: 'diminished-arp-5', grade: '5-6', type: 'Arpeggio', title: 'Diminished 7th on B', notes: 'B D F Ab',
-    hands: 'parallel', difficulty: 'advanced', tags: ['arpeggio', 'diminished', 'hands-together'],
-    knots: 'Equal minor thirds. Clean 1-2-3-5 pattern. Same shape repeats every 3 semitones.'
-  },
+    id: 'a-minor-2', grade: 2, type: 'Minor Scale', title: 'A Natural Minor', notes: 'A B C D E F G A',
+    hands: 'parallel', dyn: 'f', art: 'legato',
+    desc: 'No sharps or flats. Relative minor of C major.',
+    rh: [
+      {name: 'A', midi: 69, finger: 1},
+      {name: 'B', midi: 71, finger: 2},
+      {name: 'C', midi: 72, finger: 3},
+      {name: 'D', midi: 74, finger: 1},
+      {name: 'E', midi: 76, finger: 2},
+      {name: 'F', midi: 77, finger: 3},
+      {name: 'G', midi: 79, finger: 4},
+      {name: 'A', midi: 81, finger: 5}
+    ],
+    lh: [
+      {name: 'A', midi: 57, finger: 5},
+      {name: 'B', midi: 59, finger: 4},
+      {name: 'C', midi: 60, finger: 3},
+      {name: 'D', midi: 62, finger: 2},
+      {name: 'E', midi: 64, finger: 1},
+      {name: 'F', midi: 65, finger: 3},
+      {name: 'G', midi: 67, finger: 2},
+      {name: 'A', midi: 69, finger: 1}
+    ],
+    knots: 'Relative minor to C major. Same white keys as C.'
+  }
 ];
 
-let currentMode = 'learn';
-let currentGrade = 'all';
-let userStats = loadStats();
-let quizState = { current: 0, answers: [], score: 0 };
-let selectedScale = null;
+let currentGrade = 1;
+let selectedId = SCALES_DATA[0].id;
+let audioCtx = null;
 
-function loadStats() {
-  const saved = localStorage.getItem('scaleStats');
-  return saved ? JSON.parse(saved) : {
-    practiced: {},
-    quizScores: [],
-    timeSpent: {},
-    lastActive: Date.now()
-  };
-}
-
-function saveStats() {
-  localStorage.setItem('scaleStats', JSON.stringify(userStats));
-}
-
-function switchMode(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  render();
-}
-
-function initGradeFilter() {
-  const grades = ['all', '1-2', '2-3', '3-4', '4-5', '5-6'];
-  const filter = document.getElementById('gradeFilter');
-  filter.innerHTML = grades.map(g =>
-    `<button class="grade-badge ${g === 'all' ? 'active' : ''}" onclick="filterGrade('${g}')">${g === 'all' ? 'All Grades' : 'Grade ' + g}</button>`
+function initGradeSelector() {
+  const grades = [1, 2, 3, 4, 5, 6];
+  const selector = document.getElementById('gradeSelector');
+  selector.innerHTML = grades.map(g =>
+    `<button class="grade-btn ${g === currentGrade ? 'active' : ''}" onclick="selectGrade(${g})">Grade ${g}</button>`
   ).join('');
 }
 
-function filterGrade(grade) {
+function selectGrade(grade) {
   currentGrade = grade;
-  document.querySelectorAll('.grade-badge').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
-  render();
+  renderTabs();
 }
 
 function getScalesByGrade() {
-  return currentGrade === 'all'
-    ? SCALES_DATA
-    : SCALES_DATA.filter(s => s.grade === currentGrade);
+  return SCALES_DATA.filter(s => s.grade === currentGrade);
 }
 
-function renderLearnMode() {
+function renderTabs() {
   const scales = getScalesByGrade();
-  return `
-    <div class="scale-grid">
-      ${scales.map(scale => `
-        <div class="scale-card" onclick="openScale('${scale.id}')">
-          <div class="scale-card-inner">
-            <div class="scale-header">
-              <div>
-                <h3 class="scale-title">${scale.title}</h3>
-                <span class="scale-type">${scale.type}</span>
-              </div>
-              <div class="scale-grade">Grade ${scale.grade}</div>
-            </div>
-            <div class="scale-notes">${scale.notes}</div>
-            <div class="scale-tags">
-              ${scale.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-            </div>
-            <div class="scale-progress">
-              <div class="progress-label">
-                <span>Progress</span>
-                <span>${userStats.practiced[scale.id] || 0} practices</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${Math.min((userStats.practiced[scale.id] || 0) * 20, 100)}%"></div>
-              </div>
-            </div>
-            <div class="scale-actions">
-              <button class="btn-small btn-primary" onclick="playScale('${scale.id}', event)">▶ Play</button>
-              <button class="btn-small" onclick="openScale('${scale.id}', event)">Learn More</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = scales.map(s => `
+    <button class="tab ${s.id === selectedId ? 'active' : ''}" onclick="selectScale('${s.id}')">
+      <span class="tab-label">${s.type}</span>
+      <span class="tab-name">${s.title}</span>
+    </button>
+  `).join('');
+  renderContent();
 }
 
-function renderQuizMode() {
-  const scales = getScalesByGrade();
-  const quizLength = Math.min(10, scales.length);
-
-  if (quizState.current === 0) {
-    return `
-      <div style="text-align: center; margin-top: 40px;">
-        <h2 style="font-size: 24px; margin-bottom: 16px;">Ready for a quiz?</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 32px;">Test your knowledge with ${quizLength} questions</p>
-        <button class="challenge-btn" onclick="startQuiz()">Start Quiz</button>
-      </div>
-    `;
-  }
-
-  if (quizState.current >= quizLength) {
-    const score = quizState.answers.filter(a => a.correct).length;
-    const percent = Math.round((score / quizLength) * 100);
-    return `
-      <div class="quiz-container">
-        <div class="quiz-header">
-          <h2>Quiz Complete!</h2>
-        </div>
-        <div class="quiz-score celebration">
-          <div class="score-number">${score}/${quizLength}</div>
-          <div class="score-label">${percent}% Correct</div>
-        </div>
-        <div style="margin-top: 24px; text-align: center;">
-          <button class="btn-small btn-primary" style="margin-top: 16px;" onclick="resetQuiz()">Try Again</button>
-        </div>
-      </div>
-    `;
-  }
-
-  const scale = scales[quizState.current];
-  const quizTypes = [
-    { q: `What are the notes in ${scale.title}?`, type: 'notes' },
-    { q: `${scale.title} is a ${scale.type}. What is its grade?`, type: 'grade' },
-    { q: `How many sharps/flats does ${scale.title} have?`, type: 'key' }
-  ];
-
-  const question = quizTypes[quizState.current % quizTypes.length];
-  const options = generateQuizOptions(scale, question.type);
-
-  return `
-    <div class="quiz-container">
-      <div class="quiz-header">
-        <div class="quiz-progress">
-          ${Array(quizLength).fill(0).map((_, i) => {
-            let className = 'quiz-dot';
-            if (i < quizState.current) {
-              className += quizState.answers[i]?.correct ? ' correct' : ' incorrect';
-            } else if (i === quizState.current) {
-              className += ' active';
-            }
-            return `<div class="${className}"></div>`;
-          }).join('')}
-        </div>
-        <div style="text-align: center; color: var(--text-secondary); font-size: 12px;">
-          Question ${quizState.current + 1} of ${quizLength}
-        </div>
-      </div>
-      <div class="quiz-question">${question.q}</div>
-      <div class="quiz-options">
-        ${options.map((opt, i) => `
-          <button class="quiz-option" onclick="answerQuiz(${i}, ${opt.correct})">${opt.text}</button>
-        `).join('')}
-      </div>
-    </div>
-  `;
+function selectScale(id) {
+  selectedId = id;
+  renderTabs();
 }
 
-function generateQuizOptions(scale, type) {
-  const options = [];
+function renderContent() {
+  const scale = SCALES_DATA.find(s => s.id === selectedId);
+  if (!scale) return;
 
-  if (type === 'notes') {
-    options.push({ text: scale.notes, correct: true });
-    const wrongScales = SCALES_DATA.filter(s => s.id !== scale.id).slice(0, 3);
-    wrongScales.forEach(s => options.push({ text: s.notes, correct: false }));
-  } else if (type === 'grade') {
-    options.push({ text: `Grade ${scale.grade}`, correct: true });
-    const otherGrades = ['1-2', '2-3', '3-4', '4-5', '5-6'].filter(g => g !== scale.grade).slice(0, 3);
-    otherGrades.forEach(g => options.push({ text: `Grade ${g}`, correct: false }));
-  } else if (type === 'key') {
-    const keyInfo = scale.notes.includes('#') ? `${scale.notes.split(' ').filter(n => n.includes('#')).length} sharps` :
-                   scale.notes.includes('b') ? `${scale.notes.split(' ').filter(n => n.includes('b')).length} flats` : 'No sharps/flats';
-    options.push({ text: keyInfo, correct: true });
-    options.push({ text: `${Math.floor(Math.random() * 5)} sharps`, correct: false });
-    options.push({ text: `${Math.floor(Math.random() * 5)} flats`, correct: false });
-    options.push({ text: 'Both sharps and flats', correct: false });
-  }
-
-  return options.sort(() => Math.random() - 0.5);
-}
-
-function answerQuiz(idx, correct) {
-  quizState.answers.push({ idx, correct });
-  if (correct) {
-    userStats.quizScores.push({ scale: SCALES_DATA[quizState.current].id, score: 100, date: Date.now() });
-  }
-  saveStats();
-  quizState.current++;
-  render();
-}
-
-function startQuiz() {
-  quizState = { current: 0, answers: [], score: 0 };
-  render();
-}
-
-function resetQuiz() {
-  quizState = { current: 0, answers: [], score: 0 };
-  render();
-}
-
-function renderChallengeMode() {
-  return `
-    <div style="max-width: 600px; margin: 0 auto;">
-      <div class="challenge-card">
-        <div class="challenge-icon">⏱️</div>
-        <div class="challenge-title">Speed Challenge</div>
-        <div class="challenge-desc">Play as many scales as you can in 60 seconds</div>
-        <button class="challenge-btn" onclick="startSpeedChallenge()">Start</button>
-      </div>
-
-      <div class="challenge-card">
-        <div class="challenge-icon">🎯</div>
-        <div class="challenge-title">Perfect Play</div>
-        <div class="challenge-desc">Play 5 random scales without mistakes</div>
-        <button class="challenge-btn" onclick="startPerfectChallenge()">Start</button>
-      </div>
-
-      <div class="challenge-card">
-        <div class="challenge-icon">🔥</div>
-        <div class="challenge-title">Daily Challenge</div>
-        <div class="challenge-desc">Complete today's scale assignment</div>
-        <button class="challenge-btn" onclick="startDailyChallenge()">Start</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderProgressMode() {
-  const practiced = Object.values(userStats.practiced).reduce((a, b) => a + b, 0);
-  const quizzes = userStats.quizScores.length;
-  const avgScore = quizzes > 0 ? Math.round(userStats.quizScores.reduce((a, b) => a + b.score, 0) / quizzes) : 0;
-
-  return `
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number">${practiced}</div>
-        <div class="stat-label">Scales Practiced</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">${quizzes}</div>
-        <div class="stat-label">Quizzes Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">${avgScore}%</div>
-        <div class="stat-label">Average Quiz Score</div>
-      </div>
-    </div>
-
-    <div style="background: linear-gradient(135deg, var(--bg-card) 0%, #251d3e 100%); border: 1px solid var(--border-line); border-radius: 16px; padding: 24px;">
-      <h3 style="margin-top: 0;">Most Practiced Scales</h3>
-      <table class="leaderboard-table">
-        <thead>
-          <tr>
-            <th>Scale</th>
-            <th>Practices</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${Object.entries(userStats.practiced)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10)
-            .map(([id, count], idx) => {
-              const scale = SCALES_DATA.find(s => s.id === id);
-              return `
-                <tr>
-                  <td class="leaderboard-name">${idx + 1}. ${scale?.title || 'Unknown'}</td>
-                  <td class="leaderboard-score">${count}</td>
-                </tr>
-              `;
-            })
-            .join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-function render() {
   const content = document.getElementById('content');
+  const handLabel = scale.hands === 'contrary' ? 'Contrary motion' : 'Hands together';
 
-  let html = '';
-  if (currentMode === 'learn') {
-    html = renderLearnMode();
-  } else if (currentMode === 'quiz') {
-    html = renderQuizMode();
-  } else if (currentMode === 'challenge') {
-    html = renderChallengeMode();
-  } else if (currentMode === 'progress') {
-    html = renderProgressMode();
-  }
-
-  content.innerHTML = html;
-}
-
-function openScale(scaleId, event) {
-  if (event) event.stopPropagation();
-  const scale = SCALES_DATA.find(s => s.id === scaleId);
-  if (!scale) return;
-
-  selectedScale = scale;
-  const modal = document.getElementById('playerModal');
-  document.getElementById('modalTitle').textContent = scale.title;
-  document.getElementById('modalBody').innerHTML = `
-    <div style="margin-bottom: 20px;">
-      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">NOTES</div>
-      <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">${scale.notes}</div>
-
-      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">TIPS</div>
-      <div style="font-size: 14px; line-height: 1.6; margin-bottom: 16px;">${scale.knots}</div>
-
-      <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 8px;">PRACTICE TIPS</div>
-      <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6;">
-        <li>Start slowly and gradually increase tempo</li>
-        <li>Practice hands separately, then together</li>
-        <li>Focus on smooth thumb crossovers</li>
-        <li>Use a metronome for rhythm accuracy</li>
-      </ul>
+  content.innerHTML = `
+    <div class="content-header">
+      <div class="content-left">
+        <div class="content-title">${scale.title}</div>
+        <div class="content-desc">${scale.desc}</div>
+      </div>
+      <div class="badges">
+        <span class="badge badge-dyn">${scale.dyn}</span>
+        <span class="badge badge-art">${scale.art}</span>
+        <span class="badge badge-hand">${handLabel}</span>
+      </div>
     </div>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn-small btn-primary" style="flex: 1;" onclick="recordPractice('${scale.id}')">✓ Mark Practiced</button>
-      <button class="btn-small" style="flex: 1;" onclick="playScale('${scale.id}', null)">▶ Hear It</button>
+
+    <div class="keyboard-display" id="kbwrap"></div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #3b82f6;"></div>
+        <span>Right hand</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: #f97316;"></div>
+        <span>Left hand</span>
+      </div>
     </div>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="playScale()">▶ Play</button>
+      <button onclick="resetPlayback()">Reset</button>
+      <div class="tempo-control">
+        <label>Tempo</label>
+        <input type="range" id="tempoSlider" min="200" max="900" value="450" step="50" style="width:110px;">
+      </div>
+    </div>
+
+    <div class="hand-block">
+      <div class="hand-label">Right hand</div>
+      <div class="note-row" id="rhRow"></div>
+    </div>
+
+    <div class="hand-block">
+      <div class="hand-label">Left hand</div>
+      <div class="note-row" id="lhRow"></div>
+    </div>
+
+    <div class="note-text">${scale.knots}</div>
   `;
-  modal.classList.add('active');
+
+  drawKeyboard(scale.rh, scale.lh);
+  refreshNoteRows(scale, -1);
 }
 
-function closeModal() {
-  document.getElementById('playerModal').classList.remove('active');
-}
+function drawKeyboard(rhNotes, lhNotes) {
+  const lo = 48, hi = 84;
+  const wkW = 32, wkH = 120, bkW = 19, bkH = 76;
 
-function recordPractice(scaleId) {
-  if (!userStats.practiced[scaleId]) {
-    userStats.practiced[scaleId] = 0;
+  let whiteCount = 0;
+  for (let m = lo; m <= hi; m++) {
+    if (![1,3,6,8,10].includes(m % 12)) whiteCount++;
   }
-  userStats.practiced[scaleId]++;
-  saveStats();
-  closeModal();
-  render();
+
+  const rhMap = {}, lhMap = {};
+  rhNotes.forEach(n => rhMap[n.midi] = n.finger);
+  lhNotes.forEach(n => lhMap[n.midi] = n.finger);
+
+  const width = whiteCount * wkW + 2;
+  let svg = `<svg viewBox="0 0 ${width} ${wkH+4}" width="${Math.min(width, 880)}" height="${wkH+4}">`;
+
+  let wi = 0, whiteRects = '', blackRects = '', labels = '';
+
+  for (let m = lo; m <= hi; m++) {
+    if ([1,3,6,8,10].includes(m % 12)) continue;
+    const x = wi * wkW + 1;
+    let fill = '#fff', stroke = '#c9c7bf';
+    if (rhMap[m]) { fill = '#dbe9fd'; stroke = '#0c447c'; }
+    if (lhMap[m]) { fill = rhMap[m] ? '#e9dcf6' : '#fbe1d3'; stroke = '#4a1b0c'; }
+
+    whiteRects += `<rect x="${x}" y="1" width="${wkW-2}" height="${wkH}" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
+
+    if (rhMap[m]) {
+      labels += `<circle cx="${x+wkW/2-1}" cy="${wkH-24}" r="9" fill="#2f6fed"/><text x="${x+wkW/2-1}" y="${wkH-20}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${rhMap[m]}</text>`;
+    }
+    if (lhMap[m]) {
+      labels += `<circle cx="${x+wkW/2-1}" cy="${wkH-42}" r="9" fill="#d85a30"/><text x="${x+wkW/2-1}" y="${wkH-38}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${lhMap[m]}</text>`;
+    }
+    wi++;
+  }
+
+  for (let m = lo; m < hi; m++) {
+    if (![1,3,6,8,10].includes(m % 12)) continue;
+    const oct = Math.floor(m / 12);
+    const semis = m % 12;
+    const whiteOffsets = {0:0,2:1,4:2,5:3,7:4,9:5,11:6};
+    const blackFrac = {1:0.68,3:1.72,6:3.65,8:4.63,10:5.65};
+
+    let wCountBeforeOctave = 0;
+    for (let mm = lo; mm < oct * 12; mm++) {
+      if (![1,3,6,8,10].includes(mm % 12)) wCountBeforeOctave++;
+    }
+
+    const x = 1 + (wCountBeforeOctave + blackFrac[semis]) * wkW - bkW / 2;
+    let fill = '#2b2b29';
+    if (rhMap[m] && lhMap[m]) fill = '#6a4fae';
+    else if (rhMap[m]) fill = '#2f6fed';
+    else if (lhMap[m]) fill = '#d85a30';
+
+    blackRects += `<rect x="${x}" y="1" width="${bkW}" height="${bkH}" rx="2" fill="${fill}"/>`;
+  }
+
+  svg += whiteRects + blackRects + labels + '</svg>';
+  document.getElementById('kbwrap').innerHTML = svg;
 }
 
-function playScale(scaleId, event) {
-  if (event) event.stopPropagation();
-  const scale = SCALES_DATA.find(s => s.id === scaleId);
-  if (!scale) return;
+function refreshNoteRows(scale, currentIdx) {
+  document.getElementById('rhRow').innerHTML = scale.rh.map((n, i) =>
+    `<div class="note-card rh ${i === currentIdx ? 'current' : ''}">
+      <span class="note-name">${n.name}</span>
+      <span class="note-finger">${n.finger}</span>
+    </div>`
+  ).join('');
 
-  // Play the scale using Web Audio API
-  const notes = scale.notes.split(' ');
-  let delay = 0;
-
-  notes.forEach((note, i) => {
-    setTimeout(() => playNote(note), delay);
-    delay += 300;
-  });
+  document.getElementById('lhRow').innerHTML = scale.lh.map((n, i) =>
+    `<div class="note-card lh ${i === currentIdx ? 'current' : ''}">
+      <span class="note-name">${n.name}</span>
+      <span class="note-finger">${n.finger}</span>
+    </div>`
+  ).join('');
 }
 
-function playNote(noteName) {
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const noteFreqs = {
-    'C': 261.63, 'C#': 277.18, 'Db': 277.18,
-    'D': 293.66, 'D#': 311.13, 'Eb': 311.13,
-    'E': 329.63, 'Fb': 329.63, 'E#': 349.23,
-    'F': 349.23, 'F#': 369.99, 'Gb': 369.99,
-    'G': 391.99, 'G#': 415.3, 'Ab': 415.3,
-    'A': 440, 'A#': 466.16, 'Bb': 466.16,
-    'B': 493.88, 'Cb': 493.88, 'B#': 523.25
-  };
+function midiToFreq(m) {
+  return 440 * Math.pow(2, (m - 69) / 12);
+}
 
-  // Handle octaves
-  let freq = noteFreqs[noteName.replace(/[0-9]/g, '')];
-  if (!freq) return;
-
+function playTone(freq, durMs, gainLevel) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
 
   osc.frequency.value = freq;
+  osc.type = 'sine';
   osc.connect(gain);
   gain.connect(audioCtx.destination);
 
-  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+  const now = audioCtx.currentTime;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(gainLevel, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + durMs / 1000);
 
-  osc.start(audioCtx.currentTime);
-  osc.stop(audioCtx.currentTime + 0.5);
+  osc.start(now);
+  osc.stop(now + durMs / 1000 + 0.02);
 }
 
-function startSpeedChallenge() {
-  alert('Speed Challenge: Try to identify scales quickly! Coming soon.');
+function playScale() {
+  const scale = SCALES_DATA.find(s => s.id === selectedId);
+  if (!scale) return;
+
+  const stepMs = Number(document.getElementById('tempoSlider').value);
+  const gainLevel = scale.dyn === 'f' ? 0.22 : 0.09;
+  const durMs = scale.art === 'staccato' ? stepMs * 0.4 : stepMs * 0.95;
+
+  const full = scale.rh.map((n, i) => ({rh: n, lh: scale.lh[i]}));
+  let i = 0;
+
+  function step() {
+    if (i >= full.length) { resetPlayback(); return; }
+    const pair = full[i];
+    playTone(midiToFreq(pair.rh.midi), durMs, gainLevel);
+    playTone(midiToFreq(pair.lh.midi), durMs, gainLevel * 0.9);
+    refreshNoteRows(scale, i);
+    i++;
+    setTimeout(step, stepMs);
+  }
+
+  step();
 }
 
-function startPerfectChallenge() {
-  alert('Perfect Play: Play scales without mistakes. Coming soon.');
-}
-
-function startDailyChallenge() {
-  alert('Daily Challenge: Complete the assignment. Coming soon.');
+function resetPlayback() {
+  const scale = SCALES_DATA.find(s => s.id === selectedId);
+  if (scale) refreshNoteRows(scale, -1);
 }
 
 // Initialize
-initGradeFilter();
-render();
+initGradeSelector();
+renderTabs();
 </script>
 
 </body>
