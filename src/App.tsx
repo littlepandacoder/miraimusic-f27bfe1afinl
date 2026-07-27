@@ -34,7 +34,6 @@ import PianoHeroPage from "./pages/PianoHeroPage";
 import PianoRoomPage from "./pages/PianoRoomPage";
 import RhythmQuizPage from "./pages/RhythmQuizPage";
 import PianoTheoryPage from "./pages/PianoTheoryPage";
-import ScalesTrainerPage from "./pages/ScalesTrainerPage";
 import StudentProfile from "./pages/StudentProfile";
 import ChordProgressionQuizPage from "./pages/ChordProgressionQuizPage";
 import ScaleBuilderQuizPage from "./pages/ScaleBuilderQuizPage";
@@ -79,7 +78,6 @@ const App = () => (
             <Route path="/piano-room" element={<PianoRoomPage />} />
             <Route path="/rhythm-quiz" element={<RhythmQuizPage />} />
             <Route path="/piano-theory-game" element={<PianoTheoryPage />} />
-            <Route path="/scales-trainer" element={<ScalesTrainerPage />} />
             <Route path="/scale-builder-quiz" element={<ScaleBuilderQuizPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/pdf-viewer" element={<PDFViewerPage />} />

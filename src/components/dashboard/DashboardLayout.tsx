@@ -95,7 +95,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/sight-reading.html",  img: "/game-icons/sight_reading.png", labelKey: "dashboard.nav.sightReading", shadow: "0 0 14px 4px rgba(139,92,246,0.55)" },
     { href: "/note_naming.html",    img: "/game-icons/note_naming.png",   labelKey: "dashboard.nav.noteNaming",   shadow: "0 0 14px 4px rgba(244,63,94,0.55)"  },
     { href: "/piano-theory-game",   img: "/game-icons/piano_theory.png",  labelKey: "dashboard.nav.pianoTheory",  shadow: "0 0 14px 4px rgba(202,138,4,0.55)" },
-    { href: "/scales-trainer",      img: "/game-icons/scales_trainer.png", labelKey: "dashboard.nav.scalesTrainer", shadow: "0 0 14px 4px rgba(168,85,247,0.55)" },
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
     { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
     { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",  labelKey: "dashboard.nav.chordBoss",  shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
