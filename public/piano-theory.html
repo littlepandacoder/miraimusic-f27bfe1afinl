@@ -437,7 +437,7 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
   <p class="mode-sub">Choose a game to test your music theory knowledge.</p>
 
   <div style="margin-bottom: 2rem;">
-    <button onclick="openScalesTrainer()" style="width:100%;max-width:480px;padding:1.2rem 1.5rem;background:linear-gradient(135deg,rgba(0,212,255,.15) 0%,rgba(255,45,120,.15) 100%);border:2px solid var(--sky);border-radius:14px;color:var(--off-white);font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.75rem;transition:all .2s;font-family:'Inter',sans-serif;margin:0 auto;">
+    <button onclick="openScaleTrainer()" style="width:100%;max-width:480px;padding:1.2rem 1.5rem;background:linear-gradient(135deg,rgba(0,212,255,.15) 0%,rgba(255,45,120,.15) 100%);border:2px solid var(--sky);border-radius:14px;color:var(--off-white);font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.75rem;transition:all .2s;font-family:'Inter',sans-serif;margin:0 auto;">
       <span style="font-size:1.4rem;">📚</span>
       <div style="text-align:left;">
         <div style="color:var(--sky);font-size:.9rem;">NEW</div>
@@ -3515,9 +3515,9 @@ function sbDrawStaff(checkResults){
   svg.innerHTML=s;
 }
 
-// Open Scale Trainer in new window
+// Open Scale Trainer in new tab
 function openScaleTrainer() {
-  window.open('/scale-trainer.html', '_blank', 'width=1400,height=900,left=100,top=100');
+  window.open('/scale-trainer.html', '_blank');
 }
 </script>
 </body>

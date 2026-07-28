@@ -6,7 +6,7 @@ interface PianoTheoryHubProps {
 
 export function PianoTheoryHub({ userId }: PianoTheoryHubProps) {
   useEffect(() => {
-    window.open("/piano-theory.html", "_blank", "width=1200,height=900,left=100,top=100");
+    window.open("/piano-theory.html", "_blank");
     // Optionally redirect back or close current tab
     // window.history.back();
   }, []);
