@@ -863,8 +863,8 @@ function drawPiano(ctx, scale, currentNote = null) {
 
       // Color based on state
       if (isPlaying) {
-        ctx.fillStyle = '#ffd700';
-        ctx.strokeStyle = '#ffaa00';
+        ctx.fillStyle = '#ff69b4';
+        ctx.strokeStyle = '#ff2d78';
         ctx.lineWidth = 3;
       } else if (!isActive) {
         ctx.fillStyle = '#1a1620';
@@ -1005,8 +1005,8 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
       const isPlaying = highlightSet.has(m);
 
       if (isPlaying) {
-        ctx.fillStyle = '#ffd700';
-        ctx.strokeStyle = '#ffaa00';
+        ctx.fillStyle = '#ff69b4';
+        ctx.strokeStyle = '#ff2d78';
         ctx.lineWidth = 3;
       } else if (!isActive) {
         ctx.fillStyle = '#1a1620';
