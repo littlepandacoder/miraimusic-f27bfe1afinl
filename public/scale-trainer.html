@@ -165,11 +165,11 @@ html, body { height: 100%; background: var(--bg); color: var(--ink); font-family
   background: linear-gradient(135deg, rgba(10, 8, 18, 0.8), rgba(21, 18, 40, 0.8));
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 16px;
+  padding: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 220px;
+  height: 200px;
   overflow-x: auto;
 }
 
@@ -681,8 +681,8 @@ function updateVisualizerAndInfo() {
 
   const canvas = document.getElementById('pianoCanvas');
   const wrapper = document.querySelector('.piano-wrapper');
-  canvas.width = 960;
-  canvas.height = 180;
+  canvas.width = Math.max(wrapper.clientWidth - 16, 800);
+  canvas.height = 184;
   const ctx = canvas.getContext('2d');
   drawPiano(ctx, selectedScale);
 
@@ -731,7 +731,7 @@ function drawPiano(ctx, scale, currentNote = null) {
   ctx.fillRect(0, 0, W, H);
 
   const lo = 21, hi = 108;
-  const padding = 10;
+  const padding = 0;
   const startX = padding, startY = padding;
   const pianoW = W - padding * 2, pianoH = H - padding * 2;
 
@@ -740,9 +740,9 @@ function drawPiano(ctx, scale, currentNote = null) {
   for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m%12)) whiteCount++;
 
   const wkW = pianoW / whiteCount;
-  const wkH = pianoH * 0.7;
-  const bkW = wkW * 0.6;
-  const bkH = pianoH * 0.45;
+  const wkH = pianoH * 0.72;
+  const bkW = wkW * 0.58;
+  const bkH = pianoH * 0.48;
 
   // Get notes from SCALE_NOTES mapping
   const scaleKey = selectedScale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
@@ -875,7 +875,7 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
   ctx.fillRect(0, 0, W, H);
 
   const lo = 21, hi = 108;
-  const padding = 10;
+  const padding = 0;
   const startX = padding, startY = padding;
   const pianoW = W - padding * 2, pianoH = H - padding * 2;
 
@@ -883,9 +883,9 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
   for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m%12)) whiteCount++;
 
   const wkW = pianoW / whiteCount;
-  const wkH = pianoH * 0.7;
-  const bkW = wkW * 0.6;
-  const bkH = pianoH * 0.45;
+  const wkH = pianoH * 0.72;
+  const bkW = wkW * 0.58;
+  const bkH = pianoH * 0.48;
 
   const scaleKey = scale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
   const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
