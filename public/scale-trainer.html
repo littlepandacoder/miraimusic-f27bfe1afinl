@@ -855,10 +855,8 @@ function drawPiano(ctx, scale, currentNote = null) {
     }
 
     if (leftWhiteIdx !== -1 && rightWhiteIdx !== -1) {
-      // Position black key centered between the two white keys, on the line
-      const leftX = startX + leftWhiteIdx * wkW;
-      const rightX = startX + (leftWhiteIdx + 1) * wkW;
-      const x = leftX + wkW / 2 - bkW / 2;
+      // Position black key at the boundary line between the two white keys
+      const x = startX + (leftWhiteIdx + 1) * wkW - bkW / 2;
       const y = startY;
       const isActive = notesToShow.has(m);
       const isPlaying = currentNote === m;
@@ -1000,10 +998,8 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
     }
 
     if (leftWhiteIdx !== -1 && rightWhiteIdx !== -1) {
-      // Position black key centered between the two white keys, on the line
-      const leftX = startX + leftWhiteIdx * wkW;
-      const rightX = startX + rightWhiteIdx * wkW;
-      const x = leftX + (rightX - leftX) / 2 - bkW / 2;
+      // Position black key at the boundary line between the two white keys
+      const x = startX + (leftWhiteIdx + 1) * wkW - bkW / 2;
       const y = startY;
       const isActive = notesToShow.has(m);
       const isPlaying = highlightSet.has(m);
