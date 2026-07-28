@@ -740,20 +740,25 @@ function drawPiano(ctx, scale, currentNote = null) {
   const bkW = wkW * 0.6;
   const bkH = pianoH * 0.45;
 
+  // Get notes from SCALE_NOTES mapping
+  const scaleKey = selectedScale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
+  const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
+
   // Get finger positions and determine which notes to show
   const fingerRH = {}, fingerLH = {};
   const notesToShow = new Set();
 
-  if (selectedScale.rh && selectedScale.rh.length > 0) {
-    selectedScale.rh.forEach((m, i) => {
-      fingerRH[m] = i + 1;
+  // Build finger maps and show notes based on hand display
+  if (scaleData.rh && scaleData.rh.length > 0) {
+    scaleData.rh.forEach((m, i) => {
+      fingerRH[m] = scaleData.rhFinger[i] || (i + 1);
       if (handDisplay === 'both' || handDisplay === 'rh') notesToShow.add(m);
     });
   }
 
-  if (selectedScale.lh && selectedScale.lh.length > 0) {
-    selectedScale.lh.forEach((m, i) => {
-      fingerLH[m] = i + 1;
+  if (scaleData.lh && scaleData.lh.length > 0) {
+    scaleData.lh.forEach((m, i) => {
+      fingerLH[m] = scaleData.lhFinger[i] || (i + 1);
       if (handDisplay === 'both' || handDisplay === 'lh') notesToShow.add(m);
     });
   }
@@ -889,43 +894,52 @@ function playScale() {
   const gain = selectedScale.dynamics.includes('f') ? 0.2 : 0.1;
   const dur = selectedScale.articulation === 'staccato' ? stepMs * 0.4 : stepMs * 0.8;
 
+  // Get notes from SCALE_NOTES mapping
+  const scaleKey = selectedScale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
+  const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
+
   let notes = [];
   if (handDisplay === 'rh') {
-    notes = selectedScale.rh || [];
+    notes = scaleData.rh || [];
   } else if (handDisplay === 'lh') {
-    notes = selectedScale.lh || [];
+    notes = scaleData.lh || [];
   } else {
-    notes = (selectedScale.rh || []).concat(selectedScale.lh || []);
+    notes = (scaleData.rh || []).concat(scaleData.lh || []);
   }
 
   if (notes.length === 0) {
     playing = false;
     document.getElementById('playBtn').textContent = '▶ Play Scale';
+    alert('No notes found for this scale');
     return;
   }
 
   let i = 0;
+  const canvas = document.getElementById('pianoCanvas');
+  const ctx = canvas.getContext('2d');
+
   const playNext = () => {
     if (!playing || i >= notes.length) {
       playing = false;
       playingNote = null;
       document.getElementById('playBtn').textContent = '▶ Play Scale';
-      const canvas = document.getElementById('pianoCanvas');
-      const ctx = canvas.getContext('2d');
       drawPiano(ctx, selectedScale);
       return;
     }
-    playingNote = notes[i];
-    playTone(midiToFreq(notes[i]), dur, gain);
 
-    // Animate the piano key
-    const canvas = document.getElementById('pianoCanvas');
-    const ctx = canvas.getContext('2d');
-    drawPiano(ctx, selectedScale, notes[i]);
+    const currentNote = notes[i];
+    playingNote = currentNote;
+
+    // Draw the piano with highlighted note
+    drawPiano(ctx, selectedScale, currentNote);
+
+    // Play the sound
+    playTone(midiToFreq(currentNote), dur, gain);
 
     i++;
     setTimeout(playNext, stepMs);
   };
+
   playNext();
 }
 
