@@ -361,10 +361,168 @@ canvas {
 
 <script>
 const GRADES = {
-  'initial': { title: 'Initial', note: 'Minor choice: harmonic, melodic, or natural', sets: { 'A': [{ scale: 'C major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60', rh: [], lh: [48,50,52,53,55,57,59,60] }, { scale: 'A minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60', rh: [69,71,72,74,76,77,79,81], lh: [] }], 'B': [{ scale: 'C major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60', rh: [60,62,64,65,67,69,71,72], lh: [] }, { scale: 'A minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60', rh: [], lh: [57,59,60,62,64,65,67,69] }] } },
-  '1': { title: 'Grade 1', note: 'Minor choice: harmonic or melodic', sets: { 'A': [{ scale: 'F major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70', rh: [65,67,69,70,72,74,76,77], lh: [] }, { scale: 'E minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70', rh: [], lh: [52,54,55,57,59,60,62,64] }], 'B': [{ scale: 'G major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70', rh: [], lh: [55,57,59,60,62,64,66,67] }, { scale: 'D minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70', rh: [62,64,65,67,69,70,72,74], lh: [] }] } },
-  '2': { title: 'Grade 2', note: 'Minor choice: harmonic or melodic', sets: { 'A': [{ scale: 'B♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80', rh: [70,72,74,75,77,79,81,82,82,81,79,77,75,74,72,70], lh: [58,60,62,63,65,67,69,70,70,69,67,65,63,62,60,58] }], 'B': [{ scale: 'D major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80', rh: [62,64,66,67,69,71,73,74,74,73,71,69,67,66,64,62], lh: [50,52,54,55,57,59,61,62,62,61,59,57,55,54,52,50] }] } },
-  '3': { title: 'Grade 3', note: 'Minor choice: harmonic or melodic', sets: { 'A': [{ scale: 'E♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90', rh: [75,77,79,80,82,84,86,87,87,86,84,82,80,79,77,75], lh: [63,65,67,68,70,72,74,75,75,74,72,70,68,67,65,63] }], 'B': [{ scale: 'A major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90', rh: [69,71,73,74,76,78,80,81,81,80,78,76,74,73,71,69], lh: [57,59,61,62,64,66,68,69,69,68,66,64,62,61,59,57] }] } }
+  'initial': {
+    title: 'Initial',
+    note: 'Minor choice: harmonic, melodic, or natural',
+    sets: {
+      'A': [
+        { scale: 'C major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' },
+        { scale: 'A minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ],
+      'B': [
+        { scale: 'C major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' },
+        { scale: 'A minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ]
+    }
+  },
+  '1': {
+    title: 'Grade 1',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'F major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'E minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'Chromatic (contrary motion from D)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' }
+      ],
+      'B': [
+        { scale: 'G major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'D minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'C major (contrary motion)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' }
+      ]
+    }
+  },
+  '2': {
+    title: 'Grade 2',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'B♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'B minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '80' }
+      ],
+      'B': [
+        { scale: 'D major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'G minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'Chromatic (similar motion from B♭)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '80' }
+      ]
+    }
+  },
+  '3': {
+    title: 'Grade 3',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'E♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'C minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'Chromatic (similar motion from F#)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '90' }
+      ],
+      'B': [
+        { scale: 'A major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'F# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'E♭ major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '90' }
+      ]
+    }
+  },
+  '4': {
+    title: 'Grade 4',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'E major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '100' },
+        { scale: 'F minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '2', tempo: '100' },
+        { scale: 'Chromatic (similar motion from B)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' },
+        { scale: 'Chromatic (contrary motion from A♭)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' }
+      ],
+      'B': [
+        { scale: 'A♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '2', tempo: '100' },
+        { scale: 'C# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '100' },
+        { scale: 'E major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '1', tempo: '100' },
+        { scale: 'Chromatic (similar motion from B)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' }
+      ]
+    }
+  },
+  '5': {
+    title: 'Grade 5',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'D♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '2', tempo: '110' },
+        { scale: 'G# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '110' },
+        { scale: 'G harmonic minor (contrary motion)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '1', tempo: '110' },
+        { scale: 'Chromatic (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '110' }
+      ],
+      'B': [
+        { scale: 'B major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '110' },
+        { scale: 'B♭ minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '2', tempo: '110' },
+        { scale: 'Chromatic (similar motion from D♭)', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '1', tempo: '110' },
+        { scale: 'Chromatic (contrary motion)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '110' }
+      ]
+    }
+  },
+  '6': {
+    title: 'Grade 6',
+    note: 'Both harmonic AND melodic minor required',
+    sets: {
+      'A': [
+        { scale: 'B♭ major', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ harmonic minor', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'D melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'Chromatic (similar motion from D)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '1', tempo: '120' },
+        { scale: 'Chromatic (contrary motion from E♭)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '120' },
+        { scale: 'C major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ],
+      'B': [
+        { scale: 'D major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ melodic minor', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'Chromatic (similar motion from D)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '120' },
+        { scale: 'Chromatic (contrary motion from E♭)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '120' },
+        { scale: 'C major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ]
+    }
+  },
+  '7': {
+    title: 'Grade 7',
+    note: 'Both harmonic AND melodic minor required',
+    sets: {
+      'A': [
+        { scale: 'E major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'E harmonic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'G# melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'Chromatic (similar motion, minor 3rd apart)', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '1', tempo: '130' },
+        { scale: 'E major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '70' }
+      ],
+      'B': [
+        { scale: 'A♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'G# harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'E melodic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'Chromatic (similar motion, minor 3rd apart)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '130' },
+        { scale: 'E major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '70' }
+      ]
+    }
+  },
+  '8': {
+    title: 'Grade 8',
+    note: 'Both harmonic AND melodic minor required',
+    sets: {
+      'A': [
+        { scale: 'F# major', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'B harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'E♭ melodic minor', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'Chromatic (similar motion from F#)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '140' },
+        { scale: 'B major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C harmonic minor in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' }
+      ],
+      'B': [
+        { scale: 'E♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'F# harmonic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'B melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'Chromatic (similar motion from E♭)', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '1', tempo: '140' },
+        { scale: 'B major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C harmonic minor in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' }
+      ]
+    }
+  }
 };
 
 const FINGER_MAP = {
