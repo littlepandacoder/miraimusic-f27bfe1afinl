@@ -519,11 +519,11 @@ html,body{min-height:100%;background:var(--bg);color:var(--off-white);font-famil
       <p class="mode-desc">Listen to a 4-chord progression and pick its Roman-numeral pattern — I-V-vi-IV, ii-V-I, the 50s progression and more. Pure ear training.</p>
       <span class="diff diff-med">Intermediate</span>
     </div>
-    <div class="mode-card" onclick="window.location.href='/scales-trainer.html'">
+    <div class="mode-card" onclick="openScaleTrainer()">
       <span class="mode-icon">📚</span>
-      <div class="mode-name">Scales & Arpeggios</div>
-      <p class="mode-desc">Master scales and arpeggios for every piano grade. Learn with interactive guides, practice with playback, test yourself with quizzes, and tackle speed challenges.</p>
-      <span class="diff diff-med">Intermediate</span>
+      <div class="mode-name">Scale Trainer</div>
+      <p class="mode-desc">Complete scale requirements for every grade with detailed specifications. See hand assignments, dynamics, articulation, octaves, and minimum tempos for all sets.</p>
+      <span class="diff diff-med">Reference</span>
     </div>
   </div>
 </div>
@@ -3515,9 +3515,9 @@ function sbDrawStaff(checkResults){
   svg.innerHTML=s;
 }
 
-// Open Scales Trainer in new window
-function openScalesTrainer() {
-  window.open('/scales-trainer.html', '_blank', 'width=1200,height=800,left=100,top=100');
+// Open Scale Trainer in new window
+function openScaleTrainer() {
+  window.open('/scale-trainer.html', '_blank', 'width=1400,height=900,left=100,top=100');
 }
 </script>
 </body>
