@@ -440,8 +440,9 @@ function updateVisualizerAndInfo() {
   document.getElementById('scaleTitle').textContent = selectedScale.scale;
 
   const canvas = document.getElementById('pianoCanvas');
-  canvas.width = 1200;
-  canvas.height = 200;
+  const wrapper = document.querySelector('.piano-wrapper');
+  canvas.width = 960;
+  canvas.height = 180;
   const ctx = canvas.getContext('2d');
   drawPiano(ctx, selectedScale);
 
@@ -477,102 +478,57 @@ function drawPiano(ctx, scale) {
   ctx.fillRect(0, 0, W, H);
 
   const lo = 48, hi = 84;
+  const padding = 10;
+  const startX = padding, startY = padding;
+  const pianoW = W - padding * 2, pianoH = H - padding * 2;
+
+  // Count white keys
   let whiteCount = 0;
   for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m%12)) whiteCount++;
 
-  const wkW = W / whiteCount, wkH = H * 0.75;
-  const bkW = wkW * 0.6, bkH = H * 0.5;
+  const wkW = pianoW / whiteCount;
+  const wkH = pianoH * 0.7;
+  const bkW = wkW * 0.55;
+  const bkH = pianoH * 0.45;
 
-  // Get MIDI notes to display
-  const notesToShow = new Set();
+  // Get finger positions
   const fingerRH = {}, fingerLH = {};
 
   if (selectedScale.rh && selectedScale.rh.length > 0) {
-    selectedScale.rh.forEach((m, i) => {
-      notesToShow.add(m);
-      fingerRH[m] = i + 1;
-    });
-  } else {
-    // Fallback - extract from scale name and hand
-    const noteSequences = {
-      'C major': [60,62,64,65,67,69,71,72],
-      'G major': [67,69,71,72,74,76,78,79],
-      'F major': [65,67,69,70,72,74,76,77],
-      'D major': [62,64,66,67,69,71,73,74],
-      'B♭ major': [70,72,74,75,77,79,81,82],
-      'E♭ major': [75,77,79,80,82,84,86,87],
-      'A major': [69,71,73,74,76,78,80,81],
-    };
-    if (noteSequences[selectedScale.scale.replace(' (choice)', '')]) {
-      const notes = noteSequences[selectedScale.scale.replace(' (choice)', '')];
-      notes.forEach((m, i) => {
-        if (selectedScale.hand.includes('RH') || selectedScale.hand === 'Both') {
-          notesToShow.add(m);
-          fingerRH[m] = i + 1;
-        }
-      });
-    }
+    selectedScale.rh.forEach((m, i) => fingerRH[m] = i + 1);
   }
 
   if (selectedScale.lh && selectedScale.lh.length > 0) {
-    selectedScale.lh.forEach((m, i) => {
-      notesToShow.add(m);
-      fingerLH[m] = i + 1;
-    });
-  } else {
-    const noteSequences = {
-      'C major': [48,50,52,53,55,57,59,60],
-      'A minor': [57,59,60,62,64,65,67,69],
-    };
-    if (noteSequences[selectedScale.scale.replace(' (choice)', '')]) {
-      const notes = noteSequences[selectedScale.scale.replace(' (choice)', '')];
-      notes.forEach((m, i) => {
-        if (selectedScale.hand.includes('LH') || selectedScale.hand === 'Both') {
-          notesToShow.add(m);
-          fingerLH[m] = i + 1;
-        }
-      });
-    }
+    selectedScale.lh.forEach((m, i) => fingerLH[m] = i + 1);
   }
 
   // Draw white keys
   let wi = 0;
   for (let m = lo; m <= hi; m++) {
     if ([1,3,6,8,10].includes(m%12)) continue;
-    const x = wi * wkW;
-    const isActive = notesToShow.has(m);
+    const x = startX + wi * wkW;
+    const y = startY;
 
-    let fill = '#f5f2ec', stroke = '#8b7c5c';
-    if (isActive) {
-      fill = fingerRH[m] ? 'rgba(0,212,255,0.3)' : fingerLH[m] ? 'rgba(255,45,120,0.3)' : '#e8ecf0';
-      stroke = fingerRH[m] ? '#00d4ff' : '#ff2d78';
-    }
+    ctx.fillStyle = '#f5f2ec';
+    ctx.strokeStyle = '#2d2540';
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, wkW, wkH);
+    ctx.strokeRect(x, y, wkW, wkH);
 
-    ctx.fillStyle = fill;
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = 2;
-    ctx.fillRect(x + 1, 1, wkW - 2, wkH);
-    ctx.strokeRect(x + 1, 1, wkW - 2, wkH);
-
+    // Draw finger numbers
     if (fingerRH[m]) {
       ctx.fillStyle = '#00d4ff';
-      ctx.beginPath();
-      ctx.arc(x + wkW / 2, wkH - 20, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#0a0812';
-      ctx.font = 'bold 11px -apple-system';
+      ctx.font = 'bold 12px -apple-system';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(fingerRH[m], x + wkW / 2, wkH - 20);
+      ctx.fillText(fingerRH[m], x + wkW / 2, y + wkH - 15);
     }
     if (fingerLH[m]) {
       ctx.fillStyle = '#ff2d78';
-      ctx.beginPath();
-      ctx.arc(x + wkW / 2, wkH - 8, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 11px -apple-system';
-      ctx.fillText(fingerLH[m], x + wkW / 2, wkH - 8);
+      ctx.font = 'bold 12px -apple-system';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(fingerLH[m], x + wkW / 2, y + wkH - 35);
     }
 
     wi++;
@@ -583,18 +539,16 @@ function drawPiano(ctx, scale) {
   for (let m = lo; m < hi; m++) {
     if (![1,3,6,8,10].includes(m%12)) continue;
     const oct = Math.floor(m / 12), semis = m % 12;
-    let wCountBeforeOctave = 0;
-    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBeforeOctave++;
-    const x = (wCountBeforeOctave + blackFrac[semis]) * wkW - bkW / 2;
-    const isActive = notesToShow.has(m);
+    let wCountBefore = 0;
+    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBefore++;
+    const x = startX + (wCountBefore + blackFrac[semis]) * wkW - bkW / 2;
+    const y = startY;
 
-    let fill = '#1a1620';
-    if (isActive) {
-      fill = fingerRH[m] && fingerLH[m] ? '#9d7ce8' : fingerRH[m] ? '#00d4ff' : '#ff2d78';
-    }
-
-    ctx.fillStyle = fill;
-    ctx.fillRect(x, 1, bkW, bkH);
+    ctx.fillStyle = '#1a1620';
+    ctx.strokeStyle = '#0a0812';
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, bkW, bkH);
+    ctx.strokeRect(x, y, bkW, bkH);
   }
 }
 
