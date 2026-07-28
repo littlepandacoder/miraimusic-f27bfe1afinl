@@ -979,15 +979,31 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
   for (let m = lo; m < hi; m++) {
     if (![1,3,6,8,10].includes(m%12)) continue;
 
-    // Map MIDI note to white key index
-    let whiteIdx = -1;
-    for (let mm = lo; mm < m; mm++) {
-      if (![1,3,6,8,10].includes(mm%12)) whiteIdx++;
+    // Find white keys on either side of this black key
+    let leftWhiteIdx = -1, rightWhiteIdx = -1;
+
+    if ((m % 12) === 1) { // C#
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    } else if ((m % 12) === 3) { // D#
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    } else if ((m % 12) === 6) { // F#
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    } else if ((m % 12) === 8) { // G#
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    } else if ((m % 12) === 10) { // A#
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
     }
 
-    if (whiteIdx >= 0) {
-      // Position black key centered between two white keys, on the line
-      const x = startX + whiteIdx * wkW + wkW / 2 - bkW / 2;
+    if (leftWhiteIdx !== -1 && rightWhiteIdx !== -1) {
+      // Position black key centered between the two white keys, on the line
+      const leftX = startX + leftWhiteIdx * wkW;
+      const rightX = startX + rightWhiteIdx * wkW;
+      const x = leftX + (rightX - leftX) / 2 - bkW / 2;
       const y = startY;
       const isActive = notesToShow.has(m);
       const isPlaying = highlightSet.has(m);
