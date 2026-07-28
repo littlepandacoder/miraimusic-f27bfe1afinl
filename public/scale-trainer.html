@@ -488,7 +488,7 @@ function drawPiano(ctx, scale) {
 
   const wkW = pianoW / whiteCount;
   const wkH = pianoH * 0.7;
-  const bkW = wkW * 0.55;
+  const bkW = wkW * 0.6;
   const bkH = pianoH * 0.45;
 
   // Get finger positions
@@ -502,7 +502,17 @@ function drawPiano(ctx, scale) {
     selectedScale.lh.forEach((m, i) => fingerLH[m] = i + 1);
   }
 
-  // Draw white keys
+  // Map MIDI notes to white key indices
+  const midiToWhiteIdx = {};
+  let whiteIdx = 0;
+  for (let m = lo; m <= hi; m++) {
+    if (![1,3,6,8,10].includes(m%12)) {
+      midiToWhiteIdx[m] = whiteIdx;
+      whiteIdx++;
+    }
+  }
+
+  // Draw white keys first
   let wi = 0;
   for (let m = lo; m <= hi; m++) {
     if ([1,3,6,8,10].includes(m%12)) continue;
@@ -534,21 +544,51 @@ function drawPiano(ctx, scale) {
     wi++;
   }
 
-  // Draw black keys
-  const blackFrac = { 1: 0.68, 3: 1.72, 6: 3.65, 8: 4.63, 10: 5.65 };
+  // Draw black keys positioned between white keys
   for (let m = lo; m < hi; m++) {
     if (![1,3,6,8,10].includes(m%12)) continue;
-    const oct = Math.floor(m / 12), semis = m % 12;
-    let wCountBefore = 0;
-    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBefore++;
-    const x = startX + (wCountBefore + blackFrac[semis]) * wkW - bkW / 2;
-    const y = startY;
 
-    ctx.fillStyle = '#1a1620';
-    ctx.strokeStyle = '#0a0812';
-    ctx.lineWidth = 1;
-    ctx.fillRect(x, y, bkW, bkH);
-    ctx.strokeRect(x, y, bkW, bkH);
+    // Find the white keys on either side of this black key
+    let leftWhiteIdx = -1, rightWhiteIdx = -1;
+
+    // C# is between C and D
+    if ((m % 12) === 1) {
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    }
+    // D# is between D and E
+    else if ((m % 12) === 3) {
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    }
+    // F# is between F and G
+    else if ((m % 12) === 6) {
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    }
+    // G# is between G and A
+    else if ((m % 12) === 8) {
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    }
+    // A# is between A and B
+    else if ((m % 12) === 10) {
+      leftWhiteIdx = midiToWhiteIdx[m - 1];
+      rightWhiteIdx = midiToWhiteIdx[m + 1];
+    }
+
+    if (leftWhiteIdx !== -1 && rightWhiteIdx !== -1) {
+      const leftX = startX + leftWhiteIdx * wkW;
+      const rightX = startX + rightWhiteIdx * wkW;
+      const x = leftX + (rightX - leftX) / 2 - bkW / 2;
+      const y = startY;
+
+      ctx.fillStyle = '#1a1620';
+      ctx.strokeStyle = '#0a0812';
+      ctx.lineWidth = 1;
+      ctx.fillRect(x, y, bkW, bkH);
+      ctx.strokeRect(x, y, bkW, bkH);
+    }
   }
 }
 
