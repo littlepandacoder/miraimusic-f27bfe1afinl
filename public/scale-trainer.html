@@ -855,9 +855,10 @@ function drawPiano(ctx, scale, currentNote = null) {
     }
 
     if (leftWhiteIdx !== -1 && rightWhiteIdx !== -1) {
+      // Position black key centered between the two white keys, on the line
       const leftX = startX + leftWhiteIdx * wkW;
-      const rightX = startX + rightWhiteIdx * wkW;
-      const x = leftX + (rightX - leftX) / 2 - bkW / 2;
+      const rightX = startX + (leftWhiteIdx + 1) * wkW;
+      const x = leftX + wkW / 2 - bkW / 2;
       const y = startY;
       const isActive = notesToShow.has(m);
       const isPlaying = currentNote === m;
@@ -974,34 +975,40 @@ function drawPianoMultiple(ctx, scale, notesToHighlight) {
     wi++;
   }
 
-  // Draw black keys
-  const blackFrac = { 1: 0.68, 3: 1.72, 6: 3.65, 8: 4.63, 10: 5.65 };
+  // Draw black keys positioned between white keys, on the line
   for (let m = lo; m < hi; m++) {
     if (![1,3,6,8,10].includes(m%12)) continue;
-    const oct = Math.floor(m / 12), semis = m % 12;
-    let wCountBefore = 0;
-    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBefore++;
-    const x = startX + (wCountBefore + blackFrac[semis]) * wkW - bkW / 2;
-    const y = startY;
-    const isActive = notesToShow.has(m);
-    const isPlaying = highlightSet.has(m);
 
-    if (isPlaying) {
-      ctx.fillStyle = '#ffd700';
-      ctx.strokeStyle = '#ffaa00';
-      ctx.lineWidth = 3;
-    } else if (!isActive) {
-      ctx.fillStyle = '#1a1620';
-      ctx.strokeStyle = '#0a0812';
-      ctx.lineWidth = 1;
-    } else {
-      ctx.fillStyle = '#2a2330';
-      ctx.strokeStyle = '#1a1620';
-      ctx.lineWidth = 1.5;
+    // Map MIDI note to white key index
+    let whiteIdx = -1;
+    for (let mm = lo; mm < m; mm++) {
+      if (![1,3,6,8,10].includes(mm%12)) whiteIdx++;
     }
 
-    ctx.fillRect(x, y, bkW, bkH);
-    ctx.strokeRect(x, y, bkW, bkH);
+    if (whiteIdx >= 0) {
+      // Position black key centered between two white keys, on the line
+      const x = startX + whiteIdx * wkW + wkW / 2 - bkW / 2;
+      const y = startY;
+      const isActive = notesToShow.has(m);
+      const isPlaying = highlightSet.has(m);
+
+      if (isPlaying) {
+        ctx.fillStyle = '#ffd700';
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 3;
+      } else if (!isActive) {
+        ctx.fillStyle = '#1a1620';
+        ctx.strokeStyle = '#0a0812';
+        ctx.lineWidth = 1;
+      } else {
+        ctx.fillStyle = '#2a2330';
+        ctx.strokeStyle = '#1a1620';
+        ctx.lineWidth = 1.5;
+      }
+
+      ctx.fillRect(x, y, bkW, bkH);
+      ctx.strokeRect(x, y, bkW, bkH);
+    }
   }
 }
 
