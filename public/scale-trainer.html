@@ -217,6 +217,41 @@ canvas {
   accent-color: var(--accent);
 }
 
+.hand-selector {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.hand-btn {
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.hand-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hand-btn.active {
+  background: var(--rh);
+  border-color: var(--rh);
+  color: white;
+}
+
+.hand-btn.active-lh {
+  background: var(--lh);
+  border-color: var(--lh);
+  color: white;
+}
+
 .scales-list {
   display: flex;
   flex-direction: column;
@@ -347,6 +382,12 @@ canvas {
         <div class="controls">
           <button class="play-btn" id="playBtn" onclick="playScale()">▶ Play Scale</button>
           <button class="play-btn" style="background: transparent; border: 1px solid var(--line); color: var(--sub);" onclick="resetView()">Reset</button>
+          <div class="hand-selector">
+            <span style="font-size: 11px; color: var(--sub); font-weight: 600;">Hand:</span>
+            <button class="hand-btn active" onclick="setHandDisplay('both')" id="handBoth">Both</button>
+            <button class="hand-btn" onclick="setHandDisplay('rh')" id="handRH">RH</button>
+            <button class="hand-btn" onclick="setHandDisplay('lh')" id="handLH">LH</button>
+          </div>
           <div class="tempo-control">
             <label>Speed:</label>
             <input type="range" id="tempoSlider" min="50" max="200" value="100">
@@ -573,6 +614,8 @@ let currentSet = 'A';
 let selectedScale = null;
 let audioCtx = null;
 let playing = false;
+let handDisplay = 'both';
+let playingNote = null;
 
 function init() {
   renderGrades();
@@ -678,7 +721,7 @@ function updateVisualizerAndInfo() {
   document.getElementById('scaleInfo').innerHTML = infoHtml;
 }
 
-function drawPiano(ctx, scale) {
+function drawPiano(ctx, scale, currentNote = null) {
   const W = ctx.canvas.width, H = ctx.canvas.height;
   ctx.fillStyle = '#0a0812';
   ctx.fillRect(0, 0, W, H);
@@ -697,15 +740,22 @@ function drawPiano(ctx, scale) {
   const bkW = wkW * 0.6;
   const bkH = pianoH * 0.45;
 
-  // Get finger positions
+  // Get finger positions and determine which notes to show
   const fingerRH = {}, fingerLH = {};
+  const notesToShow = new Set();
 
   if (selectedScale.rh && selectedScale.rh.length > 0) {
-    selectedScale.rh.forEach((m, i) => fingerRH[m] = i + 1);
+    selectedScale.rh.forEach((m, i) => {
+      fingerRH[m] = i + 1;
+      if (handDisplay === 'both' || handDisplay === 'rh') notesToShow.add(m);
+    });
   }
 
   if (selectedScale.lh && selectedScale.lh.length > 0) {
-    selectedScale.lh.forEach((m, i) => fingerLH[m] = i + 1);
+    selectedScale.lh.forEach((m, i) => {
+      fingerLH[m] = i + 1;
+      if (handDisplay === 'both' || handDisplay === 'lh') notesToShow.add(m);
+    });
   }
 
   // Map MIDI notes to white key indices
@@ -724,27 +774,39 @@ function drawPiano(ctx, scale) {
     if ([1,3,6,8,10].includes(m%12)) continue;
     const x = startX + wi * wkW;
     const y = startY;
+    const isActive = notesToShow.has(m);
+    const isPlaying = currentNote === m;
 
-    ctx.fillStyle = '#f5f2ec';
-    ctx.strokeStyle = '#2d2540';
-    ctx.lineWidth = 1;
+    // Draw key - lighter if not in this hand, bright if playing
+    if (isPlaying) {
+      ctx.fillStyle = '#ffd700';
+    } else if (!isActive) {
+      ctx.fillStyle = '#e0e0e0';
+    } else {
+      ctx.fillStyle = '#f5f2ec';
+    }
+
+    ctx.strokeStyle = isPlaying ? '#ffaa00' : '#2d2540';
+    ctx.lineWidth = isPlaying ? 3 : 1;
     ctx.fillRect(x, y, wkW, wkH);
     ctx.strokeRect(x, y, wkW, wkH);
 
-    // Draw finger numbers
-    if (fingerRH[m]) {
-      ctx.fillStyle = '#00d4ff';
-      ctx.font = 'bold 12px -apple-system';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(fingerRH[m], x + wkW / 2, y + wkH - 15);
-    }
-    if (fingerLH[m]) {
-      ctx.fillStyle = '#ff2d78';
-      ctx.font = 'bold 12px -apple-system';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(fingerLH[m], x + wkW / 2, y + wkH - 35);
+    // Draw finger numbers only if in active hand
+    if (isActive) {
+      if (fingerRH[m]) {
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = 'bold 12px -apple-system';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fingerRH[m], x + wkW / 2, y + wkH - 15);
+      }
+      if (fingerLH[m]) {
+        ctx.fillStyle = '#ff2d78';
+        ctx.font = 'bold 12px -apple-system';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fingerLH[m], x + wkW / 2, y + wkH - 35);
+      }
     }
 
     wi++;
@@ -827,22 +889,40 @@ function playScale() {
   const gain = selectedScale.dynamics.includes('f') ? 0.2 : 0.1;
   const dur = selectedScale.articulation === 'staccato' ? stepMs * 0.4 : stepMs * 0.8;
 
-  const getNotes = () => {
-    if (selectedScale.rh && selectedScale.rh.length > 0) return selectedScale.rh;
-    if (selectedScale.lh && selectedScale.lh.length > 0) return selectedScale.lh;
-    const noteSeqs = { 'C major': [60,62,64,65,67,69,71,72], 'G major': [67,69,71,72,74,76,78,79], 'F major': [65,67,69,70,72,74,76,77], 'D major': [62,64,66,67,69,71,73,74], 'B♭ major': [70,72,74,75,77,79,81,82], 'E♭ major': [75,77,79,80,82,84,86,87], 'A major': [69,71,73,74,76,78,80,81] };
-    return noteSeqs[selectedScale.scale.replace(' (choice)', '')] || [];
-  };
+  let notes = [];
+  if (handDisplay === 'rh') {
+    notes = selectedScale.rh || [];
+  } else if (handDisplay === 'lh') {
+    notes = selectedScale.lh || [];
+  } else {
+    notes = (selectedScale.rh || []).concat(selectedScale.lh || []);
+  }
 
-  const notes = getNotes();
+  if (notes.length === 0) {
+    playing = false;
+    document.getElementById('playBtn').textContent = '▶ Play Scale';
+    return;
+  }
+
   let i = 0;
   const playNext = () => {
     if (!playing || i >= notes.length) {
       playing = false;
+      playingNote = null;
       document.getElementById('playBtn').textContent = '▶ Play Scale';
+      const canvas = document.getElementById('pianoCanvas');
+      const ctx = canvas.getContext('2d');
+      drawPiano(ctx, selectedScale);
       return;
     }
+    playingNote = notes[i];
     playTone(midiToFreq(notes[i]), dur, gain);
+
+    // Animate the piano key
+    const canvas = document.getElementById('pianoCanvas');
+    const ctx = canvas.getContext('2d');
+    drawPiano(ctx, selectedScale, notes[i]);
+
     i++;
     setTimeout(playNext, stepMs);
   };
@@ -851,7 +931,29 @@ function playScale() {
 
 function resetView() {
   playing = false;
+  playingNote = null;
   document.getElementById('playBtn').textContent = '▶ Play Scale';
+  if (selectedScale) {
+    const canvas = document.getElementById('pianoCanvas');
+    const ctx = canvas.getContext('2d');
+    drawPiano(ctx, selectedScale);
+  }
+}
+
+function setHandDisplay(hand) {
+  handDisplay = hand;
+  document.getElementById('handBoth').classList.toggle('active', hand === 'both');
+  document.getElementById('handBoth').classList.toggle('active-lh', false);
+  document.getElementById('handRH').classList.toggle('active', hand === 'rh');
+  document.getElementById('handRH').classList.toggle('active-lh', false);
+  document.getElementById('handLH').classList.toggle('active', false);
+  document.getElementById('handLH').classList.toggle('active-lh', hand === 'lh');
+
+  if (selectedScale) {
+    const canvas = document.getElementById('pianoCanvas');
+    const ctx = canvas.getContext('2d');
+    drawPiano(ctx, selectedScale);
+  }
 }
 
 init();
