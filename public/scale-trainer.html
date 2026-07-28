@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scale Trainer — Musicable</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<style>
+:root {
+  --bg: #0a0812;
+  --card: #151228;
+  --card2: #1c1935;
+  --ink: #e8ecf0;
+  --sub: #a89bb5;
+  --line: #2d2540;
+  --rh: #00d4ff;
+  --lh: #ff2d78;
+  --accent: #5a45c4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+
+.container { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Header */
+.header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(10, 8, 18, 0.95);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--rh), var(--lh));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Main */
+.main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grade-selector {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.grade-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--sub);
+  margin-bottom: 8px;
+}
+
+.grade-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.grade-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.grade-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* Content */
+.content {
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.content-header {
+  margin-bottom: 28px;
+}
+
+.grade-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.grade-info {
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Sets */
+.sets-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 20px;
+}
+
+.set {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.set-header {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--rh);
+}
+
+.scale-item {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.scale-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.scale-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.scale-details {
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.6;
+}
+
+.detail-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 80px;
+}
+
+.detail-value {
+  color: var(--ink);
+}
+
+.dynamics {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 3px 8px;
+  background: rgba(90, 69, 196, 0.2);
+  border: 1px solid rgba(90, 69, 196, 0.3);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--rh);
+}
+
+.badge.lh {
+  color: var(--lh);
+  border-color: rgba(255, 45, 120, 0.3);
+  background: rgba(255, 45, 120, 0.1);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 10px 16px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #6d55d4;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tempo-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.tempo-control input {
+  width: 80px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* Minor Choice */
+.minor-choice {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.choice-btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--sub);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.choice-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.choice-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.minor-note {
+  color: var(--lh);
+  font-size: 11px;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  .sets-container {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1 class="title">🎹 Scale Trainer</h1>
+      <button class="nav-btn" onclick="window.location.href='/dashboard'">← Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="grade-selector">
+        <div class="grade-label">Grade Level</div>
+        <div id="gradeButtons"></div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<script>
+const GRADES = {
+  'initial': {
+    title: 'Initial',
+    note: 'Minor choice: harmonic, melodic, or natural',
+    sets: {
+      'A': [
+        { scale: 'C major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' },
+        { scale: 'A minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ],
+      'B': [
+        { scale: 'C major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' },
+        { scale: 'A minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ]
+    }
+  },
+  '1': {
+    title: 'Grade 1',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'F major', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'E minor (choice)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'Chromatic (D, contrary motion)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' }
+      ],
+      'B': [
+        { scale: 'G major', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'D minor (choice)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' },
+        { scale: 'C major (contrary motion)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '70' }
+      ]
+    }
+  },
+  '2': {
+    title: 'Grade 2',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'B♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'B minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '80' }
+      ],
+      'B': [
+        { scale: 'D major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'G minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'Chromatic (B♭, similar motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '80' }
+      ]
+    }
+  },
+  '3': {
+    title: 'Grade 3',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'E♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'C minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'Chromatic (F#, similar motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '90' }
+      ],
+      'B': [
+        { scale: 'A major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'F# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '90' },
+        { scale: 'E♭ major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '90' }
+      ]
+    }
+  },
+  '4': {
+    title: 'Grade 4',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'E major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '100' },
+        { scale: 'F minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '2', tempo: '100' },
+        { scale: 'Chromatic (B, similar motion)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' },
+        { scale: 'Chromatic (A♭, contrary motion)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' }
+      ],
+      'B': [
+        { scale: 'A♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '2', tempo: '100' },
+        { scale: 'C# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '100' },
+        { scale: 'E major (contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '1', tempo: '100' },
+        { scale: 'Chromatic (B, similar motion)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '100' }
+      ]
+    }
+  },
+  '5': {
+    title: 'Grade 5',
+    note: 'Minor choice: harmonic or melodic',
+    sets: {
+      'A': [
+        { scale: 'D♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '2', tempo: '110' },
+        { scale: 'G# minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '110' },
+        { scale: 'G harmonic minor (contrary motion)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '1', tempo: '110' },
+        { scale: 'Chromatic (contrary: C-E)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '110' }
+      ],
+      'B': [
+        { scale: 'B major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '110' },
+        { scale: 'B♭ minor (choice)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '2', tempo: '110' },
+        { scale: 'Chromatic (D♭, similar motion)', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '1', tempo: '110' },
+        { scale: 'Chromatic (contrary: C-E)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '1', tempo: '110' }
+      ]
+    }
+  },
+  '6': {
+    title: 'Grade 6',
+    note: 'BOTH harmonic AND melodic minor required (not a choice)',
+    sets: {
+      'A': [
+        { scale: 'B♭ major', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ harmonic minor', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'D melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'Chromatic (D, similar motion)', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '1', tempo: '120' },
+        { scale: 'Chromatic (E♭, contrary motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '2', tempo: '120' },
+        { scale: 'C major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ],
+      'B': [
+        { scale: 'D major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '120' },
+        { scale: 'B♭ melodic minor', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '4', tempo: '120' },
+        { scale: 'Chromatic (D, similar motion)', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '1', tempo: '120' },
+        { scale: 'Chromatic (E♭, contrary motion)', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '2', tempo: '120' },
+        { scale: 'C major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '60' }
+      ]
+    }
+  },
+  '7': {
+    title: 'Grade 7',
+    note: 'BOTH harmonic AND melodic minor required',
+    sets: {
+      'A': [
+        { scale: 'E major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'E harmonic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'G# melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'Chromatic (minor 3rd apart: C-E♭)', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '1', tempo: '130' },
+        { scale: 'E major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '70' }
+      ],
+      'B': [
+        { scale: 'A♭ major', hand: 'Both', dynamics: 'f', articulation: 'legato', octaves: '4', tempo: '130' },
+        { scale: 'G# harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'E melodic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '130' },
+        { scale: 'Chromatic (minor 3rd apart: C-E♭)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '130' },
+        { scale: 'E major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '70' }
+      ]
+    }
+  },
+  '8': {
+    title: 'Grade 8',
+    note: 'BOTH harmonic AND melodic minor required',
+    sets: {
+      'A': [
+        { scale: 'F# major', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'B harmonic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'E♭ melodic minor', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'Chromatic (F#, similar motion)', hand: 'Both', dynamics: 'mf', articulation: 'legato', octaves: '1', tempo: '140' },
+        { scale: 'B major in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C harmonic minor in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' }
+      ],
+      'B': [
+        { scale: 'E♭ major', hand: 'Both', dynamics: 'f', articulation: 'staccato', octaves: '4', tempo: '140' },
+        { scale: 'F# harmonic minor', hand: 'Both', dynamics: 'cresc/dim p-f-p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'B melodic minor', hand: 'Both', dynamics: 'p', articulation: 'legato', octaves: '4', tempo: '140' },
+        { scale: 'Chromatic (E♭, similar motion)', hand: 'Both', dynamics: 'mf', articulation: 'staccato', octaves: '1', tempo: '140' },
+        { scale: 'B major in 3rds (LH)', hand: 'LH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' },
+        { scale: 'C harmonic minor in 3rds (RH)', hand: 'RH', dynamics: 'mf', articulation: 'legato', octaves: '2', tempo: '80' }
+      ]
+    }
+  }
+};
+
+const GRADES_ORDER = ['initial', '1', '2', '3', '4', '5', '6', '7', '8'];
+let currentGrade = 'initial';
+let minorChoice = 'harmonic';
+
+function init() {
+  renderGradeButtons();
+  renderContent();
+}
+
+function renderGradeButtons() {
+  const html = GRADES_ORDER.map(g => {
+    const label = g === 'initial' ? 'Initial' : `Grade ${g}`;
+    return `<button class="grade-btn ${g === currentGrade ? 'active' : ''}" onclick="selectGrade('${g}')">${label}</button>`;
+  }).join('');
+  document.getElementById('gradeButtons').innerHTML = html;
+}
+
+function selectGrade(grade) {
+  currentGrade = grade;
+  minorChoice = 'harmonic';
+  renderGradeButtons();
+  renderContent();
+}
+
+function renderContent() {
+  const grade = GRADES[currentGrade];
+  let setsHtml = '';
+
+  for (const [setName, scales] of Object.entries(grade.sets)) {
+    let scalesHtml = '';
+
+    scales.forEach(s => {
+      const isMajor = !s.scale.includes('minor');
+      const isMinorChoice = s.scale.includes('(choice)');
+
+      scalesHtml += `
+        <div class="scale-item">
+          <div class="scale-name">${s.scale}</div>
+          <div class="scale-details">
+            <div class="detail-row">
+              <span class="detail-label">Hand:</span>
+              <span class="detail-value">${s.hand}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Dynamics:</span>
+              <span class="detail-value">${s.dynamics}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Articulation:</span>
+              <span class="detail-value">${s.articulation}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Octaves:</span>
+              <span class="detail-value">${s.octaves}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Min Tempo:</span>
+              <span class="detail-value">♩=${s.tempo}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    setsHtml += `
+      <div class="set">
+        <div class="set-header">Set ${setName}</div>
+        ${scalesHtml}
+      </div>
+    `;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="content-header">
+      <h2 class="grade-title">${grade.title}</h2>
+      <p class="grade-info">${grade.note}</p>
+    </div>
+    <div class="sets-container">
+      ${setsHtml}
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="playAllScales()">▶ Play All</button>
+      <button class="btn btn-secondary" onclick="resetView()">Reset</button>
+      <div class="tempo-control">
+        <label>Playback Speed:</label>
+        <input type="range" id="speedSlider" min="50" max="200" value="100">
+      </div>
+    </div>
+  `;
+}
+
+function playAllScales() {
+  alert('Playback feature coming soon!');
+}
+
+function resetView() {
+  renderContent();
+}
+
+init();
+</script>
+
+</body>
+</html>
