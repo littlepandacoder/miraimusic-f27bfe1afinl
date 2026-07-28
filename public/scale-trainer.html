@@ -865,6 +865,116 @@ function drawPiano(ctx, scale, currentNote = null) {
   }
 }
 
+function drawPianoMultiple(ctx, scale, notesToHighlight) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  ctx.fillStyle = '#0a0812';
+  ctx.fillRect(0, 0, W, H);
+
+  const lo = 48, hi = 84;
+  const padding = 10;
+  const startX = padding, startY = padding;
+  const pianoW = W - padding * 2, pianoH = H - padding * 2;
+
+  let whiteCount = 0;
+  for (let m = lo; m <= hi; m++) if (![1,3,6,8,10].includes(m%12)) whiteCount++;
+
+  const wkW = pianoW / whiteCount;
+  const wkH = pianoH * 0.7;
+  const bkW = wkW * 0.6;
+  const bkH = pianoH * 0.45;
+
+  const scaleKey = scale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
+  const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
+
+  const fingerRH = {}, fingerLH = {};
+  const notesToShow = new Set();
+
+  if (scaleData.rh && scaleData.rh.length > 0) {
+    scaleData.rh.forEach((m, i) => {
+      fingerRH[m] = scaleData.rhFinger[i] || (i + 1);
+      if (handDisplay === 'both' || handDisplay === 'rh') notesToShow.add(m);
+    });
+  }
+
+  if (scaleData.lh && scaleData.lh.length > 0) {
+    scaleData.lh.forEach((m, i) => {
+      fingerLH[m] = scaleData.lhFinger[i] || (i + 1);
+      if (handDisplay === 'both' || handDisplay === 'lh') notesToShow.add(m);
+    });
+  }
+
+  const highlightSet = new Set(notesToHighlight);
+
+  const midiToWhiteIdx = {};
+  let whiteIdx = 0;
+  for (let m = lo; m <= hi; m++) {
+    if (![1,3,6,8,10].includes(m%12)) {
+      midiToWhiteIdx[m] = whiteIdx;
+      whiteIdx++;
+    }
+  }
+
+  // Draw white keys
+  let wi = 0;
+  for (let m = lo; m <= hi; m++) {
+    if ([1,3,6,8,10].includes(m%12)) continue;
+    const x = startX + wi * wkW;
+    const y = startY;
+    const isActive = notesToShow.has(m);
+    const isPlaying = highlightSet.has(m);
+
+    if (isPlaying) {
+      ctx.fillStyle = '#ffd700';
+    } else if (!isActive) {
+      ctx.fillStyle = '#e0e0e0';
+    } else {
+      ctx.fillStyle = '#f5f2ec';
+    }
+
+    ctx.strokeStyle = isPlaying ? '#ffaa00' : '#2d2540';
+    ctx.lineWidth = isPlaying ? 3 : 1;
+    ctx.fillRect(x, y, wkW, wkH);
+    ctx.strokeRect(x, y, wkW, wkH);
+
+    if (isActive) {
+      if (fingerRH[m]) {
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = 'bold 12px -apple-system';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fingerRH[m], x + wkW / 2, y + wkH - 15);
+      }
+      if (fingerLH[m]) {
+        ctx.fillStyle = '#ff2d78';
+        ctx.font = 'bold 12px -apple-system';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(fingerLH[m], x + wkW / 2, y + wkH - 35);
+      }
+    }
+
+    wi++;
+  }
+
+  // Draw black keys
+  const blackFrac = { 1: 0.68, 3: 1.72, 6: 3.65, 8: 4.63, 10: 5.65 };
+  for (let m = lo; m < hi; m++) {
+    if (![1,3,6,8,10].includes(m%12)) continue;
+    const oct = Math.floor(m / 12), semis = m % 12;
+    let wCountBefore = 0;
+    for (let mm = lo; mm < oct * 12; mm++) if (![1,3,6,8,10].includes(mm%12)) wCountBefore++;
+    const x = startX + (wCountBefore + blackFrac[semis]) * wkW - bkW / 2;
+    const y = startY;
+    const isPlaying = highlightSet.has(m);
+
+    ctx.fillStyle = isPlaying ? '#ffd700' : '#1a1620';
+    ctx.strokeStyle = isPlaying ? '#ffaa00' : '#0a0812';
+    ctx.lineWidth = isPlaying ? 3 : 1;
+    ctx.fillRect(x, y, bkW, bkH);
+    ctx.strokeRect(x, y, bkW, bkH);
+  }
+}
+
 function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
 
 function playTone(freq, dur, gain) {
@@ -898,16 +1008,30 @@ function playScale() {
   const scaleKey = selectedScale.scale.replace(' (choice)', '').replace(' (harmonic)', '').replace(' (melodic)', '').replace(' (contrary motion)', '').replace(' (similar motion)', '').replace(/\(.*\)/g, '').trim();
   const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
 
-  let notes = [];
+  let notePairs = [];
   if (handDisplay === 'rh') {
-    notes = scaleData.rh || [];
+    const rhNotes = (scaleData.rh || []).map(n => [n]);
+    const rhReverse = [...rhNotes].reverse();
+    notePairs = [...rhNotes, ...rhReverse.slice(1)]; // Don't repeat the top note
   } else if (handDisplay === 'lh') {
-    notes = scaleData.lh || [];
+    const lhNotes = (scaleData.lh || []).map(n => [n]);
+    const lhReverse = [...lhNotes].reverse();
+    notePairs = [...lhNotes, ...lhReverse.slice(1)]; // Don't repeat the top note
   } else {
-    notes = (scaleData.rh || []).concat(scaleData.lh || []);
+    // Both hands - play simultaneously in pairs, ascending then descending
+    const maxLen = Math.max(scaleData.rh.length, scaleData.lh.length);
+    const ascending = [];
+    for (let j = 0; j < maxLen; j++) {
+      const pair = [];
+      if (j < scaleData.rh.length) pair.push(scaleData.rh[j]);
+      if (j < scaleData.lh.length) pair.push(scaleData.lh[j]);
+      ascending.push(pair);
+    }
+    const descending = [...ascending].reverse();
+    notePairs = [...ascending, ...descending.slice(1)]; // Don't repeat the top pair
   }
 
-  if (notes.length === 0) {
+  if (notePairs.length === 0) {
     playing = false;
     document.getElementById('playBtn').textContent = '▶ Play Scale';
     alert('No notes found for this scale');
@@ -919,7 +1043,7 @@ function playScale() {
   const ctx = canvas.getContext('2d');
 
   const playNext = () => {
-    if (!playing || i >= notes.length) {
+    if (!playing || i >= notePairs.length) {
       playing = false;
       playingNote = null;
       document.getElementById('playBtn').textContent = '▶ Play Scale';
@@ -927,14 +1051,21 @@ function playScale() {
       return;
     }
 
-    const currentNote = notes[i];
-    playingNote = currentNote;
+    const notesToPlay = notePairs[i];
 
-    // Draw the piano with highlighted note
-    drawPiano(ctx, selectedScale, currentNote);
+    // Draw the piano with all highlighted notes for this step
+    // For 'both', we need to show both notes at once
+    if (handDisplay === 'both' && notesToPlay.length > 1) {
+      // Create a visual that shows both notes - we'll draw the piano and highlight both
+      drawPianoMultiple(ctx, selectedScale, notesToPlay);
+    } else if (notesToPlay.length > 0) {
+      drawPiano(ctx, selectedScale, notesToPlay[0]);
+    }
 
-    // Play the sound
-    playTone(midiToFreq(currentNote), dur, gain);
+    // Play all notes for this step simultaneously
+    notesToPlay.forEach(note => {
+      playTone(midiToFreq(note), dur, gain);
+    });
 
     i++;
     setTimeout(playNext, stepMs);
