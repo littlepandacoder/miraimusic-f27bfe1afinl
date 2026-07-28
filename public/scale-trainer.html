@@ -288,27 +288,78 @@ canvas {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 16px;
-  font-size: 12px;
-  line-height: 1.6;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .info-title {
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   color: var(--rh);
+  font-size: 16px;
+  grid-column: 1 / -1;
+}
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-section-title {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .info-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .info-label {
   font-weight: 600;
   color: var(--accent);
-  min-width: 70px;
+  min-width: 80px;
+  font-size: 13px;
+}
+
+.info-value {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notes-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.note-item {
+  padding: 6px 10px;
+  background: var(--line);
+  border-radius: 4px;
+  border-left: 3px solid var(--accent);
+}
+
+.note-item.rh {
+  border-left-color: var(--rh);
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.note-item.lh {
+  border-left-color: var(--lh);
+  background: rgba(255, 45, 120, 0.1);
 }
 
 /* Scrollbar */
@@ -726,37 +777,46 @@ function updateVisualizerAndInfo() {
   const scaleData = SCALE_NOTES[scaleKey] || { rh: [], lh: [], rhFinger: [], lhFinger: [] };
 
   const getNoteDisplay = (notes, fingers, hand) => {
-    if (!notes || notes.length === 0) return '';
-    return notes.map((midi, i) => `<span title="Finger ${fingers[i]}">${NOTE_NAMES[midi]}<sub>${fingers[i]}</sub></span>`).join(' - ');
+    if (!notes || notes.length === 0) return [];
+    return notes.map((midi, i) => ({ note: NOTE_NAMES[midi], finger: fingers[i], midi: midi }));
   };
 
-  const rhDisplay = getNoteDisplay(scaleData.rh, scaleData.rhFinger, 'RH');
-  const lhDisplay = getNoteDisplay(scaleData.lh, scaleData.lhFinger, 'LH');
+  const rhNotes = getNoteDisplay(scaleData.rh, scaleData.rhFinger, 'RH');
+  const lhNotes = getNoteDisplay(scaleData.lh, scaleData.lhFinger, 'LH');
+
+  const rhNotesHtml = rhNotes.length > 0 ? rhNotes.map((n, i) => `<div class="note-item rh">${n.note} <sub>${n.finger}</sub></div>`).join('') : '';
+  const lhNotesHtml = lhNotes.length > 0 ? lhNotes.map((n, i) => `<div class="note-item lh">${n.note} <sub>${n.finger}</sub></div>`).join('') : '';
 
   const infoHtml = `
     <div class="info-title">${selectedScale.scale}</div>
-    <div class="info-row">
-      <span class="info-label">Hand:</span>
-      <span>${selectedScale.hand}</span>
+    <div class="info-section">
+      <div class="info-section-title">Requirements</div>
+      <div class="info-row">
+        <span class="info-label">Hand:</span>
+        <span class="info-value">${selectedScale.hand}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Dynamics:</span>
+        <span class="info-value">${selectedScale.dynamics}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Articulation:</span>
+        <span class="info-value">${selectedScale.articulation}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Octaves:</span>
+        <span class="info-value">${selectedScale.octaves}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Min Tempo:</span>
+        <span class="info-value">♩=${selectedScale.tempo}</span>
+      </div>
     </div>
-    <div class="info-row">
-      <span class="info-label">Dynamics:</span>
-      <span>${selectedScale.dynamics}</span>
+    <div class="info-section">
+      <div class="info-section-title">Notes & Fingering</div>
+      ${rhNotesHtml ? `<div><div style="font-size: 12px; color: var(--rh); font-weight: 600; margin-bottom: 8px;">Right Hand</div><div class="notes-display">${rhNotesHtml}</div></div>` : ''}
+      ${lhNotesHtml ? `<div><div style="font-size: 12px; color: var(--lh); font-weight: 600; margin-bottom: 8px; margin-top: 12px;">Left Hand</div><div class="notes-display">${lhNotesHtml}</div></div>` : ''}
     </div>
-    <div class="info-row">
-      <span class="info-label">Articulation:</span>
-      <span>${selectedScale.articulation}</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Octaves:</span>
-      <span>${selectedScale.octaves}</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Min Tempo:</span>
-      <span>♩=${selectedScale.tempo}</span>
-    </div>
-    ${rhDisplay ? `<div class="info-row"><span class="info-label">RH Notes:</span><span style="font-size: 11px; font-family: monospace;">${rhDisplay}</span></div>` : ''}
-    ${lhDisplay ? `<div class="info-row"><span class="info-label">LH Notes:</span><span style="font-size: 11px; font-family: monospace;">${lhDisplay}</span></div>` : ''}
   `;
   document.getElementById('scaleInfo').innerHTML = infoHtml;
 }
