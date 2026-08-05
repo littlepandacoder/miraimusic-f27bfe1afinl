@@ -111,7 +111,7 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
             MUSICABLE
           </h1>
           <p className="text-muted-foreground text-sm">
-            Start learning for $17/month. Unlock 900+ lessons.
+            Start learning for <span className="font-bold text-pink">$17/month</span>. Unlock 900+ lessons.
           </p>
           {user && (
             <p className="text-xs text-muted-foreground mt-3">
