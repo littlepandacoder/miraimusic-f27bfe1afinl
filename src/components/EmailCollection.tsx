@@ -68,13 +68,34 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
   };
 
   const handleGoogleSignup = async () => {
-    setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) {
-      setError(error.message || "Failed to sign up with Google. Please try again.");
+    try {
+      setGoogleLoading(true);
+      setError("");
+
+      // Verify network connection
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setError("No internet connection. Please check your connection and try again.");
+        setGoogleLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: false,
+        },
+      });
+
+      if (error) {
+        console.error("[signup] Google OAuth error:", error);
+        setError(error.message || "Failed to sign up with Google. Please try again.");
+        setGoogleLoading(false);
+      }
+      // If no error, Supabase will redirect to Google, so we don't reset googleLoading
+    } catch (err) {
+      console.error("[signup] Google signup error:", err);
+      setError("An unexpected error occurred. Please try again.");
       setGoogleLoading(false);
     }
   };
