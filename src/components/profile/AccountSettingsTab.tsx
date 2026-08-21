@@ -78,10 +78,42 @@ const AccountSettingsTab = ({
         return;
       }
 
-      if (passwordData.new.length < 6) {
+      if (passwordData.new.length < 12) {
         toast({
           title: "Error",
-          description: "Password must be at least 6 characters",
+          description: "Password must be at least 12 characters",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!/[A-Z]/.test(passwordData.new)) {
+        toast({
+          title: "Error",
+          description: "Password must contain at least one uppercase letter",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!/[a-z]/.test(passwordData.new)) {
+        toast({
+          title: "Error",
+          description: "Password must contain at least one lowercase letter",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!/\d/.test(passwordData.new)) {
+        toast({
+          title: "Error",
+          description: "Password must contain at least one number",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!/[@$!%*?&]/.test(passwordData.new)) {
+        toast({
+          title: "Error",
+          description: "Password must contain at least one special character (@$!%*?&)",
           variant: "destructive",
         });
         return;

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { checkRateLimit } from "@/lib/rateLimiter";
 
 // Dev-only helpers to quickly reproduce the raw GoTrue response when debugging 400s
 // These read the same envs as the client (strip surrounding quotes if present).
@@ -264,6 +265,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // Rate limiting check to prevent brute force attacks
+      const rateLimitCheck = checkRateLimit(email, 'AUTH');
+      if (!rateLimitCheck.allowed) {
+        const retryAfter = rateLimitCheck.retryAfter ? Math.ceil(rateLimitCheck.retryAfter / 60) : 15;
+        const msg = `Too many login attempts. Please try again in ${retryAfter} minutes.`;
+        if (import.meta.env.DEV) setLastAuthError({ message: msg });
+        return { error: new Error(msg) };
+      }
+
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         const msg = 'No network connection. Please check your internet connection and try again.';
         if (import.meta.env.DEV) setLastAuthError({ message: msg });

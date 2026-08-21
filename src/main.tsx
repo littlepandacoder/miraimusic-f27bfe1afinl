@@ -4,8 +4,11 @@ import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
 import { initCapacitor } from "./capacitorInit";
-
+import { disableConsoleInProduction } from "./lib/disableConsole";
 import { initMetaPixel } from "./initMetaPixel";
+
+// Disable console in production
+disableConsoleInProduction();
 
 // Suppress Meta Pixel console errors in development
 if (import.meta.env.DEV) {

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Check, Loader2, CreditCard, ShieldCheck } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
+import { checkRateLimit } from "@/lib/rateLimiter";
 
 interface TrialBillingProps {
   email: string;
@@ -25,8 +26,32 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
   const handleStartTrial = async () => {
     setError("");
 
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    // Rate limiting check
+    const rateLimitCheck = checkRateLimit(email, 'AUTH');
+    if (!rateLimitCheck.allowed) {
+      const retryAfter = rateLimitCheck.retryAfter ? Math.ceil(rateLimitCheck.retryAfter / 60) : 15;
+      setError(`Too many attempts. Please try again in ${retryAfter} minutes.`);
+      return;
+    }
+
+    if (!password || password.length < 12) {
+      setError("Password must be at least 12 characters.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain at least one uppercase letter.");
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain at least one lowercase letter.");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError("Password must contain at least one number.");
+      return;
+    }
+    if (!/[@$!%*?&]/.test(password)) {
+      setError("Password must contain at least one special character (@$!%*?&).");
       return;
     }
     if (password !== confirmPassword) {
