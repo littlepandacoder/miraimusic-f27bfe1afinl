@@ -11,12 +11,23 @@ const SESSION_ID_KEY       = "musicable_sess_id";
 const SESSION_START_KEY    = "musicable_sess_start";
 const SESSION_USER_KEY     = "musicable_sess_user";
 const SESSION_ACTIVE_KEY   = "musicable_sess_active_secs";
-const HEARTBEAT_MS         = 60_000;
+const HEARTBEAT_MS         = 30_000; // More frequent heartbeat (30s instead of 60s)
 const IDLE_THRESHOLD_MS    = 60 * 1000; // 1 minute
+const RETRY_DELAY_MS       = 5_000;    // Retry failed updates after 5s
 
 export const RESET_TIME_EVENT = "musicable:reset-time";
 
-const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"] as const;
+const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "touchmove", "pointerdown"] as const;
+
+// Detect device type
+function getDeviceType(): string {
+  const ua = navigator.userAgent;
+  if (/iPad/.test(ua)) return "ipad";
+  if (/iPhone/.test(ua)) return "iphone";
+  if (/Android/.test(ua)) return "android";
+  if (/Mobile/.test(ua)) return "mobile";
+  return "desktop";
+}
 
 /**
  * Records a user_sessions row on every login and updates duration_seconds on a
@@ -69,18 +80,42 @@ export function useSessionTracking(user: User | null) {
       sessionStorage.removeItem(SESSION_ACTIVE_KEY);
 
       const now = Date.now();
-      const { data, error } = await (supabase as any)
-        .from("user_sessions")
-        .insert({ user_id: user.id })
-        .select("id")
-        .single();
+      const deviceType = getDeviceType();
+      const userAgent = navigator.userAgent;
 
-      if (!error && data?.id && mounted) {
-        sessionIdRef.current     = data.id;
+      let sessionId: string | null = null;
+      let retries = 0;
+      const maxRetries = 3;
+
+      // Retry logic for creating session (in case of network issues)
+      while (!sessionId && retries < maxRetries) {
+        const { data, error } = await (supabase as any)
+          .from("user_sessions")
+          .insert({
+            user_id: user.id,
+            device_type: deviceType,
+            user_agent: userAgent,
+            started_at: new Date(now).toISOString(),
+          })
+          .select("id")
+          .single();
+
+        if (!error && data?.id) {
+          sessionId = data.id;
+        } else {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+          }
+        }
+      }
+
+      if (sessionId && mounted) {
+        sessionIdRef.current     = sessionId;
         activeSecondsRef.current = 0;
         lastActiveRef.current    = now;
         lastTickRef.current      = now;
-        sessionStorage.setItem(SESSION_ID_KEY,    data.id);
+        sessionStorage.setItem(SESSION_ID_KEY,    sessionId);
         sessionStorage.setItem(SESSION_START_KEY, now.toString());
         sessionStorage.setItem(SESSION_USER_KEY,  user.id);
         sessionStorage.setItem(SESSION_ACTIVE_KEY, "0");
@@ -97,7 +132,7 @@ export function useSessionTracking(user: User | null) {
       const intervalMs       = now - lastTickRef.current;
       lastTickRef.current    = now;
 
-      // Only accumulate time if the user was active in the last 5 minutes
+      // Only accumulate time if the user was active in the last minute
       if (idleMs < IDLE_THRESHOLD_MS) {
         activeSecondsRef.current += Math.round(intervalMs / 1000);
         sessionStorage.setItem(SESSION_ACTIVE_KEY, activeSecondsRef.current.toString());
@@ -106,10 +141,24 @@ export function useSessionTracking(user: User | null) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) accessTokenRef.current = session.access_token;
 
-      await (supabase as any)
-        .from("user_sessions")
-        .update({ duration_seconds: activeSecondsRef.current })
-        .eq("id", sessionIdRef.current);
+      // Update session with retry logic
+      let retries = 0;
+      while (retries < 2) {
+        try {
+          const { error } = await (supabase as any)
+            .from("user_sessions")
+            .update({
+              duration_seconds: activeSecondsRef.current,
+              last_activity_at: new Date().toISOString(),
+            })
+            .eq("id", sessionIdRef.current);
+
+          if (!error) break;
+          retries++;
+        } catch {
+          retries++;
+        }
+      }
     }, HEARTBEAT_MS);
 
     const onUnload = () => {
@@ -124,22 +173,36 @@ export function useSessionTracking(user: User | null) {
         finalSecs += Math.round(intervalMs / 1000);
       }
 
+      // Use sendBeacon for reliable delivery on unload (works on iPad/mobile)
       try {
-        fetch(`${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`, {
-          method: "PATCH",
-          headers: {
-            apikey:          SUPABASE_KEY,
-            Authorization:   `Bearer ${accessTokenRef.current}`,
-            "Content-Type":  "application/json",
-            Prefer:          "return=minimal",
-          },
-          body: JSON.stringify({
-            ended_at:         new Date().toISOString(),
-            duration_seconds: finalSecs,
-          }),
-          keepalive: true,
-        });
-      } catch {}
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(
+            `${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`,
+            JSON.stringify({
+              ended_at:         new Date().toISOString(),
+              duration_seconds: finalSecs,
+            })
+          );
+        } else {
+          // Fallback for older browsers
+          fetch(`${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`, {
+            method: "PATCH",
+            headers: {
+              apikey:          SUPABASE_KEY,
+              Authorization:   `Bearer ${accessTokenRef.current}`,
+              "Content-Type":  "application/json",
+              Prefer:          "return=minimal",
+            },
+            body: JSON.stringify({
+              ended_at:         new Date().toISOString(),
+              duration_seconds: finalSecs,
+            }),
+            keepalive: true,
+          });
+        }
+      } catch (err) {
+        console.error("[session] failed to record session end:", err);
+      }
     };
 
     window.addEventListener("beforeunload", onUnload);
