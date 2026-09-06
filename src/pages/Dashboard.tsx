@@ -92,6 +92,16 @@ const Dashboard = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // Track if user just completed checkout (for race condition handling)
+  const isCheckoutSuccess = new URLSearchParams(window.location.search).get('checkout') === 'success';
+
+  useEffect(() => {
+    if (isCheckoutSuccess) {
+      // Clean URL to remove checkout parameter after first render
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [isCheckoutSuccess]);
+
   useEffect(() => {
     log("[dashboard] auth state — loading:", loading, "user:", user?.email ?? "null");
     if (!loading && !user) {
@@ -121,65 +131,85 @@ const Dashboard = () => {
     log("[dashboard] non-staff user → checking user_subscriptions table");
     let cancelled = false;
 
+    // Extend timeout for post-checkout (webhook may be delayed)
+    const timeoutMs = isCheckoutSuccess ? 30_000 : 10_000;
+
     // On timeout: if user already has roles they passed auth — grant access rather than blocking.
     const timeout = setTimeout(() => {
       if (!cancelled) {
         const hasRoles = roles.length > 0;
-        warn("[dashboard] subscription check TIMED OUT — roles present:", hasRoles, "→ granting access");
+        warn(`[dashboard] subscription check TIMED OUT (${timeoutMs}ms) — roles present:`, hasRoles, "→ granting access");
         // Only cache a positive result on timeout — a negative timeout is unreliable
         if (hasRoles) writeSubCache(user.id, true);
         setSubscribed(hasRoles);
         setCheckingSubscription(false);
       }
-    }, 10_000);
+    }, timeoutMs);
 
     const checkStripeSubscription = async () => {
-      try {
-        log("[dashboard] querying user_subscriptions for user:", user.id);
-        const { data, error } = await (supabase as any)
-          .from("user_subscriptions")
-          .select("id, status, paused_at")
-          .eq("user_id", user.id)
-          .in("status", ["active", "trialing"])
-          .limit(1)
-          .maybeSingle();
+      const maxRetries = isCheckoutSuccess ? 6 : 1;  // Retry up to 6 times if post-checkout (every 2s for 12s total)
+      const retryDelayMs = 2000;
 
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
         if (cancelled) return;
-        log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
 
-        if (error) {
-          warn("[dashboard] subscription query error:", error.message, "— roles present:", roles.length > 0);
-          const result = roles.length > 0;
-          writeSubCache(user.id, result);
-          setSubscribed(result);
-          setIsPaused(false);
-          return;
-        }
+        try {
+          log(`[dashboard] querying user_subscriptions for user: ${user.id} (attempt ${attempt + 1}/${maxRetries})`);
+          const { data, error } = await (supabase as any)
+            .from("user_subscriptions")
+            .select("id, status, paused_at")
+            .eq("user_id", user.id)
+            .in("status", ["active", "trialing"])
+            .limit(1)
+            .maybeSingle();
 
-        // Check if subscription is paused (filter in code instead of in query)
-        if (data && data.paused_at !== null) {
-          log("[dashboard] subscription is paused");
-          setSubscribed(false);
-          setIsPaused(true);
-          return;
-        }
+          if (cancelled) return;
+          log("[dashboard] user_subscriptions result — data:", data, "error:", error?.message ?? error);
 
-        const result = !!data;
-        log("[dashboard] subscribed:", result);
-        writeSubCache(user.id, result);
-        setSubscribed(result);
-        setIsPaused(false);
-      } catch (err) {
-        if (!cancelled) {
-          warn("[dashboard] subscription check threw:", err);
-          clearSubCache(user.id);
-          setSubscribed(false);
-        }
-      } finally {
-        if (!cancelled) {
-          clearTimeout(timeout);
-          setCheckingSubscription(false);
-          log("[dashboard] setCheckingSubscription(false) ✓");
+          if (error) {
+            warn("[dashboard] subscription query error:", error.message, "— roles present:", roles.length > 0);
+            const result = roles.length > 0;
+            writeSubCache(user.id, result);
+            setSubscribed(result);
+            setIsPaused(false);
+            return;
+          }
+
+          // Check if subscription is paused (filter in code instead of in query)
+          if (data && data.paused_at !== null) {
+            log("[dashboard] subscription is paused");
+            setSubscribed(false);
+            setIsPaused(true);
+            return;
+          }
+
+          if (data) {
+            // Found subscription on this attempt
+            log("[dashboard] subscribed: true (found on attempt", attempt + 1 + ")");
+            writeSubCache(user.id, true);
+            setSubscribed(true);
+            setIsPaused(false);
+            return;
+          }
+
+          // No subscription yet — retry if post-checkout
+          if (isCheckoutSuccess && attempt < maxRetries - 1) {
+            log("[dashboard] no subscription found yet (post-checkout), retrying in", retryDelayMs + "ms");
+            await new Promise(r => setTimeout(r, retryDelayMs));
+          } else {
+            log("[dashboard] subscribed: false");
+            writeSubCache(user.id, false);
+            setSubscribed(false);
+            setIsPaused(false);
+          }
+        } catch (err) {
+          if (!cancelled) {
+            warn("[dashboard] subscription check threw:", err);
+            if (attempt === maxRetries - 1) {
+              clearSubCache(user.id);
+              setSubscribed(false);
+            }
+          }
         }
       }
     };
@@ -190,7 +220,7 @@ const Dashboard = () => {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [loading, user, roles]);
+  }, [loading, user, roles, isCheckoutSuccess]);
 
   // Show AI coach widget only to new students (signed up ≤14 days ago) and only once
   const [showAIWidget, setShowAIWidget] = useState(false);
