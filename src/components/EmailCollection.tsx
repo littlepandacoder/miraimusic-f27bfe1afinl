@@ -191,10 +191,6 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
               "Get Instant Access"
             )}
           </Button>
-
-          <p className="text-[10px] text-muted-foreground text-center opacity-70">
-            No credit card required to start.
-          </p>
         </form>
 
         <div className="mt-8 pt-6 border-t border-border/20 grid grid-cols-2 gap-y-2 gap-x-4">
