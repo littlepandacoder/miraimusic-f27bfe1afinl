@@ -213,7 +213,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
               <div className="space-y-2 pt-1">
                 {(planType === "premium"
                   ? [
-                      "$29/month, billed today",
+                      "1 day free trial, then $29/month",
                       "Unlimited AI Tutor with voice",
                       "Access all piano course modules",
                       "Advanced progress analytics",
@@ -221,7 +221,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
                       "Cancel anytime from Stripe Customer Portal",
                     ]
                   : [
-                      billingPeriod === "yearly" ? "$199/year, billed today" : "$17/month, billed today",
+                      billingPeriod === "yearly" ? "1 day free trial, then $199/year" : "1 day free trial, then $17/month",
                       "Access all piano course modules",
                       "Gamified learning & quizzes",
                       "Progress tracking",
@@ -291,16 +291,19 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
               </h2>
               {planType === "premium" ? (
                 <>
+                  <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
                   <p className="text-4xl font-black mt-2">$29<span className="text-lg font-normal text-muted-foreground">/month</span></p>
                   <p className="text-xs text-green-600 font-semibold mt-2">Includes AI Tutor with Voice</p>
                 </>
               ) : billingPeriod === "yearly" ? (
                 <>
+                  <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
                   <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
                   <p className="text-xs text-muted-foreground mt-1">Billed annually, saves $5/month</p>
                 </>
               ) : (
                 <>
+                  <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
                   <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
                   <p className="text-xs text-muted-foreground mt-1">Standard access</p>
                 </>
@@ -326,8 +329,9 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
             </div>
 
             <p className="text-xs text-center text-muted-foreground">
-              You'll be redirected to Stripe's secure checkout to enter your card details.
-              Your card is charged {planType === "premium" ? "$29/month" : billingPeriod === "yearly" ? "$199/year" : "$17/month"}, starting today.
+              Card details required to start your 1-day free trial.
+              You'll be charged {planType === "premium" ? "$29/month" : billingPeriod === "yearly" ? "$199/year" : "$17/month"} after 24 hours.
+              Cancel anytime before then with no charge.
             </p>
           </Card>
         </div>
