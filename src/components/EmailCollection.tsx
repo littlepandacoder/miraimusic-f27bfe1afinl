@@ -40,20 +40,33 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
     setLoading(true);
 
     try {
-      // 1. Save to Firestore (or get existing)
+      // 1. Check if account exists in Supabase by trying to sign up
+      let accountExists = false;
+      const { error: signupError } = await supabase.auth.signUp({
+        email,
+        password: "TempCheck123!@#", // Temp password just to check
+      });
+
+      if (signupError) {
+        const msg = signupError.message?.toLowerCase() ?? "";
+        accountExists = msg.includes("already registered") || msg.includes("already exists");
+        console.log("[EmailCollection] Signup check error:", signupError.message, "→ Account exists:", accountExists);
+      }
+
+      // 2. Save/get from Firestore
       const docId = await saveEmail(email);
-      console.log("[EmailCollection] Firebase success! DocId:", docId);
+      console.log("[EmailCollection] Firebase DocId:", docId);
 
-      // 2. Check if onboarding is already completed
-      const onboardingCompleted = await hasCompletedOnboarding(docId);
-      console.log("[EmailCollection] Onboarding completed:", onboardingCompleted);
-
-      // 3. Account exists if onboarding is completed OR if doc has been saved before
-      const accountExists = onboardingCompleted;
-      console.log("[EmailCollection] Account exists:", accountExists);
+      // 3. Check if onboarding is already completed (only matters if account exists)
+      let onboardingCompleted = false;
+      if (accountExists) {
+        onboardingCompleted = await hasCompletedOnboarding(docId);
+        console.log("[EmailCollection] Onboarding completed:", onboardingCompleted);
+      }
 
       // 4. Short delay to prevent the 'removeChild' crash during transition
       setTimeout(() => {
+        console.log("[EmailCollection] Final: accountExists:", accountExists, "onboardingCompleted:", onboardingCompleted);
         onComplete(email, docId, accountExists, onboardingCompleted);
       }, 150);
 
