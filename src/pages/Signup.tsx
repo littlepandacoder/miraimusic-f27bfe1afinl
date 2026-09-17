@@ -76,32 +76,14 @@ const Signup = () => {
     setAccountExists(acctExists);
     setOnboardingCompleted(onboardingDone ?? false);
 
-    // Skip onboarding if:
-    // 1. Account exists AND onboarding is already completed, OR
-    // 2. Account exists (will ask for password only)
-    if (acctExists && onboardingDone) {
-      // Account exists with completed onboarding → skip to billing
-      setStage("billing");
-      // Set dummy onboarding data so billing page renders
-      setOnboardingData({
-        email: submittedEmail,
-        goals: [],
-        skillLevel: "",
-        topics: [],
-        genres: [],
-      });
-    } else if (acctExists) {
-      // Account exists but no onboarding → skip to billing (will ask for password)
-      setStage("billing");
-      setOnboardingData({
-        email: submittedEmail,
-        goals: [],
-        skillLevel: "",
-        topics: [],
-        genres: [],
-      });
+    // If account already exists, redirect to login page
+    if (acctExists) {
+      console.log("[Signup] Account already exists, redirecting to login");
+      localStorage.setItem("loginEmail", submittedEmail);
+      navigate("/login");
     } else {
       // New account → ask for onboarding
+      console.log("[Signup] New account, going to onboarding");
       setStage("onboarding");
     }
   };
