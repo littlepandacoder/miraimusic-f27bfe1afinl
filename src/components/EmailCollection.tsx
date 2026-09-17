@@ -16,6 +16,7 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [accountExistsError, setAccountExistsError] = useState(false);
   const { user, signOut } = useAuth();
 
   const validateEmail = (email: string): boolean => {
@@ -53,21 +54,24 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
         console.log("[EmailCollection] Signup check error:", signupError.message, "→ Account exists:", accountExists);
       }
 
+      // If account exists, show error message instead of redirecting
+      if (accountExists) {
+        setAccountExistsError(true);
+        setLoading(false);
+        return;
+      }
+
       // 2. Save/get from Firestore
       const docId = await saveEmail(email);
       console.log("[EmailCollection] Firebase DocId:", docId);
 
-      // 3. Check if onboarding is already completed (only matters if account exists)
+      // 3. Check if onboarding is already completed (only matters if new account)
       let onboardingCompleted = false;
-      if (accountExists) {
-        onboardingCompleted = await hasCompletedOnboarding(docId);
-        console.log("[EmailCollection] Onboarding completed:", onboardingCompleted);
-      }
 
       // 4. Short delay to prevent the 'removeChild' crash during transition
       setTimeout(() => {
-        console.log("[EmailCollection] Final: accountExists:", accountExists, "onboardingCompleted:", onboardingCompleted);
-        onComplete(email, docId, accountExists, onboardingCompleted);
+        console.log("[EmailCollection] New account proceeding");
+        onComplete(email, docId, false, onboardingCompleted);
       }, 150);
 
     } catch (err: any) {
@@ -198,6 +202,36 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
           {error && (
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs font-medium animate-in fade-in zoom-in-95">
               {error}
+            </div>
+          )}
+
+          {accountExistsError && (
+            <div className="p-4 bg-blue/10 border border-blue/20 rounded-lg space-y-3 animate-in fade-in zoom-in-95">
+              <p className="text-sm font-semibold text-foreground">
+                Email already exists
+              </p>
+              <p className="text-xs text-muted-foreground">
+                An account with this email already exists. Please log in with your existing account.
+              </p>
+              <a
+                href="/login"
+                className="block w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg text-center transition-colors"
+                onClick={() => {
+                  localStorage.setItem("loginEmail", email);
+                }}
+              >
+                Go to Login
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountExistsError(false);
+                  setEmail("");
+                }}
+                className="block w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Try another email
+              </button>
             </div>
           )}
 
