@@ -36,7 +36,6 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
       return;
     }
 
-    // For existing accounts, validate password but skip other checks
     // For new accounts, validate full password requirements
     if (!isExistingAccount) {
       if (!password || password.length < 12) {
@@ -63,13 +62,8 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
         setError("Passwords do not match.");
         return;
       }
-    } else {
-      // For existing accounts, just validate password is not empty
-      if (!password) {
-        setError("Please enter your password.");
-        return;
-      }
     }
+    // For existing accounts, password is not required (they're already authenticated)
 
     setLoading(true);
 
@@ -193,12 +187,14 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
         <div className={isExistingAccount ? "flex justify-center" : "grid md:grid-cols-2 gap-8"}>
           {/* Left — account setup (hidden for existing accounts) */}
           {!isExistingAccount && <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">Create Your Account</h1>
-              <p className="text-muted-foreground mt-1">
-                Set your password, then choose monthly or yearly billing.
-              </p>
-            </div>
+            {!isExistingAccount && (
+              <div>
+                <h1 className="text-3xl font-bold">Create Your Account</h1>
+                <p className="text-muted-foreground mt-1">
+                  Set your password, then choose monthly or yearly billing.
+                </p>
+              </div>
+            )}
 
             <Card className="p-6 space-y-4">
               <div>
