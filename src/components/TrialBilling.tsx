@@ -12,9 +12,10 @@ interface TrialBillingProps {
   onboardingData: unknown;
   onComplete: () => void;
   planType?: "student" | "premium";
+  accountExists?: boolean;
 }
 
-const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initialPlanType = "student" }: TrialBillingProps) => {
+const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initialPlanType = "student", accountExists = false }: TrialBillingProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -22,6 +23,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isExistingAccount] = useState(accountExists);
 
   const handleStartTrial = async () => {
     setError("");
@@ -34,29 +36,39 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
       return;
     }
 
-    if (!password || password.length < 12) {
-      setError("Password must be at least 12 characters.");
-      return;
-    }
-    if (!/[A-Z]/.test(password)) {
-      setError("Password must contain at least one uppercase letter.");
-      return;
-    }
-    if (!/[a-z]/.test(password)) {
-      setError("Password must contain at least one lowercase letter.");
-      return;
-    }
-    if (!/\d/.test(password)) {
-      setError("Password must contain at least one number.");
-      return;
-    }
-    if (!/[@$!%*?&]/.test(password)) {
-      setError("Password must contain at least one special character (@$!%*?&).");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+    // For existing accounts, validate password but skip other checks
+    // For new accounts, validate full password requirements
+    if (!isExistingAccount) {
+      if (!password || password.length < 12) {
+        setError("Password must be at least 12 characters.");
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError("Password must contain at least one uppercase letter.");
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError("Password must contain at least one lowercase letter.");
+        return;
+      }
+      if (!/\d/.test(password)) {
+        setError("Password must contain at least one number.");
+        return;
+      }
+      if (!/[@$!%*?&]/.test(password)) {
+        setError("Password must contain at least one special character (@$!%*?&).");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+    } else {
+      // For existing accounts, just validate password is not empty
+      if (!password) {
+        setError("Please enter your password.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -178,25 +190,29 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  {isExistingAccount ? "Password" : "Password"}
+                </label>
                 <input
                   type="password"
-                  placeholder="Minimum 6 characters"
+                  placeholder={isExistingAccount ? "Enter your password" : "Minimum 12 characters"}
                   className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Confirm Password</label>
-                <input
-                  type="password"
-                  placeholder="Repeat password"
-                  className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
+              {!isExistingAccount && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Confirm Password</label>
+                  <input
+                    type="password"
+                    placeholder="Repeat password"
+                    className="w-full p-2 border rounded bg-transparent text-white placeholder:text-gray-400"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1">Promo Code (optional)</label>
                 <input

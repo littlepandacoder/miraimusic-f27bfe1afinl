@@ -67,11 +67,18 @@ const Signup = () => {
   const [docId, setDocId] = useState("");
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [accountExists, setAccountExists] = useState(false);
 
-  const handleEmailSubmit = async (submittedEmail: string, signupDocId: string) => {
+  const handleEmailSubmit = async (submittedEmail: string, signupDocId: string, acctExists: boolean) => {
     setEmail(submittedEmail);
     setDocId(signupDocId);
-    setStage("onboarding");
+    setAccountExists(acctExists);
+    // If account already exists, skip onboarding and go directly to billing
+    if (acctExists) {
+      setStage("billing");
+    } else {
+      setStage("onboarding");
+    }
   };
 
   const handleOnboardingComplete = async (data: OnboardingData) => {
@@ -128,6 +135,7 @@ const Signup = () => {
           onboardingData={onboardingData}
           onComplete={handleBillingComplete}
           planType={planType}
+          accountExists={accountExists}
         />
       );
     }

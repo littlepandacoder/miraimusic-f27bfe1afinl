@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmailCollectionProps {
-  onComplete: (email: string, docId: string) => void;
+  onComplete: (email: string, docId: string, accountExists: boolean) => void;
 }
 
 export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
@@ -40,18 +40,30 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
     setLoading(true);
 
     try {
-      // 1. Save to Firestore
+      // 1. Check if account already exists by attempting sign up
+      let accountExists = false;
+      const { error: signupError } = await supabase.auth.signUp({
+        email,
+        password: "temp_check_password_123", // temporary to check if account exists
+      });
+
+      if (signupError) {
+        const msg = signupError.message?.toLowerCase() ?? "";
+        accountExists = msg.includes("already registered") || msg.includes("already exists");
+      }
+
+      // 2. Save to Firestore
       const docId = await saveEmail(email);
       console.log("Firebase success! Saved with ID:", docId);
 
-      // 2. Short delay to prevent the 'removeChild' crash during transition
+      // 3. Short delay to prevent the 'removeChild' crash during transition
       setTimeout(() => {
-        onComplete(email, docId);
+        onComplete(email, docId, accountExists);
       }, 150);
 
     } catch (err: any) {
       console.error("Error in handleSubmit:", err);
-      
+
       // Precise error messages for debugging
       if (err.code === 'permission-denied') {
         setError("Firebase Rules error: Check your Firestore 'Rules' tab.");
