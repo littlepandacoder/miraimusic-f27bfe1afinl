@@ -68,27 +68,31 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
     setLoading(true);
 
     try {
-      // 1 ── Clear any stale/expired session to avoid refresh token errors
-      await supabase.auth.signOut({ scope: "local" });
-
       // 2 ── Create or sign in to Supabase account
       let userId: string | undefined;
-      let authError: any = null;
 
-      // For existing accounts, try sign in first. For new, try sign up first
+      // For existing accounts from login, they're already authenticated - just get current user
       if (isExistingAccount) {
-        console.log("[TrialBilling] Existing account detected, signing in...");
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) {
-          console.error("[TrialBilling] Sign in error:", signInError);
-          setError(signInError.message || "Sign in failed. Please check your password.");
-          setLoading(false);
-          return;
+        console.log("[TrialBilling] Existing account, checking authentication...");
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          console.log("[TrialBilling] Already authenticated, proceeding to checkout");
+          userId = currentUser.id;
+        } else {
+          // If not authenticated, shouldn't happen but fallback to signin
+          console.log("[TrialBilling] Not authenticated, attempting sign in...");
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) {
+            console.error("[TrialBilling] Sign in error:", signInError);
+            setError(signInError.message || "Sign in failed. Please check your password.");
+            setLoading(false);
+            return;
+          }
+          userId = signInData.user?.id;
         }
-        userId = signInData.user?.id;
       } else {
         console.log("[TrialBilling] New account, signing up...");
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
