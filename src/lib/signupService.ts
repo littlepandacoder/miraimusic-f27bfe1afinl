@@ -42,10 +42,20 @@ export const hasCompletedOnboarding = async (docId: string): Promise<boolean> =>
   try {
     const ref = doc(db, "signups", docId);
     const docSnap = await getDoc(ref);
-    if (!docSnap.exists()) return false;
+    if (!docSnap.exists()) {
+      console.log(`[onboarding check] Doc ${docId} does not exist`);
+      return false;
+    }
     const data = docSnap.data();
+    console.log(`[onboarding check] Doc data:`, data);
     // Check if all required onboarding fields are present and not empty
-    return !!(data?.goals?.length > 0 && data?.skillLevel && data?.topics?.length > 0 && data?.genres?.length > 0);
+    const hasGoals = data?.goals?.length > 0;
+    const hasSkillLevel = !!data?.skillLevel;
+    const hasTopics = data?.topics?.length > 0;
+    const hasGenres = data?.genres?.length > 0;
+    const isComplete = hasGoals && hasSkillLevel && hasTopics && hasGenres;
+    console.log(`[onboarding check] Complete: ${isComplete} (goals: ${hasGoals}, level: ${hasSkillLevel}, topics: ${hasTopics}, genres: ${hasGenres})`);
+    return isComplete;
   } catch (error) {
     console.error("Error checking onboarding status:", error);
     return false;
