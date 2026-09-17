@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Mail } from "lucide-react";
 // Ensure this path exactly matches where your saveEmail function lives
-import { saveEmail } from "@/lib/signupService";
+import { saveEmail, hasCompletedOnboarding } from "@/lib/signupService";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EmailCollectionProps {
-  onComplete: (email: string, docId: string, accountExists: boolean) => void;
+  onComplete: (email: string, docId: string, accountExists: boolean, onboardingCompleted?: boolean) => void;
 }
 
 export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
@@ -56,9 +56,12 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
       const docId = await saveEmail(email);
       console.log("Firebase success! Saved with ID:", docId);
 
-      // 3. Short delay to prevent the 'removeChild' crash during transition
+      // 3. Check if onboarding is already completed
+      const onboardingCompleted = accountExists ? await hasCompletedOnboarding(docId) : false;
+
+      // 4. Short delay to prevent the 'removeChild' crash during transition
       setTimeout(() => {
-        onComplete(email, docId, accountExists);
+        onComplete(email, docId, accountExists, onboardingCompleted);
       }, 150);
 
     } catch (err: any) {

@@ -68,15 +68,40 @@ const Signup = () => {
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [accountExists, setAccountExists] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
-  const handleEmailSubmit = async (submittedEmail: string, signupDocId: string, acctExists: boolean) => {
+  const handleEmailSubmit = async (submittedEmail: string, signupDocId: string, acctExists: boolean, onboardingDone?: boolean) => {
     setEmail(submittedEmail);
     setDocId(signupDocId);
     setAccountExists(acctExists);
-    // If account already exists, skip onboarding and go directly to billing
-    if (acctExists) {
+    setOnboardingCompleted(onboardingDone ?? false);
+
+    // Skip onboarding if:
+    // 1. Account exists AND onboarding is already completed, OR
+    // 2. Account exists (will ask for password only)
+    if (acctExists && onboardingDone) {
+      // Account exists with completed onboarding → skip to billing
       setStage("billing");
+      // Set dummy onboarding data so billing page renders
+      setOnboardingData({
+        email: submittedEmail,
+        goals: [],
+        skillLevel: "",
+        topics: [],
+        genres: [],
+      });
+    } else if (acctExists) {
+      // Account exists but no onboarding → skip to billing (will ask for password)
+      setStage("billing");
+      setOnboardingData({
+        email: submittedEmail,
+        goals: [],
+        skillLevel: "",
+        topics: [],
+        genres: [],
+      });
     } else {
+      // New account → ask for onboarding
       setStage("onboarding");
     }
   };

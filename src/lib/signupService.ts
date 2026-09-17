@@ -1,5 +1,5 @@
 import { db } from "./firebase";
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
 
 export interface SignupData {
   id?: string;
@@ -34,5 +34,20 @@ export const updateSignupData = async (docId: string, data: Omit<SignupData, "id
   } catch (error) {
     console.error("Error updating signup:", error);
     throw error;
+  }
+};
+
+export const hasCompletedOnboarding = async (docId: string): Promise<boolean> => {
+  if (!db || docId === "no-firebase") return false;
+  try {
+    const ref = doc(db, "signups", docId);
+    const docSnap = await getDoc(ref);
+    if (!docSnap.exists()) return false;
+    const data = docSnap.data();
+    // Check if all required onboarding fields are present and not empty
+    return !!(data?.goals?.length > 0 && data?.skillLevel && data?.topics?.length > 0 && data?.genres?.length > 0);
+  } catch (error) {
+    console.error("Error checking onboarding status:", error);
+    return false;
   }
 };
