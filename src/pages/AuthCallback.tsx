@@ -80,7 +80,9 @@ const AuthCallback = () => {
       if (nextPath) {
         destination = nextPath;
       } else if (!hasSub) {
-        destination = "/signup";
+        // User logged in but no subscription → skip to payment/billing
+        // Pass skipOnboarding flag to indicate they already have an account
+        destination = "/signup?skipOnboarding=true";
       }
 
       if (!hasSub && !nextPath) {

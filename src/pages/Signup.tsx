@@ -37,7 +37,30 @@ const Signup = () => {
     if (plan === "premium" || plan === "student") {
       setPlanType(plan);
     }
-  }, []);
+
+    // If skipOnboarding flag is set (user logged in but needs subscription), skip to billing
+    const skipOnboarding = searchParams.get("skipOnboarding") === "true";
+    if (skipOnboarding) {
+      (async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) {
+            setEmail(user.email);
+            setStage("billing");
+            setOnboardingData({
+              email: user.email,
+              goals: [],
+              skillLevel: "",
+              topics: [],
+              genres: [],
+            });
+          }
+        } catch (err) {
+          console.error("[Signup] Error getting user:", err);
+        }
+      })();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (sessionStorage.getItem("sub_needed") === "1") {
