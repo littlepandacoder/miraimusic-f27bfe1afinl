@@ -426,9 +426,9 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
                   </div>
                 </div>
 
-                <div className="bg-amber/10 border border-amber/20 rounded-lg p-3">
+                <div className="bg-pink/10 border border-pink/20 rounded-lg p-3">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-amber-600">Note:</span> The Stripe payment page will show the regular price, but your trial is already applied. You won't be charged for 24 hours.
+                    <span className="font-semibold text-pink">Note:</span> The Stripe payment page will show the regular price, but your trial is already applied. You won't be charged for 24 hours.
                   </p>
                 </div>
 
