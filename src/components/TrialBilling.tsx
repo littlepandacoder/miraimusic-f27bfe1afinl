@@ -213,7 +213,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
               <div className="space-y-2 pt-1">
                 {(planType === "premium"
                   ? [
-                      "1 day free trial, then $29/month",
+                      "$0 for 1 day, then $29/month",
                       "Unlimited AI Tutor with voice",
                       "Access all piano course modules",
                       "Advanced progress analytics",
@@ -221,7 +221,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
                       "Cancel anytime from Stripe Customer Portal",
                     ]
                   : [
-                      billingPeriod === "yearly" ? "1 day free trial, then $199/year" : "1 day free trial, then $17/month",
+                      billingPeriod === "yearly" ? "$0 for 1 day, then $199/year" : "$0 for 1 day, then $17/month",
                       "Access all piano course modules",
                       "Gamified learning & quizzes",
                       "Progress tracking",
@@ -292,20 +292,21 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
               {planType === "premium" ? (
                 <>
                   <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
-                  <p className="text-4xl font-black mt-2">$29<span className="text-lg font-normal text-muted-foreground">/month</span></p>
+                  <p className="text-3xl font-black mt-2 text-green-500">$0<span className="text-sm text-muted-foreground"> today</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Then $29/month</p>
                   <p className="text-xs text-green-600 font-semibold mt-2">Includes AI Tutor with Voice</p>
                 </>
               ) : billingPeriod === "yearly" ? (
                 <>
                   <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
-                  <p className="text-4xl font-black mt-2">$199<span className="text-lg font-normal text-muted-foreground">/year</span></p>
-                  <p className="text-xs text-muted-foreground mt-1">Billed annually, saves $5/month</p>
+                  <p className="text-3xl font-black mt-2 text-green-500">$0<span className="text-sm text-muted-foreground"> today</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Then $199/year</p>
                 </>
               ) : (
                 <>
                   <p className="text-xs text-green-600 font-semibold mb-2">✨ 1 Day Free Trial</p>
-                  <p className="text-4xl font-black mt-2">$17<span className="text-lg font-normal text-muted-foreground">/month</span></p>
-                  <p className="text-xs text-muted-foreground mt-1">Standard access</p>
+                  <p className="text-3xl font-black mt-2 text-green-500">$0<span className="text-sm text-muted-foreground"> today</span></p>
+                  <p className="text-xs text-muted-foreground mt-1">Then $17/month</p>
                 </>
               )}
               <p className="text-sm text-muted-foreground mt-3">Cancel anytime</p>
