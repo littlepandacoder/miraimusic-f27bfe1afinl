@@ -53,10 +53,13 @@ serve(async (req) => {
       ...(customerId ? { customer: customerId } : { customer_email: email }),
       mode: "subscription",
       payment_method_collection: "always",
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [
+        { price: priceId, quantity: 1 },
+      ],
       subscription_data: {
         trial_period_days: 1,
         metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
+        description: "1 day free trial - first charge after 24 hours",
       },
       metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
       success_url: `${origin}/dashboard?checkout=success`,
