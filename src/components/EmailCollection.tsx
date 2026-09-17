@@ -122,7 +122,7 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="underline hover:text-foreground transition-colors"
+                className="underline text-pink hover:text-pink/80 transition-colors font-semibold"
               >
                 Log out
               </button>
