@@ -24,9 +24,18 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExistingAccount] = useState(accountExists);
+  const [showTrialModal, setShowTrialModal] = useState(false);
 
   const handleStartTrial = async () => {
     setError("");
+
+    // Show trial confirmation modal first
+    setShowTrialModal(true);
+  };
+
+  const handleConfirmTrial = async () => {
+    setError("");
+    setShowTrialModal(false);
 
     // Rate limiting check
     const rateLimitCheck = checkRateLimit(email, 'AUTH');
@@ -373,6 +382,73 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
             </p>
           </Card>
         </div>
+
+        {/* Trial Confirmation Modal */}
+        {showTrialModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
+              <div className="p-6 space-y-4">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-2">Confirm Your Trial</h2>
+                  <p className="text-sm text-muted-foreground">
+                    You're about to start your 1-day free trial
+                  </p>
+                </div>
+
+                <div className="bg-blue/10 border border-blue/20 rounded-lg p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <span className="text-green-500 font-bold text-lg mt-0.5">✓</span>
+                    <div>
+                      <p className="font-semibold text-sm">1 Day Free Access</p>
+                      <p className="text-xs text-muted-foreground">Full access to all features</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-green-500 font-bold text-lg mt-0.5">✓</span>
+                    <div>
+                      <p className="font-semibold text-sm">No Charge for 24 Hours</p>
+                      <p className="text-xs text-muted-foreground">Your card won't be charged during the trial</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-green-500 font-bold text-lg mt-0.5">✓</span>
+                    <div>
+                      <p className="font-semibold text-sm">Auto-Renewal</p>
+                      <p className="text-xs text-muted-foreground">After 24 hours, you'll be charged {planType === "premium" ? "$29/month" : billingPeriod === "yearly" ? "$199/year" : "$17/month"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-green-500 font-bold text-lg mt-0.5">✓</span>
+                    <div>
+                      <p className="font-semibold text-sm">Cancel Anytime</p>
+                      <p className="text-xs text-muted-foreground">Cancel before 24 hours with no charge</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setShowTrialModal(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleConfirmTrial}
+                    disabled={loading}
+                    className="flex-1 bg-primary hover:bg-primary/90"
+                  >
+                    {loading ? (
+                      <Loader2 size={18} className="animate-spin mr-2" />
+                    ) : null}
+                    Proceed to Payment
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
