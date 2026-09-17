@@ -79,44 +79,65 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
 
       // 2 ── Create or sign in to Supabase account
       let userId: string | undefined;
+      let authError: any = null;
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (signUpError) {
-        const msg = signUpError.message.toLowerCase();
-        const shouldTrySignIn =
-          msg.includes("already registered") ||
-          msg.includes("already exists") ||
-          msg.includes("rate limit") ||
-          msg.includes("too many") ||
-          signUpError.status === 429;
-
-        if (shouldTrySignIn) {
-          // Account exists or rate limited — try signing in
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          if (signInError) {
-            if (msg.includes("rate limit") || signUpError.status === 429) {
-              setError("Too many attempts. Please wait a minute and try again.");
-            } else {
-              setError("An account already exists for this email. Please log in at /login.");
-            }
-            setLoading(false);
-            return;
-          }
-          userId = signInData.user?.id;
-        } else {
-          setError(signUpError.message);
+      // For existing accounts, try sign in first. For new, try sign up first
+      if (isExistingAccount) {
+        console.log("[TrialBilling] Existing account detected, signing in...");
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          console.error("[TrialBilling] Sign in error:", signInError);
+          setError(signInError.message || "Sign in failed. Please check your password.");
           setLoading(false);
           return;
         }
+        userId = signInData.user?.id;
       } else {
-        userId = signUpData.user?.id;
+        console.log("[TrialBilling] New account, signing up...");
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (signUpError) {
+          const msg = signUpError.message.toLowerCase();
+          const shouldTrySignIn =
+            msg.includes("already registered") ||
+            msg.includes("already exists") ||
+            msg.includes("rate limit") ||
+            msg.includes("too many") ||
+            signUpError.status === 429;
+
+          if (shouldTrySignIn) {
+            console.log("[TrialBilling] Account already exists, trying sign in...");
+            // Account exists — try signing in
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            if (signInError) {
+              console.error("[TrialBilling] Sign in error:", signInError);
+              if (msg.includes("rate limit") || signUpError.status === 429) {
+                setError("Too many attempts. Please wait a minute and try again.");
+              } else {
+                setError("Invalid password. Please try again.");
+              }
+              setLoading(false);
+              return;
+            }
+            userId = signInData.user?.id;
+          } else {
+            console.error("[TrialBilling] Sign up error:", signUpError);
+            setError(signUpError.message);
+            setLoading(false);
+            return;
+          }
+        } else {
+          userId = signUpData.user?.id;
+        }
       }
 
       if (!userId) {
