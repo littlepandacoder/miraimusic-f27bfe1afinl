@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 interface PianoTheoryHubProps {
@@ -5,17 +6,16 @@ interface PianoTheoryHubProps {
 }
 
 export function PianoTheoryHub({ userId }: PianoTheoryHubProps) {
+  const navigate = useNavigate();
+
   useEffect(() => {
-    window.open("/piano-theory.html", "_blank");
-    // Optionally redirect back or close current tab
-    // window.history.back();
-  }, []);
+    navigate("/piano-theory");
+  }, [navigate]);
 
   return (
     <div className="w-full h-[calc(100vh-120px)] flex items-center justify-center">
       <div className="text-center">
-        <p className="text-muted-foreground mb-2">Opening Piano Theory...</p>
-        <p className="text-xs text-muted-foreground">If the window didn't open, please check your pop-up blocker.</p>
+        <p className="text-muted-foreground mb-2">Loading Piano Theory...</p>
       </div>
     </div>
   );
