@@ -12,15 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email, password, promoCode, billingPeriod, planType = "student" } = await req.json();
+    const { userId, email, promoCode, billingPeriod, planType = "student" } = await req.json();
 
     if (!userId || !email) {
       throw new Error("userId and email are required");
-    }
-
-    // For new accounts (userId = email), password is required
-    if (userId === email && !password) {
-      throw new Error("password is required for new accounts");
     }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -71,10 +66,10 @@ serve(async (req) => {
       ],
       subscription_data: {
         trial_period_days: 1,
-        metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr, ...(password ? { password } : {}) },
+        metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
         description: "1 day free trial - first charge after 24 hours",
       },
-      metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr, ...(password ? { password } : {}) },
+      metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/signup`,
     };

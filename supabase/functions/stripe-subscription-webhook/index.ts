@@ -256,23 +256,21 @@ serve(async (req) => {
         if (error) console.error(`[stripe-webhook] ${rpc} error:`, error);
         else console.log(`[stripe-webhook] ${rpc} OK for user ${userId} (${sub.status})`);
 
-        // Create account for new users after successful payment
-        if (session.metadata?.password) {
-          try {
-            console.log(`[stripe-webhook] Creating account for ${session.customer_details?.email} after payment`);
-            const { error: signUpError } = await supabase.auth.admin.createUser({
-              email: session.customer_details?.email || email,
-              password: session.metadata.password,
-              email_confirm: true, // Auto-confirm email
-            });
-            if (signUpError) {
-              console.warn("[stripe-webhook] Could not create account:", signUpError);
-            } else {
-              console.log(`[stripe-webhook] Account created for ${session.customer_details?.email}`);
-            }
-          } catch (err) {
-            console.warn("[stripe-webhook] Error creating account:", err);
+        // Activate pending payment accounts after successful checkout
+        try {
+          const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+            user_metadata: {
+              payment_status: "active",
+              payment_confirmed_at: new Date().toISOString(),
+            },
+          });
+          if (updateError) {
+            console.warn("[stripe-webhook] Could not update user payment status:", updateError);
+          } else {
+            console.log(`[stripe-webhook] Activated user ${userId} after payment`);
           }
+        } catch (err) {
+          console.warn("[stripe-webhook] Error updating user metadata:", err);
         }
 
         // Send welcome email — non-fatal, logged but not thrown

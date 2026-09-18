@@ -110,10 +110,49 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
           userId = signInData.user?.id;
         }
       } else {
-        // For new accounts, don't create yet - just get a temporary ID for checkout
-        // Account will be created after payment succeeds via webhook
-        console.log("[TrialBilling] New account - will be created after payment");
-        userId = email; // Use email as temp identifier for checkout
+        console.log("[TrialBilling] New account, creating with pending_payment status...");
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              payment_status: "pending_payment",
+              signup_timestamp: new Date().toISOString(),
+            },
+          },
+        });
+
+        if (signUpError) {
+          const msg = signUpError.message.toLowerCase();
+          const isAlreadyExists = msg.includes("already registered") || msg.includes("already exists");
+
+          if (isAlreadyExists) {
+            console.log("[TrialBilling] Account already exists, redirecting to login...");
+            setError("Account already exists. Redirecting to login...");
+            setLoading(false);
+            localStorage.setItem("loginEmail", email);
+            setTimeout(() => window.location.href = "/login", 500);
+            return;
+          } else {
+            console.error("[TrialBilling] Sign up error:", signUpError);
+            setError(signUpError.message);
+            setLoading(false);
+            return;
+          }
+        } else {
+          userId = signUpData.user?.id;
+          console.log("[TrialBilling] Account created with pending_payment status");
+        }
+      }
+
+      if (!userId) {
+        userId = (await supabase.auth.getUser()).data.user?.id;
+      }
+
+      if (!userId) {
+        setError("Could not create account. Please try again.");
+        setLoading(false);
+        return;
       }
 
       console.log("[TrialBilling] Creating checkout with planType:", planType);
@@ -121,7 +160,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
-        { body: { userId, email, password: !isExistingAccount ? password : undefined, promoCode: promoCode.trim() || undefined, billingPeriod, planType } }
+        { body: { userId, email, promoCode: promoCode.trim() || undefined, billingPeriod, planType } }
       );
 
       if (fnError || !data?.url) {
