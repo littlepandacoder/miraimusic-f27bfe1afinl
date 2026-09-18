@@ -5,12 +5,21 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  display_name TEXT;
 BEGIN
+  -- Extract display name from metadata, or from email if empty
+  display_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    SPLIT_PART(NEW.email, '@', 1)
+  );
+
   INSERT INTO public.profiles (user_id, email, full_name, avatar_url)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+    display_name,
     NEW.raw_user_meta_data->>'picture'
   )
   ON CONFLICT (user_id) DO UPDATE
