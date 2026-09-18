@@ -24,9 +24,7 @@ serve(async (req) => {
       throw new Error("Stripe is not configured. Please contact support.");
     }
 
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: "2025-01-27",
-    });
+    const stripe = new Stripe(stripeKey);
 
     let priceId: string;
     let actualPlanType = planType;
