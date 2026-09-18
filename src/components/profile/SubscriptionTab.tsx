@@ -160,33 +160,12 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
       </div>
 
       {/* Actions */}
-      {isActive && (
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-900 p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold mb-2 text-red-900 dark:text-red-100">
-            Cancel Subscription
-          </h3>
-          <p className="text-xs md:text-sm text-red-800 dark:text-red-200 mb-4">
-            Cancelling your subscription will end your access to premium features at the end of
-            your current billing period. Your data will be preserved.
-          </p>
-          <Button
-            variant="destructive"
-            onClick={() => setShowCancellationDialog(true)}
-            disabled={isLoadingCancel}
-            className="w-full sm:w-auto flex items-center justify-center gap-2"
-          >
-            {isLoadingCancel && <Loader2 className="w-4 h-4 animate-spin" />}
-            Cancel Subscription
-          </Button>
-        </div>
-      )}
-
       {isActive && !subscription.cancel_at_period_end && (
-        <div className="bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-900 p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold mb-2 text-green-900 dark:text-green-100">
+        <div className="bg-pink/10 dark:bg-pink/5 rounded-lg border border-pink/30 dark:border-pink/20 p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold mb-2 text-pink dark:text-pink">
             Manage Billing
           </h3>
-          <p className="text-xs md:text-sm text-green-800 dark:text-green-200 mb-4">
+          <p className="text-xs md:text-sm text-pink/80 dark:text-pink/70 mb-4">
             Update your payment method, view invoices, or pause your subscription.
           </p>
           <Button
