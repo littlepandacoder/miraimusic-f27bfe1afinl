@@ -3,6 +3,7 @@ import { LogIn } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
+import { useSignupNavigation } from "@/hooks/useSignupNavigation";
 
 const LANGS = [{ code: "en", label: "EN" }];
 
@@ -14,6 +15,7 @@ const Navbar = () => {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
   const { t, i18n } = useTranslation();
+  const { goToSignup, isLoggedIn } = useSignupNavigation();
 
   const navLinks = [
     { href: "#home",    label: t("nav.home")    },
@@ -112,13 +114,16 @@ const Navbar = () => {
 
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
-          <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+          <Link to={isLoggedIn ? "#" : "/login"} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
             <LogIn className="w-4 h-4" /> {t("nav.login")}
           </Link>
 
-          <Link to="/signup" className="btn-primary animate-pulse-glow text-sm px-6 py-3">
+          <button
+            onClick={goToSignup}
+            className="btn-primary animate-pulse-glow text-sm px-6 py-3"
+          >
             {t("nav.start")}
-          </Link>
+          </button>
 
           <LangSwitcher />
         </div>
@@ -192,7 +197,7 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to="/login"
+            to={isLoggedIn ? "#" : "/login"}
             data-item
             className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3"
             onClick={close}
@@ -200,14 +205,16 @@ const Navbar = () => {
             <LogIn className="w-4 h-4" /> {t("nav.login")}
           </Link>
 
-          <Link
-            to="/signup"
+          <button
             data-item
-            className="btn-primary text-sm text-center mt-1"
-            onClick={close}
+            onClick={() => {
+              close();
+              goToSignup();
+            }}
+            className="btn-primary text-sm text-center mt-1 w-full"
           >
             {t("nav.start")}
-          </Link>
+          </button>
         </div>
 
       </div>

@@ -256,6 +256,25 @@ serve(async (req) => {
         if (error) console.error(`[stripe-webhook] ${rpc} error:`, error);
         else console.log(`[stripe-webhook] ${rpc} OK for user ${userId} (${sub.status})`);
 
+        // Create account for new users after successful payment
+        if (session.metadata?.password) {
+          try {
+            console.log(`[stripe-webhook] Creating account for ${session.customer_details?.email} after payment`);
+            const { error: signUpError } = await supabase.auth.admin.createUser({
+              email: session.customer_details?.email || email,
+              password: session.metadata.password,
+              email_confirm: true, // Auto-confirm email
+            });
+            if (signUpError) {
+              console.warn("[stripe-webhook] Could not create account:", signUpError);
+            } else {
+              console.log(`[stripe-webhook] Account created for ${session.customer_details?.email}`);
+            }
+          } catch (err) {
+            console.warn("[stripe-webhook] Error creating account:", err);
+          }
+        }
+
         // Send welcome email — non-fatal, logged but not thrown
         const userEmail =
           session.customer_details?.email ??

@@ -368,7 +368,7 @@ const Onboarding = ({ email, docId, onComplete }: OnboardingProps) => {
                 </div>
 
                 <div className="text-sm text-muted-foreground border-t border-border/30 pt-4">
-                  $17/month, charged today. Cancel anytime from your account.
+                  <span className="text-green-500 font-semibold">$0 for 1 day</span>, then $17/month. Cancel anytime from your account.
                 </div>
               </div>
 

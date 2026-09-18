@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Check, Loader2, CreditCard, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, Loader2, CreditCard, ShieldCheck, LogOut } from "lucide-react";
 import { saveSubscriptionInfo } from "@/lib/firestore";
 import { supabase } from "@/integrations/supabase/client";
 import { checkRateLimit } from "@/lib/rateLimiter";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TrialBillingProps {
   email: string;
@@ -25,6 +26,12 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
   const [loading, setLoading] = useState(false);
   const [isExistingAccount] = useState(accountExists);
   const [showTrialModal, setShowTrialModal] = useState(false);
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = "/signup";
+  };
 
   const handleStartTrial = async () => {
     setError("");
@@ -103,58 +110,10 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
           userId = signInData.user?.id;
         }
       } else {
-        console.log("[TrialBilling] New account, signing up...");
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (signUpError) {
-          const msg = signUpError.message.toLowerCase();
-          const shouldTrySignIn =
-            msg.includes("already registered") ||
-            msg.includes("already exists") ||
-            msg.includes("rate limit") ||
-            msg.includes("too many") ||
-            signUpError.status === 429;
-
-          if (shouldTrySignIn) {
-            console.log("[TrialBilling] Account already exists, trying sign in...");
-            // Account exists — try signing in
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-            if (signInError) {
-              console.error("[TrialBilling] Sign in error:", signInError);
-              if (msg.includes("rate limit") || signUpError.status === 429) {
-                setError("Too many attempts. Please wait a minute and try again.");
-              } else {
-                setError("Invalid password. Please try again.");
-              }
-              setLoading(false);
-              return;
-            }
-            userId = signInData.user?.id;
-          } else {
-            console.error("[TrialBilling] Sign up error:", signUpError);
-            setError(signUpError.message);
-            setLoading(false);
-            return;
-          }
-        } else {
-          userId = signUpData.user?.id;
-        }
-      }
-
-      if (!userId) {
-        userId = (await supabase.auth.getUser()).data.user?.id;
-      }
-
-      if (!userId) {
-        setError("Could not create account. Please try again.");
-        setLoading(false);
-        return;
+        // For new accounts, don't create yet - just get a temporary ID for checkout
+        // Account will be created after payment succeeds via webhook
+        console.log("[TrialBilling] New account - will be created after payment");
+        userId = email; // Use email as temp identifier for checkout
       }
 
       console.log("[TrialBilling] Creating checkout with planType:", planType);
@@ -162,7 +121,7 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
       // 2 ── Create Stripe Checkout Session and redirect
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-checkout",
-        { body: { userId, email, promoCode: promoCode.trim() || undefined, billingPeriod, planType } }
+        { body: { userId, email, password: !isExistingAccount ? password : undefined, promoCode: promoCode.trim() || undefined, billingPeriod, planType } }
       );
 
       if (fnError || !data?.url) {
@@ -193,9 +152,24 @@ const TrialBilling = ({ email, docId, onComplete: _onComplete, planType: initial
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-8">
-        <Button variant="ghost" onClick={() => window.history.back()} className="gap-2">
-          <ArrowLeft size={20} /> Back
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => window.history.back()} className="gap-2">
+            <ArrowLeft size={20} /> Back
+          </Button>
+          {user?.email && (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground">Logged in as <span className="font-semibold text-foreground">{user.email}</span></span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut size={16} /> Logout
+              </Button>
+            </div>
+          )}
+        </div>
 
         <div className={isExistingAccount ? "flex justify-center" : "grid md:grid-cols-2 gap-8"}>
           {/* Left — account setup (hidden for existing accounts) */}

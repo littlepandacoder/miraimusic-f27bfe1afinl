@@ -12,10 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, email, promoCode, billingPeriod, planType = "student" } = await req.json();
+    const { userId, email, password, promoCode, billingPeriod, planType = "student" } = await req.json();
 
     if (!userId || !email) {
       throw new Error("userId and email are required");
+    }
+
+    // For new accounts (userId = email), password is required
+    if (userId === email && !password) {
+      throw new Error("password is required for new accounts");
     }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -25,7 +30,7 @@ serve(async (req) => {
     }
 
     const stripe = new Stripe(stripeKey, {
-      apiVersion: "2024-06-20",
+      apiVersion: "2025-01-27",
     });
 
     let priceId: string;
@@ -43,14 +48,22 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") ?? "https://musicable.app";
 
-    // Reuse existing Stripe customer if one exists for this email
-    const existing = await stripe.customers.list({ email, limit: 1 });
-    const customerId = existing.data[0]?.id;
+    // Check if customer exists and has an active subscription
+    const existingCustomers = await stripe.customers.list({ email, limit: 1 });
+    const existingCustomer = existingCustomers.data[0];
+
+    // Warn if they already have an active subscription (but still create new one with trial)
+    if (existingCustomer) {
+      const subs = await stripe.subscriptions.list({ customer: existingCustomer.id, status: "active", limit: 1 });
+      if (subs.data.length > 0) {
+        console.log(`[checkout] Customer ${email} already has active subscription, but creating new trial subscription anyway`);
+      }
+    }
 
     // Build base session params
     const billingPeriodStr = planType === "premium" ? "monthly" : (billingPeriod === "yearly" ? "yearly" : "monthly");
     const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
-      ...(customerId ? { customer: customerId } : { customer_email: email }),
+      customer_email: email,
       mode: "subscription",
       payment_method_collection: "always",
       line_items: [
@@ -58,16 +71,18 @@ serve(async (req) => {
       ],
       subscription_data: {
         trial_period_days: 1,
-        metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
+        metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr, ...(password ? { password } : {}) },
         description: "1 day free trial - first charge after 24 hours",
       },
-      metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr },
+      metadata: { userId, planType: actualPlanType, billingPeriod: billingPeriodStr, ...(password ? { password } : {}) },
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/signup`,
     };
 
     let session: Stripe.Checkout.Session | undefined = undefined;
     let promoApplied = false;
+
+    console.log("[checkout] Trial setup - trial_period_days: 1, subscription_data:", JSON.stringify(sessionParams.subscription_data));
 
     // A customer-typed code is a Promotion Code, not a raw Coupon ID — look it up first.
     if (promoCode) {
@@ -78,6 +93,7 @@ serve(async (req) => {
       });
       const promo = promos.data[0];
       if (promo) {
+        console.log("[checkout] Using promo code:", promoCode, "- Coupon:", promo.coupon?.id);
         session = await stripe.checkout.sessions.create({
           ...sessionParams,
           discounts: [{ promotion_code: promo.id }],
@@ -90,6 +106,7 @@ serve(async (req) => {
     // No promo code given, or it didn't resolve — full price, no discount.
     if (!session) {
       session = await stripe.checkout.sessions.create(sessionParams);
+      console.log("[checkout] Session created - subscription ID:", session.subscription, "- trial_period_days should be applied");
     }
 
     return new Response(JSON.stringify({ url: session.url, promoApplied }), {

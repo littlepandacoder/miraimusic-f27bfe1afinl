@@ -48,7 +48,21 @@ const Login = () => {
       const { error } = await signIn(email.trim(), password);
       if (error) {
         if (import.meta.env.DEV) console.error("[login] signIn error:", error.message);
-        toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
+
+        // Check if user doesn't exist
+        const errorMsg = error.message?.toLowerCase() || "";
+        if (errorMsg.includes("invalid login credentials") || errorMsg.includes("user not found")) {
+          toast({
+            title: "Account not found",
+            description: "This account doesn't exist. Let's create one!",
+            variant: "destructive"
+          });
+          // Redirect to signup with email prefilled
+          localStorage.setItem("signupEmail", email.trim());
+          setTimeout(() => navigate("/signup"), 500);
+        } else {
+          toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
+        }
       } else {
         if (import.meta.env.DEV) console.log("[login] signIn success");
         const firstName = email.split("@")[0];

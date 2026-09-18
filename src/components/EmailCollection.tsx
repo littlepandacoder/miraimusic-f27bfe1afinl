@@ -41,37 +41,14 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
     setLoading(true);
 
     try {
-      // 1. Check if account exists in Supabase by trying to sign up
-      let accountExists = false;
-      const { error: signupError } = await supabase.auth.signUp({
-        email,
-        password: "TempCheck123!@#", // Temp password just to check
-      });
-
-      if (signupError) {
-        const msg = signupError.message?.toLowerCase() ?? "";
-        accountExists = msg.includes("already registered") || msg.includes("already exists");
-        console.log("[EmailCollection] Signup check error:", signupError.message, "→ Account exists:", accountExists);
-      }
-
-      // If account exists, show error message instead of redirecting
-      if (accountExists) {
-        setAccountExistsError(true);
-        setLoading(false);
-        return;
-      }
-
-      // 2. Save/get from Firestore
+      // Save/get from Firestore
       const docId = await saveEmail(email);
       console.log("[EmailCollection] Firebase DocId:", docId);
 
-      // 3. Check if onboarding is already completed (only matters if new account)
-      let onboardingCompleted = false;
-
-      // 4. Short delay to prevent the 'removeChild' crash during transition
+      // Short delay to prevent the 'removeChild' crash during transition
       setTimeout(() => {
         console.log("[EmailCollection] New account proceeding");
-        onComplete(email, docId, false, onboardingCompleted);
+        onComplete(email, docId, false, false);
       }, 150);
 
     } catch (err: any) {
