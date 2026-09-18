@@ -1,11 +1,7 @@
-import { useState } from "react";
 import { format } from "date-fns";
 import { Loader2, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { profileService } from "@/lib/profileService";
 import { useBillingPortal } from "@/hooks/useBillingPortal";
-import CancellationDialog from "./CancellationDialog";
 
 interface SubscriptionTabProps {
   subscription: any;
@@ -13,35 +9,7 @@ interface SubscriptionTabProps {
 }
 
 const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
-  const [isLoadingCancel, setIsLoadingCancel] = useState(false);
-  const [showCancellationDialog, setShowCancellationDialog] = useState(false);
-  const { toast } = useToast();
   const { openPortal, loading: portalLoading } = useBillingPortal();
-
-  const handleCancelConfirm = async (reason: string) => {
-    try {
-      setIsLoadingCancel(true);
-      await profileService.cancelSubscription(userId, reason, true);
-
-      toast({
-        title: "Success",
-        description:
-          "Subscription has been cancelled. You'll retain access until the end of your billing period.",
-      });
-
-      setShowCancellationDialog(false);
-      // Reload page to show updated status
-      window.location.reload();
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || "Failed to cancel subscription",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingCancel(false);
-    }
-  };
 
   if (!subscription) {
     return (
@@ -179,13 +147,6 @@ const SubscriptionTab = ({ subscription, userId }: SubscriptionTabProps) => {
           </Button>
         </div>
       )}
-
-      <CancellationDialog
-        isOpen={showCancellationDialog}
-        onClose={() => setShowCancellationDialog(false)}
-        onConfirm={handleCancelConfirm}
-        isLoading={isLoadingCancel}
-      />
     </div>
   );
 };
