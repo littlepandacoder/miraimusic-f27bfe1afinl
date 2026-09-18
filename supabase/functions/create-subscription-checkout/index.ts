@@ -39,7 +39,7 @@ serve(async (req) => {
         : Deno.env.get("STRIPE_STUDENT_PRICE_ID") ?? "price_1TcBF2B8UWyR18ZVVnNultKl";
     }
 
-    const origin = req.headers.get("origin") ?? "https://musicable.app";
+    const origin = "https://musicable.app";
 
     // Check if customer exists and has an active subscription
     const existingCustomers = await stripe.customers.list({ email, limit: 1 });
