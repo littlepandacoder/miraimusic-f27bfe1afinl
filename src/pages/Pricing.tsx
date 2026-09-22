@@ -166,7 +166,7 @@ const Pricing = () => {
                 </div>
                 <CardTitle className="text-lg sm:text-xl font-black mb-1">Teacher</CardTitle>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-3xl sm:text-4xl font-black">$20</span>
+                  <span className="text-3xl sm:text-4xl font-black">$100</span>
                   <span className="text-xs sm:text-sm text-muted-foreground">/month</span>
                 </div>
                 <div className="flex items-center justify-center gap-1 text-xs text-blue-400 mt-1">
