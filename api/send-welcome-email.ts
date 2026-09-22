@@ -198,13 +198,13 @@ async function sendWelcomeEmail(toEmail: string, userId: string): Promise<void> 
   }
 
   await transporter.sendMail({
-    from: \`Musicable <\${process.env.SMTP_USER || "hello@musicable.app"}>\`,
+    from: `Musicable <${process.env.SMTP_USER || "hello@musicable.app"}>`,
     to: toEmail,
     subject: "Welcome to Musicable — Your Musical Journey Awaits! 🎹",
     html: welcomeHtml(displayName),
   });
 
-  console.log(\`[send-welcome-email] Email sent successfully to: \${toEmail}\`);
+  console.log(`[send-welcome-email] Email sent successfully to: ${toEmail}`);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
