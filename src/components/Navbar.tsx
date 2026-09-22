@@ -139,7 +139,7 @@ const Navbar = () => {
           </button>
 
           <a
-            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+            href="https://wa.me/971563206225?text=Hi%20Musicable%21%20I%20need%20help"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity font-medium"
@@ -218,7 +218,7 @@ const Navbar = () => {
           </Link>
 
           <a
-            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+            href="https://wa.me/971563206225?text=Hi%20Musicable%21%20I%20need%20help"
             target="_blank"
             rel="noopener noreferrer"
             data-item
