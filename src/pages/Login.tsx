@@ -49,17 +49,26 @@ const Login = () => {
       if (error) {
         if (import.meta.env.DEV) console.error("[login] signIn error:", error.message);
 
-        // Check if user doesn't exist
         const errorMsg = error.message?.toLowerCase() || "";
-        if (errorMsg.includes("invalid login credentials") || errorMsg.includes("user not found")) {
+
+        // Distinguish between "user not found" and "invalid credentials" (wrong password)
+        if (errorMsg.includes("user not found") || errorMsg.includes("no user found")) {
+          // User doesn't exist - offer to sign up
           toast({
             title: "Account not found",
             description: "This account doesn't exist. Let's create one!",
             variant: "destructive"
           });
-          // Redirect to signup with email prefilled
           localStorage.setItem("signupEmail", email.trim());
           setTimeout(() => navigate("/signup"), 500);
+        } else if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
+          // Wrong password - stay on login page
+          toast({
+            title: "Wrong Password",
+            description: "The password you entered is incorrect. Please try again.",
+            variant: "destructive"
+          });
+          setIsLoading(false);
         } else {
           toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
         }
