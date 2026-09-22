@@ -26,117 +26,79 @@ function welcomeHtml(name: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Welcome to Musicable</title>
 </head>
-<body style="margin:0;padding:0;background:#0a0a1a;font-family:system-ui,-apple-system,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a1a;padding:40px 0;">
+<body style="margin:0;padding:0;background:#fff8e1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e1;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;padding:0 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;position:relative;overflow:hidden;">
 
-          <!-- Logo -->
+          <!-- Decorative Pink Blob Top -->
           <tr>
-            <td style="padding-bottom:32px;">
-              <span style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-1px;">MUSICABLE</span>
+            <td style="height:200px;background:#fff8e1;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:-50px;right:-80px;width:300px;height:300px;background:#ff1493;border-radius:60% 40% 30% 70% / 60% 30% 70% 40%;opacity:0.6;"></div>
+              <div style="position:relative;z-index:10;padding:40px 30px 0;">
+                <h1 style="margin:0;font-size:42px;font-weight:900;color:#000;text-align:left;">Welcome to the band!</h1>
+              </div>
             </td>
           </tr>
 
-          <!-- Hero -->
+          <!-- Main Content -->
           <tr>
-            <td style="background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%);border-radius:16px;padding:40px;text-align:center;">
-              <p style="font-size:40px;margin:0 0 12px;">🎹</p>
-              <h1 style="margin:0 0 12px;font-size:30px;font-weight:900;color:#ffffff;line-height:1.2;">
-                Welcome to Musicable, ${name}!
-              </h1>
-              <p style="margin:0;font-size:16px;color:rgba(255,255,255,0.85);line-height:1.5;">
-                Your account is ready. Your musical journey starts now.
+            <td style="background:#fff8e1;padding:40px 30px;">
+              <p style="margin:0 0 20px;font-size:16px;font-weight:500;color:#000;line-height:1.6;">
+                You've signed up for unlimited piano lessons straight to your inbox.
+              </p>
+              <p style="margin:0 0 20px;font-size:16px;font-weight:500;color:#000;line-height:1.6;">
+                We are so pleased to have you onboard.
+              </p>
+              <p style="margin:0;font-size:14px;color:#333;line-height:1.6;">
+                Please note you can unsubscribe at anytime by clicking "unsubscribe from this list". It's right there in the footer.
               </p>
             </td>
           </tr>
 
-          <!-- Spacer -->
-          <tr><td style="height:24px;"></td></tr>
-
-          <!-- What you can do -->
+          <!-- CTA Button -->
           <tr>
-            <td style="background:#111827;border-radius:12px;padding:28px;">
-              <h2 style="margin:0 0 20px;font-size:16px;font-weight:700;color:#ffffff;">Get started with your free trial</h2>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding-bottom:14px;">
-                    <span style="font-size:20px;">🎵</span>
-                    <span style="margin-left:12px;font-size:14px;color:#d1d5db;line-height:1.5;">
-                      <strong style="color:#ffffff;">Access Premium Content</strong> — explore 900+ piano lessons
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding-bottom:14px;">
-                    <span style="font-size:20px;">🤖</span>
-                    <span style="margin-left:12px;font-size:14px;color:#d1d5db;line-height:1.5;">
-                      <strong style="color:#ffffff;">Get AI Feedback</strong> — real-time analysis on your playing
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding-bottom:14px;">
-                    <span style="font-size:20px;">📊</span>
-                    <span style="margin-left:12px;font-size:14px;color:#d1d5db;line-height:1.5;">
-                      <strong style="color:#ffffff;">Track Progress</strong> — see exactly where you are
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <span style="font-size:20px;">🎮</span>
-                    <span style="margin-left:12px;font-size:14px;color:#d1d5db;line-height:1.5;">
-                      <strong style="color:#ffffff;">Play Games</strong> — piano hero, rhythm quiz, and more
-                    </span>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Spacer -->
-          <tr><td style="height:24px;"></td></tr>
-
-          <!-- CTA -->
-          <tr>
-            <td style="text-align:center;">
+            <td style="background:#fff8e1;padding:0 30px 30px;">
               <a href="https://musicable.app/dashboard"
-                 style="display:inline-block;background:#ec4899;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-weight:700;font-size:16px;letter-spacing:0.3px;">
-                Launch Your Dashboard →
+                 style="display:inline-block;background:#000;color:#fff8e1;text-decoration:none;padding:18px 50px;border-radius:30px;font-weight:900;font-size:16px;letter-spacing:0.5px;">
+                START LEARNING
               </a>
             </td>
           </tr>
 
           <!-- Spacer -->
-          <tr><td style="height:24px;"></td></tr>
+          <tr><td style="height:50px;background:#fff8e1;"></td></tr>
 
-          <!-- Tips -->
+          <!-- Decorative Pink Blob Bottom -->
           <tr>
-            <td style="background:#1f2937;border-radius:12px;padding:28px;">
-              <h3 style="margin:0 0 16px;font-size:14px;font-weight:700;color:#ffffff;">💡 Pro Tips to Get Started</h3>
-              <ul style="margin:0;padding-left:20px;color:#d1d5db;font-size:14px;line-height:1.6;">
-                <li style="margin-bottom:8px;">Start with the Foundation Modules — they build essential skills</li>
-                <li style="margin-bottom:8px;">Play Piano Hero daily to earn XP and practice songs</li>
-                <li style="margin-bottom:8px;">Use Ask Tutor to get real-time feedback on your playing</li>
-                <li>Check your progress dashboard to see how far you've come</li>
-              </ul>
+            <td style="height:150px;background:#fff8e1;position:relative;overflow:hidden;">
+              <div style="position:absolute;bottom:-50px;left:-80px;width:280px;height:280px;background:#ff1493;border-radius:70% 30% 66% 34% / 40% 50% 50% 60%;opacity:0.5;"></div>
             </td>
           </tr>
 
-          <!-- Spacer -->
-          <tr><td style="height:40px;"></td></tr>
-
           <!-- Footer -->
           <tr>
-            <td style="border-top:1px solid #1f2937;padding-top:24px;text-align:center;">
-              <p style="margin:0 0 8px;font-size:12px;color:#6b7280;">
-                Questions? Reply to this email or write to us at
-                <a href="mailto:hello@musicable.app" style="color:#9ca3af;">hello@musicable.app</a>
-              </p>
-              <p style="margin:0;font-size:12px;color:#6b7280;">
-                © ${new Date().getFullYear()} Musicable. All rights reserved.
+            <td style="background:#fff8e1;padding:40px 30px;text-align:center;">
+              <!-- Social Icons -->
+              <div style="margin-bottom:24px;">
+                <a href="https://twitter.com/musicableapp" style="display:inline-block;width:40px;height:40px;margin:0 10px;background:#000;border-radius:50%;text-align:center;line-height:40px;text-decoration:none;">
+                  <span style="color:#fff8e1;font-weight:900;font-size:20px;">𝕏</span>
+                </a>
+                <a href="https://instagram.com/musicableapp" style="display:inline-block;width:40px;height:40px;margin:0 10px;background:#000;border-radius:50%;text-align:center;line-height:40px;text-decoration:none;">
+                  <span style="color:#fff8e1;font-weight:900;">📷</span>
+                </a>
+                <a href="https://youtube.com/musicableapp" style="display:inline-block;width:40px;height:40px;margin:0 10px;background:#000;border-radius:50%;text-align:center;line-height:40px;text-decoration:none;">
+                  <span style="color:#fff8e1;font-weight:900;font-size:18px;">▶</span>
+                </a>
+              </div>
+
+              <p style="margin:0 0 12px;font-size:12px;color:#000;">© ${new Date().getFullYear()} Musicable AB</p>
+
+              <p style="margin:0;font-size:11px;color:#666;">
+                Want to change how you receive these emails?<br/>
+                You can <a href="https://musicable.app/preferences" style="color:#000;font-weight:600;text-decoration:none;">update your preferences</a> or
+                <a href="mailto:hello@musicable.app?subject=Unsubscribe" style="color:#000;font-weight:600;text-decoration:none;">unsubscribe from this list</a>
               </p>
             </td>
           </tr>
