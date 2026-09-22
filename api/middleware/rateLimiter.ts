@@ -89,14 +89,12 @@ export function createRateLimiter(config: RateLimitConfig) {
  * Get client IP from request
  */
 function getClientIp(req: VercelRequest): string {
-  return (
-    (Array.isArray(req.headers["x-forwarded-for"])
-      ? req.headers["x-forwarded-for"][0]
-      : req.headers["x-forwarded-for"]) ||
-    req.headers["cf-connecting-ip"] ||
-    req.socket?.remoteAddress ||
-    "unknown"
-  );
+  const xForwardedFor = req.headers["x-forwarded-for"];
+  const forwardedIp = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
+  const cfConnectingIp = req.headers["cf-connecting-ip"];
+  const socketIp = req.socket?.remoteAddress;
+
+  return (forwardedIp || cfConnectingIp || socketIp || "unknown") as string;
 }
 
 /**
