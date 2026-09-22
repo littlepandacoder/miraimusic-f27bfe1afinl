@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: process.env.SMTP_USER || "hello@musicable.app",
-    pass: process.env.SMTP_PASSWORD || "",
+    pass: process.env.SMTP_PASS || "",
   },
 });
 
@@ -159,8 +159,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing userId or email" });
   }
 
-  if (!process.env.SMTP_PASSWORD) {
-    console.error("[send-welcome-email] SMTP_PASSWORD not configured");
+  if (!process.env.SMTP_PASS) {
+    console.error("[send-welcome-email] SMTP_PASS not configured");
     return res.status(500).json({ error: "Email service not configured" });
   }
 
