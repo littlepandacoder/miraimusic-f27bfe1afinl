@@ -115,7 +115,7 @@ const Pricing = () => {
             </Card>
 
             {/* Premium AI Tutor Plan */}
-            <Card className="relative bg-card border-purple-500/30 ring-2 ring-purple-500/20 flex flex-col md:scale-105">
+            <Card className="relative bg-card border-purple-500/30 ring-2 ring-purple-500/20 flex flex-col">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-purple-500 text-white text-xs font-bold whitespace-nowrap">
                 AI Tutor
               </div>
