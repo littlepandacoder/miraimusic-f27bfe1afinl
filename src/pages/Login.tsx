@@ -19,6 +19,7 @@ const Login = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError("");
     if (!email.trim() || !password.trim()) {
       toast({ title: t("login.errors.validation"), description: t("login.errors.enterBoth"), variant: "destructive" });
       return;
@@ -62,7 +64,8 @@ const Login = () => {
           localStorage.setItem("signupEmail", email.trim());
           setTimeout(() => navigate("/signup"), 500);
         } else if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
-          // Wrong password - stay on login page
+          // Wrong password - show error below password field and in toast
+          setPasswordError("The password you entered is incorrect. Please try again.");
           toast({
             title: "Wrong Password",
             description: "The password you entered is incorrect. Please try again.",
@@ -220,11 +223,17 @@ const Login = () => {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError("");
+                    }}
                     placeholder={t("login.passwordPlaceholder")}
                     required
-                    className="bg-secondary border-border"
+                    className={`bg-secondary border-border ${passwordError ? "border-destructive" : ""}`}
                   />
+                  {passwordError && (
+                    <p className="text-xs text-destructive mt-1">{passwordError}</p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
                   {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("login.signingIn")}</> : t("login.signIn")}
