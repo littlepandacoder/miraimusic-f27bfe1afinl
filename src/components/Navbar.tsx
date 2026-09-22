@@ -109,52 +109,60 @@ const Navbar = () => {
       <div className="container mx-auto px-6 sm:px-8 py-4">
 
         {/* Desktop row */}
-        <div className="hidden md:flex items-center justify-center gap-8">
-          <Link to="/" className="text-2xl font-black text-foreground">Musicable</Link>
+        <div className="hidden md:flex items-center justify-between gap-8">
+          {/* Left side navigation */}
+          <div className="flex items-center gap-8">
+            {isHomePage && navLinks.map((link) => (
+              <a key={link.href} href={link.href} className="nav-link">{link.label}</a>
+            ))}
 
-          {isHomePage && navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="nav-link">{link.label}</a>
-          ))}
+            <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
-          <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
-
-          <a
-            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
-            title="Contact us on WhatsApp"
-          >
-            <MessageCircle className="w-4 h-4" />
-          </a>
-
-          {isLoggedIn ? (
-            <button
-              onClick={() => user?.id && openPortal(user.id)}
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
+            <a
+              href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center text-foreground hover:text-primary transition-colors font-medium"
+              title="Contact us on WhatsApp"
             >
-              <LogIn className="w-4 h-4" /> {t("nav.login")}
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-5.031 1.378c-3.055 2.2-4.982 5.973-4.982 10.102 0 1.08.19 2.144.567 3.163l-1.294 4.726 4.993-1.282c3.12 1.657 6.592 1.538 8.933-.041 3.322-2.392 5.441-6.184 5.441-10.338 0-2.857-.956-5.634-2.764-7.897-1.817-2.272-4.52-3.693-7.418-3.774z"/>
+              </svg>
+            </a>
+
+            {isLoggedIn ? (
+              <button
+                onClick={() => user?.id && openPortal(user.id)}
+                className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" /> {t("nav.login")}
+              </button>
+            ) : (
+              <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+                <LogIn className="w-4 h-4" /> {t("nav.login")}
+              </Link>
+            )}
+
+            <button
+              onClick={goToSignup}
+              className="btn-primary animate-pulse-glow text-sm px-6 py-3"
+            >
+              {t("nav.start")}
             </button>
-          ) : (
-            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
-              <LogIn className="w-4 h-4" /> {t("nav.login")}
-            </Link>
-          )}
+          </div>
 
-          <button
-            onClick={goToSignup}
-            className="btn-primary animate-pulse-glow text-sm px-6 py-3"
-          >
-            {t("nav.start")}
-          </button>
-
-          <LangSwitcher />
+          {/* Right side - Logo and Language */}
+          <div className="flex items-center gap-6">
+            <Link to="/" className="text-2xl font-black text-foreground whitespace-nowrap">Musicable</Link>
+            <LangSwitcher />
+          </div>
         </div>
 
         {/* Mobile row */}
         <div className="flex md:hidden items-center justify-between">
+          <div className="flex-1" />
           <Link to="/" className="text-2xl font-black text-foreground">Musicable</Link>
-          <div className="flex items-center gap-3">
+          <div className="flex-1 flex items-center justify-end gap-3">
             <LangSwitcher />
 
             {/* Animated hamburger / X button */}
