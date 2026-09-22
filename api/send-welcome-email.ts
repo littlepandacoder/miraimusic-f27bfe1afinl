@@ -8,9 +8,10 @@ const supabase = createClient(
 );
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "mail.spacemail.com",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true,
+  host: process.env.SMTP_HOST || "smtp.hostinger.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: false,
+  requireTLS: true,
   auth: {
     user: process.env.SMTP_USER || "hello@musicable.app",
     pass: process.env.SMTP_PASS || "",
