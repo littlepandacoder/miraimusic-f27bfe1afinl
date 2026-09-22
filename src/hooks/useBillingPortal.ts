@@ -31,6 +31,7 @@ export const useBillingPortal = () => {
 
       // Open Stripe billing portal in a new tab
       window.open(data.url, "_blank", "noopener,noreferrer");
+      setLoading(false);
     } catch (err: any) {
       toast({
         title: "Error",

@@ -34,14 +34,29 @@ export const EmailCollection = ({ onComplete }: EmailCollectionProps) => {
     }
 
     if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
+      setError("Invalid email");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Save/get from Firestore
+      // Validate email with server (check MX records and disposable domains)
+      const validationResponse = await fetch("/api/validate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const validationData = await validationResponse.json();
+
+      if (!validationData.valid) {
+        setError(validationData.error || "Invalid email");
+        setLoading(false);
+        return;
+      }
+
+      // Email is valid, save to Firestore
       const docId = await saveEmail(email);
       console.log("[EmailCollection] Firebase DocId:", docId);
 

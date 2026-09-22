@@ -4,6 +4,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { useSignupNavigation } from "@/hooks/useSignupNavigation";
+import { useBillingPortal } from "@/hooks/useBillingPortal";
+import { useAuth } from "@/hooks/useAuth";
 
 const LANGS = [{ code: "en", label: "EN" }];
 
@@ -16,6 +18,8 @@ const Navbar = () => {
   const isHomePage = location.pathname === "/";
   const { t, i18n } = useTranslation();
   const { goToSignup, isLoggedIn } = useSignupNavigation();
+  const { user } = useAuth();
+  const { openPortal } = useBillingPortal();
 
   const navLinks = [
     { href: "#home",    label: t("nav.home")    },
@@ -114,9 +118,18 @@ const Navbar = () => {
 
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
-          <Link to={isLoggedIn ? "#" : "/login"} className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
-            <LogIn className="w-4 h-4" /> {t("nav.login")}
-          </Link>
+          {isLoggedIn ? (
+            <button
+              onClick={() => user?.id && openPortal(user.id)}
+              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" /> {t("nav.login")}
+            </button>
+          ) : (
+            <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
+              <LogIn className="w-4 h-4" /> {t("nav.login")}
+            </Link>
+          )}
 
           <button
             onClick={goToSignup}
@@ -196,14 +209,27 @@ const Navbar = () => {
             {t("nav.pricing")}
           </Link>
 
-          <Link
-            to={isLoggedIn ? "#" : "/login"}
-            data-item
-            className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3"
-            onClick={close}
-          >
-            <LogIn className="w-4 h-4" /> {t("nav.login")}
-          </Link>
+          {isLoggedIn ? (
+            <button
+              data-item
+              onClick={() => {
+                close();
+                user?.id && openPortal(user.id);
+              }}
+              className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3 text-left cursor-pointer w-full"
+            >
+              <LogIn className="w-4 h-4" /> {t("nav.login")}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              data-item
+              className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3"
+              onClick={close}
+            >
+              <LogIn className="w-4 h-4" /> {t("nav.login")}
+            </Link>
+          )}
 
           <button
             data-item

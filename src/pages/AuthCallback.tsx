@@ -37,6 +37,19 @@ const AuthCallback = () => {
 
     // Wrap async checks in an inner function (useEffect can't be async)
     (async () => {
+      // Send welcome email if user is new
+      if (isNew && user.email) {
+        try {
+          await fetch("/api/send-welcome-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: user.id, email: user.email }),
+          });
+        } catch (err) {
+          console.log("[auth-callback] Welcome email send failed:", err);
+        }
+      }
+
       // Resolve display name: OAuth metadata → profiles table → email prefix
       let rawName =
         user.user_metadata?.full_name ||
