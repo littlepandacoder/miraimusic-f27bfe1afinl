@@ -118,16 +118,6 @@ const Navbar = () => {
 
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
-          <a
-            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity font-medium"
-            title="Contact us on WhatsApp"
-          >
-            <img src="/whatsapp-logo.svg" alt="WhatsApp" className="w-5 h-5" />
-          </a>
-
           {isLoggedIn ? (
             <button
               onClick={() => user?.id && openPortal(user.id)}
@@ -148,7 +138,15 @@ const Navbar = () => {
             {t("nav.start")}
           </button>
 
-          <LangSwitcher />
+          <a
+            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity font-medium"
+            title="Contact us on WhatsApp"
+          >
+            <img src="/whatsapp-logo.svg" alt="WhatsApp" className="w-5 h-5" />
+          </a>
         </div>
 
         {/* Mobile row */}
