@@ -79,11 +79,11 @@ const Pricing = () => {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
 
             {/* Student Plan */}
-            <Card className="relative bg-card border-primary ring-2 ring-primary/20 flex flex-col">
+            <Card className="relative bg-card border-primary ring-2 ring-primary/20 flex flex-col p-6 sm:p-8">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold whitespace-nowrap">
                 Most Popular
               </div>
-              <CardHeader className="pb-4 text-center pt-6 sm:pt-8">
+              <CardHeader className="pb-4 text-center">
                 <div className="flex justify-center mb-2">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Zap className="w-5 h-5 text-primary" />
@@ -115,11 +115,11 @@ const Pricing = () => {
             </Card>
 
             {/* Premium AI Tutor Plan */}
-            <Card className="relative bg-card border-purple-500/30 ring-2 ring-purple-500/20 flex flex-col">
+            <Card className="relative bg-card border-purple-500/30 ring-2 ring-purple-500/20 flex flex-col p-6 sm:p-8">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-purple-500 text-white text-xs font-bold whitespace-nowrap">
                 AI Tutor
               </div>
-              <CardHeader className="pb-4 text-center pt-6 sm:pt-8">
+              <CardHeader className="pb-4 text-center">
                 <div className="flex justify-center mb-2">
                   <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                     <Mic className="w-5 h-5 text-purple-400" />
@@ -154,11 +154,11 @@ const Pricing = () => {
             </Card>
 
             {/* Teacher Plan */}
-            <Card className="relative bg-card border-blue-500/30 ring-2 ring-blue-500/20 flex flex-col">
+            <Card className="relative bg-card border-blue-500/30 ring-2 ring-blue-500/20 flex flex-col p-6 sm:p-8">
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 sm:px-4 py-1 rounded-full bg-blue-500 text-white text-xs font-bold whitespace-nowrap">
                 For Teachers
               </div>
-              <CardHeader className="pb-4 text-center pt-6 sm:pt-8">
+              <CardHeader className="pb-4 text-center">
                 <div className="flex justify-center mb-2">
                   <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                     <GraduationCap className="w-5 h-5 text-blue-400" />
