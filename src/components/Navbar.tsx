@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, MessageCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
@@ -118,6 +118,16 @@ const Navbar = () => {
 
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
+          <a
+            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium"
+            title="Contact us on WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </a>
+
           {isLoggedIn ? (
             <button
               onClick={() => user?.id && openPortal(user.id)}
@@ -208,6 +218,17 @@ const Navbar = () => {
           >
             {t("nav.pricing")}
           </Link>
+
+          <a
+            href="https://wa.me/966563206225?text=Hi%20Musicable%21%20I%20need%20help"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-item
+            className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3"
+            onClick={close}
+          >
+            <MessageCircle className="w-4 h-4" /> WhatsApp
+          </a>
 
           {isLoggedIn ? (
             <button
