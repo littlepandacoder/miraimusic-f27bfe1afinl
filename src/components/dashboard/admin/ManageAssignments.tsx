@@ -21,29 +21,34 @@ const ManageAssignments = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [rolesRes, profilesRes, assignRes] = await Promise.all([
+      const [rolesRes, profilesRes, usersRes, assignRes] = await Promise.all([
         (supabase as any).rpc("admin_get_all_user_roles"),
-        supabase.from("profiles").select("user_id, full_name, email"),
+        supabase.from("profiles").select("user_id, full_name"),
+        (supabase as any).rpc("admin_get_all_users"),
         (supabase as any).from("teacher_students").select("teacher_id, student_id"),
       ]);
 
       const roles: any[] = rolesRes.data || [];
       const profiles: any[] = profilesRes.data || [];
+      const users: any[] = usersRes.data || [];
       const assigns: any[] = assignRes.data || [];
 
       const profileMap = new Map(profiles.map((p: any) => [p.user_id, p]));
+      const userMap = new Map(users.map((u: any) => [u.id, u]));
 
       const studentIds = new Set(roles.filter((r: any) => r.role === "student").map((r: any) => r.user_id));
       const teacherIds = new Set(roles.filter((r: any) => r.role === "teacher").map((r: any) => r.user_id));
 
       const studentList: Person[] = [...studentIds].map((id) => {
         const p = profileMap.get(id);
-        return { id, full_name: p?.full_name || "—", email: p?.email || "—" };
+        const u = userMap.get(id);
+        return { id, full_name: p?.full_name || "—", email: u?.email || "—" };
       }).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
       const teacherList: Person[] = [...teacherIds].map((id) => {
         const p = profileMap.get(id);
-        return { id, full_name: p?.full_name || "—", email: p?.email || "—" };
+        const u = userMap.get(id);
+        return { id, full_name: p?.full_name || "—", email: u?.email || "—" };
       }).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
       const map: Record<string, string | null> = {};
