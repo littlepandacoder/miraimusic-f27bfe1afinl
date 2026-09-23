@@ -119,12 +119,9 @@ const Navbar = () => {
           <Link to="/pricing" className="nav-link font-semibold">{t("nav.pricing")}</Link>
 
           {isLoggedIn ? (
-            <button
-              onClick={() => user?.id && openPortal(user.id)}
-              className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
-            >
+            <Link to="/dashboard" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
               <LogIn className="w-4 h-4" /> {t("nav.login")}
-            </button>
+            </Link>
           ) : (
             <Link to="/login" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors font-medium">
               <LogIn className="w-4 h-4" /> {t("nav.login")}
@@ -229,16 +226,14 @@ const Navbar = () => {
           </a>
 
           {isLoggedIn ? (
-            <button
+            <Link
+              to="/dashboard"
               data-item
-              onClick={() => {
-                close();
-                user?.id && openPortal(user.id);
-              }}
-              className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3 text-left cursor-pointer w-full"
+              className="flex items-center gap-2 nav-link py-2 font-medium border-b border-border/20 pb-3"
+              onClick={close}
             >
               <LogIn className="w-4 h-4" /> {t("nav.login")}
-            </button>
+            </Link>
           ) : (
             <Link
               to="/login"
