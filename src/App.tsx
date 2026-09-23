@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ConversationProvider } from "@elevenlabs/react";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Capacitor } from "@capacitor/core";
 import { PageTracking } from "@/hooks/usePageTracking";
@@ -47,15 +48,16 @@ const App = () => (
     {!Capacitor.isNativePlatform() && <MusicCursor />}
     {!Capacitor.isNativePlatform() && <IOSInstallBanner />}
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        {!Capacitor.isNativePlatform() && <NotificationSetup />}
-        <BrowserRouter>
-          <PageTracking />
-          <OAuthRedirectHandler />
-          <Routes>
+    <ConversationProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {!Capacitor.isNativePlatform() && <NotificationSetup />}
+          <BrowserRouter>
+            <PageTracking />
+            <OAuthRedirectHandler />
+            <Routes>
             <Route path="/" element={Capacitor.isNativePlatform() ? <Navigate to="/login" replace /> : <Index />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/blog/piano-theory" element={<PianoTheory />} />
@@ -88,10 +90,11 @@ const App = () => (
             <Route path="/affiliate-dashboard" element={<AffiliateDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ConversationProvider>
   </QueryClientProvider>
   </>
 );
