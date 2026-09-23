@@ -36,27 +36,6 @@ const Login = () => {
     navigate(callbackUrl);
   }, [user, authLoading, navigate]);
 
-  const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", emailToCheck)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        if (import.meta.env.DEV) console.log("[login] Error checking email:", error);
-        return false;
-      }
-
-      return !!data;
-    } catch (err) {
-      if (import.meta.env.DEV) console.error("[login] Exception checking email:", err);
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
@@ -64,24 +43,8 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
-
-    // First, check if email exists in database
-    const emailExists = await checkEmailExists(email.trim());
-    if (!emailExists) {
-      if (import.meta.env.DEV) console.log("[login] Email not found in database:", email.trim());
-      toast({
-        title: "User does not exist",
-        description: "This email is not registered. Let's create an account!",
-        variant: "destructive"
-      });
-      localStorage.setItem("signupEmail", email.trim());
-      setTimeout(() => navigate("/signup"), 500);
-      setIsLoading(false);
-      return;
-    }
-
     if (import.meta.env.DEV) console.log("[login] attempting sign in — email:", email.trim());
+    setIsLoading(true);
 
     try {
       const { error } = await signIn(email.trim(), password);
@@ -90,8 +53,18 @@ const Login = () => {
 
         const errorMsg = error.message?.toLowerCase() || "";
 
-        // Show error for invalid credentials - stay on login page
-        if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
+        // User not found - redirect to signup
+        if (errorMsg.includes("user not found") || errorMsg.includes("no user found")) {
+          toast({
+            title: "User does not exist",
+            description: "This email is not registered. Let's create an account!",
+            variant: "destructive"
+          });
+          localStorage.setItem("signupEmail", email.trim());
+          setTimeout(() => navigate("/signup"), 500);
+        }
+        // Invalid credentials - stay on login page
+        else if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
           toast({
             title: "Wrong password",
             description: "The password you entered is incorrect. Please try again.",
