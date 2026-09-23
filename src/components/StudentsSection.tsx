@@ -171,14 +171,14 @@ const StudentsSection = () => {
   const checkScroll = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    setCanScrollLeft(container.scrollLeft > 0);
+    setCanScrollLeft(container.scrollLeft > 10);
     setCanScrollRight(container.scrollLeft < container.scrollWidth - container.clientWidth - 10);
   };
 
   const scroll = (direction: 'left' | 'right') => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    const scrollAmount = 350;
+    const scrollAmount = 400;
     container.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
@@ -303,10 +303,10 @@ const StudentsSection = () => {
             </p>
           </div>
 
-          {/* Scroll Container */}
+          {/* Grid with horizontal scroll - 3 columns */}
           {students.length > 0 ? (
             <div className="relative">
-              {/* Scroll buttons */}
+              {/* Left scroll button */}
               {canScrollLeft && (
                 <button
                   onClick={() => scroll('left')}
@@ -317,6 +317,7 @@ const StudentsSection = () => {
                 </button>
               )}
 
+              {/* Right scroll button */}
               {canScrollRight && (
                 <button
                   onClick={() => scroll('right')}
@@ -327,14 +328,18 @@ const StudentsSection = () => {
                 </button>
               )}
 
-              {/* Horizontal scroll container */}
+              {/* Horizontal scroll container showing 3 columns */}
               <div
                 ref={scrollContainerRef}
-                className="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth"
-                style={{ scrollBehavior: 'smooth' }}
+                className="grid gap-5 overflow-x-auto scrollbar-hide scroll-smooth"
+                style={{
+                  gridAutoFlow: 'column',
+                  gridTemplateRows: 'repeat(2, 1fr)',
+                  scrollBehavior: 'smooth',
+                }}
               >
                 {students.map((s, i) => (
-                  <div key={i} className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3">
+                  <div key={i} className="w-96">
                     <VideoCard
                       student={s}
                       index={i}
