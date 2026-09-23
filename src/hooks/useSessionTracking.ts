@@ -125,7 +125,7 @@ export function useSessionTracking(user: User | null) {
     init();
 
     const heartbeat = setInterval(async () => {
-      if (!sessionIdRef.current) return;
+      if (!sessionIdRef.current || !mounted) return;
 
       const now              = Date.now();
       const idleMs           = now - lastActiveRef.current;
@@ -138,26 +138,16 @@ export function useSessionTracking(user: User | null) {
         sessionStorage.setItem(SESSION_ACTIVE_KEY, activeSecondsRef.current.toString());
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) accessTokenRef.current = session.access_token;
-
-      // Update session with retry logic
-      let retries = 0;
-      while (retries < 2) {
-        try {
-          const { error } = await (supabase as any)
-            .from("user_sessions")
-            .update({
-              duration_seconds: activeSecondsRef.current,
-              last_activity_at: new Date().toISOString(),
-            })
-            .eq("id", sessionIdRef.current);
-
-          if (!error) break;
-          retries++;
-        } catch {
-          retries++;
-        }
+      try {
+        await (supabase as any)
+          .from("user_sessions")
+          .update({
+            duration_seconds: activeSecondsRef.current,
+            last_activity_at: new Date().toISOString(),
+          })
+          .eq("id", sessionIdRef.current);
+      } catch (err) {
+        // Silently ignore session update errors
       }
     }, HEARTBEAT_MS);
 

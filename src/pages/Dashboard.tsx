@@ -159,8 +159,6 @@ const Dashboard = () => {
             .from("user_subscriptions")
             .select("id, status, paused_at")
             .eq("user_id", user.id)
-            .in("status", ["active", "trialing"])
-            .limit(1)
             .maybeSingle();
 
           if (cancelled) return;
@@ -175,7 +173,7 @@ const Dashboard = () => {
             return;
           }
 
-          // Check if subscription is paused (filter in code instead of in query)
+          // Check if subscription is paused
           if (data && data.paused_at !== null) {
             log("[dashboard] subscription is paused");
             setSubscribed(false);
@@ -183,8 +181,8 @@ const Dashboard = () => {
             return;
           }
 
-          if (data) {
-            // Found subscription on this attempt
+          // Check if subscription is active or trialing
+          if (data && (data.status === "active" || data.status === "trialing")) {
             log("[dashboard] subscribed: true (found on attempt", attempt + 1 + ")");
             writeSubCache(user.id, true);
             setSubscribed(true);
