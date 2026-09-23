@@ -64,9 +64,8 @@ const ManageUsers = () => {
         return;
       }
 
-      // Fetch user emails and names using admin RPC
-      const { data: userData } = await (supabase as any)
-        .rpc("admin_get_users_with_emails");
+      // Fetch user emails and names from edge function
+      const userData = await (supabase as any).functions.invoke("admin-get-users-with-emails");
 
       const profileMap: Record<string, any> = {};
       (userData || []).forEach((u: any) => { profileMap[u.user_id] = u; });

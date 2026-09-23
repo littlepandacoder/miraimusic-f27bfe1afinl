@@ -21,15 +21,16 @@ const ManageAssignments = () => {
 
   useEffect(() => {
     const load = async () => {
-      const [rolesRes, usersRes, assignRes] = await Promise.all([
-        (supabase as any).rpc("admin_get_all_user_roles"),
-        (supabase as any).rpc("admin_get_users_with_emails"),
-        (supabase as any).from("teacher_students").select("teacher_id, student_id"),
-      ]);
+      try {
+        const [rolesRes, usersData, assignRes] = await Promise.all([
+          (supabase as any).rpc("admin_get_all_user_roles"),
+          (supabase as any).functions.invoke("admin-get-users-with-emails"),
+          (supabase as any).from("teacher_students").select("teacher_id, student_id"),
+        ]);
 
-      const roles: any[] = rolesRes.data || [];
-      const users: any[] = usersRes.data || [];
-      const assigns: any[] = assignRes.data || [];
+        const roles: any[] = rolesRes.data || [];
+        const users: any[] = usersData || [];
+        const assigns: any[] = assignRes.data || [];
 
       const userMap = new Map(users.map((u: any) => [u.user_id, u]));
 
@@ -58,10 +59,14 @@ const ManageAssignments = () => {
       studentList.forEach((s) => { map[s.id] = null; });
       assigns.forEach((a: any) => { if (map.hasOwnProperty(a.student_id)) map[a.student_id] = a.teacher_id; });
 
-      setStudents(studentList);
-      setTeachers(teacherList);
-      setAssignments(map);
-      setLoading(false);
+        setStudents(studentList);
+        setTeachers(teacherList);
+        setAssignments(map);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
