@@ -83,12 +83,7 @@ export function useSessionTracking(user: User | null) {
       const deviceType = getDeviceType();
       const userAgent = navigator.userAgent;
 
-      let sessionId: string | null = null;
-      let retries = 0;
-      const maxRetries = 3;
-
-      // Retry logic for creating session (in case of network issues)
-      while (!sessionId && retries < maxRetries) {
+      try {
         const { data, error } = await (supabase as any)
           .from("user_sessions")
           .insert({
@@ -100,25 +95,18 @@ export function useSessionTracking(user: User | null) {
           .select("id")
           .single();
 
-        if (!error && data?.id) {
-          sessionId = data.id;
-        } else {
-          retries++;
-          if (retries < maxRetries) {
-            await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
-          }
+        if (!error && data?.id && mounted) {
+          sessionIdRef.current     = data.id;
+          activeSecondsRef.current = 0;
+          lastActiveRef.current    = now;
+          lastTickRef.current      = now;
+          sessionStorage.setItem(SESSION_ID_KEY,    data.id);
+          sessionStorage.setItem(SESSION_START_KEY, now.toString());
+          sessionStorage.setItem(SESSION_USER_KEY,  user.id);
+          sessionStorage.setItem(SESSION_ACTIVE_KEY, "0");
         }
-      }
-
-      if (sessionId && mounted) {
-        sessionIdRef.current     = sessionId;
-        activeSecondsRef.current = 0;
-        lastActiveRef.current    = now;
-        lastTickRef.current      = now;
-        sessionStorage.setItem(SESSION_ID_KEY,    sessionId);
-        sessionStorage.setItem(SESSION_START_KEY, now.toString());
-        sessionStorage.setItem(SESSION_USER_KEY,  user.id);
-        sessionStorage.setItem(SESSION_ACTIVE_KEY, "0");
+      } catch (err) {
+        // Silently ignore session creation errors — don't block dashboard
       }
     };
 
