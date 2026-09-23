@@ -218,9 +218,23 @@ const StudentsSection = () => {
     if (!container) return;
     container.addEventListener('scroll', checkScroll);
     window.addEventListener('resize', checkScroll);
+
+    // Keyboard navigation
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        scroll('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        scroll('right');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       container.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
