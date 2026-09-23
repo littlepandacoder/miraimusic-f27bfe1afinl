@@ -64,13 +64,12 @@ const ManageUsers = () => {
         return;
       }
 
-      // Fetch profiles for display names
-      const { data: profiles } = await (supabase as any)
-        .from("profiles")
-        .select("user_id, email, full_name, created_at");
+      // Fetch user emails and names using admin RPC
+      const { data: userData } = await (supabase as any)
+        .rpc("admin_get_users_with_emails");
 
       const profileMap: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+      (userData || []).forEach((u: any) => { profileMap[u.user_id] = u; });
 
       // Fetch subscriptions - prioritize active (not paused) ones
       const { data: subs } = await (supabase as any)
