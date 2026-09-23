@@ -1,22 +1,19 @@
-import { useAuth } from "@/hooks/useAuth";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { PianoTheoryHub } from "@/components/PianoTheoryHub";
+import { useEffect } from "react";
+import { Music } from "lucide-react";
 
 export default function PianoTheoryPage() {
-  const { user, loading, hasRole } = useAuth();
-
-  if (loading || !user) {
-    return null;
-  }
+  useEffect(() => {
+    window.location.href = "/piano-theory.html";
+  }, []);
 
   return (
-    <DashboardLayout
-      title="Piano Theory"
-      role={hasRole("student") ? "student" : hasRole("teacher") ? "teacher" : "admin"}
-    >
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
-        <PianoTheoryHub userId={user.id} />
+    <div className="w-full h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Music className="w-8 h-8 text-primary animate-pulse" />
+        </div>
+        <p className="text-muted-foreground">Loading Piano Theory...</p>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
