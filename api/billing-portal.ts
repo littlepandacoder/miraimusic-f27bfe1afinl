@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         body: new URLSearchParams({
           customer: subscription.stripe_customer_id,
-          return_url: `https://www.musicable.app/profile`,
+          return_url: `https://pay.musicable.app/dashboard`,
         }).toString(),
       }
     );
