@@ -100,11 +100,10 @@ const Signup = () => {
     setAccountExists(acctExists);
     setOnboardingCompleted(onboardingDone ?? false);
 
-    // If account already exists, redirect to login page
+    // If account already exists, redirect to onboarding/billing
     if (acctExists) {
-      console.log("[Signup] Account already exists, redirecting to login");
-      localStorage.setItem("loginEmail", submittedEmail);
-      navigate("/login");
+      console.log("[Signup] Account already exists, redirecting to onboarding");
+      navigate("/signup?skipOnboarding=true");
     } else {
       // New account → ask for onboarding
       console.log("[Signup] New account, going to onboarding");

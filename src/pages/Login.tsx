@@ -19,7 +19,6 @@ const Login = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
 
   const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -39,7 +38,6 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError("");
     if (!email.trim() || !password.trim()) {
       toast({ title: t("login.errors.validation"), description: t("login.errors.enterBoth"), variant: "destructive" });
       return;
@@ -53,25 +51,16 @@ const Login = () => {
 
         const errorMsg = error.message?.toLowerCase() || "";
 
-        // Distinguish between "user not found" and "invalid credentials" (wrong password)
-        if (errorMsg.includes("user not found") || errorMsg.includes("no user found")) {
-          // User doesn't exist - offer to sign up
+        // Redirect to signup for user not found or invalid credentials
+        if (errorMsg.includes("user not found") || errorMsg.includes("no user found") ||
+            errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
           toast({
-            title: "Account not found",
-            description: "This account doesn't exist. Let's create one!",
+            title: "Account not found or invalid credentials",
+            description: "Let's create an account or try again.",
             variant: "destructive"
           });
           localStorage.setItem("signupEmail", email.trim());
           setTimeout(() => navigate("/signup"), 500);
-        } else if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
-          // Wrong password - show error below password field and in toast
-          setPasswordError("The password you entered is incorrect. Please try again.");
-          toast({
-            title: "Wrong Password",
-            description: "The password you entered is incorrect. Please try again.",
-            variant: "destructive"
-          });
-          setIsLoading(false);
         } else {
           toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
         }
@@ -223,17 +212,11 @@ const Login = () => {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (passwordError) setPasswordError("");
-                    }}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder={t("login.passwordPlaceholder")}
                     required
-                    className={`bg-secondary border-border ${passwordError ? "border-destructive" : ""}`}
+                    className="bg-secondary border-border"
                   />
-                  {passwordError && (
-                    <p className="text-xs text-destructive mt-1">{passwordError}</p>
-                  )}
                 </div>
                 <Button type="submit" className="w-full btn-primary" disabled={isLoading}>
                   {isLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t("login.signingIn")}</> : t("login.signIn")}
