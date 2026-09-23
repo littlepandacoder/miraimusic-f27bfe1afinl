@@ -142,7 +142,7 @@ const Pricing = () => {
                   ))}
                 </ul>
                 <Button
-                  className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm sm:text-base py-2 sm:py-3"
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm sm:text-base py-2 sm:py-3 rounded-lg font-semibold"
                   onClick={handlePremiumCTA}
                 >
                   Upgrade to Premium
@@ -183,7 +183,7 @@ const Pricing = () => {
                   ))}
                 </ul>
                 <Button
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm sm:text-base py-2 sm:py-3"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm sm:text-base py-2 sm:py-3 rounded-lg font-semibold"
                   onClick={handleTeacherCTA}
                 >
                   {user && roles.includes("teacher") ? "Go to Dashboard" : "Get Teacher Plan"}
