@@ -10,19 +10,40 @@ import { initMetaPixel } from "./initMetaPixel";
 // Disable console in production
 disableConsoleInProduction();
 
+// Handle unhandled promise rejections from token refresh and network errors
+window.addEventListener('unhandledrejection', (event) => {
+  const error = event.reason;
+  const errorMsg = (error?.message || error?.toString?.() || '').toLowerCase();
+
+  // Silently ignore Supabase token refresh and network errors to prevent console spam
+  if (
+    errorMsg.includes('failed to fetch') ||
+    errorMsg.includes('network') ||
+    errorMsg.includes('token') ||
+    errorMsg.includes('disconnected')
+  ) {
+    event.preventDefault();
+    return;
+  }
+});
+
 // Suppress Meta Pixel console errors in development
 if (import.meta.env.DEV) {
   const originalError = console.error;
   const originalWarn = console.warn;
   
   console.error = (...args: any[]) => {
-    // Suppress Meta Pixel, tracking, and other non-critical errors in dev
+    // Suppress Meta Pixel, tracking, network, and other non-critical errors in dev
     const message = args[0]?.toString?.() || '';
     if (
-      message.includes('pixel') || 
-      message.includes('fbq') || 
+      message.includes('pixel') ||
+      message.includes('fbq') ||
       message.includes('facebook') ||
       message.includes('Failed to load resource') ||
+      message.includes('Failed to fetch') ||
+      message.includes('net::ERR') ||
+      message.includes('400') ||
+      message.includes('token') ||
       message.includes('502')
     ) {
       return;
