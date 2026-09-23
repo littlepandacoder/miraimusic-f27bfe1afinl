@@ -90,14 +90,13 @@ const Login = () => {
 
         const errorMsg = error.message?.toLowerCase() || "";
 
-        // Show error for invalid credentials
+        // Show error for invalid credentials - stay on login page
         if (errorMsg.includes("invalid login credentials") || errorMsg.includes("invalid password")) {
           toast({
-            title: "Invalid credentials",
+            title: "Wrong password",
             description: "The password you entered is incorrect. Please try again.",
             variant: "destructive"
           });
-          setIsLoading(false);
         } else {
           toast({ title: t("login.errors.loginFailed"), description: error.message || t("login.errors.invalidCredentials"), variant: "destructive" });
         }
