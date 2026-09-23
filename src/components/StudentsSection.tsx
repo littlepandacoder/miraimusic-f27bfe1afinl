@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,12 +158,32 @@ const VideoCard = ({
 const StudentsSection = () => {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const sectionRef   = useRef<HTMLElement>(null);
   const titleRef     = useRef<HTMLDivElement>(null);
   const cardRefs     = useRef<(HTMLDivElement | null)[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const backdropRef  = useRef<HTMLDivElement>(null);
   const playerRef    = useRef<HTMLDivElement>(null);
   const videoRef     = useRef<HTMLVideoElement>(null);
+
+  const checkScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    setCanScrollLeft(container.scrollLeft > 0);
+    setCanScrollRight(container.scrollLeft < container.scrollWidth - container.clientWidth - 10);
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const scrollAmount = 350;
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -187,9 +207,21 @@ const StudentsSection = () => {
           accent: ACCENT_COLORS[i % ACCENT_COLORS.length],
         }));
         setStudents(studentData);
+        setTimeout(checkScroll, 100);
       }
     };
     fetchStudents();
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      container.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
   }, []);
 
   /* ── Scroll reveal for cards ──────────────────────────────────────── */
@@ -271,18 +303,47 @@ const StudentsSection = () => {
             </p>
           </div>
 
-          {/* Grid */}
+          {/* Scroll Container */}
           {students.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {students.map((s, i) => (
-                <VideoCard
-                  key={i}
-                  student={s}
-                  index={i}
-                  onClick={() => openModal(i)}
-                  cardRef={(el) => { cardRefs.current[i] = el; }}
-                />
-              ))}
+            <div className="relative">
+              {/* Scroll buttons */}
+              {canScrollLeft && (
+                <button
+                  onClick={() => scroll('left')}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center transition-all -ml-5"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-5 h-5 text-white" />
+                </button>
+              )}
+
+              {canScrollRight && (
+                <button
+                  onClick={() => scroll('right')}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center transition-all -mr-5"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-5 h-5 text-white" />
+                </button>
+              )}
+
+              {/* Horizontal scroll container */}
+              <div
+                ref={scrollContainerRef}
+                className="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth"
+                style={{ scrollBehavior: 'smooth' }}
+              >
+                {students.map((s, i) => (
+                  <div key={i} className="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3">
+                    <VideoCard
+                      student={s}
+                      index={i}
+                      onClick={() => openModal(i)}
+                      cardRef={(el) => { cardRefs.current[i] = el; }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">

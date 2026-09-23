@@ -171,6 +171,15 @@ body[data-modal-open="true"] .music-cursor-trail {
   .piano-shadow {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @keyframes glow-pulse {
