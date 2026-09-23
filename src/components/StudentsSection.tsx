@@ -321,26 +321,24 @@ const StudentsSection = () => {
           {students.length > 0 ? (
             <div className="relative">
               {/* Left scroll button */}
-              {canScrollLeft && (
-                <button
-                  onClick={() => scroll('left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center transition-all -ml-5"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="w-5 h-5 text-white" />
-                </button>
-              )}
+              <button
+                onClick={() => scroll('left')}
+                disabled={!canScrollLeft}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:cursor-not-allowed flex items-center justify-center transition-all -ml-5"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
 
               {/* Right scroll button */}
-              {canScrollRight && (
-                <button
-                  onClick={() => scroll('right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center transition-all -mr-5"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-5 h-5 text-white" />
-                </button>
-              )}
+              <button
+                onClick={() => scroll('right')}
+                disabled={!canScrollRight}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-primary hover:bg-primary/90 disabled:bg-primary/40 disabled:cursor-not-allowed flex items-center justify-center transition-all -mr-5"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-5 h-5 text-white" />
+              </button>
 
               {/* Horizontal scroll container showing 3 columns */}
               <div
