@@ -183,6 +183,8 @@ const StudentsSection = () => {
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
     });
+    // Update scroll state after scrolling
+    setTimeout(checkScroll, 100);
   };
 
   useEffect(() => {
