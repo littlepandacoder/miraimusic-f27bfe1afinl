@@ -59,28 +59,9 @@ export const useSubscriptionStatus = (): SubscriptionStatus => {
         const isActive = data.status === "active";
         console.log("[useSubscriptionStatus] Subscription found:", { isActive, status: data.status, planId: data.plan_id });
 
-        // Check Stripe subscription to determine if on trial or regular plan
-        let isTrialPlan = false;
-        if (isActive && data.subscription_id) {
-          try {
-            const response = await supabase.functions.invoke(
-              "check-subscription-details",
-              { body: { subscriptionId: data.subscription_id } }
-            );
-
-            if (response.data) {
-              isTrialPlan = response.data.isTrialPlan || false;
-              console.log("[useSubscriptionStatus] Trial plan check:", isTrialPlan);
-            }
-          } catch (err) {
-            console.error("Error checking subscription details:", err);
-            // Default to false if we can't determine
-          }
-        }
-
         setSubscriptionData({
           hasActiveSubscription: isActive,
-          isTrialPlan,
+          isTrialPlan: false,
           subscriptionId: data.subscription_id,
           planId: data.plan_id,
           status: data.status,

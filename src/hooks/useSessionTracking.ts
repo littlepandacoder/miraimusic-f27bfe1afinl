@@ -173,33 +173,22 @@ export function useSessionTracking(user: User | null) {
         finalSecs += Math.round(intervalMs / 1000);
       }
 
-      // Use sendBeacon for reliable delivery on unload (works on iPad/mobile)
+      // Update session end time
       try {
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(
-            `${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`,
-            JSON.stringify({
-              ended_at:         new Date().toISOString(),
-              duration_seconds: finalSecs,
-            })
-          );
-        } else {
-          // Fallback for older browsers
-          fetch(`${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`, {
-            method: "PATCH",
-            headers: {
-              apikey:          SUPABASE_KEY,
-              Authorization:   `Bearer ${accessTokenRef.current}`,
-              "Content-Type":  "application/json",
-              Prefer:          "return=minimal",
-            },
-            body: JSON.stringify({
-              ended_at:         new Date().toISOString(),
-              duration_seconds: finalSecs,
-            }),
-            keepalive: true,
-          });
-        }
+        fetch(`${SUPABASE_URL}/rest/v1/user_sessions?id=eq.${sessionIdRef.current}`, {
+          method: "PATCH",
+          headers: {
+            apikey:          SUPABASE_KEY,
+            Authorization:   `Bearer ${accessTokenRef.current}`,
+            "Content-Type":  "application/json",
+            Prefer:          "return=minimal",
+          },
+          body: JSON.stringify({
+            ended_at:         new Date().toISOString(),
+            duration_seconds: finalSecs,
+          }),
+          keepalive: true,
+        }).catch(err => console.error("[session] failed to record session end:", err));
       } catch (err) {
         console.error("[session] failed to record session end:", err);
       }
