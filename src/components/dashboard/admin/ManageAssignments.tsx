@@ -22,14 +22,18 @@ const ManageAssignments = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [rolesRes, usersData, assignRes] = await Promise.all([
+        const [rolesRes, usersRes, assignRes] = await Promise.all([
           (supabase as any).rpc("admin_get_all_user_roles"),
-          (supabase as any).functions.invoke("admin-get-users-with-emails"),
+          (supabase as any).rpc("admin_get_users_with_emails"),
           (supabase as any).from("teacher_students").select("teacher_id, student_id"),
         ]);
 
+        if (rolesRes.error) throw rolesRes.error;
+        if (usersRes.error) throw usersRes.error;
+        if (assignRes.error) throw assignRes.error;
+
         const roles: any[] = rolesRes.data || [];
-        const users: any[] = usersData || [];
+        const users: any[] = usersRes.data || [];
         const assigns: any[] = assignRes.data || [];
 
       const userMap = new Map(users.map((u: any) => [u.user_id, u]));
@@ -64,6 +68,7 @@ const ManageAssignments = () => {
         setAssignments(map);
       } catch (error) {
         console.error("Error loading data:", error);
+        toast({ title: "Error", description: `Failed to load data: ${error instanceof Error ? error.message : 'Unknown error'}`, variant: "destructive" });
       } finally {
         setLoading(false);
       }

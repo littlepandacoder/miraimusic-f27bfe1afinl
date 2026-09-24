@@ -53,9 +53,22 @@ const ManageUsers = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // Check current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("Current user:", { user, authError });
+
+      if (!user) {
+        console.error("Not authenticated");
+        toast({ title: "Not authenticated", description: "You must be logged in.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
       // Use the admin RPC to get all user roles (bypasses RLS without recursion)
       const { data: roleRows, error: roleError } = await (supabase as any)
         .rpc("admin_get_all_user_roles");
+
+      console.log("Roles response:", { roleRows, roleError });
 
       if (roleError) {
         console.error("Error fetching roles:", roleError);
@@ -64,11 +77,24 @@ const ManageUsers = () => {
         return;
       }
 
-      // Fetch user emails and names from edge function
-      const userData = await (supabase as any).functions.invoke("admin-get-users-with-emails");
+      if (!roleRows || roleRows.length === 0) {
+        console.warn("No users with roles found in database");
+        toast({ title: "No users", description: "No users with assigned roles found in the database." });
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user emails and names
+      const { data: userDataRes, error: userError } = await (supabase as any).rpc("admin_get_users_with_emails");
+
+      if (userError) {
+        console.error("Error fetching user data:", userError);
+        toast({ title: "Error loading users", description: userError.message, variant: "destructive" });
+      }
 
       const profileMap: Record<string, any> = {};
-      (userData || []).forEach((u: any) => { profileMap[u.user_id] = u; });
+      (userDataRes || []).forEach((u: any) => { profileMap[u.user_id] = u; });
 
       // Fetch subscriptions - prioritize active (not paused) ones
       const { data: subs } = await (supabase as any)
