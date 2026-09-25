@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Music, Volume2, Loader2, FileUp, Pencil } from "lucide-react";
+import { NotationEditor } from "./NotationEditor";
 
 interface MusicSyncData {
   id: string;
@@ -28,7 +29,7 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation, showUplo
   const { toast } = useToast();
   const [syncData, setSyncData] = useState<MusicSyncData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<"choose" | "upload" | "edit">("choose");
+  const [mode, setMode] = useState<"choose" | "upload" | "edit" | "notation">("choose");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -88,6 +89,32 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation, showUplo
       toast({ title: "Error uploading file", description: (err as Error).message, variant: "destructive" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleNotationSave = async (musicxml: string) => {
+    try {
+      const table = isFoundation ? "foundation_lesson_music_sync" : "module_music_sync";
+      const field = isFoundation ? "lesson_id" : "module_id";
+      const id = isFoundation ? lessonId : moduleId;
+      const conflictField = isFoundation ? "lesson_id" : "module_id";
+
+      const { error } = await supabase
+        .from(table)
+        .upsert(
+          {
+            [field]: id,
+            musicxml_data: musicxml,
+            sync_points: syncData?.sync_points || [],
+          },
+          { onConflict: conflictField }
+        );
+
+      if (error) throw error;
+      toast({ title: "Notation saved successfully" });
+      fetchMusicSync();
+    } catch (err) {
+      toast({ title: "Error saving notation", description: (err as Error).message, variant: "destructive" });
     }
   };
 
@@ -155,7 +182,12 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation, showUplo
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {mode === "choose" ? (
+        {mode === "notation" ? (
+          <NotationEditor
+            onSave={handleNotationSave}
+            onCancel={() => setMode("choose")}
+          />
+        ) : mode === "choose" ? (
           <div className="grid grid-cols-2 gap-6">
             {/* Upload Option */}
             <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border rounded-lg hover:bg-secondary/50 transition-colors">
@@ -204,11 +236,11 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation, showUplo
                 </div>
                 <h3 className="text-lg font-semibold mb-1">Create manually</h3>
                 <p className="text-sm text-muted-foreground text-center mb-4">
-                  Add sync points directly from the timeline
+                  Create sheet music using our notation editor
                 </p>
-                <Button onClick={() => setMode("edit")} variant="outline">
-                  <Volume2 className="w-4 h-4 mr-2" />
-                  Create Sync Points
+                <Button onClick={() => setMode("notation")} variant="outline">
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Open Editor
                 </Button>
               </div>
             )}
