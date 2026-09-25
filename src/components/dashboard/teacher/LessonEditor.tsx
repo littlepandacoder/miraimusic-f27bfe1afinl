@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { MusicSync } from "../../admin/MusicSync";
+import { MusicSync } from "../admin/MusicSync";
 
 interface Video {
   id: string;
