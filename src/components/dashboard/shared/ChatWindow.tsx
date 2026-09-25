@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TextWithLinks } from "@/lib/linkParser";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -28,6 +29,40 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = 800;
+      oscillator.type = "sine";
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (e) {
+      console.log("Audio notification not supported");
+    }
+  };
+
+  const notifyNewMessage = (senderName: string, messagePreview: string) => {
+    playNotificationSound();
+    toast({
+      title: `New message from ${senderName}`,
+      description: messagePreview.substring(0, 100),
+      duration: 3000,
+    });
+    if (Notification.permission === "granted") {
+      new Notification(`Message from ${senderName}`, {
+        body: messagePreview.substring(0, 100),
+        tag: "chat-notification",
+      });
+    }
+  };
 
   const markIncomingRead = async (msgs: Message[]) => {
     const unreadIds = msgs
@@ -40,6 +75,12 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
         .in("id", unreadIds);
     }
   };
+
+  useEffect(() => {
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -95,6 +136,7 @@ export const ChatWindow = ({ teacherId, studentId, currentUserId, recipientName 
             setMessages((prev) =>
               prev.map((m) => (m.id === row.id ? { ...m, read_at: new Date().toISOString() } : m))
             );
+            notifyNewMessage(recipientName, row.content);
           }
         }
       )
