@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, GripVertical, Upload, Video, Loader2, HelpCircle, ChevronDown, ChevronRight, Check, X } from "lucide-react";
+import { Plus, Trash2, GripVertical, Upload, Video, Loader2, HelpCircle, ChevronDown, ChevronRight, Check, X, Music } from "lucide-react";
+import { MusicSync } from "./MusicSync";
 
 interface CourseModule {
   id: string;
@@ -51,6 +52,9 @@ const ManageCourses = () => {
   const [addingQuestionFor, setAddingQuestionFor] = useState<string | null>(null);
   const [newQuestion, setNewQuestion] = useState(EMPTY_NEW_QUESTION);
   const [savingQuestion, setSavingQuestion] = useState(false);
+
+  // Music sync state
+  const [expandedMusic, setExpandedMusic] = useState<string | null>(null);
 
   const fetchModules = async () => {
     const { data, error } = await supabase
@@ -295,6 +299,23 @@ const ManageCourses = () => {
                           onChange={e => e.target.files?.[0] && handleVideoUpload(mod.id, e.target.files[0])}
                         />
                       </label>
+                    )}
+
+                    {/* Music Sync toggle */}
+                    <button
+                      onClick={() => setExpandedMusic(expandedMusic === mod.id ? null : mod.id)}
+                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+                    >
+                      {expandedMusic === mod.id ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      <Music className="w-4 h-4" />
+                      <span>Music Sync</span>
+                    </button>
+
+                    {/* Music Sync Component */}
+                    {expandedMusic === mod.id && (
+                      <div className="pl-4 border-l border-border">
+                        <MusicSync moduleId={mod.id} videoUrl={mod.video_url} />
+                      </div>
                     )}
 
                     {/* Quiz section toggle */}
