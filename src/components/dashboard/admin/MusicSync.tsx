@@ -9,7 +9,8 @@ import { Upload, Music, Volume2, Loader2, Download, Trash2 } from "lucide-react"
 
 interface MusicSyncData {
   id: string;
-  module_id: string;
+  lesson_id?: string;
+  module_id?: string;
   musicxml_data: string | null;
   sync_points: Array<{ timestamp: number; measure: number }>;
   created_at: string;
@@ -17,11 +18,13 @@ interface MusicSyncData {
 }
 
 interface MusicSyncProps {
-  moduleId: string;
+  moduleId?: string;
+  lessonId?: string;
   videoUrl: string | null;
+  isFoundation?: boolean;
 }
 
-export const MusicSync = ({ moduleId, videoUrl }: MusicSyncProps) => {
+export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation }: MusicSyncProps) => {
   const { toast } = useToast();
   const [syncData, setSyncData] = useState<MusicSyncData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +37,14 @@ export const MusicSync = ({ moduleId, videoUrl }: MusicSyncProps) => {
   const [currentMeasure, setCurrentMeasure] = useState(1);
 
   const fetchMusicSync = async () => {
+    const table = isFoundation ? "foundation_lesson_music_sync" : "module_music_sync";
+    const field = isFoundation ? "lesson_id" : "module_id";
+    const id = isFoundation ? lessonId : moduleId;
+
     const { data } = await supabase
-      .from("module_music_sync")
+      .from(table)
       .select("*")
-      .eq("module_id", moduleId)
+      .eq(field, id)
       .single();
 
     if (data) {
@@ -49,21 +56,26 @@ export const MusicSync = ({ moduleId, videoUrl }: MusicSyncProps) => {
 
   useEffect(() => {
     fetchMusicSync();
-  }, [moduleId]);
+  }, [moduleId, lessonId, isFoundation]);
 
   const handleMusicXMLUpload = async (file: File) => {
     setUploading(true);
     try {
       const text = await file.text();
+      const table = isFoundation ? "foundation_lesson_music_sync" : "module_music_sync";
+      const field = isFoundation ? "lesson_id" : "module_id";
+      const id = isFoundation ? lessonId : moduleId;
+      const conflictField = isFoundation ? "lesson_id" : "module_id";
+
       const { error } = await supabase
-        .from("module_music_sync")
+        .from(table)
         .upsert(
           {
-            module_id: moduleId,
+            [field]: id,
             musicxml_data: text,
             sync_points: syncData?.sync_points || [],
           },
-          { onConflict: "module_id" }
+          { onConflict: conflictField }
         );
 
       if (error) throw error;
@@ -89,10 +101,14 @@ export const MusicSync = ({ moduleId, videoUrl }: MusicSyncProps) => {
 
   const saveSyncPoints = async () => {
     try {
+      const table = isFoundation ? "foundation_lesson_music_sync" : "module_music_sync";
+      const field = isFoundation ? "lesson_id" : "module_id";
+      const id = isFoundation ? lessonId : moduleId;
+
       const { error } = await supabase
-        .from("module_music_sync")
+        .from(table)
         .update({ sync_points: syncPoints })
-        .eq("module_id", moduleId);
+        .eq(field, id);
 
       if (error) throw error;
       toast({ title: "Sync points saved successfully" });

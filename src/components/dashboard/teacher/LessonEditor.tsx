@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { MusicSync } from "../dashboard/admin/MusicSync";
 
 interface Video {
   id: string;
@@ -724,6 +725,15 @@ Recommended Content Structure:
               )}
             </CardContent>
           </Card>
+
+          {/* Music Sync Section */}
+          {lesson.videos.length > 0 && (
+            <MusicSync
+              lessonId={lessonId}
+              videoUrl={lesson.videos[0]?.url}
+              isFoundation={true}
+            />
+          )}
 
           {/* Quiz Section */}
           <Card className="border-border">
