@@ -12,6 +12,7 @@ interface LibraryLesson {
   id: string;
   name: string;
   videos_count: number;
+  video_url?: string;
   music_sync_data?: { musicxml_data: string | null; sync_points: any[] };
 }
 
@@ -33,8 +34,8 @@ export const ResourceLibrary = () => {
     try {
       const { data: lessonsData } = await supabase
         .from("foundation_lessons")
-        .select("id, name, videos")
-        .order("name");
+        .select("id, title")
+        .order("title");
 
       const { data: modulesData } = await supabase
         .from("course_modules")
@@ -44,11 +45,17 @@ export const ResourceLibrary = () => {
       if (lessonsData) {
         const lessonsWithCount = await Promise.all(
           lessonsData.map(async (lesson: any) => {
-            const videoCount = Array.isArray(lesson.videos) ? lesson.videos.length : 0;
+            const { data: allVideos } = await supabase
+              .from("lesson_videos")
+              .select("id, url")
+              .eq("lesson_id", lesson.id)
+              .order("created_at", { ascending: true });
+
             return {
               id: lesson.id,
-              name: lesson.name,
-              videos_count: videoCount,
+              name: lesson.title,
+              videos_count: allVideos?.length || 0,
+              video_url: allVideos?.[0]?.url,
               type: "lesson",
             };
           })
@@ -106,7 +113,7 @@ export const ResourceLibrary = () => {
             {selectedLesson.videos_count > 0 && (
               <MusicSync
                 lessonId={selectedLesson.id}
-                videoUrl={null}
+                videoUrl={selectedLesson.video_url || null}
                 isFoundation={true}
                 showUploadOnly={false}
               />
