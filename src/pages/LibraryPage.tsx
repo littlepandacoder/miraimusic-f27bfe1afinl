@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { StudentLibrary } from "@/components/StudentLibrary";
-import { ResourceUploadManager } from "@/components/ResourceUploadManager";
+import { ResourceLibrary } from "@/components/dashboard/admin/ResourceLibrary";
 
 const LibraryPage = () => {
   const { user, loading, hasRole } = useAuth();
@@ -14,15 +14,23 @@ const LibraryPage = () => {
   const isTeacher = hasRole("teacher");
   const isStudent = hasRole("student");
 
-  // Admin and Teachers see upload manager
-  if (isAdmin || isTeacher) {
+  // Admin sees resource library for editing music sync
+  if (isAdmin) {
     return (
-      <DashboardLayout
-        title="Resource Library"
-        role={isAdmin ? "admin" : "teacher"}
-      >
+      <DashboardLayout title="Resource Library" role="admin">
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          <ResourceUploadManager />
+          <ResourceLibrary />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Teachers see resource library for editing music sync
+  if (isTeacher) {
+    return (
+      <DashboardLayout title="Resource Library" role="teacher">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <ResourceLibrary />
         </div>
       </DashboardLayout>
     );

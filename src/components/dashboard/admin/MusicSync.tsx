@@ -22,9 +22,10 @@ interface MusicSyncProps {
   lessonId?: string;
   videoUrl: string | null;
   isFoundation?: boolean;
+  showUploadOnly?: boolean;
 }
 
-export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation }: MusicSyncProps) => {
+export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation, showUploadOnly = true }: MusicSyncProps) => {
   const { toast } = useToast();
   const [syncData, setSyncData] = useState<MusicSyncData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,9 +143,9 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation }: MusicS
           </p>
         ) : (
           <Tabs value={mode} onValueChange={(v) => setMode(v as "upload" | "edit")}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${showUploadOnly ? "grid-cols-1" : "grid-cols-2"}`}>
               <TabsTrigger value="upload">Upload MusicXML</TabsTrigger>
-              <TabsTrigger value="edit">Sync with Audio</TabsTrigger>
+              {!showUploadOnly && <TabsTrigger value="edit">Sync with Audio</TabsTrigger>}
             </TabsList>
 
             {/* Upload Tab */}
@@ -187,7 +188,7 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation }: MusicS
             </TabsContent>
 
             {/* Sync Tab */}
-            <TabsContent value="edit" className="space-y-4">
+            {!showUploadOnly && <TabsContent value="edit" className="space-y-4">
               {!syncData?.musicxml_data ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
                   Upload a MusicXML file first
@@ -279,7 +280,7 @@ export const MusicSync = ({ moduleId, lessonId, videoUrl, isFoundation }: MusicS
                   </Button>
                 </>
               )}
-            </TabsContent>
+            </TabsContent>}
           </Tabs>
         )}
       </CardContent>
