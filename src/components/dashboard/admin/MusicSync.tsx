@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Music, Waveform2, Loader2, Download, Trash2 } from "lucide-react";
+import { Upload, Music, Volume2, Loader2, Download, Trash2 } from "lucide-react";
 
 interface MusicSyncData {
   id: string;
@@ -258,7 +258,7 @@ export const MusicSync = ({ moduleId, videoUrl }: MusicSyncProps) => {
                   </div>
 
                   <Button onClick={saveSyncPoints} className="w-full">
-                    <Waveform2 className="w-4 h-4 mr-2" />
+                    <Volume2 className="w-4 h-4 mr-2" />
                     Save Sync Points
                   </Button>
                 </>
