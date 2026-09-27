@@ -25,10 +25,10 @@ body {
   }
 }
 
-/* Hide the default cursor globally so the custom music cursor shows everywhere (desktop only) */
+/* Pink arrow cursor for desktop */
 @media (pointer: fine) {
   *, *::before, *::after {
-    cursor: none !important;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><path d="M 4 0 L 20 16 L 12 16 L 12 28 L 8 28 L 8 16 L 0 16 Z" fill="%23ec4899"/></svg>') 0 0, auto;
   }
 }
 
