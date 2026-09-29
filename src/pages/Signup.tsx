@@ -46,6 +46,7 @@ const Signup = () => {
           const { data: { user } } = await supabase.auth.getUser();
           if (user?.email) {
             setEmail(user.email);
+            setDocId(user.id || "existing-user");
             setAccountExists(true); // This is an existing account
             setStage("billing");
             setOnboardingData({
