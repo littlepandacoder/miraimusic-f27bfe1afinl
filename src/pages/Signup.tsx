@@ -7,6 +7,7 @@ import { saveEmail } from "@/lib/signupService";
 import { logClick } from "@/lib/affiliateService";
 import { supabase } from "@/integrations/supabase/client";
 import { recordConversion } from "@/lib/affiliateService";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2, AlertCircle } from "lucide-react";
 interface OnboardingData {
   email: string;
@@ -21,9 +22,17 @@ type Stage = "email" | "onboarding" | "billing" | "loading";
 const Signup = () => {
   const navigate = useNavigate();
   const [searchParams]  = useSearchParams();
+  const { user, roles } = useAuth();
   const [stage, setStage] = useState<Stage>("email");
   const [subNeeded, setSubNeeded] = useState(false);
   const [planType, setPlanType] = useState<"student" | "premium">("student");
+
+  // Redirect admins/staff to dashboard (they have auto-access)
+  useEffect(() => {
+    if (user && roles && roles.some(r => r === "admin" || r === "teacher")) {
+      navigate("/dashboard");
+    }
+  }, [user, roles, navigate]);
 
   // ── Affiliate referral tracking & plan type ────────────────────────
   useEffect(() => {
