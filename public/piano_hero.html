@@ -6589,6 +6589,7 @@ function launchGame(song, waitMode = false) {
       missed: false,
       hitTime: null,
       active:  false,
+      autoPlayed: false,  // Track if note has been auto-played as backing track
     };
   });
 
@@ -6674,6 +6675,21 @@ function updateGame() {
       }
     }
   }
+
+  // ── AUTO-PLAY BACKING TRACK ──────────────────────────────
+  // Play notes automatically as they reach the hit zone (backing track)
+  game.notes.forEach(n => {
+    if (n.autoPlayed || n.missed) return;
+    // Check if note has reached the hit zone (roughly when curBeat passes n.beat)
+    if (curBeat >= n.beat && curBeat < n.beat + 0.2) {
+      n.autoPlayed = true;
+      startAudio().then(() => {
+        const note = midiToToneNote(n.midi);
+        const noteDur = (n.dur * game.beatDur) / 1000; // Convert to seconds
+        pianoSampler.triggerAttackRelease(note, Math.max(0.1, noteDur), Tone.now());
+      });
+    }
+  });
 
   // ── NORMAL MISS DETECTION (not in wait mode) ─────────────
   if (!game.waitMode) {
