@@ -210,6 +210,10 @@ body{font-family:'Inter',system-ui,sans-serif;color:var(--off-white)}
 }
 .hud-combo.pop{transform:scale(1.4)}
 .combo-fire{font-size:.9rem}
+.hud-tempo{
+  font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;
+  color:var(--cyan);text-shadow:0 0 15px rgba(0,212,255,.4);
+}
 .accuracy-ring{position:relative;width:48px;height:48px}
 .accuracy-ring svg{transform:rotate(-90deg)}
 .accuracy-center{
@@ -2362,6 +2366,10 @@ window.musicableUserId   = null;
         <div class="hud-combo" id="hudCombo">x0 <span class="combo-fire"></span></div>
       </div>
       <div>
+        <div class="hud-label">Tempo</div>
+        <div class="hud-tempo" id="hudTempo">—</div>
+      </div>
+      <div>
         <div class="hud-label">Accuracy</div>
         <div class="accuracy-ring">
           <svg width="48" height="48">
@@ -3205,6 +3213,39 @@ const missSound = new Tone.Synth({
   envelope: { attack: 0.01, decay: 0.07, sustain: 0, release: 0.05 },
   volume: -22,
 }).connect(masterLimiter);
+
+// Click track (metronome) — plays quarter note clicks at song's BPM
+const clickSynth = new Tone.Synth({
+  oscillator: { type: 'square' },
+  envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.01 },
+  volume: -20,
+}).connect(masterLimiter);
+
+let clickTrackOsc = null;
+
+function startClickTrack(bpm) {
+  if (clickTrackOsc) return;
+
+  // Beat duration in seconds (quarter note)
+  const beatDur = 60 / bpm;
+
+  const now = Tone.now();
+  const startBeat = Math.ceil(now / beatDur) * beatDur;
+
+  clickTrackOsc = new Tone.Loop((time) => {
+    clickSynth.triggerAttackRelease('C4', '64n', time);
+  }, `${beatDur}s`);
+
+  clickTrackOsc.start(startBeat);
+}
+
+function stopClickTrack() {
+  if (clickTrackOsc) {
+    clickTrackOsc.stop();
+    clickTrackOsc.dispose();
+    clickTrackOsc = null;
+  }
+}
 
 // Ensure audio context is running (required before any sound)
 async function startAudio() {
@@ -6562,6 +6603,9 @@ function launchGame(song, waitMode = false) {
     startPitchDetection();
   }
 
+  // Start click track for practice/learning
+  startAudio().then(() => startClickTrack(song.bpm));
+
   cancelAnimationFrame(game.gameRAF);
   gameLoop();
 }
@@ -6595,6 +6639,11 @@ function updateGame() {
 
   const comboEl = document.getElementById('hudCombo');
   comboEl.textContent = `x${game.combo} ${game.combo >= 10 ? '🔥' : ''}`;
+
+  // Update tempo display
+  const beatNum = Math.floor(curBeat) + 1;
+  const beatInMeasure = (beatNum - 1) % 4 + 1;
+  document.getElementById('hudTempo').textContent = `${game.song.bpm} BPM · ${beatInMeasure}/4`;
 
   const hitFrac = game.totalNotes > 0 ? game.hitNotes / game.totalNotes : 0;
   const accPct  = Math.round(hitFrac * 100);
@@ -7054,6 +7103,7 @@ function endGame(completed) {
   game.active = false;
   cancelAnimationFrame(game.gameRAF);
   stopPitchDetection(); // Stop audio pitch detection when game ends
+  stopClickTrack(); // Stop click track when game ends
 
   const acc  = game.totalNotes > 0 ? Math.round((game.hitNotes / game.totalNotes) * 100) : 0;
   const grade = acc >= 95 ? 'S' : acc >= 85 ? 'A' : acc >= 70 ? 'B' : acc >= 55 ? 'C' : acc >= 40 ? 'D' : 'F';
@@ -7161,6 +7211,7 @@ function backToSongs() {
   document.getElementById('endScreen').classList.remove('active');
   cancelAnimationFrame(game.gameRAF);
   stopMic();
+  stopClickTrack();
   showScreen('songs');
 }
 
