@@ -1,5 +1,5 @@
 // Initialize Meta Pixel (Facebook) only in production to avoid dev/CI console noise
-export function initMetaPixel(pixelId = "1421609375270323") {
+export function initMetaPixel(pixelId = "2297466371027878") {
   try {
     // Only run in production (Vite exposes import.meta.env.PROD)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
