@@ -97,6 +97,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (isCheckoutSuccess) {
+      // Track purchase event in Meta Pixel
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', {
+          value: 9.99,  // Standard subscription price
+          currency: 'USD',
+          content_name: 'Premium Subscription',
+          content_type: 'product_group'
+        });
+      }
       // Clean URL to remove checkout parameter after first render
       window.history.replaceState({}, '', window.location.pathname);
     }
