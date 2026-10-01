@@ -164,29 +164,39 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      "name": "Musicable",
-      "description": "Online piano lessons with AI-powered learning platform",
+      "@type": "Service",
+      "name": "Online Piano Lessons",
+      "description": "AI-powered piano lessons and classes for all levels - Trinity exam prep, music theory, sight reading training",
       "url": "https://pay.musicable.app",
-      "educationalLevel": "Beginner to Advanced",
-      "offers": [
+      "serviceType": "Music Lessons",
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "Musicable",
+        "url": "https://pay.musicable.app"
+      },
+      "areaServed": [
         {
-          "@type": "Offer",
-          "name": "Premium Piano Lessons",
-          "description": "AI-powered piano lessons, Trinity exam prep, music theory",
-          "price": "9.99",
-          "priceCurrency": "USD",
-          "availability": "https://schema.org/InStock",
-          "url": "https://pay.musicable.app/pricing"
+          "@type": "City",
+          "name": "Dubai"
+        },
+        {
+          "@type": "Country",
+          "name": "United Arab Emirates"
+        },
+        {
+          "@type": "Country",
+          "name": "Worldwide"
         }
       ],
-      "serviceType": [
-        "Online Piano Lessons",
-        "Piano Classes",
-        "Trinity Piano Exam Preparation",
-        "Music Theory",
-        "Sight Reading Training"
-      ]
+      "offers": {
+        "@type": "Offer",
+        "name": "Premium Piano Subscription",
+        "description": "Unlimited access to AI-powered piano lessons",
+        "price": "9.99",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": "https://pay.musicable.app/pricing"
+      }
     }
     </script>
 
