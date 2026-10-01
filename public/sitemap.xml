@@ -1,99 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
-  <!-- Public marketing pages -->
+  <!-- Homepage - Piano Lessons -->
   <url>
-    <loc>https://musicable.app/</loc>
+    <loc>https://pay.musicable.app/</loc>
+    <lastmod>2026-10-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Pricing Page - Piano Classes -->
   <url>
-    <loc>https://musicable.app/pricing</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://pay.musicable.app/pricing</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- Courses Page - Piano Lessons Online -->
   <url>
-    <loc>https://musicable.app/courses</loc>
+    <loc>https://pay.musicable.app/courses</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Sign Up - Piano Class Enrollment -->
+  <url>
+    <loc>https://pay.musicable.app/signup</loc>
+    <lastmod>2026-10-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Auth -->
+  <!-- Dashboard - Learning Platform -->
   <url>
-    <loc>https://musicable.app/signup</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://pay.musicable.app/dashboard</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://musicable.app/login</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/teacher-signup</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
 
-  <!-- Blog / learning articles -->
+  <!-- Piano Game - Interactive Learning -->
   <url>
-    <loc>https://musicable.app/blog/piano-theory</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/blog/sight-reading</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/blog/note-naming</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Interactive games (public HTML) -->
-  <url>
-    <loc>https://musicable.app/piano.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/piano_hero.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/rhythm-quiz.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/note_naming.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/sight-reading.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/piano-theory.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Legal -->
-  <url>
-    <loc>https://musicable.app/terms</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://musicable.app/privacy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <loc>https://pay.musicable.app/piano-hero</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 
 </urlset>

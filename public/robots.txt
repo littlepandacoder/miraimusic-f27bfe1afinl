@@ -1,14 +1,35 @@
+# SEO-optimized robots.txt for Musicable
+
+# Google
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
+# Bing
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
+# Social Media Crawlers
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
 Allow: /
 
+# Default for all crawlers
 User-agent: *
 Allow: /
+Allow: /pricing
+Allow: /courses
+Allow: /signin
+Allow: /signup
+Allow: /dashboard
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Crawl-delay: 2
+
+# Sitemap
+Sitemap: https://pay.musicable.app/sitemap.xml
+Sitemap: https://pay.musicable.app/sitemap-piano-lessons.xml
