@@ -32,4 +32,3 @@ Crawl-delay: 2
 
 # Sitemap
 Sitemap: https://pay.musicable.app/sitemap.xml
-Sitemap: https://pay.musicable.app/sitemap-piano-lessons.xml
