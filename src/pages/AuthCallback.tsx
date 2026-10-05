@@ -13,7 +13,7 @@ const AuthCallback = () => {
   const { user, roles, loading } = useAuth();
 
   const welcomed = useRef(false);
-  const destRef = useRef("/dashboard");
+  const destRef = useRef("/dashboard/foundation");
   const [welcome, setWelcome] = useState<WelcomeInfo | null>(null);
 
   // Effect 1 — detect user + build welcome state (runs whenever user/roles/loading change)
@@ -88,8 +88,8 @@ const AuthCallback = () => {
         }
       }
 
-      // Determine destination: use next param if provided, otherwise default routing
-      let destination = "/dashboard";
+      // Determine destination: use next param if provided, otherwise default to Foundational Modules
+      let destination = "/dashboard/foundation";
       if (nextPath) {
         destination = nextPath;
       } else if (!hasSub) {
