@@ -84,10 +84,10 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
       }
 
       const data = event.data;
-      console.log("[Soundslice API] Received:", data);
+      console.log("[Soundslice API] ALL MESSAGES:", JSON.stringify(data));
 
       // Handle ssPlayerReady event - this is the real connection signal
-      if (data.name === "ssPlayerReady") {
+      if (data.name === "ssPlayerReady" || data.event === "ssPlayerReady") {
         console.log("[Soundslice] ssPlayerReady event received!");
         setConnection(prev => ({
           ...prev,
@@ -106,8 +106,10 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
         return;
       }
 
-      // Handle API responses
-      if (data.name === "ssCurrentTime") {
+      // Handle API responses (try both data.name and data.event formats)
+      const eventName = data.name || data.event;
+
+      if (eventName === "ssCurrentTime") {
         const currentTime = data.data || 0;
         console.log("[Soundslice] Current time:", currentTime);
         setPlayerState(prev => ({ ...prev, currentTime }));
@@ -119,16 +121,29 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
         return;
       }
 
-      if (data.name === "ssIsPlaying") {
+      if (eventName === "ssIsPlaying") {
         console.log("[Soundslice] Is playing:", data.data);
         setPlayerState(prev => ({ ...prev, isPlaying: data.data }));
         return;
       }
 
-      if (data.name === "ssDuration") {
+      if (eventName === "ssDuration") {
         console.log("[Soundslice] Duration:", data.data);
         setPlayerState(prev => ({ ...prev, duration: data.data }));
         return;
+      }
+
+      // If we get ANY message and player isn't marked ready, try to connect
+      if (!connection.playerReady && !connection.apiConnected && data) {
+        console.log("[Soundslice] Got message, attempting connection test");
+        setConnection(prev => ({
+          ...prev,
+          playerReady: true,
+          lastMessage: `Received: ${JSON.stringify(data).substring(0, 100)}`,
+        }));
+        setTimeout(() => {
+          sendCommand("getCurrentTime");
+        }, 100);
       }
 
       // Track any valid message
