@@ -19,6 +19,8 @@ import ManageAssignments from "./admin/ManageAssignments";
 import ManageAffiliates from "./admin/ManageAffiliates";
 import ManageStudentVideos from "./admin/ManageStudentVideos";
 import ManageDistricts from "./admin/ManageDistricts";
+import VideoPlayerPlatform from "./admin/VideoPlayerPlatform";
+import SoundsliceIntegration from "./admin/SoundsliceIntegration";
 import { CalibrationTool } from "./admin/CalibrationTool";
 import LessonEditor from "./teacher/LessonEditor";
 import LessonViewer from "./student/LessonViewer";
@@ -467,6 +469,20 @@ const AdminHome = () => {
               <p className="text-sm text-muted-foreground">Organize teachers and students</p>
             </div>
           </a>
+          <a href="/dashboard/video-player-platform" className="feature-card flex items-center gap-4 p-4">
+            <Music className="w-8 h-8 text-lime" />
+            <div>
+              <p className="font-semibold">Video Player Platform</p>
+              <p className="text-sm text-muted-foreground">Manage interactive tutorials</p>
+            </div>
+          </a>
+          <a href="/dashboard/soundslice" className="feature-card flex items-center gap-4 p-4">
+            <Music className="w-8 h-8 text-cyan" />
+            <div>
+              <p className="font-semibold">Soundslice Integration</p>
+              <p className="text-sm text-muted-foreground">Test embedded lessons & MIDI</p>
+            </div>
+          </a>
         </CardContent>
       </Card>
 
@@ -501,6 +517,8 @@ const AdminDashboard = () => {
         <Route path="/assignments" element={<ManageAssignments />} />
         <Route path="/affiliates" element={<ManageAffiliates />} />
         <Route path="/student-videos" element={<ManageStudentVideos />} />
+        <Route path="/video-player-platform" element={<VideoPlayerPlatform />} />
+        <Route path="/soundslice" element={<SoundsliceIntegration />} />
         <Route path="/calibration" element={<CalibrationTool />} />
         <Route path="/foundation/lesson-editor/:moduleId/:lessonId" element={<LessonEditor />} />
         <Route path="/foundation/lesson-viewer/:moduleId/:lessonId" element={<LessonViewer />} />
