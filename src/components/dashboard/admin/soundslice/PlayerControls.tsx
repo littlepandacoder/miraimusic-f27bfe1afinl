@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, RotateCcw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Play, Pause, RotateCcw, AlertCircle, CheckCircle2, RotateCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface PlayerControlsProps {
@@ -14,151 +14,196 @@ interface PlayerState {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
-  isConnected: boolean;
+}
+
+interface ConnectionState {
+  iframeLoaded: boolean;
+  playerReady: boolean;
+  apiConnected: boolean;
+  lastMessage: string;
+  lastError: string | null;
+  connectionTimeout: boolean;
 }
 
 export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
-  const [state, setState] = useState<PlayerState>({
+  const [playerState, setPlayerState] = useState<PlayerState>({
     isPlaying: false,
     currentTime: 0,
     duration: 0,
-    isConnected: false,
   });
+
+  const [connection, setConnection] = useState<ConnectionState>({
+    iframeLoaded: false,
+    playerReady: false,
+    apiConnected: false,
+    lastMessage: "",
+    lastError: null,
+    connectionTimeout: false,
+  });
+
   const [seekTime, setSeekTime] = useState("");
-  const messageQueueRef = useRef<Array<{ command: string; timestamp: number }>>([]);
-  const pendingQueriesRef = useRef<Set<string>>(new Set());
-  const connectionTimeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const pollIntervalRef = useRef<NodeJS.Timeout>();
 
-  // Send command to player
-  const sendCommand = (command: string, args?: any) => {
-    if (!iframe?.contentWindow) return;
-
-    const message = { command, ...args };
-    iframe.contentWindow.postMessage(message, "https://www.soundslice.com");
-    messageQueueRef.current.push({ command, timestamp: Date.now() });
-
-    messageQueueRef.current = messageQueueRef.current.filter(
-      m => Date.now() - m.timestamp < 5000
-    );
-  };
-
-  // Query current player state
-  const queryPlayerState = () => {
-    if (!iframe?.contentWindow) return;
-    sendCommand("player.getIsPlaying");
-    sendCommand("player.getCurrentTimeInSeconds");
-    sendCommand("player.getDurationInSeconds");
-  };
-
-  // Set up message listener for Soundslice API
-  useEffect(() => {
-    if (!iframe) {
-      console.log("[PlayerControls] No iframe yet");
+  // Send command to Soundslice API
+  const sendCommand = (command: string, params?: Record<string, any>) => {
+    if (!iframe?.contentWindow) {
+      setConnection(prev => ({
+        ...prev,
+        lastError: "Iframe not available",
+      }));
       return;
     }
 
-    console.log("[PlayerControls] Setting up message listener");
+    const message = { command, ...params };
+    console.log("[Soundslice API] Sending:", message);
+    iframe.contentWindow.postMessage(message, "https://www.soundslice.com");
+  };
+
+  // Initialize connection and message listener
+  useEffect(() => {
+    if (!iframe) {
+      console.log("[Soundslice] No iframe reference");
+      return;
+    }
+
+    console.log("[Soundslice] Setting up message listener");
+    setConnection(prev => ({ ...prev, iframeLoaded: true }));
 
     const handleMessage = (event: MessageEvent) => {
-      // Validate origin
+      // Strict origin validation
       if (event.origin !== "https://www.soundslice.com") {
-        console.log("[PlayerControls] Wrong origin:", event.origin);
+        console.log("[Soundslice] Wrong origin:", event.origin);
         return;
       }
 
+      // Verify source is the iframe
       if (event.source !== iframe.contentWindow) {
-        console.log("[PlayerControls] Wrong source");
+        console.log("[Soundslice] Wrong source");
         return;
       }
 
       const data = event.data;
-      console.log("[PlayerControls] Received message:", data);
+      console.log("[Soundslice API] Received:", data);
 
-      // Establish connection on any valid response
-      if (!state.isConnected && data.method) {
-        console.log("[PlayerControls] API Connected!");
-        setState(prev => ({ ...prev, isConnected: true }));
-        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+      // Handle ssPlayerReady event - this is the real connection signal
+      if (data.name === "ssPlayerReady") {
+        console.log("[Soundslice] ssPlayerReady event received!");
+        setConnection(prev => ({
+          ...prev,
+          playerReady: true,
+          lastMessage: "ssPlayerReady event",
+        }));
+
+        // Immediately test the connection with getCurrentTime
+        setTimeout(() => {
+          console.log("[Soundslice] Testing connection with getCurrentTime");
+          sendCommand("getCurrentTime");
+        }, 100);
+
+        // Clear any timeout since we got a real response
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        return;
       }
 
-      // Handle playback state changes
-      if (data.method === "player.isPlaying") {
-        setState(prev => ({ ...prev, isPlaying: data.value }));
+      // Handle API responses
+      if (data.name === "ssCurrentTime") {
+        const currentTime = data.data || 0;
+        console.log("[Soundslice] Current time:", currentTime);
+        setPlayerState(prev => ({ ...prev, currentTime }));
+        setConnection(prev => ({
+          ...prev,
+          apiConnected: true,
+          lastMessage: `ssCurrentTime: ${currentTime.toFixed(2)}s`,
+        }));
+        return;
       }
 
-      if (data.method === "player.currentTimeInSeconds") {
-        setState(prev => ({ ...prev, currentTime: data.value }));
-        pendingQueriesRef.current.delete("player.currentTimeInSeconds");
+      if (data.name === "ssIsPlaying") {
+        console.log("[Soundslice] Is playing:", data.data);
+        setPlayerState(prev => ({ ...prev, isPlaying: data.data }));
+        return;
       }
 
-      if (data.method === "player.durationInSeconds") {
-        setState(prev => ({ ...prev, duration: data.value }));
-        pendingQueriesRef.current.delete("player.durationInSeconds");
+      if (data.name === "ssDuration") {
+        console.log("[Soundslice] Duration:", data.data);
+        setPlayerState(prev => ({ ...prev, duration: data.data }));
+        return;
       }
+
+      // Track any valid message
+      setConnection(prev => ({
+        ...prev,
+        lastMessage: JSON.stringify(data).substring(0, 100),
+      }));
     };
 
     window.addEventListener("message", handleMessage);
 
-    // Wait a bit for iframe to fully initialize before querying
-    const initialDelay = setTimeout(() => {
-      console.log("[PlayerControls] Initial connection attempt");
-      queryPlayerState();
-    }, 500);
-
-    // Set timeout to retry if no connection
-    connectionTimeoutRef.current = setTimeout(() => {
-      if (!state.isConnected) {
-        console.log("[PlayerControls] Retrying connection...");
-        queryPlayerState();
+    // Set timeout for connection attempt
+    timeoutRef.current = setTimeout(() => {
+      if (!connection.playerReady) {
+        console.log("[Soundslice] Connection timeout - player not ready");
+        setConnection(prev => ({
+          ...prev,
+          connectionTimeout: true,
+          lastError: "Soundslice player did not respond within 5 seconds",
+        }));
       }
-    }, 2000);
+    }, 5000);
 
     return () => {
       window.removeEventListener("message", handleMessage);
-      clearTimeout(initialDelay);
-      if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [iframe, state.isConnected]);
+  }, [iframe]);
 
-  // Poll for playback position
+  // Poll for playback position when player is ready
   useEffect(() => {
-    if (!iframe?.contentWindow || !state.isConnected) return;
+    if (!connection.playerReady || !iframe?.contentWindow) return;
 
-    const interval = setInterval(() => {
-      if (!pendingQueriesRef.current.has("player.currentTimeInSeconds")) {
-        pendingQueriesRef.current.add("player.currentTimeInSeconds");
-        sendCommand("player.getCurrentTimeInSeconds");
-      }
+    pollIntervalRef.current = setInterval(() => {
+      sendCommand("getCurrentTime");
     }, 500);
 
-    return () => clearInterval(interval);
-  }, [iframe, state.isConnected]);
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [connection.playerReady, iframe]);
 
   const handlePlay = () => {
-    sendCommand("player.play");
-    setTimeout(queryPlayerState, 100);
+    sendCommand("play");
   };
 
   const handlePause = () => {
-    sendCommand("player.pause");
-    setTimeout(queryPlayerState, 100);
+    sendCommand("pause");
   };
 
   const handleSeek = () => {
-    const timeSeconds = parseFloat(seekTime);
-    if (isNaN(timeSeconds)) {
-      toast({ title: "Invalid time value", variant: "destructive" });
+    const seconds = parseFloat(seekTime);
+    if (isNaN(seconds)) {
+      toast({ title: "Invalid time", variant: "destructive" });
       return;
     }
-    sendCommand("player.seekToSecond", { second: timeSeconds });
+    sendCommand("seekToSecond", { second: seconds });
     setSeekTime("");
-    setTimeout(queryPlayerState, 100);
   };
 
   const handleReset = () => {
-    sendCommand("player.seekToSecond", { second: 0 });
+    sendCommand("seekToSecond", { second: 0 });
     handlePause();
-    setTimeout(queryPlayerState, 100);
+  };
+
+  const handleRetry = () => {
+    console.log("[Soundslice] Retry connection");
+    setConnection(prev => ({
+      ...prev,
+      connectionTimeout: false,
+      lastError: null,
+      playerReady: false,
+      apiConnected: false,
+    }));
+    sendCommand("getCurrentTime");
   };
 
   const formatTime = (seconds: number) => {
@@ -173,7 +218,7 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
         <CardTitle className="flex items-center justify-between">
           <span>Player Controls</span>
           <div className="flex items-center gap-2">
-            {state.isConnected ? (
+            {connection.apiConnected ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                 <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
@@ -190,20 +235,67 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Connection Diagnostics */}
+        <div className="space-y-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded border border-gray-200 dark:border-gray-700">
+          <p className="text-xs font-semibold text-muted-foreground">Connection Status</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-1">
+              {connection.iframeLoaded ? (
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              ) : (
+                <AlertCircle className="w-3 h-3 text-yellow-500" />
+              )}
+              <span>Iframe: {connection.iframeLoaded ? "Loaded" : "Loading"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {connection.playerReady ? (
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              ) : (
+                <AlertCircle className="w-3 h-3 text-yellow-500" />
+              )}
+              <span>Player: {connection.playerReady ? "Ready" : "Waiting"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {connection.apiConnected ? (
+                <CheckCircle2 className="w-3 h-3 text-green-500" />
+              ) : (
+                <AlertCircle className="w-3 h-3 text-yellow-500" />
+              )}
+              <span>API: {connection.apiConnected ? "Connected" : "Waiting"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {connection.connectionTimeout ? (
+                <AlertCircle className="w-3 h-3 text-red-500" />
+              ) : (
+                <CheckCircle2 className="w-3 h-3 text-gray-400" />
+              )}
+              <span>Timeout: {connection.connectionTimeout ? "Yes" : "No"}</span>
+            </div>
+          </div>
+
+          {connection.lastMessage && (
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-mono text-muted-foreground">
+                Last msg: {connection.lastMessage}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Playback Info */}
         <div className="grid grid-cols-3 gap-4">
           <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded">
             <p className="text-xs text-muted-foreground mb-1">Current Time</p>
-            <p className="text-lg font-bold font-mono">{formatTime(state.currentTime)}</p>
+            <p className="text-lg font-bold font-mono">{formatTime(playerState.currentTime)}</p>
           </div>
           <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded">
             <p className="text-xs text-muted-foreground mb-1">Duration</p>
-            <p className="text-lg font-bold font-mono">{formatTime(state.duration)}</p>
+            <p className="text-lg font-bold font-mono">{formatTime(playerState.duration)}</p>
           </div>
           <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded">
             <p className="text-xs text-muted-foreground mb-1">Status</p>
             <p className="text-lg font-bold">
-              {state.isPlaying ? "▶️ Playing" : "⏸ Paused"}
+              {playerState.isPlaying ? "▶️ Playing" : "⏸ Paused"}
             </p>
           </div>
         </div>
@@ -212,7 +304,7 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
         <div className="flex gap-2">
           <Button
             onClick={handlePlay}
-            disabled={!state.isConnected}
+            disabled={!connection.apiConnected}
             className="flex items-center gap-2"
           >
             <Play className="w-4 h-4" />
@@ -220,7 +312,7 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
           </Button>
           <Button
             onClick={handlePause}
-            disabled={!state.isConnected}
+            disabled={!connection.apiConnected}
             variant="outline"
             className="border-border flex items-center gap-2"
           >
@@ -229,7 +321,7 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
           </Button>
           <Button
             onClick={handleReset}
-            disabled={!state.isConnected}
+            disabled={!connection.apiConnected}
             variant="outline"
             className="border-border flex items-center gap-2"
           >
@@ -247,12 +339,12 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
               placeholder="e.g., 5.5"
               value={seekTime}
               onChange={(e) => setSeekTime(e.target.value)}
-              disabled={!state.isConnected}
+              disabled={!connection.apiConnected}
               className="bg-background border-border"
             />
             <Button
               onClick={handleSeek}
-              disabled={!state.isConnected || !seekTime}
+              disabled={!connection.apiConnected || !seekTime}
               variant="outline"
               className="border-border"
             >
@@ -261,21 +353,23 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded h-2 overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-200"
-              style={{
-                width: state.duration > 0 ? `${(state.currentTime / state.duration) * 100}%` : "0%",
-              }}
-            />
-          </div>
-        </div>
-
-        {!state.isConnected && (
-          <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-800 dark:text-yellow-300">
-            Establishing connection with Soundslice player... Please wait.
+        {/* Error/Timeout State */}
+        {connection.connectionTimeout && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-500" />
+              <p className="text-sm font-medium text-red-900 dark:text-red-400">
+                {connection.lastError || "Connection timeout"}
+              </p>
+            </div>
+            <Button
+              onClick={handleRetry}
+              size="sm"
+              className="w-full flex items-center gap-2"
+            >
+              <RotateCw className="w-3 h-3" />
+              Retry Connection
+            </Button>
           </div>
         )}
       </CardContent>
