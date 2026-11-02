@@ -19,14 +19,19 @@ export const SoundslicePlayer = ({ sliceId, onPlayerReady, onError }: Soundslice
     if (!iframe) return;
 
     const handleLoad = () => {
+      console.log("[Soundslice] Iframe loaded");
       setIsLoading(false);
-      if (onPlayerReady) {
-        onPlayerReady(iframe);
-      }
+      // Wait a moment for Soundslice to initialize internally
+      setTimeout(() => {
+        if (onPlayerReady) {
+          onPlayerReady(iframe);
+        }
+      }, 500);
     };
 
     const handleError = () => {
       const error = "Failed to load Soundslice player";
+      console.error("[Soundslice] Iframe error:", error);
       setLoadError(error);
       setIsLoading(false);
       if (onError) {
@@ -38,11 +43,16 @@ export const SoundslicePlayer = ({ sliceId, onPlayerReady, onError }: Soundslice
     iframe.addEventListener("error", handleError);
 
     // Set a timeout in case the iframe doesn't emit load/error events
+    // After 4 seconds, consider it loaded anyway and proceed
     const timeout = setTimeout(() => {
       if (isLoading) {
+        console.log("[Soundslice] Timeout reached, marking as loaded");
         setIsLoading(false);
+        if (onPlayerReady) {
+          onPlayerReady(iframe);
+        }
       }
-    }, 3000);
+    }, 4000);
 
     return () => {
       iframe.removeEventListener("load", handleLoad);

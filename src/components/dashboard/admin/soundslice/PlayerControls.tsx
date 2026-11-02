@@ -52,17 +52,31 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
 
   // Set up message listener for Soundslice API
   useEffect(() => {
-    if (!iframe) return;
+    if (!iframe) {
+      console.log("[PlayerControls] No iframe yet");
+      return;
+    }
+
+    console.log("[PlayerControls] Setting up message listener");
 
     const handleMessage = (event: MessageEvent) => {
       // Validate origin
-      if (event.origin !== "https://www.soundslice.com") return;
-      if (event.source !== iframe.contentWindow) return;
+      if (event.origin !== "https://www.soundslice.com") {
+        console.log("[PlayerControls] Wrong origin:", event.origin);
+        return;
+      }
+
+      if (event.source !== iframe.contentWindow) {
+        console.log("[PlayerControls] Wrong source");
+        return;
+      }
 
       const data = event.data;
+      console.log("[PlayerControls] Received message:", data);
 
       // Establish connection on any valid response
       if (!state.isConnected && data.method) {
+        console.log("[PlayerControls] API Connected!");
         setState(prev => ({ ...prev, isConnected: true }));
         if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
       }
@@ -85,18 +99,23 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
 
     window.addEventListener("message", handleMessage);
 
-    // Attempt initial connection
-    queryPlayerState();
+    // Wait a bit for iframe to fully initialize before querying
+    const initialDelay = setTimeout(() => {
+      console.log("[PlayerControls] Initial connection attempt");
+      queryPlayerState();
+    }, 500);
 
-    // Set timeout to check connection status
+    // Set timeout to retry if no connection
     connectionTimeoutRef.current = setTimeout(() => {
       if (!state.isConnected) {
+        console.log("[PlayerControls] Retrying connection...");
         queryPlayerState();
       }
-    }, 1500);
+    }, 2000);
 
     return () => {
       window.removeEventListener("message", handleMessage);
+      clearTimeout(initialDelay);
       if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
     };
   }, [iframe, state.isConnected]);
