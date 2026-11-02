@@ -27,6 +27,28 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
   const [seekTime, setSeekTime] = useState("");
   const messageQueueRef = useRef<Array<{ command: string; timestamp: number }>>([]);
   const pendingQueriesRef = useRef<Set<string>>(new Set());
+  const connectionTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Send command to player
+  const sendCommand = (command: string, args?: any) => {
+    if (!iframe?.contentWindow) return;
+
+    const message = { command, ...args };
+    iframe.contentWindow.postMessage(message, "https://www.soundslice.com");
+    messageQueueRef.current.push({ command, timestamp: Date.now() });
+
+    messageQueueRef.current = messageQueueRef.current.filter(
+      m => Date.now() - m.timestamp < 5000
+    );
+  };
+
+  // Query current player state
+  const queryPlayerState = () => {
+    if (!iframe?.contentWindow) return;
+    sendCommand("player.getIsPlaying");
+    sendCommand("player.getCurrentTimeInSeconds");
+    sendCommand("player.getDurationInSeconds");
+  };
 
   // Set up message listener for Soundslice API
   useEffect(() => {
@@ -39,65 +61,49 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
 
       const data = event.data;
 
-      // Establish connection
-      if (data.method === "player.readyState" && data.value === "ready") {
+      // Establish connection on any valid response
+      if (!state.isConnected && data.method) {
         setState(prev => ({ ...prev, isConnected: true }));
-        toast({ title: "Soundslice API connected" });
-        // Query initial state
-        queryPlayerState();
-        return;
+        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
       }
 
       // Handle playback state changes
       if (data.method === "player.isPlaying") {
         setState(prev => ({ ...prev, isPlaying: data.value }));
-        return;
       }
 
       if (data.method === "player.currentTimeInSeconds") {
         setState(prev => ({ ...prev, currentTime: data.value }));
         pendingQueriesRef.current.delete("player.currentTimeInSeconds");
-        return;
       }
 
       if (data.method === "player.durationInSeconds") {
         setState(prev => ({ ...prev, duration: data.value }));
         pendingQueriesRef.current.delete("player.durationInSeconds");
-        return;
       }
     };
 
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [iframe]);
 
-  // Send command to player
-  const sendCommand = (command: string, args?: any) => {
-    if (!iframe?.contentWindow) {
-      toast({ title: "Player not ready", variant: "destructive" });
-      return;
-    }
+    // Attempt initial connection
+    queryPlayerState();
 
-    const message = { command, ...args };
-    iframe.contentWindow.postMessage(message, "https://www.soundslice.com");
-    messageQueueRef.current.push({ command, timestamp: Date.now() });
+    // Set timeout to check connection status
+    connectionTimeoutRef.current = setTimeout(() => {
+      if (!state.isConnected) {
+        queryPlayerState();
+      }
+    }, 1500);
 
-    // Keep queue clean (remove messages older than 5 seconds)
-    messageQueueRef.current = messageQueueRef.current.filter(
-      m => Date.now() - m.timestamp < 5000
-    );
-  };
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+    };
+  }, [iframe, state.isConnected]);
 
-  // Query current player state
-  const queryPlayerState = () => {
-    sendCommand("player.getIsPlaying");
-    sendCommand("player.getCurrentTimeInSeconds");
-    sendCommand("player.getDurationInSeconds");
-  };
-
-  // Start polling for playback position
+  // Poll for playback position
   useEffect(() => {
-    if (!state.isConnected) return;
+    if (!iframe?.contentWindow || !state.isConnected) return;
 
     const interval = setInterval(() => {
       if (!pendingQueriesRef.current.has("player.currentTimeInSeconds")) {
@@ -107,16 +113,16 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [state.isConnected]);
+  }, [iframe, state.isConnected]);
 
   const handlePlay = () => {
     sendCommand("player.play");
-    queryPlayerState();
+    setTimeout(queryPlayerState, 100);
   };
 
   const handlePause = () => {
     sendCommand("player.pause");
-    queryPlayerState();
+    setTimeout(queryPlayerState, 100);
   };
 
   const handleSeek = () => {
@@ -250,7 +256,7 @@ export const PlayerControls = ({ iframe }: PlayerControlsProps) => {
 
         {!state.isConnected && (
           <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-800 dark:text-yellow-300">
-            Waiting for Soundslice player to connect... This may take a few seconds.
+            Establishing connection with Soundslice player... Please wait.
           </div>
         )}
       </CardContent>
