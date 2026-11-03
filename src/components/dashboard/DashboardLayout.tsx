@@ -98,6 +98,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
     { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
     { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",  labelKey: "dashboard.nav.chordBoss",  shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
+    { href: "/sheet-music-practice/index.html", img: "/game-icons/sheet_music.svg", labelKey: "dashboard.nav.sheetMusic", shadow: "0 0 14px 4px rgba(236,72,153,0.55)" },
   ];
 
   const getNavItems = () => {
@@ -203,13 +204,21 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         className={`${baseClass} ${lockClass}`}
         {...(isLocked && { onClick: (e) => { e.preventDefault(); handleClick(e); } })}
       >
-        <item.icon className="w-5 h-5 shrink-0" />
+        {(item as any).img ? (
+          <img src={(item as any).img} alt="" className="w-7 h-7 shrink-0 object-contain" />
+        ) : (
+          <item.icon className="w-5 h-5 shrink-0" />
+        )}
         <span className="truncate flex-1">{item.label}</span>
         {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </a>
     ) : (
       <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`}>
-        <item.icon className="w-5 h-5 shrink-0" />
+        {(item as any).img ? (
+          <img src={(item as any).img} alt="" className="w-7 h-7 shrink-0 object-contain" />
+        ) : (
+          <item.icon className="w-5 h-5 shrink-0" />
+        )}
         <span className="truncate flex-1">{item.label}</span>
         {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </Link>

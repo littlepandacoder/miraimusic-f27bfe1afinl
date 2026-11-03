@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" rx="14" fill="#151228"/>
+  <!-- Staff lines -->
+  <line x1="10" y1="28" x2="90" y2="28" stroke="#3a3760" stroke-width="2"/>
+  <line x1="10" y1="39" x2="90" y2="39" stroke="#3a3760" stroke-width="2"/>
+  <line x1="10" y1="50" x2="90" y2="50" stroke="#3a3760" stroke-width="2"/>
+  <line x1="10" y1="61" x2="90" y2="61" stroke="#3a3760" stroke-width="2"/>
+  <line x1="10" y1="72" x2="90" y2="72" stroke="#3a3760" stroke-width="2"/>
+  <!-- Beamed eighth notes (pink, Musicable primary) -->
+  <path d="M34 62 L34 30 L72 22 L72 54" fill="none" stroke="#ec4899" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M26 66 Q26 60 34 60 Q42 60 42 66 Q42 72 34 72 Q26 72 26 66 Z" fill="#ec4899"/>
+  <path d="M64 58 Q64 52 72 52 Q80 52 80 58 Q80 64 72 64 Q64 64 64 58 Z" fill="#ec4899"/>
+</svg>

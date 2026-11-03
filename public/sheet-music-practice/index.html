@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sheet Music Practice — Musicable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="icon" href="data:," />
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <style type="text/css">
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+      }
+
+      .at-wrap {
+        width: 80vw;
+        height: 80vh;
+        margin: 0 auto;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .at-content {
+        position: relative;
+        overflow: hidden;
+        flex: 1 1 auto;
+      }
+
+      /** Sidebar **/
+      .at-sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        max-width: 70px;
+        width: auto;
+        display: flex;
+        align-content: stretch;
+        z-index: 1001;
+        overflow: hidden;
+        border-right: 1px solid rgba(0, 0, 0, 0.12);
+        background: #f7f7f7;
+      }
+
+      .at-sidebar:hover {
+        max-width: 400px;
+        transition: max-width 0.2s;
+        overflow-y: auto;
+      }
+
+      .at-viewport {
+        overflow-y: auto;
+        position: absolute;
+        top: 0;
+        left: 70px;
+        right: 0;
+        bottom: 0;
+        padding-right: 20px;
+      }
+
+      .at-footer {
+        flex: 0 0 auto;
+        background: #436d9d;
+        color: #fff;
+      }
+
+      /** Overlay **/
+
+      .at-overlay {
+        /** Fill Parent */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1002;
+
+        /* Blurry dark shade */
+        backdrop-filter: blur(3px);
+        background: rgba(0, 0, 0, 0.5);
+
+        /** center content */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .at-overlay-content {
+        /* white box with drop-shadow */
+        margin-top: 20px;
+        background: #fff;
+        box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+      }
+
+      /** Track selector **/
+      .at-track {
+        display: flex;
+        position: relative;
+        padding: 5px;
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+
+      .at-track:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .at-track > .at-track-icon,
+      .at-track > .at-track-details {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .at-track > .at-track-icon {
+        flex-shrink: 0;
+        font-size: 32px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+        width: 64px;
+        height: 64px;
+        margin-right: 5px;
+        align-items: center;
+      }
+
+      .at-track-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .at-track:hover > .at-track-icon {
+        opacity: 0.8;
+      }
+
+      .at-track.active {
+        background: rgba(0, 0, 0, 0.03);
+      }
+
+      .at-track.active > .at-track-icon {
+        color: #4972a1;
+        opacity: 1;
+      }
+
+      .at-track > .at-track-name {
+        font-weight: 500;
+      }
+
+      /** Footer **/
+      .at-controls {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: space-between;
+        background: #436d9d;
+        color: #fff;
+      }
+
+      .at-controls > div {
+        display: flex;
+        justify-content: flex-start;
+        align-content: center;
+        align-items: center;
+      }
+
+      .at-controls > div > * {
+        display: flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 4px;
+        margin: 0 3px;
+      }
+
+      .at-controls .btn {
+        color: #fff;
+        border-radius: 0;
+        height: 40px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+      .at-controls .btn.disabled {
+        cursor: progress;
+        opacity: 0.5;
+      }
+
+      .at-controls a.active {
+        background: #5588c7;
+        text-decoration: none;
+      }
+
+      .at-controls .btn i {
+        vertical-align: top;
+      }
+
+      .at-controls select {
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+        border: none;
+        width: 100%;
+        height: 40px;
+        background: #436d9d;
+        padding: 4px 10px;
+        color: #fff;
+        font-size: 16px;
+        text-align-last: center;
+        text-align: center;
+        -ms-text-align-last: center;
+        -moz-text-align-last: center;
+        cursor: pointer;
+      }
+
+      .at-song-title {
+        font-weight: bold;
+      }
+
+      .at-cursor-bar {
+        /* Defines the color of the bar background when a bar is played */
+        background: rgba(255, 242, 0, 0.25);
+      }
+
+      .at-selection div {
+        /* Defines the color of the selection background */
+        background: rgba(64, 64, 255, 0.1);
+      }
+
+      .at-cursor-beat {
+        /* Defines the beat cursor */
+        background: rgba(64, 64, 255, 0.75);
+        width: 3px;
+      }
+
+      .at-highlight * {
+        /* Defines the color of the music symbols when they are being played (svg) */
+        fill: #0078ff;
+        stroke: #0078ff;
+      }
+
+      /** Test upload bar (MusicXML / MXL) **/
+      .upload-bar {
+        width: 80vw;
+        margin: 0 auto 8px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .upload-bar button {
+        font: inherit;
+        height: 40px;
+        padding: 0 14px;
+        border: none;
+        border-radius: 0;
+        background: #436d9d;
+        color: #fff;
+        cursor: pointer;
+      }
+      .upload-bar button:hover:not(:disabled) {
+        background: #5588c7;
+      }
+      .upload-bar button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .upload-bar button.on {
+        background: #2e7d4f;
+      }
+      .upload-bar button.on:hover:not(:disabled) {
+        background: #3a9a60;
+      }
+      .loop-status {
+        font-size: 13px;
+        color: #333;
+      }
+      .speed-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: bold;
+      }
+      .speed-control input[type="range"] {
+        width: 140px;
+        accent-color: #436d9d;
+        cursor: pointer;
+      }
+      #speedValue {
+        min-width: 40px;
+        font-variant-numeric: tabular-nums;
+      }
+      .upload-bar select {
+        font: inherit;
+        height: 40px;
+        padding: 0 8px;
+        border: none;
+        border-radius: 0;
+        background: #436d9d;
+        color: #fff;
+        cursor: pointer;
+      }
+      .upload-status {
+        margin-left: auto;
+      }
+      .upload-error {
+        width: 80vw;
+        margin: 0 auto 8px;
+        box-sizing: border-box;
+        color: #b00020;
+        background: #fdecea;
+        padding: 6px 10px;
+        border-radius: 4px;
+      }
+      .upload-error[hidden] {
+        display: none;
+      }
+      .songs-panel {
+        width: 80vw;
+        margin: 0 auto 12px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .songs-panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: bold;
+      }
+      .songs-panel select {
+        font: inherit;
+        height: 36px;
+        min-width: 320px;
+        max-width: 60vw;
+        padding: 0 10px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        background: #fff;
+        cursor: pointer;
+      }
+      .songs-panel button {
+        font: inherit;
+        height: 36px;
+        padding: 0 14px;
+        border: none;
+        background: #a33;
+        color: #fff;
+        cursor: pointer;
+      }
+      .songs-panel button:hover:not(:disabled) {
+        background: #c44;
+      }
+      .songs-panel button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      /** MIDI practice panel **/
+      .practice-panel {
+        width: 80vw;
+        margin: 0 auto 12px;
+        box-sizing: border-box;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        background: #fff;
+        padding: 10px;
+        font-size: 13px;
+      }
+      .practice-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .practice-row label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .practice-panel button {
+        font: inherit;
+        height: 32px;
+        padding: 0 12px;
+        border: none;
+        background: #436d9d;
+        color: #fff;
+        cursor: pointer;
+      }
+      .practice-panel button:hover:not(:disabled) {
+        background: #5588c7;
+      }
+      .practice-panel button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .practice-panel select,
+      .practice-panel input[type="number"] {
+        font: inherit;
+        height: 32px;
+        padding: 0 6px;
+      }
+      .practice-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 4px 16px;
+        margin-bottom: 8px;
+      }
+      .practice-feedback {
+        grid-column: 1 / -1;
+        min-height: 1.4em;
+        padding: 6px 10px;
+        border-radius: 4px;
+        background: #f4f4f4;
+      }
+      .practice-feedback.correct { background: #e6f4ea; color: #1e6b35; }
+      .practice-feedback.wrong { background: #fdecea; color: #b00020; }
+      .practice-feedback.partial { background: #fff8e1; color: #7a5a00; }
+      .practice-feedback.info { background: #eef4fb; color: #23466e; }
+      .piano-wrap {
+        width: 80vw;
+        margin: 0 auto 12px;
+        box-sizing: border-box;
+        overflow-x: auto;
+      }
+      .piano {
+        position: relative;
+        width: 100%;
+        height: 130px;
+        user-select: none;
+      }
+      .piano .key {
+        position: absolute;
+        top: 0;
+        box-sizing: border-box;
+        touch-action: none;
+        cursor: pointer;
+      }
+      .piano .key.white {
+        height: 130px;
+        background: #fff;
+        border: 1px solid #888;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+      .piano .key.black {
+        height: 80px;
+        background: #222;
+        border: 1px solid #000;
+        z-index: 1;
+      }
+      .piano .key-label {
+        font-size: 9px;
+        color: #666;
+        margin-bottom: 4px;
+      }
+      .piano .key.expected { background: #8ab4ea; }
+      .piano .key.held { background: #f0a040; }
+      .piano .key.correct { background: #4caf50; }
+      .piano .key.black.expected { background: #3b6fb0; }
+      .piano .key.black.held { background: #c76b00; }
+      .piano .key.black.correct { background: #2e7d32; }
+      /* Notes sounding in playback (from alphaTab's playback events) */
+      .piano .key.sounding { background: #9b59b6; }
+      .piano .key.black.sounding { background: #6c3483; }
+      /** Sync-mode results pop-up (game-style score screen) **/
+      .results-dialog {
+        width: min(600px, 94vw);
+        max-height: 88vh;
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(160deg, #1f2a44 0%, #2b3f6b 100%);
+        color: #fff;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      }
+      .results-dialog::backdrop {
+        background: rgba(10, 14, 30, 0.6);
+      }
+      .results-body {
+        padding: 22px 22px 6px;
+        max-height: calc(88vh - 60px);
+        overflow-y: auto;
+      }
+      .res-banner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .res-grade {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 46px;
+        font-weight: 900;
+        color: #1f2a44;
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2), 0 6px 18px rgba(0, 0, 0, 0.35);
+        animation: res-pop 0.5s ease-out;
+      }
+      .res-info {
+        flex: 1;
+      }
+      .res-title {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+      }
+      .res-stars {
+        font-size: 26px;
+        color: #ffd54a;
+        letter-spacing: 4px;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      .res-score {
+        text-align: right;
+      }
+      .res-score-num {
+        font-size: 44px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+      .res-score-unit {
+        font-size: 20px;
+        opacity: 0.8;
+      }
+      .res-bars {
+        margin: 18px 0 8px;
+      }
+      .res-bar-row {
+        margin-bottom: 10px;
+      }
+      .res-bar-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 4px;
+        opacity: 0.95;
+      }
+      .res-bar-track {
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.15);
+        overflow: hidden;
+      }
+      .res-bar-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+      }
+      .res-tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 12px 0 6px;
+      }
+      .res-tile {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 10px 6px;
+        text-align: center;
+        border-bottom: 3px solid transparent;
+      }
+      .res-tile.good { border-color: #4caf50; }
+      .res-tile.bad { border-color: #ef5350; }
+      .res-tile.warn { border-color: #ffb300; }
+      .res-tile.info { border-color: #42a5f5; }
+      .res-tile-icon {
+        font-size: 18px;
+      }
+      .res-tile-value {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 2px 0;
+      }
+      .res-tile-label {
+        font-size: 11px;
+        opacity: 0.8;
+      }
+      .res-sub {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.75;
+        margin: 14px 0 6px;
+      }
+      .res-counts {
+        font-size: 13px;
+        opacity: 0.9;
+        margin: 6px 0 2px;
+      }
+      .res-timing {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        max-height: 190px;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+      .res-timing-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-left: 4px solid transparent;
+      }
+      .res-timing-note {
+        font-weight: 700;
+      }
+      .res-timing-detail {
+        text-align: right;
+      }
+      .res-timing-row.ontime { border-color: #4caf50; }
+      .res-timing-row.late { border-color: #ffb300; }
+      .res-timing-row.early { border-color: #42a5f5; }
+      .res-timing-row.missed { border-color: #ef5350; }
+      .res-timing-row.wrong { border-color: #ef5350; background: rgba(239, 83, 80, 0.15); }
+      .res-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-height: 150px;
+        overflow-y: auto;
+        padding-bottom: 6px;
+      }
+      .res-chip {
+        font-size: 12px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .res-chip.hit { background: #2e7d32; }
+      .res-chip.miss { background: #7f2a2a; }
+      .results-dialog form {
+        padding: 10px 22px 18px;
+        text-align: right;
+      }
+      .results-dialog form button {
+        font: inherit;
+        font-weight: 700;
+        height: 40px;
+        padding: 0 22px;
+        border: none;
+        border-radius: 999px;
+        background: #ffd54a;
+        color: #1f2a44;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+      @keyframes res-pop {
+        0% { transform: scale(0.4); opacity: 0; }
+        70% { transform: scale(1.08); opacity: 1; }
+        100% { transform: scale(1); }
+      }
+      .at-wrap.upload-dragover {
+        outline: 2px dashed #436d9d;
+        outline-offset: -4px;
+      }
+      /* ── Musicable theme (matches the website: dark navy, pink primary, Montserrat) ── */
+      :root {
+        --bg: hsl(222 47% 11%);
+        --card: hsl(222 47% 14%);
+        --secondary: hsl(222 47% 18%);
+        --muted: hsl(222 47% 20%);
+        --border: hsl(222 47% 25%);
+        --primary: hsl(330 85% 55%);
+        --primary-hover: hsl(330 85% 48%);
+        --fg: #ffffff;
+        --muted-fg: hsl(220 13% 70%);
+        --ok: #39d98a;
+        --bad: #ef4444;
+        --warn: #f59e0b;
+        --info: #00d4ff;
+      }
+      html, body {
+        background: var(--bg) !important;
+        color: var(--fg) !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 14px;
+        margin: 0;
+      }
+      .sm-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 14px 4vw;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+      }
+      .sm-brand { font-weight: 900; font-size: 18px; letter-spacing: .3px; }
+      .sm-brand span { color: var(--primary); }
+      .sm-sub { color: var(--muted-fg); font-size: 13px; font-weight: 500; margin-left: 10px; }
+      .sm-back {
+        color: var(--fg); text-decoration: none; font-weight: 600;
+        border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px;
+        background: var(--secondary); transition: border-color .2s, color .2s;
+      }
+      .sm-back:hover { border-color: var(--primary); color: var(--primary); }
+      .upload-bar, .songs-panel, .practice-panel, .upload-error {
+        margin: 14px 4vw 0 !important;
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        padding: 14px 16px !important;
+        color: var(--fg) !important;
+      }
+      .upload-error { background: rgba(239,68,68,.15) !important; color: #fca5a5 !important; border-color: rgba(239,68,68,.4) !important; }
+      .upload-bar button, .songs-panel button, .practice-panel button, .results-dialog button {
+        font: inherit !important; font-weight: 600 !important;
+        padding: 8px 16px !important; border-radius: 999px !important;
+        border: 1px solid var(--border) !important;
+        background: var(--secondary) !important; color: var(--fg) !important;
+        cursor: pointer; transition: border-color .2s, background .2s, opacity .2s;
+      }
+      .upload-bar button:hover:not(:disabled), .songs-panel button:hover:not(:disabled), .practice-panel button:hover:not(:disabled) {
+        border-color: var(--primary) !important; color: var(--primary) !important;
+      }
+      .upload-bar button:disabled, .songs-panel button:disabled, .practice-panel button:disabled { opacity: .4 !important; cursor: not-allowed; }
+      .upload-bar button.on, #uploadBtn, #midiConnectBtn, #practiceResumeBtn, #finishPerfBtn {
+        background: var(--primary) !important; border-color: var(--primary) !important; color: #fff !important;
+      }
+      .upload-bar button.on:hover:not(:disabled), #uploadBtn:hover:not(:disabled), #midiConnectBtn:hover:not(:disabled),
+      #practiceResumeBtn:hover:not(:disabled), #finishPerfBtn:hover:not(:disabled) {
+        background: var(--primary-hover) !important; color: #fff !important;
+      }
+      .upload-bar select, .songs-panel select, .practice-panel select, .practice-panel input[type="number"], .at-zoom select, .at-layout select {
+        font: inherit !important; background: var(--secondary) !important; color: var(--fg) !important;
+        border: 1px solid var(--border) !important; border-radius: 8px !important; padding: 6px 10px !important;
+      }
+      .upload-status, .loop-status, .speed-control, .songs-panel label, .practice-row label, .practice-info, .practice-status {
+        color: var(--muted-fg) !important;
+      }
+      .upload-status strong, .practice-info strong, #midiStatus { color: var(--fg) !important; }
+      .speed-control input[type="range"] { accent-color: var(--primary); }
+      .practice-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+      .practice-info { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; }
+      .practice-feedback { border-radius: 10px; padding: 8px 12px; width: 100%; box-sizing: border-box; }
+      .practice-feedback.correct { background: rgba(57,217,138,.15) !important; color: var(--ok) !important; }
+      .practice-feedback.wrong { background: rgba(239,68,68,.15) !important; color: #fca5a5 !important; }
+      .practice-feedback.partial { background: rgba(245,158,11,.15) !important; color: #fcd34d !important; }
+      .practice-feedback.info { background: rgba(0,212,255,.1) !important; color: var(--info) !important; }
+
+      .at-wrap {
+        width: auto !important; height: 70vh !important; min-height: 420px;
+        margin: 14px 4vw 0 !important;
+        background: #fbfbfd !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,.35);
+      }
+      .at-sidebar { background: var(--card) !important; border-right: 1px solid var(--border) !important; color: var(--fg) !important; }
+      .at-track { color: var(--fg) !important; }
+      .at-track:hover { background: var(--secondary) !important; }
+      .at-track.active { background: rgba(236,72,153,.12) !important; }
+      .at-track.active > .at-track-icon { color: var(--primary) !important; }
+      .at-track-name { color: var(--fg) !important; }
+      .at-controls {
+        background: var(--card) !important; border-top: 1px solid var(--border) !important; color: var(--fg) !important;
+      }
+      .at-controls .btn { color: var(--fg) !important; }
+      .at-controls .btn:hover, .at-controls a.active { color: var(--primary) !important; }
+      .at-controls .btn.disabled { opacity: .35 !important; }
+      .at-controls .btn.at-player-play-pause { color: var(--primary) !important; }
+      .at-song-info, .at-song-position, .at-player-progress { color: var(--muted-fg) !important; }
+      .at-controls select { background: var(--secondary) !important; color: var(--fg) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
+      .at-overlay { background: rgba(10,15,28,.6) !important; }
+      .at-overlay-content { background: var(--card) !important; color: var(--fg) !important; border: 1px solid var(--border); border-radius: 12px; }
+      .at-wrap.upload-dragover { outline-color: var(--primary) !important; }
+
+      .piano-wrap {
+        background: var(--card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        margin: 14px 4vw 24px !important;
+        padding: 12px !important;
+      }
+      .piano .key.white { background: #f5f5f7 !important; border-color: #333 !important; }
+      .piano .key.black { background: #111827 !important; }
+      .piano .key.expected { background: #7dd3fc !important; }
+      .piano .key.held { background: #f59e0b !important; }
+      .piano .key.correct { background: #39d98a !important; }
+      .piano .key.black.expected { background: #0284c7 !important; }
+      .piano .key.black.held { background: #b45309 !important; }
+      .piano .key.black.correct { background: #15803d !important; }
+      .piano .key.sounding { background: var(--primary) !important; }
+      .piano .key.black.sounding { background: #9d174d !important; }
+
+      .results-dialog {
+        background: var(--card) !important; color: var(--fg) !important;
+        border: 1px solid var(--border) !important; border-radius: 20px !important;
+        box-shadow: 0 24px 60px rgba(0,0,0,.5) !important;
+      }
+      .results-dialog::backdrop { background: rgba(10,15,28,.7) !important; }
+      .results-dialog form button { background: var(--primary) !important; border-color: var(--primary) !important; color: #fff !important; }
+      .res-tile, .res-timing-row, .res-chip { color: var(--fg); }
+      .res-tile { background: var(--secondary) !important; }
+      .res-timing-row { background: var(--secondary) !important; }
+      .res-bar-track { background: var(--muted) !important; }
+      .res-grade { color: var(--card) !important; }
+
+      /* Align all panels with the score box (original CSS used a fixed 80vw width) */
+      .upload-bar, .songs-panel, .practice-panel, .piano-wrap, .upload-error {
+        width: calc(100vw - 8vw) !important; box-sizing: border-box !important;
+      }
+
+      @media (max-width: 720px) {
+        .at-wrap, .upload-bar, .songs-panel, .practice-panel, .piano-wrap { margin-left: 16px !important; margin-right: 16px !important; }
+        .at-wrap { height: 60vh !important; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="sm-topbar">
+      <div><span class="sm-brand">Musicable<span>.</span></span><span class="sm-sub">Sheet Music Practice</span></div>
+      <a class="sm-back" href="/dashboard">&larr; Back to dashboard</a>
+    </header>
+    <div class="upload-bar">
+      <button id="uploadBtn" type="button">Upload MusicXML</button>
+      <input id="fileInput" type="file" accept=".musicxml,.xml,.mxl,.mid,.midi" hidden />
+      <button id="resetBtn" type="button">Reset to demo score</button>
+      <button id="zoomOutBtn" type="button">Zoom out</button>
+      <button id="zoomInBtn" type="button">Zoom in</button>
+      <label class="speed-control">
+        Tempo
+        <input id="speedSlider" type="range" min="50" max="150" step="5" value="100" />
+        <span id="speedValue">100%</span>
+      </label>
+      <button id="loopBtn" type="button">Loop: off</button>
+      <button id="clearLoopBtn" type="button">Clear selection</button>
+      <span id="loopStatus" class="loop-status"></span>
+      <span class="upload-status">Showing: <strong id="fileName"></strong></span>
+    </div>
+    <div id="uploadError" class="upload-error" hidden></div>
+    <section class="songs-panel">
+      <label>
+        Uploaded songs
+        <select id="songSelect"></select>
+      </label>
+      <button id="deleteSongBtn" type="button">Delete selected song</button>
+    </section>
+    <section class="practice-panel">
+      <div class="practice-row">
+        <button id="midiConnectBtn" type="button">Connect MIDI Keyboard</button>
+        <select id="midiDeviceSelect" hidden></select>
+        <span id="midiStatus" class="practice-status">Disconnected</span>
+      </div>
+      <div class="practice-row">
+        <label class="practice-check">
+          <input id="practiceToggle" type="checkbox" />
+          Require note input before continuing (MIDI, touch or keys)
+        </label>
+        <label>Mode
+          <select id="practiceMode">
+            <option value="wait">Wait for note</option>
+            <option value="sync">Sync (performance)</option>
+          </select>
+        </label>
+        <label>Checkpoints
+          <select id="checkpointMode">
+            <option value="note">Every note</option>
+            <option value="measure">Every measure</option>
+          </select>
+        </label>
+        <label>Clef
+          <select id="clefFilter">
+            <option value="both">Treble + bass</option>
+            <option value="treble">Treble only</option>
+            <option value="bass">Bass only</option>
+          </select>
+        </label>
+        <label>Track
+          <select id="practiceTrack"><option value="all">All tracks</option></select>
+        </label>
+        <label>Chord window (ms)
+          <input id="chordWindow" type="number" min="50" max="1000" step="10" value="250" />
+        </label>
+      </div>
+      <div class="practice-row">
+        <button id="practicePauseBtn" type="button" disabled>Pause</button>
+        <button id="practiceResumeBtn" type="button">Resume</button>
+        <button id="resetPracticeBtn" type="button">Reset practice</button>
+        <button id="finishPerfBtn" type="button">Finish &amp; analyse</button>
+        <button id="nextCheckpointBtn" type="button" disabled>Next checkpoint (admin)</button>
+      </div>
+      <div class="practice-info">
+        <div>State: <strong id="practiceState">Disconnected</strong></div>
+        <div>Checkpoint: <strong id="cpInfo">-</strong></div>
+        <div>Expected: <strong id="expectedInfo">-</strong></div>
+        <div>Last MIDI: <strong id="lastMidi">-</strong></div>
+        <div id="practiceFeedback" class="practice-feedback"></div>
+      </div>
+    </section>
+
+    <div class="at-wrap">
+      <div class="at-overlay">
+        <div class="at-overlay-content">
+          Music sheet is loading
+        </div>
+      </div>
+      <div class="at-content">
+        <div class="at-sidebar">
+          <div class="at-sidebar-content">
+            <div class="at-track-list"></div>
+          </div>
+        </div>
+        <div class="at-viewport">
+          <div class="at-main"></div>
+        </div>
+      </div>
+      <div class="at-controls">
+        <div class="at-controls-left">
+          <a class="btn at-player-stop disabled">
+            <i class="fas fa-step-backward"></i>
+          </a>
+          <a class="btn at-player-play-pause disabled">
+            <i class="fas fa-play"></i>
+          </a>
+          <span class="at-player-progress">0%</span>
+          <div class="at-song-info">
+            <span class="at-song-title"></span> -
+            <span class="at-song-artist"></span>
+          </div>
+          <div class="at-song-position">00:00 / 00:00</div>
+        </div>
+        <div class="at-controls-right">
+          <a class="btn toggle at-count-in">
+            <i class="fas fa-hourglass-half"></i>
+          </a>        
+          <a class="btn at-metronome">
+            <i class="fas fa-edit"></i>
+          </a>
+          <a class="btn at-loop">
+            <i class="fas fa-retweet"></i>
+          </a>
+          <a class="btn at-print">
+            <i class="fas fa-print"></i>
+          </a>
+          <div class="at-zoom">
+            <i class="fas fa-search"></i>
+            <select>
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="90">90%</option>
+              <option value="100" selected>100%</option>
+              <option value="110">110%</option>
+              <option value="125">125%</option>
+              <option value="150">150%</option>
+              <option value="200">200%</option>
+            </select>
+          </div>
+          <div class="at-layout">
+            <select>
+              <option value="horizontal">Horizontal</option>
+              <option value="page" selected>Page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="piano-wrap">
+      <div id="pianoKeys" class="piano"></div>
+    </div>
+
+    <dialog id="resultsDialog" class="results-dialog">
+      <div id="resultsBody"></div>
+      <form method="dialog"><button type="submit">Continue</button></form>
+    </dialog>
+
+    <template id="at-track-template">
+      <div class="at-track">
+        <div class="at-track-icon">
+          <i class="fas fa-guitar"></i>
+        </div>
+        <div class="at-track-details">
+          <div class="at-track-name"></div>
+        </div>
+      </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.2/dist/umd/supabase.js"></script>
+    <script type="text/javascript">
+      // load elements
+      const wrapper = document.querySelector(".at-wrap");
+      const main = wrapper.querySelector(".at-main");
+
+      // initialize alphatab
+      const settings = {
+        player: {
+          enablePlayer: true,
+          soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
+          scrollElement: wrapper.querySelector('.at-viewport')
+        },
+      };
+      const api = new alphaTab.AlphaTabApi(main, settings);
+      window.musicableApi = api; // used by src/practice.js (MIDI practice mode)
+
+      // overlay logic
+      const overlay = wrapper.querySelector(".at-overlay");
+      api.renderStarted.on(() => {
+        overlay.style.display = "flex";
+      });
+      api.renderFinished.on(() => {
+        overlay.style.display = "none";
+      });
+
+      // track selector
+      function createTrackItem(track) {
+        const trackItem = document
+          .querySelector("#at-track-template")
+          .content.cloneNode(true).firstElementChild;
+        trackItem.querySelector(".at-track-name").innerText = track.name;
+        trackItem.track = track;
+        trackItem.onclick = (e) => {
+          e.stopPropagation();
+          api.renderTracks([track]);
+        };
+        return trackItem;
+      }
+      const trackList = wrapper.querySelector(".at-track-list");
+      api.scoreLoaded.on((score) => {
+        // clear items
+        trackList.innerHTML = "";
+        // generate a track item for all tracks of the score
+        score.tracks.forEach((track) => {
+          trackList.appendChild(createTrackItem(track));
+        });
+      });
+      api.renderStarted.on(() => {
+        // collect tracks being rendered
+        const tracks = new Map();
+        api.tracks.forEach((t) => {
+          tracks.set(t.index, t);
+        });
+        // mark the item as active or not
+        const trackItems = trackList.querySelectorAll(".at-track");
+        trackItems.forEach((trackItem) => {
+          if (tracks.has(trackItem.track.index)) {
+            trackItem.classList.add("active");
+          } else {
+            trackItem.classList.remove("active");
+          }
+        });
+      });
+
+      /** Controls **/
+      api.scoreLoaded.on((score) => {
+        wrapper.querySelector(".at-song-title").innerText = score.title;
+        wrapper.querySelector(".at-song-artist").innerText = score.artist;
+      });
+
+      const countIn = wrapper.querySelector('.at-controls .at-count-in');
+      countIn.onclick = () => {
+        countIn.classList.toggle('active');
+        if (countIn.classList.contains('active')) {
+          api.countInVolume = 1;
+        } else {
+          api.countInVolume = 0;
+        }
+      };
+      
+      const metronome = wrapper.querySelector(".at-controls .at-metronome");
+      metronome.onclick = () => {
+        metronome.classList.toggle("active");
+        if (metronome.classList.contains("active")) {
+          api.metronomeVolume = 1;
+        } else {
+          api.metronomeVolume = 0;
+        }
+      };
+
+      const loop = wrapper.querySelector(".at-controls .at-loop");
+      loop.onclick = () => {
+        loop.classList.toggle("active");
+        api.isLooping = loop.classList.contains("active");
+      };
+
+      wrapper.querySelector(".at-controls .at-print").onclick = () => {
+        api.print();
+      };
+
+      const zoom = wrapper.querySelector(".at-controls .at-zoom select");
+      zoom.onchange = () => {
+        const zoomLevel = parseInt(zoom.value) / 100;
+        api.settings.display.scale = zoomLevel;
+        api.updateSettings();
+        api.render();
+      };
+
+      const layout = wrapper.querySelector(".at-controls .at-layout select");
+      layout.onchange = () => {
+        switch (layout.value) {
+          case "horizontal":
+            api.settings.display.layoutMode = alphaTab.LayoutMode.Horizontal;
+            break;
+          case "page":
+            api.settings.display.layoutMode = alphaTab.LayoutMode.Page;
+            break;
+        }
+        api.updateSettings();
+        api.render();
+      };
+
+      // player loading indicator
+      const playerIndicator = wrapper.querySelector(
+        ".at-controls .at-player-progress"
+      );
+      api.soundFontLoad.on((e) => {
+        const percentage = Math.floor((e.loaded / e.total) * 100);
+        playerIndicator.innerText = percentage + "%";
+      });
+      api.playerReady.on(() => {
+        playerIndicator.style.display = "none";
+      });
+
+      // main player controls
+      const playPause = wrapper.querySelector(
+        ".at-controls .at-player-play-pause"
+      );
+      const stop = wrapper.querySelector(".at-controls .at-player-stop");
+      playPause.onclick = (e) => {
+        if (e.target.classList.contains("disabled")) {
+          return;
+        }
+        api.playPause();
+      };
+      stop.onclick = (e) => {
+        if (e.target.classList.contains("disabled")) {
+          return;
+        }
+        api.stop();
+      };
+      api.playerReady.on(() => {
+        playPause.classList.remove("disabled");
+        stop.classList.remove("disabled");
+      });
+      api.playerStateChanged.on((e) => {
+        const icon = playPause.querySelector("i.fas");
+        if (e.state === alphaTab.synth.PlayerState.Playing) {
+          icon.classList.remove("fa-play");
+          icon.classList.add("fa-pause");
+        } else {
+          icon.classList.remove("fa-pause");
+          icon.classList.add("fa-play");
+        }
+      });
+
+      // song position
+      function formatDuration(milliseconds) {
+        let seconds = milliseconds / 1000;
+        const minutes = (seconds / 60) | 0;
+        seconds = (seconds - minutes * 60) | 0;
+        return (
+          String(minutes).padStart(2, "0") +
+          ":" +
+          String(seconds).padStart(2, "0")
+        );
+      }
+
+      const songPosition = wrapper.querySelector(".at-song-position");
+      let previousTime = -1;
+      api.playerPositionChanged.on((e) => {
+        // reduce number of UI updates to second changes.
+        const currentSeconds = (e.currentTime / 1000) | 0;
+        if (currentSeconds == previousTime) {
+          return;
+        }
+
+        songPosition.innerText =
+          formatDuration(e.currentTime) + " / " + formatDuration(e.endTime);
+      });
+
+      /** Uploaded songs: MusicXML / MXL saved locally in IndexedDB (browser only) **/
+      const DEMO_URL = "https://www.alphatab.net/files/iron-waltz.gp";
+      const DEMO_NAME = "Iron Waltz (demo)";
+      const DEMO_VALUE = "demo";
+      const ACCEPTED_FILE = /\.(musicxml|xml|mxl|mid|midi)$/i;
+      const MIDI_FILE = /\.midi?$/i;
+
+      const DB_NAME = "musicable-upload-test";
+      const DB_VERSION = 2;
+      const SONGS = "songs";
+      const STATE_STORE = "files"; // also holds the old single-upload record, migrated on startup
+      const CURRENT_KEY = "current";
+
+      const uploadBtn = document.querySelector("#uploadBtn");
+      const fileInput = document.querySelector("#fileInput");
+      const resetBtn = document.querySelector("#resetBtn");
+      const fileName = document.querySelector("#fileName");
+      const uploadError = document.querySelector("#uploadError");
+      const songSelect = document.querySelector("#songSelect");
+      const deleteSongBtn = document.querySelector("#deleteSongBtn");
+
+      /** Saved uploads live in the Musicable database: metadata in the student_sheet_music table and
+          the file in the private student-sheet-music bucket. Same signed-in session as the website. **/
+      const SUPABASE_URL = "https://tychkyunjfbkksyxknhn.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw";
+      const SONG_BUCKET = "student-sheet-music";
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true },
+      });
+
+      async function currentUser() {
+        const { data, error } = await sb.auth.getSession();
+        if (error) throw error;
+        return data.session?.user ?? null;
+      }
+
+      const toSong = (row) => ({
+        id: row.id,
+        name: row.file_name,
+        storagePath: row.storage_path,
+        addedAt: Date.parse(row.created_at),
+      });
+
+      async function fetchRemoteSongs() {
+        const { data, error } = await sb
+          .from("student_sheet_music")
+          .select("id, file_name, storage_path, created_at")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data;
+      }
+
+      async function saveUpload(user, name, bytes) {
+        const isMxl = /\.mxl$/i.test(name);
+        const path = `${user.id}/${crypto.randomUUID()}.${isMxl ? "mxl" : "musicxml"}`;
+        const { error: storageError } = await sb.storage.from(SONG_BUCKET).upload(path, bytes, {
+          contentType: isMxl ? "application/vnd.recordare.musicxml" : "application/vnd.recordare.musicxml+xml",
+          upsert: false,
+        });
+        if (storageError) throw storageError;
+        const { data, error } = await sb
+          .from("student_sheet_music")
+          .insert({
+            user_id: user.id,
+            file_name: name,
+            file_type: isMxl ? "mxl" : "musicxml",
+            file_size_bytes: bytes.byteLength,
+            storage_path: path,
+          })
+          .select("id, file_name, storage_path, created_at")
+          .single();
+        if (error) {
+          await sb.storage.from(SONG_BUCKET).remove([path]);
+          throw error;
+        }
+        return data;
+      }
+
+      async function downloadSong(song) {
+        const { data, error } = await sb.storage.from(SONG_BUCKET).download(song.storagePath);
+        if (error) throw error;
+        return data.arrayBuffer();
+      }
+
+      async function deleteRemoteSong(song) {
+        const { error } = await sb.from("student_sheet_music").delete().eq("id", song.id);
+        if (error) throw error;
+        await sb.storage.from(SONG_BUCKET).remove([song.storagePath]);
+      }
+
+      // Songs saved in this browser before accounts were used move to the signed-in account.
+      async function migrateLocalSongs(user) {
+        const local = await getAllSongs();
+        for (const song of local) {
+          await saveUpload(user, song.name, song.bytes);
+          await removeSong(song.id);
+        }
+      }
+
+      let songs = []; // saved songs for the signed-in user, newest first: { id, name, storagePath, addedAt }
+      let currentSongId = null; // null = demo score is showing
+
+      function showError(message) {
+        uploadError.textContent = message;
+        uploadError.hidden = !message;
+      }
+      function showName(name) {
+        fileName.textContent = name;
+      }
+
+      api.error.on((error) => {
+        showError("alphaTab error: " + error.message);
+      });
+
+      /** IndexedDB helpers **/
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(SONGS)) {
+              db.createObjectStore(SONGS, { keyPath: "id", autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains(STATE_STORE)) {
+              db.createObjectStore(STATE_STORE);
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function dbRequest(storeName, mode, makeRequest) {
+        const db = await openDb();
+        try {
+          return await new Promise((resolve, reject) => {
+            const tx = db.transaction(storeName, mode);
+            const request = makeRequest(tx.objectStore(storeName));
+            tx.oncomplete = () => resolve(request.result);
+            tx.onerror = () => reject(tx.error);
+            tx.onabort = () => reject(tx.error);
+          });
+        } finally {
+          db.close();
+        }
+      }
+
+      const getAllSongs = () => dbRequest(SONGS, "readonly", (s) => s.getAll());
+      const getSong = (id) => dbRequest(SONGS, "readonly", (s) => s.get(id));
+      const addSong = (song) => dbRequest(SONGS, "readwrite", (s) => s.add(song));
+      const removeSong = (id) => dbRequest(SONGS, "readwrite", (s) => s.delete(id));
+      const readCurrent = () => dbRequest(STATE_STORE, "readonly", (s) => s.get(CURRENT_KEY));
+      const writeCurrent = (value) => dbRequest(STATE_STORE, "readwrite", (s) => s.put(value, CURRENT_KEY));
+
+      // Moves the single upload saved by the earlier version into the song list.
+      async function migrateLegacyUpload() {
+        const legacy = await dbRequest(STATE_STORE, "readonly", (s) => s.get("state"));
+        if (!legacy) return;
+        if (legacy.bytes) {
+          const id = await addSong({ name: legacy.name, bytes: legacy.bytes, addedAt: Date.now() });
+          if (legacy.source === "upload") {
+            await writeCurrent({ songId: id });
+          }
+        }
+        await dbRequest(STATE_STORE, "readwrite", (s) => s.delete("state"));
+      }
+
+      /** Loading **/
+      // Throws if alphaTab cannot read the data.
+      function loadBytes(bytes, name) {
+        if (!api.load(new Uint8Array(bytes))) {
+          throw new Error("alphaTab cannot read this data.");
+        }
+        showName(name);
+      }
+
+      function loadDemo() {
+        currentSongId = null;
+        api.load(DEMO_URL);
+        showName(DEMO_NAME);
+        renderSongList();
+      }
+
+      async function openSong(id) {
+        showError("");
+        try {
+          const song = songs.find((s) => s.id === id);
+          if (!song) {
+            throw new Error("this song is no longer saved.");
+          }
+          loadBytes(await downloadSong(song), song.name);
+          currentSongId = id;
+          renderSongList();
+          await writeCurrent({ songId: id });
+          return true;
+        } catch (e) {
+          showError(`Could not open the song: ${e.message ?? e}`);
+          return false;
+        }
+      }
+
+      /** Song list **/
+      async function refreshSongs() {
+        const user = await currentUser();
+        songs = user ? (await fetchRemoteSongs()).map(toSong) : [];
+        renderSongList();
+      }
+
+      function renderSongList() {
+        songSelect.innerHTML = "";
+        songSelect.add(new Option(DEMO_NAME, DEMO_VALUE));
+        for (const song of songs) {
+          const label = `${song.name} (${new Date(song.addedAt).toLocaleDateString()})`;
+          songSelect.add(new Option(label, String(song.id)));
+        }
+        songSelect.value = currentSongId == null ? DEMO_VALUE : String(currentSongId);
+        deleteSongBtn.disabled = currentSongId == null;
+      }
+
+      songSelect.onchange = async () => {
+        if (songSelect.value === DEMO_VALUE) {
+          loadDemo();
+          try {
+            await writeCurrent({ songId: null });
+          } catch (e) {
+            showError(`Could not save the current selection: ${e.message ?? e}`);
+          }
+        } else {
+          await openSong(songSelect.value);
+        }
+        renderSongList(); // re-sync the dropdown if a song failed to open
+      };
+
+      deleteSongBtn.onclick = () => {
+        if (currentSongId != null) deleteSongById(currentSongId);
+      };
+
+      async function deleteSongById(id) {
+        const song = songs.find((s) => s.id === id);
+        if (song && !confirm(`Delete "${song.name}" from the song list?`)) return;
+
+        showError("");
+        try {
+          if (song) await deleteRemoteSong(song);
+          if (currentSongId === id) {
+            loadDemo();
+            await writeCurrent({ songId: null });
+          }
+          await refreshSongs();
+        } catch (e) {
+          showError(`Could not delete the song: ${e.message ?? e}`);
+        }
+      }
+
+      /** Upload **/
+      async function handleFile(file) {
+        if (!file) return;
+        if (MIDI_FILE.test(file.name)) {
+          showError(
+            `"${file.name}" is a MIDI file. alphaTab cannot show MIDI as sheet music (it only reads MusicXML, MXL, Guitar Pro, Capella and alphaTex). Export the file as MusicXML from your notation app and upload that.`
+          );
+          return;
+        }
+        if (!ACCEPTED_FILE.test(file.name)) {
+          showError(`"${file.name}" is not supported. Choose a .musicxml, .xml or .mxl file.`);
+          return;
+        }
+
+        const user = await currentUser().catch(() => null);
+        if (!user) {
+          showError("Sign in to Musicable to upload sheet music. Your uploads are saved to your account.");
+          return;
+        }
+
+        showError("");
+        let bytes;
+        try {
+          bytes = await file.arrayBuffer();
+          if (bytes.byteLength === 0) {
+            throw new Error("the file is empty.");
+          }
+          // Nothing is saved if alphaTab cannot read the file.
+          loadBytes(bytes, file.name);
+        } catch (e) {
+          showError(`Could not load "${file.name}": ${e.message ?? e}`);
+          return;
+        }
+
+        try {
+          const saved = await saveUpload(user, file.name, bytes);
+          songs = [toSong(saved), ...songs];
+          currentSongId = saved.id;
+          await writeCurrent({ songId: saved.id });
+          renderSongList();
+        } catch (e) {
+          showError(`Loaded, but could not save it to your account: ${e.message ?? e}`);
+        }
+      }
+
+      uploadBtn.onclick = () => fileInput.click();
+      fileInput.onchange = () => {
+        handleFile(fileInput.files[0]);
+        fileInput.value = "";
+      };
+
+      // Drag and drop onto the viewer
+      wrapper.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        wrapper.classList.add("upload-dragover");
+      });
+      wrapper.addEventListener("dragleave", (e) => {
+        if (!wrapper.contains(e.relatedTarget)) {
+          wrapper.classList.remove("upload-dragover");
+        }
+      });
+      wrapper.addEventListener("drop", (e) => {
+        e.preventDefault();
+        wrapper.classList.remove("upload-dragover");
+        handleFile(e.dataTransfer.files[0]);
+      });
+
+      // Reset shows the demo score. Saved songs stay in the list.
+      resetBtn.onclick = async () => {
+        showError("");
+        loadDemo();
+        try {
+          await writeCurrent({ songId: null });
+        } catch (e) {
+          showError(`Could not save the current selection: ${e.message ?? e}`);
+        }
+      };
+
+      // Zoom buttons step through the existing zoom dropdown.
+      const zoomSelect = wrapper.querySelector(".at-controls .at-zoom select");
+      function stepZoom(direction) {
+        const index = zoomSelect.selectedIndex + direction;
+        if (index < 0 || index >= zoomSelect.options.length) return;
+        zoomSelect.selectedIndex = index;
+        zoomSelect.dispatchEvent(new Event("change"));
+      }
+      document.querySelector("#zoomOutBtn").onclick = () => stepZoom(-1);
+      document.querySelector("#zoomInBtn").onclick = () => stepZoom(1);
+
+      /** Startup: restore the song that was showing, otherwise the demo **/
+      async function startup() {
+        try {
+          await migrateLegacyUpload();
+        } catch (e) {
+          showError(`Could not read the saved files: ${e.message ?? e}`);
+        }
+        try {
+          const user = await currentUser();
+          if (user) await migrateLocalSongs(user);
+        } catch (e) {
+          showError(`Could not move your saved songs to your account: ${e.message ?? e}`);
+        }
+
+        try {
+          await refreshSongs();
+          const current = await readCurrent();
+          if (current && current.songId != null && songs.some((s) => s.id === current.songId)) {
+            if (await openSong(current.songId)) return;
+          }
+        } catch (e) {
+          showError(`Could not read the song list: ${e.message ?? e}`);
+        }
+        loadDemo();
+      }
+
+      /** Loop: drag over bars in the score to select them, then press Loop **/
+      const loopBtn = document.querySelector("#loopBtn");
+      const clearLoopBtn = document.querySelector("#clearLoopBtn");
+      const loopStatus = document.querySelector("#loopStatus");
+      const footerLoop = document.querySelector(".at-controls .at-loop");
+
+      // Converts a playback range (ticks) into the first and last bar numbers (1-based).
+      function barsForRange(range) {
+        let first = 0;
+        let last = 0;
+        api.score.masterBars.forEach((masterBar, i) => {
+          if (masterBar.start <= range.startTick) first = i;
+          if (masterBar.start < range.endTick) last = i;
+        });
+        return [first + 1, Math.max(first, last) + 1];
+      }
+
+      function refreshLoopUi() {
+        const range = api.playbackRange;
+        const looping = api.isLooping;
+
+        loopBtn.textContent = looping ? "Loop: on" : "Loop: off";
+        loopBtn.classList.toggle("on", looping);
+        clearLoopBtn.disabled = !range;
+        footerLoop.classList.toggle("active", looping);
+
+        if (!api.score) {
+          loopStatus.textContent = "";
+        } else if (range) {
+          const [from, to] = barsForRange(range);
+          loopStatus.textContent = from === to ? `Selected: bar ${from}` : `Selected: bars ${from}–${to}`;
+        } else {
+          loopStatus.textContent = "No selection: looping plays the whole song (drag over bars to select)";
+        }
+      }
+
+      loopBtn.onclick = () => {
+        api.isLooping = !api.isLooping;
+        refreshLoopUi();
+      };
+      clearLoopBtn.onclick = () => {
+        api.playbackRange = null;
+        api.clearPlaybackRangeHighlight();
+        refreshLoopUi();
+      };
+      // The footer loop icon also toggles api.isLooping; keep both in sync.
+      footerLoop.addEventListener("click", () => setTimeout(refreshLoopUi, 0));
+
+      /** Playback speed: 1 = 100%. Applies to playback from the player controls and the loop. **/
+      const speedSlider = document.querySelector("#speedSlider");
+      const speedValue = document.querySelector("#speedValue");
+      function applySpeed() {
+        const percent = Number(speedSlider.value);
+        api.playbackSpeed = percent / 100;
+        speedValue.textContent = percent + "%";
+      }
+      speedSlider.oninput = applySpeed;
+      applySpeed();
+
+      api.playbackRangeChanged.on(refreshLoopUi);
+      api.scoreLoaded.on(refreshLoopUi);
+      api.renderFinished.on(refreshLoopUi);
+
+/** Space bar: play / pause the score. Ignored while typing or using a dropdown. **/
+document.addEventListener("keydown", (e) => {
+  if (e.code !== "Space" || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  const target = e.target;
+  const typing =
+    target.isContentEditable ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    (target instanceof HTMLInputElement && !["checkbox", "range", "button"].includes(target.type));
+  if (typing) return;
+
+  e.preventDefault(); // stop a focused button or checkbox from also being activated
+  if (target instanceof HTMLElement) target.blur();
+  api.playPause();
+});
+
+      startup();
+    </script>
+    <script type="module" src="src/practice.js"></script>
+  </body>
+</html>
