@@ -4,15 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Upload } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 
-// Tables and buckets from supabase/migrations/20261105_* and 20261106_* are not in the
+// Tables and buckets from supabase/migrations/20261105_*, 20261106_* and 20261107_* are not in the
 // generated types yet, so they are accessed through an untyped client.
 const db = supabase as any;
 const SONG_BUCKET = "sheet-music-library";
 const THUMB_BUCKET = "sheet-music-thumbs";
 const SONG_FILE = /\.(musicxml|xml|mxl)$/i;
 const THUMB_FILE = /\.(png|jpe?g|webp)$/i;
+const selectClass =
+  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
+interface Category {
+  id: string;
+  name: string;
+  sort_order: number;
+}
 
 interface LibrarySong {
   id: string;
@@ -22,6 +30,7 @@ interface LibrarySong {
   file_size_bytes: number;
   storage_path: string;
   thumbnail_path: string | null;
+  category_id: string | null;
   created_at: string;
 }
 
@@ -30,22 +39,44 @@ const formatSize = (bytes: number) =>
 
 const ManageSheetMusic = () => {
   const [songs, setSongs] = useState<LibrarySong[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [composer, setComposer] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [thumb, setThumb] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
   const [thumbInputKey, setThumbInputKey] = useState(0);
+  const [newCategory, setNewCategory] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
+
+  const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "No category";
+
+  const loadCategories = async () => {
+    const { data, error } = await db
+      .from("sheet_music_categories")
+      .select("id, name, sort_order")
+      .order("sort_order")
+      .order("name");
+    if (error) {
+      toast({ title: "Error loading categories", description: error.message, variant: "destructive" });
+      return;
+    }
+    setCategories((data ?? []) as Category[]);
+  };
 
   const load = async () => {
     setLoading(true);
+    await loadCategories();
     const { data, error } = await db
       .from("sheet_music_library")
-      .select("id, title, composer, file_name, file_size_bytes, storage_path, thumbnail_path, created_at")
+      .select("id, title, composer, file_name, file_size_bytes, storage_path, thumbnail_path, category_id, created_at")
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "Error loading sheet music", description: error.message, variant: "destructive" });
@@ -74,6 +105,87 @@ const ManageSheetMusic = () => {
   useEffect(() => {
     load();
   }, []);
+
+  // ---- Categories: create, rename, delete ----
+
+  const addCategory = async () => {
+    const name = newCategory.trim();
+    if (!name) return;
+    setSavingCategory(true);
+    const sortOrder = categories.reduce((max, c) => Math.max(max, c.sort_order), 0) + 1;
+    const { error } = await db.from("sheet_music_categories").insert({ name, sort_order: sortOrder });
+    setSavingCategory(false);
+    if (error) {
+      toast({ title: "Could not add category", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewCategory("");
+    toast({ title: "Category added" });
+    await loadCategories();
+  };
+
+  const renameCategory = async (category: Category) => {
+    const name = editingCategoryName.trim();
+    if (!name || name === category.name) {
+      setEditingCategoryId(null);
+      return;
+    }
+    const { data, error } = await db
+      .from("sheet_music_categories")
+      .update({ name })
+      .eq("id", category.id)
+      .select("id");
+    if (error || !data || data.length === 0) {
+      toast({
+        title: "Could not rename category",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setEditingCategoryId(null);
+    toast({ title: "Category renamed" });
+    await loadCategories();
+  };
+
+  const deleteCategory = async (category: Category) => {
+    const count = songs.filter((s) => s.category_id === category.id).length;
+    const note = count > 0 ? ` Its ${count} song(s) will be kept with no category.` : "";
+    if (!confirm(`Delete the category "${category.name}"?${note}`)) return;
+    const { data, error } = await db.from("sheet_music_categories").delete().eq("id", category.id).select("id");
+    if (error || !data || data.length === 0) {
+      toast({
+        title: "Could not delete category",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Category deleted" });
+    await load();
+  };
+
+  // ---- Songs ----
+
+  const moveSong = async (song: LibrarySong, newCategoryId: string) => {
+    const value = newCategoryId || null;
+    if (value === song.category_id) return;
+    const { data, error } = await db
+      .from("sheet_music_library")
+      .update({ category_id: value })
+      .eq("id", song.id)
+      .select("id");
+    if (error || !data || data.length === 0) {
+      toast({
+        title: "Could not change category",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Category updated" });
+    await load();
+  };
 
   const handleUpload = async () => {
     if (!title.trim() || !file || !thumb) {
@@ -124,6 +236,7 @@ const ManageSheetMusic = () => {
         file_size_bytes: file.size,
         storage_path: songPath,
         thumbnail_path: thumbPath,
+        category_id: categoryId || null,
         uploaded_by: userId,
       });
       if (insertError) throw insertError;
@@ -131,6 +244,7 @@ const ManageSheetMusic = () => {
       toast({ title: "Sheet music added", description: "Students will see it in the Sheet Music library." });
       setTitle("");
       setComposer("");
+      setCategoryId("");
       setFile(null);
       setThumb(null);
       setFileInputKey((k) => k + 1);
@@ -174,17 +288,94 @@ const ManageSheetMusic = () => {
       <div>
         <h1 className="text-2xl font-bold">Sheet Music Library</h1>
         <p className="text-sm text-muted-foreground">
-          Upload a MusicXML file and a thumbnail image. Each song appears as a picture with its title in the
-          library for every student.
+          Upload a MusicXML file and a thumbnail image, and put it in a category. Each category is a section on the
+          "Choose a piece" page for students.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Categories</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {categories.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No categories yet. Add one below.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {categories.map((category) => (
+                <li key={category.id} className="flex items-center justify-between gap-4 py-2">
+                  {editingCategoryId === category.id ? (
+                    <div className="flex flex-1 items-center gap-2">
+                      <Input
+                        value={editingCategoryName}
+                        onChange={(e) => setEditingCategoryName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") renameCategory(category);
+                          if (e.key === "Escape") setEditingCategoryId(null);
+                        }}
+                        autoFocus
+                      />
+                      <Button size="sm" onClick={() => renameCategory(category)}>Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingCategoryId(null)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{category.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {songs.filter((s) => s.category_id === category.id).length} song(s)
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Rename ${category.name}`}
+                          onClick={() => {
+                            setEditingCategoryId(category.id);
+                            setEditingCategoryName(category.name);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Delete ${category.name}`}
+                          onClick={() => deleteCategory(category)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-center gap-2">
+            <Input
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addCategory();
+              }}
+              placeholder="New category name, e.g. Grade 1"
+            />
+            <Button onClick={addCategory} disabled={savingCategory || !newCategory.trim()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add category
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Add sheet music</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-1">
               <label className="text-sm font-medium">Title *</label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Twinkle Twinkle" />
@@ -192,6 +383,17 @@ const ManageSheetMusic = () => {
             <div className="space-y-1">
               <label className="text-sm font-medium">Composer</label>
               <Input value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Category</label>
+              <select className={selectClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                <option value="">No category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -235,7 +437,7 @@ const ManageSheetMusic = () => {
           ) : (
             <ul className="divide-y divide-border">
               {songs.map((song) => (
-                <li key={song.id} className="flex items-center justify-between gap-4 py-3">
+                <li key={song.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
                     {thumbUrls[song.id] ? (
                       <img
@@ -253,21 +455,37 @@ const ManageSheetMusic = () => {
                         {song.file_name} · {formatSize(song.file_size_bytes)} · added{" "}
                         {new Date(song.created_at).toLocaleDateString()}
                       </p>
+                      <p className="text-xs text-muted-foreground">Category: {categoryName(song.category_id)}</p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(song)}
-                    disabled={deletingId === song.id}
-                    aria-label={`Remove ${song.title}`}
-                  >
-                    {deletingId === song.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <select
+                      className={`${selectClass} md:w-56`}
+                      value={song.category_id ?? ""}
+                      onChange={(e) => moveSong(song, e.target.value)}
+                      aria-label={`Category for ${song.title}`}
+                    >
+                      <option value="">No category</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(song)}
+                      disabled={deletingId === song.id}
+                      aria-label={`Remove ${song.title}`}
+                    >
+                      {deletingId === song.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      )}
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
