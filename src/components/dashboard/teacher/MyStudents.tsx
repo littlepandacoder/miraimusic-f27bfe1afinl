@@ -54,6 +54,26 @@ const MyStudents = () => {
   const [buyProcessing, setBuyProcessing] = useState(false);
   const [buyError, setBuyError]   = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [online, setOnline] = useState<Record<string, boolean>>({});
+
+  // Live presence: a student is online while their practice page is open.
+  const studentIdsKey = students.map((st) => st.id).join(",");
+  useEffect(() => {
+    if (!studentIdsKey) return;
+    const channels = studentIdsKey.split(",").map((studentId) => {
+      const channel: any = (supabase as any)
+        .channel(`room:${studentId}`, { config: { private: true } })
+        .on("presence", { event: "sync" }, () => {
+          const state = channel.presenceState();
+          setOnline((prev) => ({ ...prev, [studentId]: Boolean(state[studentId]?.length) }));
+        })
+        .subscribe();
+      return channel;
+    });
+    return () => {
+      channels.forEach((c: any) => (supabase as any).removeChannel(c));
+    };
+  }, [studentIdsKey]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteDates, setNoteDates] = useState<Record<string, string>>({});
   const [savingNote, setSavingNote] = useState<string | null>(null);
@@ -324,7 +344,10 @@ const MyStudents = () => {
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-x-4 gap-y-1 items-center min-w-0">
                       <div className="min-w-0">
-                        <p className="font-semibold truncate">{s.full_name}</p>
+                        <p className="font-semibold truncate flex items-center gap-2">
+                          {s.full_name}
+                          {online[s.id] && <span className="text-[10px] font-bold text-emerald-400">● Online</span>}
+                        </p>
                         <p className="text-xs text-muted-foreground truncate">{s.email}</p>
                       </div>
                       <div className="min-w-0">
@@ -359,7 +382,15 @@ const MyStudents = () => {
                   {/* Expanded stats */}
                   {expandedId === s.id && (
                     <>
-                    <div className="border-t border-border bg-black/20 px-4 pt-3 pb-1 flex justify-end">
+                    <div className="border-t border-border bg-black/20 px-4 pt-3 pb-1 flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs h-7"
+                        onClick={() => { window.location.href = `/sheet-music-practice/index.html?room=${s.id}`; }}
+                      >
+                        {online[s.id] ? "● Enter live room" : "Enter room"}
+                      </Button>
                       <Button
                         size="sm"
                         className="gap-1.5 text-xs h-7 text-white border-0"

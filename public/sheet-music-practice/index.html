@@ -799,6 +799,8 @@
       .piano .key.black.correct { background: #15803d !important; }
       .piano .key.sounding, .piano .key.black.sounding { background: #ec4899 !important; }
       .piano .key.user-lit { background: var(--note-color) !important; }
+      .piano .key.flash { animation: keyFlash 0.3s ease-out; }
+      @keyframes keyFlash { 0% { filter: brightness(1.7); } 100% { filter: none; } }
 
       .results-dialog {
         background: var(--card) !important; color: var(--fg) !important;
@@ -978,6 +980,7 @@
         <button id="finishPerfBtn" type="button">Finish &amp; analyse</button>
         <button id="nextCheckpointBtn" type="button" disabled>Next checkpoint (admin)</button>
       </div>
+      <div id="roomStatus" class="practice-status" style="margin-bottom:6px"></div>
       <div class="practice-info">
         <div>State: <strong id="practiceState">Disconnected</strong></div>
         <div>Checkpoint: <strong id="cpInfo">-</strong></div>
@@ -1624,6 +1627,7 @@
           }
           loadBytes(await downloadSong(song), song.name);
           currentSongId = id;
+          window.roomSendSong?.(id);
           renderSongList();
           await writeCurrent({ songId: id });
           return true;

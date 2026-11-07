@@ -117,7 +117,7 @@ api.midiEventsPlayed.on((e) => {
     // Drum/percussion tracks use note numbers for instruments, not pitches.
     if (api.score?.tracks[event.track]?.isPercussion) continue;
 
-    if (!isOn) unlightKey(event.noteKey);
+    if (!isOn) releaseKey(event.noteKey);
     const count = soundingCounts.get(event.noteKey) ?? 0;
     if (isOn) {
       lightKey(event.noteKey);
@@ -948,6 +948,7 @@ function showResults(r) {
 }
 
 function noteOn(midi, velocity) {
+  roomNote(midi, velocity, true);
   practice.held.add(midi);
   lightKey(midi, true);
   practice.lastMidiEvent = { midi, velocity, pressed: true };
@@ -960,8 +961,9 @@ function noteOn(midi, velocity) {
 }
 
 function noteOff(midi) {
+  roomNote(midi, 0, false);
   practice.held.delete(midi);
-  unlightKey(midi);
+  releaseKey(midi);
   practice.lastMidiEvent = { midi, velocity: 0, pressed: false };
   refreshUi();
 }
@@ -1262,14 +1264,25 @@ function keyElement(midi) {
 function lightKey(midi, byUser = false) {
   const el = keyElement(midi);
   if (!el) return;
+  // Restart the flash, so a repeated note blinks again even when the key is already lit.
+  el.classList.remove("sounding", "user-lit", "flash");
+  void el.offsetWidth;
+  el.classList.add("flash");
   if (byUser) {
     el.style.setProperty("--note-color", RAINBOW[midi % 12]);
     el.classList.add("user-lit");
   } else {
     el.classList.add("sounding");
   }
+  // Score notes go dark by themselves. Keys you hold stay lit until you release them.
   clearTimeout(litTimers.get(midi));
-  litTimers.set(midi, setTimeout(() => unlightKey(midi), 900));
+  if (!byUser) litTimers.set(midi, setTimeout(() => unlightKey(midi), 900));
+}
+
+// Note ended: keep the highlight visible for a moment, so short and fast notes still show.
+function releaseKey(midi) {
+  clearTimeout(litTimers.get(midi));
+  litTimers.set(midi, setTimeout(() => unlightKey(midi), 250));
 }
 function unlightKey(midi) {
   const el = keyElement(midi);
@@ -1551,4 +1564,110 @@ api.playerPositionChanged.on((e) => {
 api.playerStateChanged.on((e) => {
   if (e.state !== PlayerState.Playing) metroScheduled.clear();
 });
+
+/** Live practice room: a student and their teacher share the score controls and the keys played.
+    The room is "room:<student id>". The student is online while they have this page open. **/
+const roomParam = new URLSearchParams(location.search).get("room");
+let room = null; // { channel, id, me, role }
+const roomStatusEl = document.getElementById("roomStatus");
+
+function setRoomStatus(text) {
+  if (roomStatusEl) roomStatusEl.textContent = text;
+}
+
+function sendRoom(payload) {
+  if (!room) return;
+  room.channel.send({ type: "broadcast", event: "control", payload: { ...payload, from: room.me } });
+}
+
+// Keys played on this keyboard go to the other person in the room.
+function roomNote(midi, velocity, on) {
+  if (room) sendRoom({ action: "note", midi, velocity, on });
+}
+
+// The song chosen here is sent to the room (only library songs can be shared).
+window.roomSendSong = (id) => {
+  if (typeof id === "string" && id.startsWith("lib-")) sendRoom({ action: "song", id });
+};
+
+function snapshot() {
+  return {
+    action: "snapshot",
+    id: typeof currentSongId === "string" && currentSongId.startsWith("lib-") ? currentSongId : null,
+    playing: api.playerState === PlayerState.Playing,
+    tick: api.tickPosition,
+  };
+}
+
+// Applies what the other person did. Each action is checked first, so nothing is sent back.
+function applyRemote(p) {
+  if (p.from === room?.me) return;
+  switch (p.action) {
+    case "play":
+      if (api.playerState !== PlayerState.Playing) api.play();
+      break;
+    case "pause":
+      if (api.playerState === PlayerState.Playing) api.pause();
+      break;
+    case "seek":
+      if (Math.abs(api.tickPosition - p.tick) > 960) api.tickPosition = p.tick;
+      break;
+    case "song":
+      if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
+      break;
+    case "note": {
+      const id = `room-${p.midi}`;
+      if (p.on) {
+        startKeySound(p.midi, p.velocity, id);
+        lightKey(p.midi, true);
+      } else {
+        stopKeySound(p.midi, id);
+        releaseKey(p.midi);
+      }
+      break;
+    }
+    case "snapshot":
+      if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
+      if (p.playing && api.playerState !== PlayerState.Playing) api.play();
+      if (!p.playing && api.playerState === PlayerState.Playing) api.pause();
+      if (Math.abs(api.tickPosition - p.tick) > 960) api.tickPosition = p.tick;
+      break;
+  }
+}
+
+// Score play / pause / stop, sent with the position so the other screen moves to the same place.
+api.playerStateChanged.on((e) => {
+  if (!room) return;
+  if (e.state === PlayerState.Playing) sendRoom({ action: "play", tick: api.tickPosition });
+  else if (e.state === PlayerState.Paused) sendRoom({ action: "pause", tick: api.tickPosition });
+});
+
+async function startRoom() {
+  const { data } = await sb.auth.getSession();
+  const me = data.session?.user?.id;
+  if (!me) return;
+  const roomId = roomParam || me;
+  const role = roomId === me ? "student" : "teacher";
+  const channel = sb.channel(`room:${roomId}`, {
+    config: { private: true, broadcast: { self: false }, presence: { key: me } },
+  });
+  room = { channel, id: roomId, me, role };
+  channel.on("broadcast", { event: "control" }, ({ payload }) => applyRemote(payload));
+  channel.on("broadcast", { event: "hello" }, () => {
+    if (role === "student") sendRoom(snapshot());
+  });
+  channel.on("presence", { event: "sync" }, () => {
+    const others = Object.keys(channel.presenceState()).filter((k) => k !== me);
+    if (role === "student") setRoomStatus(others.length ? "Teacher is in your room" : "You are online");
+    else setRoomStatus(others.length ? "Connected to the student's room" : "Waiting for the student to be online");
+  });
+  channel.subscribe(async (status) => {
+    if (status !== "SUBSCRIBED") return;
+    await channel.track({ userId: me, role, at: Date.now() });
+    if (role === "teacher") channel.send({ type: "broadcast", event: "hello", payload: {} });
+  });
+  setRoomStatus(role === "teacher" ? "Joining the student's room…" : "Connecting…");
+}
+
+startRoom();
 
