@@ -1341,33 +1341,64 @@
         redrawInk();
       };
 
+      // Points are sent to the other person in the room as they are drawn (in small batches).
+      let inkPending = [];
+      let inkFlushTimer = null;
+      function flushInk() {
+        if (!inkStroke || inkPending.length === 0) return;
+        const meta = { id: inkStroke.id, eraser: inkStroke.eraser, color: inkStroke.color, width: inkStroke.width };
+        window.roomSendInkPoints?.(inkKey(), meta, inkPending);
+        inkPending = [];
+      }
+
       ink.addEventListener("pointerdown", (e) => {
         if (!inkState.on) return;
         inkDrawing = true;
         ink.setPointerCapture(e.pointerId);
         inkStroke = {
+          id: crypto.randomUUID(),
           eraser: inkState.eraser,
           color: inkState.color,
           width: inkState.eraser ? 18 : 3,
           points: [inkPoint(e)],
         };
         inkStrokes().push(inkStroke);
+        inkPending = [inkStroke.points[0]];
+        clearInterval(inkFlushTimer);
+        inkFlushTimer = setInterval(flushInk, 40);
       });
       ink.addEventListener("pointermove", (e) => {
         if (!inkDrawing || !inkStroke) return;
         const point = inkPoint(e);
         const last = inkStroke.points[inkStroke.points.length - 1];
         inkStroke.points.push(point);
+        inkPending.push(point);
         drawInkSegment(last, point, inkStroke);
       });
       const endInk = () => {
         inkDrawing = false;
-        // A finished stroke goes to the other person in the room.
-        if (inkStroke) window.roomSendInk?.(inkKey(), inkStroke);
+        clearInterval(inkFlushTimer);
+        flushInk();
         inkStroke = null;
+        inkPending = [];
       };
 
-      // Strokes and clears from the other person in the room.
+      // Ink from the other person in the room: each batch of points is drawn straight away.
+      window.roomInkPoints = (piece, meta, points) => {
+        if (!inkByPiece.has(piece)) inkByPiece.set(piece, []);
+        const strokes = inkByPiece.get(piece);
+        let stroke = strokes.find((st) => st.id === meta.id);
+        if (!stroke) {
+          stroke = { ...meta, points: [] };
+          strokes.push(stroke);
+        }
+        const isCurrent = piece === inkKey();
+        for (const point of points) {
+          const last = stroke.points[stroke.points.length - 1];
+          stroke.points.push(point);
+          if (isCurrent && last) drawInkSegment(last, point, stroke);
+        }
+      };
       window.roomInkRemote = (piece, stroke) => {
         if (!inkByPiece.has(piece)) inkByPiece.set(piece, []);
         inkByPiece.get(piece).push(stroke);

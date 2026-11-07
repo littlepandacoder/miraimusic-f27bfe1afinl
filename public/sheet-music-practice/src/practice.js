@@ -1581,7 +1581,7 @@ function sendRoom(payload) {
 }
 
 // Pen strokes and clears are shared with the other person in the room.
-window.roomSendInk = (piece, stroke) => sendRoom({ action: "ink", piece, stroke });
+window.roomSendInkPoints = (piece, meta, points) => sendRoom({ action: "inkPts", piece, meta, points });
 window.roomSendInkClear = (piece) => sendRoom({ action: "inkClear", piece });
 
 // Keys played on this keyboard go to the other person in the room.
@@ -1661,8 +1661,8 @@ function applyRemote(p) {
       }
       break;
     }
-    case "ink":
-      window.roomInkRemote?.(p.piece, p.stroke);
+    case "inkPts":
+      window.roomInkPoints?.(p.piece, p.meta, p.points || []);
       break;
     case "inkClear":
       window.roomInkClearRemote?.(p.piece);
