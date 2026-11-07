@@ -119,6 +119,7 @@ api.midiEventsPlayed.on((e) => {
 
     const count = soundingCounts.get(event.noteKey) ?? 0;
     if (isOn) {
+      blinkKey(event.noteKey);
       soundingCounts.set(event.noteKey, count + 1);
     } else if (count > 1) {
       soundingCounts.set(event.noteKey, count - 1);
@@ -846,6 +847,7 @@ function showResults(r) {
 
 function noteOn(midi, velocity) {
   practice.held.add(midi);
+  blinkKey(midi);
   practice.lastMidiEvent = { midi, velocity, pressed: true };
   if (practice.enabled && practice.mode === "sync" && practice.perf.active) {
     practice.perf.presses.push({ t: playbackNowMs(), midi });
@@ -1136,8 +1138,17 @@ function refreshKeyboard() {
     el.classList.toggle("expected", expected.has(midi));
     el.classList.toggle("held", practice.held.has(midi));
     el.classList.toggle("correct", correct.has(midi));
-    el.classList.toggle("sounding", soundingCounts.has(midi));
   }
+}
+
+// Each note blinks its key once when it starts. The blink ends by itself, so a key never stays lit
+// when a note-off is missed.
+function blinkKey(midi) {
+  const el = ui.keys.querySelector(`.key[data-midi="${midi}"]`);
+  if (!el) return;
+  el.classList.remove("blink");
+  void el.offsetWidth; // restart the animation for repeated notes
+  el.classList.add("blink");
 }
 
 /** Input from the on-screen keyboard and the computer keyboard **/

@@ -872,6 +872,12 @@
       /* Track selector removed: the score fills the full width */
       .at-sidebar { display: none !important; }
       .at-viewport { left: 0 !important; }
+      /* Keyboard: a key blinks when its note starts */
+      .piano .key.blink { animation: keyBlink 0.4s ease-out; }
+      @keyframes keyBlink {
+        0% { box-shadow: 0 0 16px 5px rgba(236,72,153,.95); filter: brightness(1.35); }
+        100% { box-shadow: none; filter: none; }
+      }
       @media (max-width: 720px) {
         .upload-bar { flex-wrap: wrap !important; }
         .upload-bar .loop-status { white-space: normal; }
