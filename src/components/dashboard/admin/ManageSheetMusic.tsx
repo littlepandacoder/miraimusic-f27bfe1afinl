@@ -20,6 +20,7 @@ interface Category {
   id: string;
   name: string;
   sort_order: number;
+  thumbnail_path: string | null;
 }
 
 interface LibrarySong {
@@ -55,20 +56,32 @@ const ManageSheetMusic = () => {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
+  const [catThumbUrls, setCatThumbUrls] = useState<Record<string, string>>({});
 
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "No category";
 
   const loadCategories = async () => {
     const { data, error } = await db
       .from("sheet_music_categories")
-      .select("id, name, sort_order")
+      .select("id, name, sort_order, thumbnail_path")
       .order("sort_order")
       .order("name");
     if (error) {
       toast({ title: "Error loading categories", description: error.message, variant: "destructive" });
       return;
     }
-    setCategories((data ?? []) as Category[]);
+    const rows = (data ?? []) as Category[];
+    setCategories(rows);
+    const urls: Record<string, string> = {};
+    await Promise.all(
+      rows
+        .filter((c) => c.thumbnail_path)
+        .map(async (c) => {
+          const { data: signed } = await supabase.storage.from(THUMB_BUCKET).createSignedUrl(c.thumbnail_path as string, 3600);
+          if (signed?.signedUrl) urls[c.id] = signed.signedUrl;
+        }),
+    );
+    setCatThumbUrls(urls);
   };
 
   const load = async () => {
@@ -161,8 +174,45 @@ const ManageSheetMusic = () => {
       });
       return;
     }
+    if (category.thumbnail_path) await supabase.storage.from(THUMB_BUCKET).remove([category.thumbnail_path]);
     toast({ title: "Category deleted" });
     await load();
+  };
+
+  // Category thumbnail: the picture students see for this category on the library page.
+  const uploadCategoryThumb = async (category: Category, image: File | undefined) => {
+    if (!image) return;
+    if (!THUMB_FILE.test(image.name)) {
+      toast({ title: "Unsupported image", description: "Choose a .png, .jpg or .webp image.", variant: "destructive" });
+      return;
+    }
+    const ext = image.name.split(".").pop()!.toLowerCase();
+    const path = `category-${category.id}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from(THUMB_BUCKET).upload(path, image, {
+      contentType: image.type || "image/png",
+      upsert: false,
+    });
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      return;
+    }
+    const { data, error } = await db
+      .from("sheet_music_categories")
+      .update({ thumbnail_path: path })
+      .eq("id", category.id)
+      .select("id");
+    if (error || !data || data.length === 0) {
+      await supabase.storage.from(THUMB_BUCKET).remove([path]);
+      toast({
+        title: "Could not save the image",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (category.thumbnail_path) await supabase.storage.from(THUMB_BUCKET).remove([category.thumbnail_path]);
+    toast({ title: "Category image saved" });
+    await loadCategories();
   };
 
   // ---- Songs ----
@@ -320,13 +370,30 @@ const ManageSheetMusic = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="min-w-0">
+                      <div className="flex items-center gap-4 min-w-0">
+                        {catThumbUrls[category.id] ? (
+                          <img src={catThumbUrls[category.id]} alt="" className="w-12 h-16 rounded-md object-cover border border-border shrink-0" />
+                        ) : (
+                          <div className="w-12 h-16 rounded-md border border-border shrink-0 bg-muted" />
+                        )}
                         <p className="font-semibold truncate">{category.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {songs.filter((s) => s.category_id === category.id).length} song(s)
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
+                        <label className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload category image" aria-label={`Upload image for ${category.name}`}>
+                          <Upload className="w-4 h-4" />
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            className="hidden"
+                            onChange={(e) => {
+                              uploadCategoryThumb(category, e.target.files?.[0]);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
                         <Button
                           variant="ghost"
                           size="icon"

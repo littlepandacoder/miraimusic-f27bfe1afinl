@@ -59,6 +59,7 @@
       .info { padding: 12px 14px 14px; }
       .title { font-weight: 700; font-size: 15px; line-height: 1.3; margin: 0; }
       .composer { color: var(--muted-fg); font-size: 12px; margin: 4px 0 0; }
+      .back-link { display: inline-block; color: var(--primary); font-weight: 700; margin-bottom: 16px; text-decoration: none; }
       .state { color: var(--muted-fg); font-size: 15px; padding: 30px 0; }
       .section-title { font-size: 18px; font-weight: 800; margin: 26px 0 12px; }
       .section-title:first-child { margin-top: 0; }
@@ -121,7 +122,7 @@
     </header>
     <main>
       <h1>Choose a piece</h1>
-      <p class="intro">Tap a picture to open the sheet music and practise it.</p>
+      <p id="intro" class="intro">Tap a picture to open the sheet music and practise it.</p>
       <div id="state" class="state">Loading library…</div>
       <div id="sections"></div>
     </main>
@@ -190,17 +191,6 @@
       const stateEl = document.getElementById("state");
       const sections = document.getElementById("sections");
 
-      // One section per category; songs without a category go under "Other".
-      function addSection(title, songs, urls) {
-        if (songs.length === 0) return;
-        const heading = document.createElement("h2");
-        heading.className = "section-title";
-        heading.textContent = title;
-        const grid = document.createElement("div");
-        grid.className = "grid";
-        songs.forEach(({ song, url }) => grid.appendChild(makeCard(song, url)));
-        sections.append(heading, grid);
-      }
 
       const showState = (html) => {
         stateEl.innerHTML = html;
@@ -367,6 +357,99 @@
         return card;
       }
 
+      const intro = document.getElementById("intro");
+      let categories = [];
+      let songs = [];
+      let songUrls = {};
+      let categoryUrls = {};
+
+      // A tile for a category (or a song): picture, title, subtitle. Tapping it goes to the hash link.
+      function makeTile(title, subtitle, thumbUrl, hash) {
+        const tile = document.createElement("a");
+        tile.className = "card";
+        tile.href = hash;
+        const thumb = document.createElement("div");
+        if (thumbUrl) {
+          thumb.className = "thumb";
+          const img = document.createElement("img");
+          img.alt = "";
+          img.loading = "lazy";
+          img.src = thumbUrl;
+          thumb.appendChild(img);
+        } else {
+          thumb.className = "thumb placeholder";
+          thumb.textContent = "♪";
+        }
+        const info = document.createElement("div");
+        info.className = "info";
+        const titleEl = document.createElement("p");
+        titleEl.className = "title";
+        titleEl.textContent = title;
+        info.appendChild(titleEl);
+        if (subtitle) {
+          const sub = document.createElement("p");
+          sub.className = "composer";
+          sub.textContent = subtitle;
+          info.appendChild(sub);
+        }
+        tile.append(thumb, info);
+        return tile;
+      }
+
+      // Songs that belong to no category are shown under "Other".
+      const categoryIds = () => new Set(categories.map((c) => c.id));
+      const songsIn = (id) => (id === "other"
+        ? songs.filter((s) => !categoryIds().has(s.category_id))
+        : songs.filter((s) => s.category_id === id));
+
+      function renderCategories() {
+        intro.textContent = "Tap a category to see its songs.";
+        sections.innerHTML = "";
+        const groups = categories.map((c) => ({ id: c.id, name: c.name }));
+        if (songsIn("other").length > 0) groups.push({ id: "other", name: "Other" });
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        for (const group of groups) {
+          const inside = songsIn(group.id);
+          const firstWithPicture = inside.find((s) => songUrls[s.id]);
+          const picture = categoryUrls[group.id] || (firstWithPicture ? songUrls[firstWithPicture.id] : null);
+          const count = `${inside.length} song${inside.length === 1 ? "" : "s"}`;
+          grid.appendChild(makeTile(group.name, count, picture, `#cat=${group.id}`));
+        }
+        sections.appendChild(grid);
+      }
+
+      function renderCategorySongs(id) {
+        const name = id === "other" ? "Other" : (categories.find((c) => c.id === id)?.name ?? null);
+        if (name === null) {
+          location.hash = "";
+          return;
+        }
+        intro.textContent = name;
+        sections.innerHTML = "";
+        const back = document.createElement("a");
+        back.className = "back-link";
+        back.href = "#";
+        back.textContent = "← All categories";
+        sections.appendChild(back);
+        const inside = songsIn(id);
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        if (inside.length === 0) {
+          showState("No songs in this category yet.");
+        } else {
+          showState("");
+          inside.forEach((song) => grid.appendChild(makeCard(song, songUrls[song.id])));
+        }
+        sections.appendChild(grid);
+      }
+
+      function renderView() {
+        const match = location.hash.match(/cat=([^&]+)/);
+        if (match) renderCategorySongs(decodeURIComponent(match[1]));
+        else renderCategories();
+      }
+
       async function load() {
         try {
           const { data: sessionData } = await sb.auth.getSession();
@@ -375,41 +458,35 @@
             return;
           }
 
-          const { data: categories, error: categoryError } = await sb
+          const { data: categoryRows, error: categoryError } = await sb
             .from("sheet_music_categories")
-            .select("id, name, sort_order")
+            .select("id, name, sort_order, thumbnail_path")
             .order("sort_order")
             .order("name");
           if (categoryError) throw categoryError;
+          categories = categoryRows || [];
 
           const { data, error } = await sb
             .from("sheet_music_library")
             .select("id, title, composer, thumbnail_path, category_id, created_at")
             .order("created_at", { ascending: false });
           if (error) throw error;
+          songs = data || [];
 
-          if (!data || data.length === 0) {
+          // Private thumbnails: short-lived signed links for songs and categories.
+          const sign = (path) => sb.storage.from(THUMB_BUCKET).createSignedUrl(path, 3600).then(({ data: signed }) => (signed ? signed.signedUrl : null));
+          const songLinks = await Promise.all(songs.map((song) => (song.thumbnail_path ? sign(song.thumbnail_path) : null)));
+          const categoryLinks = await Promise.all(categories.map((c) => (c.thumbnail_path ? sign(c.thumbnail_path) : null)));
+          songUrls = Object.fromEntries(songs.map((song, i) => [song.id, songLinks[i]]));
+          categoryUrls = Object.fromEntries(categories.map((c, i) => [c.id, categoryLinks[i]]));
+
+          if (songs.length === 0 && categories.length === 0) {
             showState("No sheet music in the library yet.");
             return;
           }
-
-          // Private thumbnails: create short-lived signed links for the images.
-          const urls = await Promise.all(
-            data.map(async (song) => {
-              if (!song.thumbnail_path) return null;
-              const { data: signed } = await sb.storage
-                .from(THUMB_BUCKET)
-                .createSignedUrl(song.thumbnail_path, 3600);
-              return signed ? signed.signedUrl : null;
-            }),
-          );
-
-          const withUrls = data.map((song, i) => ({ song, url: urls[i] }));
-          for (const category of categories || []) {
-            addSection(category.name, withUrls.filter(({ song }) => song.category_id === category.id));
-          }
-          addSection("Other", withUrls.filter(({ song }) => !song.category_id || !(categories || []).some((c) => c.id === song.category_id)));
           showState("");
+          window.addEventListener("hashchange", renderView);
+          renderView();
         } catch (e) {
           showState(`Could not load the library: ${e.message ?? e}`);
         }
