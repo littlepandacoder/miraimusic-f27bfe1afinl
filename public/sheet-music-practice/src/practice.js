@@ -1629,6 +1629,22 @@ function catchUp(tick, sentAt) {
   api.tickPosition = tick + catchUpTicks(sentAt);
 }
 
+// Everything that is shown in the room: piece, position, ink and selection.
+function sendFullState() {
+  sendRoom(snapshot());
+  const piece = typeof currentSongId === "string" && currentSongId.startsWith("lib-") ? currentSongId : "demo";
+  sendRoom({ action: "inkAll", piece, strokes: window.roomGetInk?.(piece) || [] });
+  const selection = window.roomCurrentRange?.();
+  if (selection) sendRoom({ action: "range", range: selection.range, looping: selection.looping });
+}
+
+// Opens the piece the other person has. The piece list may still be loading after a refresh, so retry briefly.
+function openRemoteSong(p, attempt = 0) {
+  if (!p.id || p.id === currentSongId) return;
+  if (songs.some((s) => s.id === p.id)) openSong(p.id);
+  else if (attempt < 20) setTimeout(() => openRemoteSong(p, attempt + 1), 500);
+}
+
 // Applies what the other person did. Each action is checked first, so nothing is sent back.
 function applyRemote(p) {
   if (p.from === room?.me) return;
@@ -1651,7 +1667,7 @@ function applyRemote(p) {
       if (Math.abs(api.tickPosition - p.tick) > 960) api.tickPosition = p.tick;
       break;
     case "song":
-      if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
+      openRemoteSong(p);
       break;
     case "note": {
       const id = `room-${p.midi}`;
@@ -1677,7 +1693,7 @@ function applyRemote(p) {
       window.roomSetInk?.(p.piece, p.strokes || []);
       break;
     case "snapshot":
-      if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
+      openRemoteSong(p);
       if (p.playing && api.playerState !== PlayerState.Playing) api.play();
       if (!p.playing && api.playerState === PlayerState.Playing) api.pause();
       if (p.playing) catchUp(p.tick, p.at);
@@ -1704,15 +1720,9 @@ async function startRoom() {
   });
   room = { channel, id: roomId, me, role };
   channel.on("broadcast", { event: "control" }, ({ payload }) => applyRemote(payload));
-  channel.on("broadcast", { event: "hello" }, () => {
-    if (role === "student") {
-      sendRoom(snapshot());
-      const piece = typeof currentSongId === "string" && currentSongId.startsWith("lib-") ? currentSongId : "demo";
-      sendRoom({ action: "inkAll", piece, strokes: window.roomGetInk?.(piece) || [] });
-      const selection = window.roomCurrentRange?.();
-      if (selection) sendRoom({ action: "range", range: selection.range, looping: selection.looping });
-    }
-  });
+  // Whoever connects asks for the other person's state, and both answer with their current state.
+  // So a refresh picks up where the room is, instead of starting from zero.
+  channel.on("broadcast", { event: "hello" }, () => sendFullState());
   channel.on("presence", { event: "sync" }, () => {
     const others = Object.keys(channel.presenceState()).filter((k) => k !== me);
     if (role === "student") setRoomStatus(others.length ? "Teacher is in your room" : "You are online");
@@ -1721,7 +1731,7 @@ async function startRoom() {
   channel.subscribe(async (status) => {
     if (status !== "SUBSCRIBED") return;
     trackRoomPresence();
-    if (role === "teacher") channel.send({ type: "broadcast", event: "hello", payload: {} });
+    channel.send({ type: "broadcast", event: "hello", payload: {} });
   });
   setRoomStatus(role === "teacher" ? "Joining the student's room…" : "Connecting…");
   // While the score plays, send the position a few times a second so both screens stay together.

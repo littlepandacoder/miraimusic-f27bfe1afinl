@@ -2033,6 +2033,8 @@
         api.playbackRange = range ? { startTick: range.startTick, endTick: range.endTick } : null;
         if (!range) api.clearPlaybackRangeHighlight();
         api.isLooping = looping;
+        // alphaTab may round the selection to whole bars: remember it as stored, so it is not sent back.
+        lastRangeKey = rangeKey(api.playbackRange, api.isLooping);
         refreshLoopUi();
       };
 
