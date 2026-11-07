@@ -1,4 +1,5 @@
-import { startKeySound, stopKeySound } from "./keySampler.js";
+import { startKeySound, stopKeySound, silencePiano, playWoodblock, audioReady } from "./keySampler.js";
+import { checkMidiConnection } from "./midiCheck.mjs";
 
 /*
  * Musicable MIDI practice mode.
@@ -22,6 +23,13 @@ const CURSOR_STICK_MS = 250;
 const CHECKPOINT_LATE_TICKS = 480;
 const FEEDBACK_FLASH_MS = 700;
 
+// Wait mode: what happened at each checkpoint (index -> wrong key presses, answered, skipped).
+let waitLog = new Map();
+function waitEntry(index) {
+  if (!waitLog.has(index)) waitLog.set(index, { wrong: [], correct: false, skipped: false });
+  return waitLog.get(index);
+}
+
 
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const midiName = (midi) => `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
@@ -30,6 +38,7 @@ const isBlackKey = (midi) => [1, 3, 6, 8, 10].includes(midi % 12);
 const $ = (id) => document.getElementById(id);
 const ui = {
   connectBtn: $("midiConnectBtn"),
+  testBtn: $("midiTestBtn"),
   deviceSelect: $("midiDeviceSelect"),
   midiStatus: $("midiStatus"),
   practiceToggle: $("practiceToggle"),
@@ -80,17 +89,19 @@ const MidiEventTypes = window.alphaTab.midi.MidiEventType;
 api.midiEventsPlayedFilter = [MidiEventTypes.NoteOn, MidiEventTypes.NoteOff, MidiEventTypes.AlphaTabMetronome];
 
 // Metronome click: a short tone, higher on the first beat of a bar.
-const CLICK_MIDI_ACCENT = 84;
-const CLICK_MIDI = 76;
-const CLICK_MS = 70;
-let clickCounter = 0;
-function playMetronomeClick(accent) {
-  const id = `metronome:${clickCounter++}`;
-  startKeySound(accent ? CLICK_MIDI_ACCENT : CLICK_MIDI, 110, id);
-  setTimeout(() => stopKeySound(accent ? CLICK_MIDI_ACCENT : CLICK_MIDI, id), CLICK_MS);
+
+
+// Each note-on gets its own voice; its note-off releases the oldest voice for that pitch, in order.
+const scoreVoices = new Map(); // "track-pitch" -> [voice id, ...] still sounding
+
+// Pausing or stopping the score must not leave its notes ringing.
+function releaseScoreVoices() {
+  scoreVoices.clear();
+  silencePiano();
 }
 
 function clearSounding() {
+  releaseScoreVoices();
   stopAccompaniment();
   if (soundingCounts.size === 0) return;
   soundingCounts.clear();
@@ -189,12 +200,6 @@ function flushAccompaniment() {
 }
 
 api.midiEventsPlayed.on((e) => {
-  // While practising, the score is muted, so the metronome is played as clicks through the sampler.
-  if (practice.enabled && api.metronomeVolume > 0) {
-    for (const event of e.events) {
-      if (event.isMetronome) playMetronomeClick(event.metronomeNumerator === 0); // beats are numbered from 0
-    }
-  }
   const filter = ui.clefSelect.value;
   // Only while practising a single clef; the other clef is the accompaniment.
   if (!practice.enabled || filter === "both") {
@@ -322,6 +327,7 @@ function firstIndexAtOrAfter(tick) {
 
 function rebuildCheckpoints(fromStart = false) {
   practice.checkpoints = buildCheckpoints();
+  waitLog = new Map();
   practice.waiting = null;
   practice.completed = false;
   practice.nextIndex = fromStart ? 0 : firstIndexAtOrAfter(practice.lastTick);
@@ -441,6 +447,7 @@ api.playerStateChanged.on((e) => {
 api.playerFinished.on(() => {
   clearSounding();
   if (practice.perf.active) finishPerformance();
+  else if (practice.enabled && practice.mode === "wait" && waitLog.size > 0) finishWaitPractice();
   if (practice.enabled) practice.completed = true;
   practice.waiting = null;
   refreshUi();
@@ -460,16 +467,17 @@ function chordWindowMs() {
 }
 
 // Keys pressed on the connected MIDI keyboard also sound through the key sampler.
-const MIDI_VOICE = "midi";
+// Each key gets its own voice, so a chord keeps every note sounding (polyphony).
+const midiVoice = (note) => `midi-${note}`;
 
 function handleMidiMessage(event) {
   const [status, note, velocity = 0] = event.data;
   const type = status & 0xf0;
   if (type === 0x90 && velocity > 0) {
-    startKeySound(note, velocity, MIDI_VOICE);
+    startKeySound(note, velocity, midiVoice(note));
     noteOn(note, velocity);
   } else if (type === 0x80 || (type === 0x90 && velocity === 0)) {
-    stopKeySound(note, MIDI_VOICE);
+    stopKeySound(note, midiVoice(note));
     noteOff(note);
   }
 }
@@ -616,6 +624,109 @@ function gradeFor(score) {
   return { letter: "D", title: "Keep practising", color: "#ef5350" };
 }
 
+function finishWaitPractice() {
+  const results = scoreWaitPractice(practice.checkpoints, waitLog);
+  waitLog = new Map();
+  showWaitResults(results);
+  refreshUi();
+}
+
+// Pure scoring for wait mode. A "mistake" is each wrong key press while a checkpoint waits.
+function scoreWaitPractice(checkpoints, log) {
+  let rightFirst = 0;
+  let fixed = 0; // wrong at least once, then the right note(s) were played
+  let unresolved = 0; // wrong and never corrected
+  let skipped = 0;
+  let wrongPresses = 0;
+  let reached = 0;
+  const rows = [];
+  checkpoints.forEach((cp, index) => {
+    const entry = log.get(index);
+    if (!entry) return;
+    reached++;
+    wrongPresses += entry.wrong.length;
+    if (entry.correct && entry.wrong.length === 0) rightFirst++;
+    else if (entry.correct) fixed++;
+    else if (entry.skipped) skipped++;
+    else unresolved++;
+    if (entry.wrong.length > 0) {
+      rows.push({ bar: cp.bar, expected: cp.midi, wrong: entry.wrong, corrected: entry.correct });
+    }
+  });
+  const total = checkpoints.length;
+  return {
+    total,
+    reached,
+    rightFirst,
+    fixed,
+    unresolved,
+    skipped,
+    wrongPresses,
+    rows,
+    accuracy: total ? (rightFirst / total) * 100 : 0,
+  };
+}
+
+function showWaitResults(r) {
+  const body = document.querySelector("#resultsBody");
+  const dialog = document.querySelector("#resultsDialog");
+  const make = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const grade = gradeFor(r.accuracy);
+  const stars = r.accuracy >= 85 ? 3 : r.accuracy >= 60 ? 2 : r.accuracy >= 35 ? 1 : 0;
+  const notReached = r.total - r.reached;
+
+  body.innerHTML = "";
+  const content = make("div", "results-body");
+
+  const banner = make("div", "res-banner");
+  const badge = make("div", "res-grade", grade.letter);
+  badge.style.background = grade.color;
+  const info = make("div", "res-info");
+  info.append(make("div", "res-title", grade.title), make("div", "res-stars", "★".repeat(stars) + "☆".repeat(3 - stars)));
+  const scoreBox = make("div", "res-score");
+  scoreBox.append(make("span", "res-score-num", String(Math.round(r.accuracy))), make("span", "res-score-unit", "%"));
+  banner.append(badge, info, scoreBox);
+
+  const tiles = make("div", "res-tiles");
+  const tile = (icon, value, label, className) => {
+    const node = make("div", `res-tile ${className}`);
+    node.append(make("div", "res-tile-icon", icon), make("div", "res-tile-value", value), make("div", "res-tile-label", label));
+    return node;
+  };
+  tiles.append(
+    tile("🎯", `${r.rightFirst}/${r.total}`, "Right first time", "good"),
+    tile("⚠️", String(r.wrongPresses), "Wrong key presses", "warn"),
+    tile("🔁", String(r.fixed), "Wrong, then right", "info"),
+    tile("💨", String(r.unresolved + r.skipped + notReached), "Not played", "bad"),
+  );
+
+  const counts = make("div", "res-counts");
+  counts.textContent = `Right first time ${r.rightFirst} · Wrong then right ${r.fixed} · Wrong, not corrected ${r.unresolved} · Skipped ${r.skipped} · Not reached ${notReached}`;
+
+  const list = make("div", "res-timing");
+  if (r.rows.length === 0) {
+    list.appendChild(make("div", "res-timing-row ontime", "No wrong notes played"));
+  }
+  for (const row of r.rows) {
+    const detail = `played ${row.wrong.map(midiName).join(", ")} · ${row.corrected ? "then corrected" : "not corrected"}`;
+    const el = make("div", `res-timing-row ${row.corrected ? "late" : "wrong"}`);
+    el.append(
+      make("span", "res-timing-note", `bar ${row.bar} · expected ${row.expected.map(midiName).join(" + ")}`),
+      make("span", "res-timing-detail", detail),
+    );
+    list.appendChild(el);
+  }
+
+  content.append(banner, tiles, counts, make("div", "res-sub", "Wrong key presses (each one is a mistake)"), list);
+  body.appendChild(content);
+  dialog.showModal();
+}
+
 function showResults(r) {
   const body = document.querySelector("#resultsBody");
   const dialog = document.querySelector("#resultsDialog");
@@ -757,6 +868,7 @@ function checkInput(midi) {
 
   // Exact MIDI number match: octave mismatches are wrong.
   if (!cp.midi.includes(midi)) {
+    waitEntry(waiting.index).wrong.push(midi);
     setFeedback("wrong", `Wrong note: you played ${midiName(midi)} (${midi}). Expected ${cp.midi.map(midiName).join(" + ")}.`);
     return;
   }
@@ -769,6 +881,7 @@ function checkInput(midi) {
   waiting.pressed.add(midi);
 
   if (waiting.pressed.size === cp.midi.length) {
+    waitEntry(waiting.index).correct = true;
     setFeedback("correct", `Correct: ${cp.midi.map(midiName).join(" + ")}`);
     flashKeys(cp.midi);
     resumePlayback();
@@ -852,21 +965,41 @@ async function connectMidi() {
   }
 }
 
+// Runs the step-by-step MIDI check (browser, permission, keyboard, key press) and reports each step.
+async function testMidiConnection() {
+  let granted = null;
+  setFeedback("info", "Testing the MIDI connection. Press any key on the keyboard within 10 seconds.");
+  const steps = await checkMidiConnection({
+    midi: {
+      supported: !!navigator.requestMIDIAccess,
+      requestAccess: async (options) => (granted = await navigator.requestMIDIAccess(options)),
+    },
+    timeoutMs: 10000,
+  });
+  // Keep the access the test obtained, so the keyboard is connected without a second permission prompt.
+  if (granted && !practice.midiAccess) {
+    practice.midiAccess = granted;
+    granted.onstatechange = refreshDevices;
+    refreshDevices();
+  }
+  const passed = steps.every((s) => s.ok);
+  const report = steps.map((s) => `${s.ok ? "✓" : "✗"} ${s.name}${s.detail ? `: ${s.detail}` : ""}`).join("  ");
+  setFeedback(passed ? "correct" : "wrong", `MIDI test ${passed ? "passed" : "failed"}. ${report}`);
+  refreshUi();
+}
+
 ui.connectBtn.onclick = connectMidi;
+ui.testBtn.onclick = testMidiConnection;
 ui.deviceSelect.onchange = () => selectDevice(ui.deviceSelect.value);
 
 /** Controls **/
 // The score's own sound is muted during practice so only the student's key presses are heard.
 // The volume the user had before practice is restored when practice is turned off.
 let volumeBeforePractice = null;
+// Only wait mode mutes the score: it stops at each note, so only the student's keys should be heard.
+// Sync mode plays the score through, so the performance is audible.
 function applyPracticeMute() {
-  if (practice.enabled) {
-    if (volumeBeforePractice === null) volumeBeforePractice = api.masterVolume;
-    api.masterVolume = 0;
-  } else if (volumeBeforePractice !== null) {
-    api.masterVolume = volumeBeforePractice;
-    volumeBeforePractice = null;
-  }
+  silenceAlphaTabSynth();
 }
 
 ui.practiceToggle.onchange = () => {
@@ -889,6 +1022,7 @@ ui.modeSelect.onchange = () => { rebuildCheckpoints(); refreshUi(); };
 
 ui.practiceMode.onchange = () => {
   practice.mode = ui.practiceMode.value;
+  applyPracticeMute();
   practice.perf = { active: false, presses: [] };
   if (practice.waiting) resumePlayback();
   setFeedback("info", practice.mode === "sync"
@@ -901,6 +1035,9 @@ ui.finishBtn.onclick = () => {
   if (practice.perf.active) {
     api.pause();
     finishPerformance();
+  } else if (practice.mode === "wait" && waitLog.size > 0) {
+    api.pause();
+    finishWaitPractice();
   } else {
     setFeedback("info", "No performance in progress. Press play in sync mode to start one.");
   }
@@ -920,6 +1057,7 @@ ui.resumeBtn.onclick = () => {
 
 ui.resetBtn.onclick = () => {
   resetPerformance();
+  waitLog = new Map();
   practice.waiting = null;
   practice.completed = false;
   practice.nextIndex = 0;
@@ -933,6 +1071,7 @@ ui.nextBtn.onclick = () => {
     setFeedback("info", "Playback is not waiting at a checkpoint.");
     return;
   }
+  waitEntry(practice.waiting.index).skipped = true;
   const skipped = practice.waiting.index + 1;
   setFeedback("info", `Skipped checkpoint ${skipped} (administrative).`);
   resumePlayback();
@@ -1033,18 +1172,21 @@ function releasePointerKey(e) {
 window.addEventListener("pointerup", releasePointerKey);
 window.addEventListener("pointercancel", releasePointerKey);
 
-// Computer keyboard (ignored while typing in a text field).
-function isTyping(target) {
+// Computer keyboard. Only real text entry blocks the note keys. A focused dropdown, checkbox,
+// slider or button must not stop notes from sounding (it used to, so chords went silent).
+function isTextEntry(target) {
   return target.isContentEditable
     || target instanceof HTMLTextAreaElement
-    || target instanceof HTMLSelectElement
-    || (target instanceof HTMLInputElement && !["checkbox", "range", "button"].includes(target.type));
+    || (target instanceof HTMLInputElement && ["text", "search", "email", "password", "url", "tel", "number"].includes(target.type));
 }
 
 window.addEventListener("keydown", (e) => {
-  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   const midi = COMPUTER_KEYS[e.code];
-  if (midi === undefined || computerKeysDown.has(e.code)) return;
+  if (midi === undefined || isTextEntry(e.target)) return;
+  // A focused dropdown would otherwise jump to the option matching the letter pressed.
+  if (e.target instanceof HTMLSelectElement) e.target.blur();
+  if (computerKeysDown.has(e.code)) return;
   computerKeysDown.set(e.code, midi);
   startKeySound(midi, SCREEN_VELOCITY);
   noteOn(midi, SCREEN_VELOCITY);
@@ -1076,7 +1218,32 @@ function stateLabel() {
   return "Ready";
 }
 
+// Status bar in the settings pop-up: shows whether a MIDI keyboard is connected, and which one.
+function updateMidiBar() {
+  const bar = document.getElementById("psMidiBar");
+  const text = document.getElementById("psMidiText");
+  if (!bar || !text) return;
+  let state;
+  let message;
+  if (practice.device) {
+    state = "on";
+    message = `MIDI keyboard connected: ${practice.device.name || practice.device.id}`;
+  } else if (practice.error) {
+    state = "warn";
+    message = practice.error;
+  } else if (practice.midiAccess) {
+    state = "warn";
+    message = "MIDI is on, but no keyboard is detected. Plug it in, or check that it is switched on.";
+  } else {
+    state = "warn";
+    message = "No MIDI keyboard connected. Press Connect MIDI Keyboard, or use the on-screen keys.";
+  }
+  bar.className = `midi-bar ${state}`;
+  text.textContent = message;
+}
+
 function refreshUi() {
+  updateMidiBar();
   flushAccompaniment();
   // Connection status
   if (practice.error) {
@@ -1129,3 +1296,121 @@ if (api.score) {
   rebuildCheckpoints();
 }
 refreshUi();
+
+/** Settings chosen in the library pop-up (URL parameters), applied before the score loads **/
+function applyLaunchSettings() {
+  const params = new URLSearchParams(location.search);
+  if (!params.has("song")) return;
+  const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
+  ui.practiceMode.value = pick(params.get("mode"), ["wait", "sync"], "wait");
+  ui.modeSelect.value = pick(params.get("checkpoints"), ["note", "measure"], "note");
+  ui.clefSelect.value = pick(params.get("clef"), ["both", "treble", "bass"], "both");
+  const chord = Number(params.get("chord"));
+  if (Number.isFinite(chord) && chord >= 50 && chord <= 1000) ui.chordWindow.value = String(chord);
+  // "Just play" (mode=play) turns practice off: the score plays normally, with no checks or results.
+  ui.practiceToggle.checked = params.get("mode") !== "play" && params.get("require") !== "0";
+  practice.mode = ui.practiceMode.value;
+  practice.enabled = ui.practiceToggle.checked;
+  applyPracticeMute();
+  refreshUi();
+}
+applyLaunchSettings();
+
+/** Score playback through the Salamander piano samples. alphaTab's own synth is silenced, so only these play. **/
+let scoreVoiceSerial = 0;
+// alphaTab's synth sets its volume back to full when it (re)initialises, so keep it silenced.
+function silenceAlphaTabSynth() {
+  api.masterVolume = 0;
+}
+silenceAlphaTabSynth();
+api.playerReady.on(silenceAlphaTabSynth);
+api.soundFontLoad.on(silenceAlphaTabSynth);
+api.scoreLoaded.on(silenceAlphaTabSynth);
+api.midiEventsPlayed.on((e) => {
+  // In wait mode the score is silent: the student plays the notes, and accompaniment is handled above.
+  if (practice.enabled && practice.mode === "wait") return;
+  for (const event of e.events) {
+    const isOn = event.command === MidiEventTypes.NoteOn && event.noteVelocity > 0;
+    const isOff = event.command === MidiEventTypes.NoteOff || (event.command === MidiEventTypes.NoteOn && event.noteVelocity === 0);
+    if (!isOn && !isOff) continue;
+    if (api.score?.tracks[event.track]?.isPercussion) continue;
+    const key = `${event.track}-${event.noteKey}`;
+    if (isOn) {
+      // Treble-only or bass-only: the other clef is muted (notes of unknown clef still play).
+      const clefFilter = ui.clefSelect.value;
+      const kind = clefOfNoteAt(event.tick, event.noteKey);
+      if (clefFilter !== "both" && (kind === "treble" || kind === "bass") && kind !== clefFilter) continue;
+      const id = `score-${++scoreVoiceSerial}`;
+      if (!scoreVoices.has(key)) scoreVoices.set(key, []);
+      scoreVoices.get(key).push(id);
+      startKeySound(event.noteKey, event.noteVelocity, id);
+    } else {
+      const queue = scoreVoices.get(key);
+      if (!queue || queue.length === 0) continue;
+      stopKeySound(event.noteKey, queue.shift());
+    }
+  }
+});
+
+/** Metronome: clicks are scheduled from the score's beats ahead of time, so they land on the beat. **/
+// alphaTab reports a beat only after it has passed, so the clicks are not taken from its events.
+let metroBeats = []; // { tick, accent, ticksPerBeat } sorted by tick
+let metroPosition = null; // { time (ms), tick, bpm, wall (performance.now()) } from the latest position update
+let metroScheduled = new Set(); // ticks already queued for a click
+const METRO_LOOKAHEAD_MS = 250;
+
+function buildMetronomeBeats() {
+  metroBeats = [];
+  const bars = api.score?.masterBars ?? [];
+  bars.forEach((bar, i) => {
+    const next = bars[i + 1];
+    const barTicks = next ? next.start - bar.start : (i > 0 ? bar.start - bars[i - 1].start : 0);
+    const beats = bar.timeSignatureNumerator || 4;
+    if (barTicks <= 0) return;
+    for (let beat = 0; beat < beats; beat++) {
+      metroBeats.push({ tick: bar.start + beat * (barTicks / beats), accent: beat === 0, ticksPerBeat: barTicks / beats });
+    }
+  });
+  metroScheduled.clear();
+}
+
+// Seconds from now until a tick is due, based on the latest position update and the playback speed.
+function metronomeDelaySeconds(tick) {
+  if (!metroPosition) return 0;
+  const beat = metroBeats.find((b) => b.tick >= metroPosition.tick) ?? metroBeats[metroBeats.length - 1];
+  const msPerTick = 60000 / (metroPosition.bpm * (beat ? beat.ticksPerBeat : 480));
+  const dueMs = metroPosition.time + (tick - metroPosition.tick) * msPerTick;
+  const elapsedReal = performance.now() - metroPosition.wall;
+  const remainingRealMs = (dueMs - metroPosition.time) / (api.playbackSpeed || 1) - elapsedReal;
+  return Math.max(0, remainingRealMs) / 1000;
+}
+
+function scheduleMetronome() {
+  if (!metroPosition || api.metronomeVolume <= 0 || api.playerState !== PlayerState.Playing) return;
+  if (!audioReady()) return; // wait until the browser allows sound (after the first click on the page)
+  const lookaheadTicks = (METRO_LOOKAHEAD_MS / 1000) * (metroPosition.bpm / 60) * (metroBeats[0]?.ticksPerBeat ? metroBeats[0].ticksPerBeat : 480);
+  for (const beat of metroBeats) {
+    if (beat.tick < metroPosition.tick - 1) continue;
+    if (beat.tick > metroPosition.tick + lookaheadTicks) break;
+    if (metroScheduled.has(beat.tick)) continue;
+    metroScheduled.add(beat.tick);
+    playWoodblock(beat.accent, metronomeDelaySeconds(beat.tick));
+  }
+}
+
+api.scoreLoaded.on(buildMetronomeBeats);
+api.playerPositionChanged.on((e) => {
+  // A jump backwards (seek or loop) starts the beats again.
+  if (metroPosition && e.currentTick < metroPosition.tick - 1000) metroScheduled.clear();
+  metroPosition = {
+    time: e.currentTime,
+    tick: e.currentTick,
+    bpm: e.modifiedTempo || e.currentTempo || 120,
+    wall: performance.now(),
+  };
+  scheduleMetronome();
+});
+api.playerStateChanged.on((e) => {
+  if (e.state !== PlayerState.Playing) metroScheduled.clear();
+});
+

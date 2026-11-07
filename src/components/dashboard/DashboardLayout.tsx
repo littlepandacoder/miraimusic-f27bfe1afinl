@@ -98,7 +98,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
     { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
     { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",  labelKey: "dashboard.nav.chordBoss",  shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
-    { href: "/sheet-music-practice/index.html", img: "/game-icons/sheet_music.svg", labelKey: "dashboard.nav.sheetMusic", shadow: "0 0 14px 4px rgba(236,72,153,0.55)" },
+    { href: "/sheet-music-practice/library.html", img: "/game-icons/sheet_music.svg", labelKey: "dashboard.nav.sheetMusic", shadow: "0 0 14px 4px rgba(236,72,153,0.55)" },
   ];
 
   const getNavItems = () => {
@@ -115,6 +115,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/slots",           icon: ClipboardList, label: t("dashboard.nav.timeSlots") },
         { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
+        { href: "/dashboard/sheet-music",     icon: Music,         label: "Sheet Music Library" },
         { href: "/library",                   icon: Library,       label: "Resource Library" },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
         { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },

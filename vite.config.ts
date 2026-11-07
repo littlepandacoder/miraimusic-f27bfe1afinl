@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => ({
       "127.0.0.1",
       ...(process.env.VITE_DEV_ALLOWED_HOST ? [process.env.VITE_DEV_ALLOWED_HOST] : []),
     ],
-    middlewareMode: true,
     headers: {
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
       "X-Content-Type-Options": "nosniff",

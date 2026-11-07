@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sheet Music Library — Musicable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.2/dist/umd/supabase.js"></script>
+    <style>
+      :root {
+        --bg: hsl(222 47% 11%);
+        --card: hsl(222 47% 14%);
+        --secondary: hsl(222 47% 18%);
+        --border: hsl(222 47% 25%);
+        --primary: hsl(330 85% 55%);
+        --fg: #ffffff;
+        --muted-fg: hsl(220 13% 70%);
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: 'Montserrat', sans-serif;
+      }
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+        padding: 14px 4vw; background: var(--card); border-bottom: 1px solid var(--border);
+      }
+      .brand { font-weight: 900; font-size: 18px; }
+      .brand span { color: var(--primary); }
+      .sub { color: var(--muted-fg); font-size: 13px; font-weight: 500; margin-left: 10px; }
+      .back {
+        color: var(--fg); text-decoration: none; font-weight: 600; font-size: 14px;
+        border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px; background: var(--secondary);
+      }
+      .back:hover { border-color: var(--primary); color: var(--primary); }
+      main { padding: 24px 4vw 40px; }
+      h1 { font-size: 22px; margin: 0 0 6px; }
+      .intro { color: var(--muted-fg); font-size: 14px; margin: 0 0 22px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 18px;
+      }
+      .card {
+        display: block; text-decoration: none; color: var(--fg);
+        background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+        overflow: hidden; transition: border-color .2s, transform .2s;
+      }
+      .card:hover, .card:focus-visible { border-color: var(--primary); transform: translateY(-2px); outline: none; }
+      .thumb {
+        width: 100%; aspect-ratio: 3 / 4; background: #fbfbfd;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+      }
+      .thumb img { width: 100%; height: 100%; object-fit: cover; }
+      .thumb.placeholder { color: var(--muted-fg); font-size: 40px; background: var(--secondary); }
+      .info { padding: 12px 14px 14px; }
+      .title { font-weight: 700; font-size: 15px; line-height: 1.3; margin: 0; }
+      .composer { color: var(--muted-fg); font-size: 12px; margin: 4px 0 0; }
+      .state { color: var(--muted-fg); font-size: 15px; padding: 30px 0; }
+      .state a { color: var(--primary); font-weight: 700; }
+      .midi-bar {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--secondary); font-size: 13px; font-weight: 600;
+      }
+      .midi-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7280; flex-shrink: 0; }
+      .midi-bar .midi-text { flex: 1; min-width: 180px; }
+      .midi-bar.on { border-color: #39d98a; background: rgba(57,217,138,.12); }
+      .midi-bar.on .dot { background: #39d98a; box-shadow: 0 0 8px #39d98a; }
+      .midi-bar.warn { border-color: #f59e0b; background: rgba(245,158,11,.12); }
+      .midi-bar.warn .dot { background: #f59e0b; }
+      .midi-bar .btn { padding: 6px 12px; font-size: 12px; }
+      .card { cursor: pointer; }
+      dialog.settings {
+        background: var(--card); color: var(--fg); border: 1px solid var(--border); border-radius: 20px;
+        padding: 0; width: min(460px, 92vw); box-shadow: 0 24px 60px rgba(0,0,0,.5);
+      }
+      dialog.settings::backdrop { background: rgba(10,15,28,.7); }
+      .settings-head { padding: 20px 22px 6px; }
+      .settings-head h2 { margin: 0; font-size: 18px; }
+      .settings-head p { margin: 4px 0 0; color: var(--muted-fg); font-size: 14px; }
+      .settings-body { padding: 14px 22px; display: grid; gap: 14px; }
+      .settings-body label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted-fg); }
+      .settings-body select, .settings-body input[type="number"] {
+        font: inherit; color: var(--fg); background: var(--secondary); border: 1px solid var(--border);
+        border-radius: 8px; padding: 9px 10px;
+      }
+      .group-title { font-size: 13px; font-weight: 600; color: var(--muted-fg); margin-bottom: 8px; }
+      .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+      .tile {
+        font: inherit; color: var(--fg); text-align: left; cursor: pointer;
+        background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+        display: grid; gap: 4px; transition: border-color .15s, background .15s;
+      }
+      .tile:hover { border-color: var(--primary); }
+      .tile .icon { font-size: 20px; line-height: 1; }
+      .tile .label { font-size: 13px; font-weight: 700; }
+      .tile .hint { font-size: 11px; color: var(--muted-fg); font-weight: 500; }
+      .tile[aria-pressed="true"] { border-color: var(--primary); background: hsl(330 85% 55% / .18); }
+      .tile[aria-pressed="true"] .hint { color: var(--fg); }
+      .settings-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 6px 22px 20px; }
+      .btn {
+        font: inherit; font-weight: 700; padding: 10px 18px; border-radius: 999px; cursor: pointer;
+        border: 1px solid var(--border); background: var(--secondary); color: var(--fg);
+      }
+      .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+      .btn:hover { border-color: var(--primary); }
+      @media (max-width: 480px) {
+        .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div><span class="brand">Musicable<span>.</span></span><span class="sub">Sheet Music Library</span></div>
+      <a class="back" href="/dashboard">&larr; Back to dashboard</a>
+    </header>
+    <main>
+      <h1>Choose a piece</h1>
+      <p class="intro">Tap a picture to open the sheet music and practise it.</p>
+      <div id="state" class="state">Loading library…</div>
+      <div id="grid" class="grid"></div>
+    </main>
+
+    <dialog id="settings" class="settings">
+      <form method="dialog" id="settingsForm">
+        <div class="settings-head">
+          <h2 id="settingsTitle">Practice settings</h2>
+          <p>Choose how you want to practise, then start.</p>
+        </div>
+        <div class="settings-body">
+          <div id="midiBar" class="midi-bar">
+            <span class="dot"></span>
+            <span id="midiText" class="midi-text">Checking MIDI…</span>
+            <button type="button" class="btn" id="midiCheckBtn" hidden>Check now</button>
+          </div>
+          <div>
+            <div class="group-title">Note input</div>
+            <div class="tiles">
+              <button type="button" class="tile" data-toggle="require"><span class="icon">🎹</span><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="group-title">Practice mode</div>
+            <div class="tiles" data-group="mode">
+              <button type="button" class="tile" data-value="wait"><span class="icon">⏸</span><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
+              <button type="button" class="tile" data-value="sync"><span class="icon">▶️</span><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
+              <button type="button" class="tile" data-value="play"><span class="icon">🔊</span><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="group-title">Checkpoints</div>
+            <div class="tiles" data-group="checkpoints">
+              <button type="button" class="tile" data-value="note"><span class="icon">♩</span><span class="label">Every note</span></button>
+              <button type="button" class="tile" data-value="measure"><span class="icon">𝄀</span><span class="label">Every measure</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="group-title">Clef</div>
+            <div class="tiles" data-group="clef">
+              <button type="button" class="tile" data-value="both"><span class="icon">𝄞 𝄢</span><span class="label">Treble + bass</span></button>
+              <button type="button" class="tile" data-value="treble"><span class="icon">𝄞</span><span class="label">Treble only</span></button>
+              <button type="button" class="tile" data-value="bass"><span class="icon">𝄢</span><span class="label">Bass only</span></button>
+            </div>
+          </div>
+          <label class="group-title" style="display:grid;gap:6px">Chord window (ms)
+            <input id="setChord" type="number" min="50" max="1000" step="10" value="250" style="font:inherit;color:var(--fg);background:var(--secondary);border:1px solid var(--border);border-radius:8px;padding:9px 10px" />
+          </label>
+        </div>
+        <div class="settings-foot">
+          <button type="button" class="btn" id="settingsCancel">Cancel</button>
+          <button type="submit" class="btn primary" id="settingsStart">Start practice</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+      // Same signed-in session as the website (localStorage is shared on the same origin).
+      const SUPABASE_URL = "https://tychkyunjfbkksyxknhn.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw";
+      const THUMB_BUCKET = "sheet-music-thumbs";
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true },
+      });
+
+      const stateEl = document.getElementById("state");
+      const grid = document.getElementById("grid");
+
+      const showState = (html) => {
+        stateEl.innerHTML = html;
+        stateEl.hidden = !html;
+      };
+
+      // Settings pop-up: the choices are passed to the practice page in the link.
+      const settingsDialog = document.getElementById("settings");
+      let chosenSong = null;
+
+      // Tile choices. null = nothing selected in that group, so the default is used.
+      const DEFAULTS = { mode: "wait", checkpoints: "note", clef: "both" };
+      const choice = { mode: null, checkpoints: null, clef: null, require: true };
+
+      function refreshOptions() {
+        document.querySelectorAll("[data-group]").forEach((group) => {
+          const key = group.dataset.group;
+          group.querySelectorAll("button[data-value]").forEach((btn) => {
+            btn.setAttribute("aria-pressed", String(choice[key] === btn.dataset.value));
+          });
+        });
+        document.querySelectorAll("[data-toggle='require']").forEach((btn) => {
+          btn.setAttribute("aria-pressed", String(choice.require));
+        });
+      }
+
+      document.querySelectorAll("[data-group] button[data-value]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.parentElement.dataset.group;
+          choice[key] = choice[key] === btn.dataset.value ? null : btn.dataset.value;
+          refreshOptions();
+        });
+      });
+      document.querySelector("[data-toggle='require']").addEventListener("click", () => {
+        choice.require = !choice.require;
+        refreshOptions();
+      });
+
+      // MIDI keyboard detection: shown in the pop-up before the practice page opens.
+      const midiBar = document.getElementById("midiBar");
+      const midiText = document.getElementById("midiText");
+      const midiCheckBtn = document.getElementById("midiCheckBtn");
+      let midiAccess = null;
+
+      function setMidiBar(state, message) {
+        midiBar.className = `midi-bar ${state}`;
+        midiText.textContent = message;
+      }
+
+      function renderMidi() {
+        if (!navigator.requestMIDIAccess) {
+          setMidiBar("warn", "This browser cannot detect MIDI keyboards. Use Chrome, Edge or Opera.");
+          return;
+        }
+        if (!midiAccess) {
+          setMidiBar("warn", "MIDI keyboard not checked yet. Press Check now.");
+          return;
+        }
+        const inputs = [...midiAccess.inputs.values()];
+        if (inputs.length === 0) {
+          setMidiBar("warn", "No MIDI keyboard detected. Plug it in and switch it on.");
+        } else {
+          setMidiBar("on", `MIDI keyboard detected: ${inputs.map((input) => input.name || input.id).join(", ")}`);
+        }
+      }
+
+      // Asks the browser for MIDI access. The browser's permission prompt only appears here.
+      async function checkMidi() {
+        if (!navigator.requestMIDIAccess) {
+          renderMidi();
+          return;
+        }
+        try {
+          midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+          midiAccess.onstatechange = renderMidi; // updates when a keyboard is plugged in or removed
+          midiCheckBtn.hidden = true;
+        } catch (e) {
+          midiCheckBtn.hidden = false;
+          setMidiBar("warn", `MIDI access was denied or is unavailable: ${e?.message ?? e}`);
+          return;
+        }
+        renderMidi();
+      }
+
+      // Checks silently only if MIDI permission was already given; otherwise the user presses Check now.
+      async function autoCheckMidi() {
+        let granted = false;
+        try {
+          const status = await navigator.permissions.query({ name: "midi", sysex: false });
+          granted = status.state === "granted";
+        } catch (_) {
+          granted = false;
+        }
+        if (granted) {
+          checkMidi();
+        } else {
+          midiCheckBtn.hidden = false;
+          renderMidi();
+        }
+      }
+
+      midiCheckBtn.onclick = checkMidi;
+
+      function openSettings(song) {
+        chosenSong = song;
+        refreshOptions();
+        autoCheckMidi();
+        document.getElementById("settingsTitle").textContent = song.title;
+        settingsDialog.showModal();
+      }
+
+      document.getElementById("settingsCancel").onclick = () => settingsDialog.close();
+
+      document.getElementById("settingsForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!chosenSong) return;
+        const params = new URLSearchParams({
+          song: `lib-${chosenSong.id}`,
+          mode: choice.mode ?? DEFAULTS.mode,
+          checkpoints: choice.checkpoints ?? DEFAULTS.checkpoints,
+          clef: choice.clef ?? DEFAULTS.clef,
+          chord: document.getElementById("setChord").value || "250",
+          require: choice.require ? "1" : "0",
+        });
+        window.location.href = `index.html?${params.toString()}`;
+      });
+
+      function makeCard(song, thumbUrl) {
+        const card = document.createElement("a");
+        card.className = "card";
+        card.href = `index.html?song=${encodeURIComponent(`lib-${song.id}`)}`;
+        card.addEventListener("click", (event) => {
+          event.preventDefault();
+          openSettings(song);
+        });
+
+        const thumb = document.createElement("div");
+        if (thumbUrl) {
+          thumb.className = "thumb";
+          const img = document.createElement("img");
+          img.alt = "";
+          img.loading = "lazy";
+          img.src = thumbUrl;
+          thumb.appendChild(img);
+        } else {
+          thumb.className = "thumb placeholder";
+          thumb.textContent = "♪";
+        }
+
+        const info = document.createElement("div");
+        info.className = "info";
+        const title = document.createElement("p");
+        title.className = "title";
+        title.textContent = song.title;
+        info.appendChild(title);
+        if (song.composer) {
+          const composer = document.createElement("p");
+          composer.className = "composer";
+          composer.textContent = song.composer;
+          info.appendChild(composer);
+        }
+
+        card.append(thumb, info);
+        return card;
+      }
+
+      async function load() {
+        try {
+          const { data: sessionData } = await sb.auth.getSession();
+          if (!sessionData.session) {
+            showState('Sign in to see the sheet music library. <a href="/login">Sign in</a>');
+            return;
+          }
+
+          const { data, error } = await sb
+            .from("sheet_music_library")
+            .select("id, title, composer, thumbnail_path, created_at")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            showState("No sheet music in the library yet.");
+            return;
+          }
+
+          // Private thumbnails: create short-lived signed links for the images.
+          const urls = await Promise.all(
+            data.map(async (song) => {
+              if (!song.thumbnail_path) return null;
+              const { data: signed } = await sb.storage
+                .from(THUMB_BUCKET)
+                .createSignedUrl(song.thumbnail_path, 3600);
+              return signed ? signed.signedUrl : null;
+            }),
+          );
+
+          data.forEach((song, i) => grid.appendChild(makeCard(song, urls[i])));
+          showState("");
+        } catch (e) {
+          showState(`Could not load the library: ${e.message ?? e}`);
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>

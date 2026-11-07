@@ -817,7 +817,61 @@
         width: calc(100vw - 8vw) !important; box-sizing: border-box !important;
       }
 
+      /* MIDI status bar inside the settings pop-up */
+      .midi-bar {
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+        border: 1px solid var(--border); background: var(--secondary); font-size: 13px; font-weight: 600;
+      }
+      .midi-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #6b7280; flex-shrink: 0; }
+      .midi-bar.on { border-color: #39d98a; background: rgba(57,217,138,.12); }
+      .midi-bar.on .dot { background: #39d98a; box-shadow: 0 0 8px #39d98a; }
+      .midi-bar.warn { border-color: #f59e0b; background: rgba(245,158,11,.12); }
+      .midi-bar.warn .dot { background: #f59e0b; }
+      .piano-credit { margin: 0 4vw 24px; font-size: 11px; color: var(--muted-fg); }
+      .piano-credit a { color: var(--muted-fg); }
+      /* Practice settings pop-up (same look as the library pop-up) */
+      .card { cursor: pointer; }
+      dialog.settings {
+        background: var(--card); color: var(--fg); border: 1px solid var(--border); border-radius: 20px;
+        padding: 0; width: min(460px, 92vw); box-shadow: 0 24px 60px rgba(0,0,0,.5);
+      }
+      dialog.settings::backdrop { background: rgba(10,15,28,.7); }
+      .settings-head { padding: 20px 22px 6px; }
+      .settings-head h2 { margin: 0; font-size: 18px; }
+      .settings-head p { margin: 4px 0 0; color: var(--muted-fg); font-size: 14px; }
+      .settings-body { padding: 14px 22px; display: grid; gap: 14px; }
+      .settings-body label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted-fg); }
+      .settings-body select, .settings-body input[type="number"] {
+        font: inherit; color: var(--fg); background: var(--secondary); border: 1px solid var(--border);
+        border-radius: 8px; padding: 9px 10px;
+      }
+      .group-title { font-size: 13px; font-weight: 600; color: var(--muted-fg); margin-bottom: 8px; }
+      .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+      .tile {
+        font: inherit; color: var(--fg); text-align: left; cursor: pointer;
+        background: var(--secondary); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+        display: grid; gap: 4px; transition: border-color .15s, background .15s;
+      }
+      .tile:hover { border-color: var(--primary); }
+      .tile .icon { font-size: 20px; line-height: 1; }
+      .tile .label { font-size: 13px; font-weight: 700; }
+      .tile .hint { font-size: 11px; color: var(--muted-fg); font-weight: 500; }
+      .tile[aria-pressed="true"] { border-color: var(--primary); background: hsl(330 85% 55% / .18); }
+      .tile[aria-pressed="true"] .hint { color: var(--fg); }
+      .settings-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 6px 22px 20px; }
+      .sm-btn {
+        font: inherit; font-weight: 700; padding: 10px 18px; border-radius: 999px; cursor: pointer;
+        border: 1px solid var(--border); background: var(--secondary); color: var(--fg);
+      }
+      .sm-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+      .sm-btn:hover { border-color: var(--primary); }
+      /* Upload bar: keep Loop, selection, status and "Showing" on one line on desktop */
+      .upload-bar { flex-wrap: nowrap !important; align-items: center; }
+      .upload-bar .loop-status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
+      .upload-bar .upload-status { white-space: nowrap; margin-left: auto; flex-shrink: 0; }
       @media (max-width: 720px) {
+        .upload-bar { flex-wrap: wrap !important; }
+        .upload-bar .loop-status { white-space: normal; }
         .at-wrap, .upload-bar, .songs-panel, .practice-panel, .piano-wrap { margin-left: 16px !important; margin-right: 16px !important; }
         .at-wrap { height: 60vh !important; }
       }
@@ -827,26 +881,21 @@
   <body>
     <header class="sm-topbar">
       <div><span class="sm-brand">Musicable<span>.</span></span><span class="sm-sub">Sheet Music Practice</span></div>
-      <a class="sm-back" href="/dashboard">&larr; Back to dashboard</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="sm-back" href="library.html">&larr; Back to music sheet library</a>
+        <button class="sm-back" id="settingsBtn" type="button" style="font:inherit;cursor:pointer">Settings</button>
+        <a class="sm-back" href="/dashboard">Back to dashboard</a>
+      </div>
     </header>
     <div class="upload-bar">
-      <button id="uploadBtn" type="button">Upload MusicXML</button>
       <input id="fileInput" type="file" accept=".musicxml,.xml,.mxl,.mid,.midi" hidden />
-      <button id="resetBtn" type="button">Reset to demo score</button>
-      <button id="zoomOutBtn" type="button">Zoom out</button>
-      <button id="zoomInBtn" type="button">Zoom in</button>
-      <label class="speed-control">
-        Tempo
-        <input id="speedSlider" type="range" min="50" max="150" step="5" value="100" />
-        <span id="speedValue">100%</span>
-      </label>
       <button id="loopBtn" type="button">Loop: off</button>
       <button id="clearLoopBtn" type="button">Clear selection</button>
       <span id="loopStatus" class="loop-status"></span>
       <span class="upload-status">Showing: <strong id="fileName"></strong></span>
     </div>
     <div id="uploadError" class="upload-error" hidden></div>
-    <section class="songs-panel">
+    <section class="songs-panel" style="display:none">
       <label>
         Uploaded songs
         <select id="songSelect"></select>
@@ -856,10 +905,16 @@
     <section class="practice-panel">
       <div class="practice-row">
         <button id="midiConnectBtn" type="button">Connect MIDI Keyboard</button>
+        <button id="midiTestBtn" type="button">Test MIDI connection</button>
         <select id="midiDeviceSelect" hidden></select>
         <span id="midiStatus" class="practice-status">Disconnected</span>
+        <label class="speed-control">
+        Tempo
+        <input id="speedSlider" type="range" min="50" max="150" step="5" value="100" />
+        <span id="speedValue">100%</span>
+        </label>
       </div>
-      <div class="practice-row">
+      <div class="practice-row" id="settingsRow" style="display:none">
         <label class="practice-check">
           <input id="practiceToggle" type="checkbox" />
           Require note input before continuing (MIDI, touch or keys)
@@ -977,6 +1032,60 @@
     <div class="piano-wrap">
       <div id="pianoKeys" class="piano"></div>
     </div>
+    <p class="piano-credit"><span id="pianoStatus">Piano samples: loading (keys use a basic tone until loaded)</span>. Piano sound: Salamander Grand Piano by Alexander Holm, <a href="https://archive.org/details/SalamanderGrandPianoV3" target="_blank" rel="noopener">CC BY 3.0</a>.</p>
+
+    <dialog id="practiceSettings" class="settings">
+      <div class="settings-head">
+        <h2>Practice settings</h2>
+        <p>Choose how you want to practise, then apply.</p>
+      </div>
+      <div class="settings-body">
+        <div id="psMidiBar" class="midi-bar">
+          <span class="dot"></span>
+          <span id="psMidiText">Checking MIDI…</span>
+        </div>
+        <div>
+          <div class="group-title">Note input</div>
+          <div class="tiles">
+            <button type="button" class="tile" data-toggle="require"><span class="icon">🎹</span><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="group-title">Practice mode</div>
+          <div class="tiles" data-group="mode">
+            <button type="button" class="tile" data-value="wait"><span class="icon">⏸</span><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
+            <button type="button" class="tile" data-value="sync"><span class="icon">▶️</span><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
+            <button type="button" class="tile" data-value="play"><span class="icon">🔊</span><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="group-title">Checkpoints</div>
+          <div class="tiles" data-group="checkpoints">
+            <button type="button" class="tile" data-value="note"><span class="icon">♩</span><span class="label">Every note</span></button>
+            <button type="button" class="tile" data-value="measure"><span class="icon">𝄀</span><span class="label">Every measure</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="group-title">Clef</div>
+          <div class="tiles" data-group="clef">
+            <button type="button" class="tile" data-value="both"><span class="icon">𝄞 𝄢</span><span class="label">Treble + bass</span></button>
+            <button type="button" class="tile" data-value="treble"><span class="icon">𝄞</span><span class="label">Treble only</span></button>
+            <button type="button" class="tile" data-value="bass"><span class="icon">𝄢</span><span class="label">Bass only</span></button>
+          </div>
+        </div>
+        <div>
+          <div class="group-title">Track</div>
+          <div class="tiles" id="trackTiles" data-group="track"></div>
+        </div>
+        <label class="group-title" style="display:grid;gap:6px">Chord window (ms)
+          <input id="setChordPractice" type="number" min="50" max="1000" step="10" style="font:inherit;color:var(--fg);background:var(--secondary);border:1px solid var(--border);border-radius:8px;padding:9px 10px" />
+        </label>
+      </div>
+      <div class="settings-foot">
+        <button type="button" class="sm-btn" id="practiceSettingsCancel">Cancel</button>
+        <button type="button" class="sm-btn primary" id="practiceSettingsApply">Apply</button>
+      </div>
+    </dialog>
 
     <dialog id="resultsDialog" class="results-dialog">
       <div id="resultsBody"></div>
@@ -994,8 +1103,95 @@
       </div>
     </template>
 
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.2/dist/umd/supabase.js"></script>
     <script type="text/javascript">
+      // Settings pop-up. Its tiles read and write the page's own controls (hidden in #settingsRow),
+      // so the existing practice logic still runs when Apply is pressed.
+      window.addEventListener("piano-samples-ready", () => {
+        document.getElementById("pianoStatus").textContent = "Piano samples: loaded (Salamander Grand Piano)";
+      });
+      const psDialog = document.getElementById("practiceSettings");
+      const psChoice = { mode: null, checkpoints: null, clef: null, track: null, require: true };
+      const PS_DEFAULTS = { mode: "wait", checkpoints: "note", clef: "both", track: "all" };
+      const psControl = (id) => document.getElementById(id);
+
+      function psRefresh() {
+        psDialog.querySelectorAll("[data-group] button[data-value]").forEach((btn) => {
+          const key = btn.parentElement.dataset.group;
+          btn.setAttribute("aria-pressed", String(psChoice[key] === btn.dataset.value));
+        });
+        psDialog.querySelector("[data-toggle='require']").setAttribute("aria-pressed", String(psChoice.require));
+      }
+
+      // Tap a tile to select it; tap the selected tile again to clear it (the default is used).
+      function psPick(key, value) {
+        psChoice[key] = psChoice[key] === value ? null : value;
+        psRefresh();
+      }
+
+      function psBuildTracks() {
+        const tiles = document.getElementById("trackTiles");
+        tiles.innerHTML = "";
+        for (const opt of psControl("practiceTrack").options) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "tile";
+          btn.dataset.value = opt.value;
+          btn.innerHTML = '<span class="icon">🎸</span><span class="label"></span>';
+          btn.querySelector(".label").textContent = opt.textContent;
+          btn.onclick = () => psPick("track", opt.value);
+          tiles.appendChild(btn);
+        }
+      }
+
+      psDialog.querySelectorAll("[data-group] button[data-value]").forEach((btn) => {
+        btn.onclick = () => psPick(btn.parentElement.dataset.group, btn.dataset.value);
+      });
+      psDialog.querySelector("[data-toggle='require']").onclick = () => {
+        psChoice.require = !psChoice.require;
+        psRefresh();
+      };
+
+      function openPracticeSettings() {
+        psChoice.mode = psControl("practiceToggle").checked ? psControl("practiceMode").value : "play";
+        psChoice.checkpoints = psControl("checkpointMode").value;
+        psChoice.clef = psControl("clefFilter").value;
+        psChoice.track = psControl("practiceTrack").value;
+        psChoice.require = psControl("practiceToggle").checked;
+        psControl("setChordPractice").value = psControl("chordWindow").value;
+        psBuildTracks();
+        psRefresh();
+        psDialog.showModal();
+      }
+
+      // Setting a value and firing 'change' runs the same handlers as before.
+      function psSet(el, value) {
+        if (el.value === value) return;
+        el.value = value;
+        el.dispatchEvent(new Event("change"));
+      }
+
+      function applyPracticeSettings() {
+        const toggle = psControl("practiceToggle");
+        const practiceOn = psChoice.mode !== "play" && psChoice.require;
+        if (toggle.checked !== practiceOn) {
+          toggle.checked = practiceOn;
+          toggle.dispatchEvent(new Event("change"));
+        }
+        if (psChoice.mode !== "play") psSet(psControl("practiceMode"), psChoice.mode ?? PS_DEFAULTS.mode);
+        psSet(psControl("checkpointMode"), psChoice.checkpoints ?? PS_DEFAULTS.checkpoints);
+        psSet(psControl("clefFilter"), psChoice.clef ?? PS_DEFAULTS.clef);
+        psSet(psControl("practiceTrack"), psChoice.track ?? PS_DEFAULTS.track);
+        const chord = Number(psControl("setChordPractice").value);
+        if (Number.isFinite(chord) && chord >= 50 && chord <= 1000) psSet(psControl("chordWindow"), String(chord));
+        psDialog.close();
+      }
+
+      document.getElementById("settingsBtn").onclick = openPracticeSettings;
+      document.getElementById("practiceSettingsCancel").onclick = () => psDialog.close();
+      document.getElementById("practiceSettingsApply").onclick = applyPracticeSettings;
+
       // load elements
       const wrapper = document.querySelector(".at-wrap");
       const main = wrapper.querySelector(".at-main");
@@ -1199,9 +1395,7 @@
       const STATE_STORE = "files"; // also holds the old single-upload record, migrated on startup
       const CURRENT_KEY = "current";
 
-      const uploadBtn = document.querySelector("#uploadBtn");
       const fileInput = document.querySelector("#fileInput");
-      const resetBtn = document.querySelector("#resetBtn");
       const fileName = document.querySelector("#fileName");
       const uploadError = document.querySelector("#uploadError");
       const songSelect = document.querySelector("#songSelect");
@@ -1212,6 +1406,7 @@
       const SUPABASE_URL = "https://tychkyunjfbkksyxknhn.supabase.co";
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5Y2hreXVuamZia2tzeXhrbmhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDQxOTEsImV4cCI6MjA4NDAyMDE5MX0.5NzAwo1xGI3rOIihsEuBJKfYxAWMpBO60MjI2jUR7Qw";
       const SONG_BUCKET = "student-sheet-music";
+      const LIBRARY_BUCKET = "sheet-music-library";
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
         auth: { persistSession: true, autoRefreshToken: true },
       });
@@ -1226,8 +1421,28 @@
         id: row.id,
         name: row.file_name,
         storagePath: row.storage_path,
+        bucket: SONG_BUCKET,
         addedAt: Date.parse(row.created_at),
       });
+
+      // Admin-uploaded library songs: read-only for students.
+      const toLibrarySong = (row) => ({
+        id: `lib-${row.id}`,
+        name: row.composer ? `${row.title} (${row.composer})` : row.title,
+        storagePath: row.storage_path,
+        bucket: LIBRARY_BUCKET,
+        library: true,
+        addedAt: Date.parse(row.created_at),
+      });
+
+      async function fetchLibrarySongs() {
+        const { data, error } = await sb
+          .from("sheet_music_library")
+          .select("id, title, composer, storage_path, created_at")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data;
+      }
 
       async function fetchRemoteSongs() {
         const { data, error } = await sb
@@ -1265,12 +1480,13 @@
       }
 
       async function downloadSong(song) {
-        const { data, error } = await sb.storage.from(SONG_BUCKET).download(song.storagePath);
+        const { data, error } = await sb.storage.from(song.bucket).download(song.storagePath);
         if (error) throw error;
         return data.arrayBuffer();
       }
 
       async function deleteRemoteSong(song) {
+        if (song.library) throw new Error("Library songs can only be removed by an admin.");
         const { error } = await sb.from("student_sheet_music").delete().eq("id", song.id);
         if (error) throw error;
         await sb.storage.from(SONG_BUCKET).remove([song.storagePath]);
@@ -1390,7 +1606,12 @@
       /** Song list **/
       async function refreshSongs() {
         const user = await currentUser();
-        songs = user ? (await fetchRemoteSongs()).map(toSong) : [];
+        if (user) {
+          const [library, own] = await Promise.all([fetchLibrarySongs(), fetchRemoteSongs()]);
+          songs = [...library.map(toLibrarySong), ...own.map(toSong)];
+        } else {
+          songs = [];
+        }
         renderSongList();
       }
 
@@ -1398,11 +1619,12 @@
         songSelect.innerHTML = "";
         songSelect.add(new Option(DEMO_NAME, DEMO_VALUE));
         for (const song of songs) {
-          const label = `${song.name} (${new Date(song.addedAt).toLocaleDateString()})`;
+          const label = `${song.library ? "Library: " : ""}${song.name} (${new Date(song.addedAt).toLocaleDateString()})`;
           songSelect.add(new Option(label, String(song.id)));
         }
         songSelect.value = currentSongId == null ? DEMO_VALUE : String(currentSongId);
-        deleteSongBtn.disabled = currentSongId == null;
+        const selected = songs.find((s) => s.id === currentSongId);
+        deleteSongBtn.disabled = currentSongId == null || !!(selected && selected.library);
       }
 
       songSelect.onchange = async () => {
@@ -1481,11 +1703,16 @@
           await writeCurrent({ songId: saved.id });
           renderSongList();
         } catch (e) {
-          showError(`Loaded, but could not save it to your account: ${e.message ?? e}`);
+          // Not saved: put back the song that was showing before this upload.
+          if (currentSongId != null) {
+            await openSong(currentSongId);
+          } else {
+            loadDemo();
+          }
+          showError(`Not saved to your account, so this file was not kept: ${e.message ?? e}. Please try again.`);
         }
       }
 
-      uploadBtn.onclick = () => fileInput.click();
       fileInput.onchange = () => {
         handleFile(fileInput.files[0]);
         fileInput.value = "";
@@ -1507,27 +1734,6 @@
         handleFile(e.dataTransfer.files[0]);
       });
 
-      // Reset shows the demo score. Saved songs stay in the list.
-      resetBtn.onclick = async () => {
-        showError("");
-        loadDemo();
-        try {
-          await writeCurrent({ songId: null });
-        } catch (e) {
-          showError(`Could not save the current selection: ${e.message ?? e}`);
-        }
-      };
-
-      // Zoom buttons step through the existing zoom dropdown.
-      const zoomSelect = wrapper.querySelector(".at-controls .at-zoom select");
-      function stepZoom(direction) {
-        const index = zoomSelect.selectedIndex + direction;
-        if (index < 0 || index >= zoomSelect.options.length) return;
-        zoomSelect.selectedIndex = index;
-        zoomSelect.dispatchEvent(new Event("change"));
-      }
-      document.querySelector("#zoomOutBtn").onclick = () => stepZoom(-1);
-      document.querySelector("#zoomInBtn").onclick = () => stepZoom(1);
 
       /** Startup: restore the song that was showing, otherwise the demo **/
       async function startup() {
@@ -1545,6 +1751,11 @@
 
         try {
           await refreshSongs();
+          // Opened from the library: show the requested song.
+          const requested = new URLSearchParams(location.search).get("song");
+          if (requested && songs.some((s) => s.id === requested)) {
+            if (await openSong(requested)) return;
+          }
           const current = await readCurrent();
           if (current && current.songId != null && songs.some((s) => s.id === current.songId)) {
             if (await openSong(current.songId)) return;
