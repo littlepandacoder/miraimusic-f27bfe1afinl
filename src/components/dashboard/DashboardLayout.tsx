@@ -23,6 +23,7 @@ import {
   Film,
   Lock,
   Library,
+  Radio,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -130,6 +131,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
       return [
         ...baseItems,
         { href: "/dashboard/my-students",  icon: Users,           label: t("dashboard.nav.myStudents") },
+        { href: "/dashboard/live-students", icon: Radio,           label: "Live Students" },
         { href: "/sheet-music-practice/library.html", icon: Music, img: "/game-icons/sheet_music.svg", label: "Music Sheet", external: true },
         { href: "/dashboard/lesson-plans", icon: BookOpen,        label: t("dashboard.nav.lessonPlans") },
         { href: "/dashboard/schedule",     icon: Calendar,        label: t("dashboard.nav.schedule") },

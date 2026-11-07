@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Users, Calendar, BookOpen, Clock, Gamepad2 } from "lucide-react";
 import MyStudents from "./teacher/MyStudents";
+import LiveStudents from "./teacher/LiveStudents";
 import LessonPlans from "./teacher/LessonPlans";
 import TeacherSchedule from "./teacher/TeacherSchedule";
 import TeacherSlots from "./teacher/TeacherSlots";
@@ -130,6 +131,7 @@ const TeacherDashboard = () => {
         <Route index element={<TeacherHome />} />
         <Route path="/" element={<TeacherHome />} />
         <Route path="/my-students" element={<MyStudents />} />
+        <Route path="/live-students" element={<LiveStudents />} />
         <Route path="/lesson-plans" element={<LessonPlans />} />
         <Route path="/schedule" element={<TeacherSchedule />} />
         <Route path="/slots" element={<TeacherSlots />} />

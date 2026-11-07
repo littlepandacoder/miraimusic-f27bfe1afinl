@@ -1585,10 +1585,18 @@ function roomNote(midi, velocity, on) {
   if (room) sendRoom({ action: "note", midi, velocity, on });
 }
 
-// The song chosen here is sent to the room (only library songs can be shared).
+// The song chosen here is sent to the room (only library songs can be shared), and shown to the teacher.
 window.roomSendSong = (id) => {
   if (typeof id === "string" && id.startsWith("lib-")) sendRoom({ action: "song", id });
+  trackRoomPresence();
 };
+
+// The presence status tells the teacher who is online and which piece they are on.
+function trackRoomPresence() {
+  if (!room) return;
+  const song = songs.find((s) => s.id === currentSongId);
+  room.channel.track({ userId: room.me, role: room.role, song: song ? song.name : null, at: Date.now() });
+}
 
 function snapshot() {
   return {
@@ -1599,12 +1607,35 @@ function snapshot() {
   };
 }
 
+// Score ticks per millisecond at the current tempo and speed.
+function ticksPerMs() {
+  return (960 * (api.score?.tempo || 120) / 60000) * (api.playbackSpeed || 1);
+}
+
+// How far the score has moved since the other screen sent its position (capped at 2 seconds).
+function catchUpTicks(sentAt) {
+  const lagMs = Math.min(2000, Math.max(0, Date.now() - (sentAt || Date.now())));
+  return lagMs * ticksPerMs();
+}
+
+function catchUp(tick, sentAt) {
+  api.tickPosition = tick + catchUpTicks(sentAt);
+}
+
 // Applies what the other person did. Each action is checked first, so nothing is sent back.
 function applyRemote(p) {
   if (p.from === room?.me) return;
   switch (p.action) {
     case "play":
       if (api.playerState !== PlayerState.Playing) api.play();
+      catchUp(p.tick, p.at);
+      break;
+    case "tick":
+      // Heartbeat from the other screen while it plays: correct only a real drift.
+      if (api.playerState === PlayerState.Playing && p.playing) {
+        const expected = p.tick + catchUpTicks(p.at);
+        if (Math.abs(api.tickPosition - expected) > 150 * ticksPerMs()) api.tickPosition = expected;
+      }
       break;
     case "pause":
       if (api.playerState === PlayerState.Playing) api.pause();
@@ -1630,7 +1661,8 @@ function applyRemote(p) {
       if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
       if (p.playing && api.playerState !== PlayerState.Playing) api.play();
       if (!p.playing && api.playerState === PlayerState.Playing) api.pause();
-      if (Math.abs(api.tickPosition - p.tick) > 960) api.tickPosition = p.tick;
+      if (p.playing) catchUp(p.tick, p.at);
+      else if (Math.abs(api.tickPosition - p.tick) > 960) api.tickPosition = p.tick;
       break;
   }
 }
@@ -1638,8 +1670,8 @@ function applyRemote(p) {
 // Score play / pause / stop, sent with the position so the other screen moves to the same place.
 api.playerStateChanged.on((e) => {
   if (!room) return;
-  if (e.state === PlayerState.Playing) sendRoom({ action: "play", tick: api.tickPosition });
-  else if (e.state === PlayerState.Paused) sendRoom({ action: "pause", tick: api.tickPosition });
+  if (e.state === PlayerState.Playing) sendRoom({ action: "play", tick: api.tickPosition, at: Date.now() });
+  else if (e.state === PlayerState.Paused) sendRoom({ action: "pause", tick: api.tickPosition, at: Date.now() });
 });
 
 async function startRoom() {
@@ -1663,10 +1695,16 @@ async function startRoom() {
   });
   channel.subscribe(async (status) => {
     if (status !== "SUBSCRIBED") return;
-    await channel.track({ userId: me, role, at: Date.now() });
+    trackRoomPresence();
     if (role === "teacher") channel.send({ type: "broadcast", event: "hello", payload: {} });
   });
   setRoomStatus(role === "teacher" ? "Joining the student's room…" : "Connecting…");
+  // While the score plays, send the position a few times a second so both screens stay together.
+  setInterval(() => {
+    if (room && api.playerState === PlayerState.Playing) {
+      sendRoom({ action: "tick", tick: api.tickPosition, at: Date.now(), playing: true });
+    }
+  }, 1500);
 }
 
 startRoom();
