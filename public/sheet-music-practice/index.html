@@ -467,6 +467,12 @@
       .piano .key.black.correct { background: #2e7d32; }
       /* Notes sounding in playback (from alphaTab's playback events) */
       .piano .key.sounding { background: #9b59b6; }
+      /* A lit key gets a colour layer over its own surface (no glow outside the key) */
+      .piano .key.sounding { position: relative; }
+      .piano .key.sounding::after {
+        content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+        background: rgba(236, 72, 153, 0.55);
+      }
       .piano .key.black.sounding { background: #6c3483; }
       /** Sync-mode results pop-up (game-style score screen) **/
       .results-dialog {
@@ -872,11 +878,27 @@
       /* Track selector removed: the score fills the full width */
       .at-sidebar { display: none !important; }
       .at-viewport { left: 0 !important; }
-      /* Keyboard: a key blinks when its note starts */
-      .piano .key.blink { animation: keyBlink 0.4s ease-out; }
-      @keyframes keyBlink {
-        0% { box-shadow: 0 0 16px 5px rgba(236,72,153,.95); filter: brightness(1.35); }
-        100% { box-shadow: none; filter: none; }
+      /* Praise / missed pop-up over the score. It never takes clicks, so playing is not affected. */
+      .pop-feedback {
+        position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        pointer-events: none; z-index: 1500; opacity: 0; white-space: nowrap;
+        font-weight: 900; font-size: 44px; letter-spacing: 1px;
+        text-shadow: 0 3px 14px rgba(255,255,255,.9), 0 0 2px rgba(0,0,0,.2);
+      }
+      .pop-feedback.praise { color: #15803d; }
+      .pop-feedback.missed { color: #dc2626; font-size: 52px; }
+      .pop-feedback.show.praise { animation: popPraise 0.8s ease-out forwards; }
+      .pop-feedback.show.missed { animation: popMissed 0.5s ease-out forwards; }
+      @keyframes popPraise {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+        70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+      }
+      @keyframes popMissed {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+        25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
       }
       @media (max-width: 720px) {
         .upload-bar { flex-wrap: wrap !important; }
@@ -971,6 +993,7 @@
     </section>
 
     <div class="at-wrap">
+      <div id="popFeedback" class="pop-feedback" aria-live="polite"></div>
       <div class="at-overlay">
         <div class="at-overlay-content">
           Music sheet is loading

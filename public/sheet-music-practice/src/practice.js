@@ -117,9 +117,10 @@ api.midiEventsPlayed.on((e) => {
     // Drum/percussion tracks use note numbers for instruments, not pitches.
     if (api.score?.tracks[event.track]?.isPercussion) continue;
 
+    if (!isOn) unlightKey(event.noteKey);
     const count = soundingCounts.get(event.noteKey) ?? 0;
     if (isOn) {
-      blinkKey(event.noteKey);
+      lightKey(event.noteKey);
       soundingCounts.set(event.noteKey, count + 1);
     } else if (count > 1) {
       soundingCounts.set(event.noteKey, count - 1);
@@ -248,6 +249,19 @@ api.midiEventsPlayed.on((e) => {
 
 /** Feedback **/
 let feedbackTimer = null;
+// Praise and MISSED pop-ups over the score (see index.html #popFeedback).
+const popEl = document.getElementById("popFeedback");
+let popTimer = null;
+function showPop(text, kind) {
+  if (!popEl) return;
+  popEl.textContent = text;
+  popEl.className = `pop-feedback ${kind}`;
+  void popEl.offsetWidth; // restart the animation
+  popEl.classList.add("show");
+  clearTimeout(popTimer);
+  popTimer = setTimeout(() => popEl.classList.remove("show"), kind === "missed" ? 500 : 800);
+}
+
 function setFeedback(kind, text) {
   ui.feedback.className = `practice-feedback ${kind}`;
   ui.feedback.textContent = text;
@@ -488,10 +502,13 @@ api.playerPositionChanged.on((e) => {
   if (practice.waiting) return;
 
   // Checkpoints the playhead has already passed are skipped, not triggered late.
+  let passedWithoutNote = 0;
   while (practice.nextIndex < practice.checkpoints.length
     && practice.checkpoints[practice.nextIndex].tick < tick - CHECKPOINT_LATE_TICKS) {
     practice.nextIndex++;
+    passedWithoutNote++;
   }
+  if (passedWithoutNote > 0) showPop("MISSED", "missed");
 
   const cp = practice.checkpoints[practice.nextIndex];
   if (cp && tick >= cp.tick) {
@@ -577,12 +594,27 @@ function startPerformance() {
 // Interpolates the playback time (ms) of each checkpoint the playhead crossed between two events.
 function recordCheckpointTimes(t0, ms0, t1, ms1) {
   const cps = practice.checkpoints;
+  const crossed = [];
   while (practice.nextIndex < cps.length && cps[practice.nextIndex].tick <= t1) {
     const cp = cps[practice.nextIndex];
     const fraction = t1 > t0 ? Math.min(1, Math.max(0, (cp.tick - t0) / (t1 - t0))) : 1;
     cp.time = ms0 + fraction * (ms1 - ms0);
+    crossed.push(cp);
     practice.nextIndex++;
   }
+  if (crossed.length > 0) checkSyncNotes(crossed);
+}
+
+// Sync mode: once the playhead has passed a checkpoint and the match window has closed, show
+// Amazing / Good job when every note was hit, or MISSED when one was not.
+function checkSyncNotes(cps) {
+  setTimeout(() => {
+    if (!practice.perf.active) return;
+    const allHit = cps.every((cp) => cp.midi.every((midi) =>
+      practice.perf.presses.some((p) => p.midi === midi && Math.abs(p.t - cp.time) <= SYNC_MATCH_WINDOW_MS)));
+    if (allHit) showPop(cps.length === 1 && cps[0].midi.length > 1 ? "Great!" : "Amazing!", "praise");
+    else showPop("MISSED", "missed");
+  }, SYNC_MATCH_WINDOW_MS + 80);
 }
 
 function finishPerformance() {
@@ -917,7 +949,7 @@ function showResults(r) {
 
 function noteOn(midi, velocity) {
   practice.held.add(midi);
-  blinkKey(midi);
+  lightKey(midi);
   practice.lastMidiEvent = { midi, velocity, pressed: true };
   if (practice.enabled && practice.mode === "sync" && practice.perf.active) {
     practice.perf.presses.push({ t: playbackNowMs(), midi });
@@ -929,6 +961,7 @@ function noteOn(midi, velocity) {
 
 function noteOff(midi) {
   practice.held.delete(midi);
+  unlightKey(midi);
   practice.lastMidiEvent = { midi, velocity: 0, pressed: false };
   refreshUi();
 }
@@ -953,7 +986,12 @@ function checkInput(midi) {
   waiting.pressed.add(midi);
 
   if (waiting.pressed.size === cp.midi.length) {
-    waitEntry(waiting.index).correct = true;
+    const entry = waitEntry(waiting.index);
+    const clean = entry.wrong.length === 0; // no wrong key on this note first
+    entry.correct = true;
+    if (clean && cp.midi.length > 1) showPop("Great!", "praise");
+    else if (clean) showPop("Amazing!", "praise");
+    else showPop("Good job!", "praise");
     setFeedback("correct", `Correct: ${cp.midi.map(midiName).join(" + ")}`);
     flashKeys(cp.midi);
     resumePlayback();
@@ -1144,6 +1182,7 @@ ui.nextBtn.onclick = () => {
     return;
   }
   waitEntry(practice.waiting.index).skipped = true;
+  showPop("MISSED", "missed");
   const skipped = practice.waiting.index + 1;
   setFeedback("info", `Skipped checkpoint ${skipped} (administrative).`);
   resumePlayback();
@@ -1211,14 +1250,24 @@ function refreshKeyboard() {
   }
 }
 
-// Each note blinks its key once when it starts. The blink ends by itself, so a key never stays lit
-// when a note-off is missed.
-function blinkKey(midi) {
-  const el = ui.keys.querySelector(`.key[data-midi="${midi}"]`);
+// A key lights up while its note sounds (in front of the other keys). It also goes dark by itself
+// after a moment, so a missed note-off can never leave it stuck.
+const litTimers = new Map(); // MIDI number -> timer
+function keyElement(midi) {
+  return ui.keys.querySelector(`.key[data-midi="${midi}"]`);
+}
+function lightKey(midi) {
+  const el = keyElement(midi);
   if (!el) return;
-  el.classList.remove("blink");
-  void el.offsetWidth; // restart the animation for repeated notes
-  el.classList.add("blink");
+  el.classList.add("sounding");
+  clearTimeout(litTimers.get(midi));
+  litTimers.set(midi, setTimeout(() => unlightKey(midi), 900));
+}
+function unlightKey(midi) {
+  const el = keyElement(midi);
+  clearTimeout(litTimers.get(midi));
+  litTimers.delete(midi);
+  if (el) el.classList.remove("sounding");
 }
 
 /** Input from the on-screen keyboard and the computer keyboard **/
