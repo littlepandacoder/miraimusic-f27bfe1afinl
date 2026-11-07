@@ -879,28 +879,51 @@
       /* Track selector removed: the score fills the full width */
       .at-sidebar { display: none !important; }
       .at-viewport { left: 0 !important; }
-      /* Praise / missed pop-up over the score. It never takes clicks, so playing is not affected. */
+      /* Praise / missed pop-up over the score (branded badge). It never takes clicks, so playing is not affected. */
       .pop-feedback {
         position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
         pointer-events: none; z-index: 1500; opacity: 0; white-space: nowrap;
-        font-weight: 900; font-size: 44px; letter-spacing: 1px;
-        text-shadow: 0 3px 14px rgba(255,255,255,.9), 0 0 2px rgba(0,0,0,.2);
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 34px 14px 22px; border-radius: 999px;
+        font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 40px; letter-spacing: 0.5px;
+        color: #fff;
+        box-shadow: 0 12px 40px rgba(168, 85, 247, 0.45), 0 0 0 4px rgba(255, 255, 255, 0.18);
       }
-      .pop-feedback.praise { color: #15803d; }
-      .pop-feedback.missed { color: #dc2626; font-size: 52px; }
-      .pop-feedback.show.praise { animation: popPraise 0.8s ease-out forwards; }
-      .pop-feedback.show.missed { animation: popMissed 0.5s ease-out forwards; }
+      .pop-feedback .pop-icon { font-size: 44px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,.25)); }
+      .pop-feedback.praise { background: linear-gradient(135deg, #FF2D78 0%, #A855F7 100%); }
+      .pop-feedback.missed {
+        background: linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%);
+        box-shadow: 0 12px 40px rgba(239, 68, 68, 0.5), 0 0 0 4px rgba(255, 255, 255, 0.18);
+        font-size: 46px;
+      }
+      .pop-feedback.show.praise { animation: popPraise 0.8s cubic-bezier(.2,1.4,.4,1) forwards; }
+      .pop-feedback.show.missed { animation: popMissed 0.55s ease-out forwards; }
       @keyframes popPraise {
-        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
-        20% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
-        70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-6deg); }
+        25% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(2deg); }
+        40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
       }
       @keyframes popMissed {
-        0% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
-        25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        25% { transform: translate(calc(-50% - 10px), -50%); }
+        35% { transform: translate(calc(-50% + 10px), -50%); }
+        45% { transform: translate(calc(-50% - 6px), -50%); }
+        55% { transform: translate(calc(-50% + 6px), -50%); }
+        65% { transform: translate(-50%, -50%); }
+        85% { opacity: 1; }
+        100% { opacity: 0; }
       }
+      /* Upload bar: keep Loop, selection, status and "Showing" on one line on desktop */
+      .upload-bar { flex-wrap: nowrap !important; align-items: center; }
+      .upload-bar button, .upload-bar select { white-space: nowrap; }
+      .upload-bar .loop-status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
+      .upload-bar .upload-status { white-space: nowrap; margin-left: auto; flex-shrink: 0; }
+      /* Track selector removed: the score fills the full width */
+      .at-sidebar { display: none !important; }
+      .at-viewport { left: 0 !important; }
       @media (max-width: 720px) {
         .upload-bar { flex-wrap: wrap !important; }
         .upload-bar .loop-status { white-space: normal; }

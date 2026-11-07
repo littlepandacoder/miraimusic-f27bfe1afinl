@@ -252,9 +252,16 @@ let feedbackTimer = null;
 // Praise and MISSED pop-ups over the score (see index.html #popFeedback).
 const popEl = document.getElementById("popFeedback");
 let popTimer = null;
+const POP_ICONS = { "Amazing!": "⭐", "Great!": "🔥", "Good job!": "👏", "MISSED": "✖" };
 function showPop(text, kind) {
   if (!popEl) return;
-  popEl.textContent = text;
+  popEl.innerHTML = "";
+  const icon = document.createElement("span");
+  icon.className = "pop-icon";
+  icon.textContent = POP_ICONS[text] || "♪";
+  const label = document.createElement("span");
+  label.textContent = text;
+  popEl.append(icon, label);
   popEl.className = `pop-feedback ${kind}`;
   void popEl.offsetWidth; // restart the animation
   popEl.classList.add("show");
