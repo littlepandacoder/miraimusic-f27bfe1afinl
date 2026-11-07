@@ -1580,6 +1580,9 @@ function sendRoom(payload) {
   room.channel.send({ type: "broadcast", event: "control", payload: { ...payload, from: room.me } });
 }
 
+// The selected measures and the loop setting are shared with the other person in the room.
+window.roomSendRange = (range, looping) => sendRoom({ action: "range", range, looping });
+
 // Pen strokes and clears are shared with the other person in the room.
 window.roomSendInkPoints = (piece, meta, points) => sendRoom({ action: "inkPts", piece, meta, points });
 window.roomSendInkClear = (piece) => sendRoom({ action: "inkClear", piece });
@@ -1661,6 +1664,9 @@ function applyRemote(p) {
       }
       break;
     }
+    case "range":
+      window.roomApplyRange?.(p.range, p.looping);
+      break;
     case "inkPts":
       window.roomInkPoints?.(p.piece, p.meta, p.points || []);
       break;
@@ -1703,6 +1709,8 @@ async function startRoom() {
       sendRoom(snapshot());
       const piece = typeof currentSongId === "string" && currentSongId.startsWith("lib-") ? currentSongId : "demo";
       sendRoom({ action: "inkAll", piece, strokes: window.roomGetInk?.(piece) || [] });
+      const selection = window.roomCurrentRange?.();
+      if (selection) sendRoom({ action: "range", range: selection.range, looping: selection.looping });
     }
   });
   channel.on("presence", { event: "sync" }, () => {

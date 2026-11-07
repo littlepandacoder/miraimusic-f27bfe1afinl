@@ -2011,17 +2011,45 @@
         }
       }
 
+      // The selection and loop setting are shared with the room. Only real changes are sent,
+      // so a change from the other person is not sent back.
+      let lastRangeKey = "";
+      const rangeKey = (range, looping) => JSON.stringify([range ? [range.startTick, range.endTick] : null, looping]);
+      function shareRange() {
+        const range = api.playbackRange;
+        const key = rangeKey(range, api.isLooping);
+        if (key === lastRangeKey) return;
+        lastRangeKey = key;
+        window.roomSendRange?.(range ? { startTick: range.startTick, endTick: range.endTick } : null, api.isLooping);
+      }
+      window.roomCurrentRange = () => ({
+        range: api.playbackRange ? { startTick: api.playbackRange.startTick, endTick: api.playbackRange.endTick } : null,
+        looping: api.isLooping,
+      });
+      window.roomApplyRange = (range, looping) => {
+        const key = rangeKey(range, looping);
+        if (key === lastRangeKey) return;
+        lastRangeKey = key;
+        api.playbackRange = range ? { startTick: range.startTick, endTick: range.endTick } : null;
+        if (!range) api.clearPlaybackRangeHighlight();
+        api.isLooping = looping;
+        refreshLoopUi();
+      };
+
       loopBtn.onclick = () => {
         api.isLooping = !api.isLooping;
         refreshLoopUi();
+        shareRange();
       };
       clearLoopBtn.onclick = () => {
         api.playbackRange = null;
         api.clearPlaybackRangeHighlight();
         refreshLoopUi();
+        shareRange();
       };
       // The footer loop icon also toggles api.isLooping; keep both in sync.
-      footerLoop.addEventListener("click", () => setTimeout(refreshLoopUi, 0));
+      footerLoop.addEventListener("click", () => setTimeout(() => { refreshLoopUi(); shareRange(); }, 0));
+      api.playbackRangeChanged.on(shareRange);
 
       /** Playback speed: 1 = 100%. Applies to playback from the player controls and the loop. **/
       const speedSlider = document.querySelector("#speedSlider");
