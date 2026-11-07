@@ -1265,7 +1265,9 @@
       scoreViewport.appendChild(ink);
       const inkCtx = ink.getContext("2d");
       const inkByPiece = new Map(); // piece -> strokes
-      const inkState = { on: false, eraser: false, color: "#dc2626" };
+      // One mode at a time: off, pen or eraser. Each button switches to its mode, or back off.
+      const inkState = { mode: "off", color: "#dc2626" };
+      const inkOn = () => inkState.mode !== "off";
       let inkStroke = null;
       let inkDrawing = false;
       const inkBtn = document.getElementById("inkBtn");
@@ -1309,30 +1311,32 @@
         redrawInk();
       }
 
+      // The score fills in more of its height as it is scrolled, so keep the drawing layer matched to it.
+      const scoreMain = scoreViewport.querySelector(".at-main");
+      if (window.ResizeObserver && scoreMain) new ResizeObserver(() => sizeInk()).observe(scoreMain);
+
       function inkPoint(e) {
         const rect = ink.getBoundingClientRect();
         return [e.clientX - rect.left, e.clientY - rect.top];
       }
 
       function refreshInkButtons() {
-        ink.classList.toggle("on", inkState.on);
-        inkBtn.textContent = inkState.on && !inkState.eraser ? "✎ Pen on" : "✎ Pen";
-        inkEraserBtn.textContent = inkState.on && inkState.eraser ? "Eraser on" : "Eraser";
+        ink.classList.toggle("on", inkOn());
+        inkBtn.textContent = inkState.mode === "pen" ? "✎ Pen on" : "✎ Pen";
+        inkEraserBtn.textContent = inkState.mode === "eraser" ? "Eraser on" : "Eraser";
       }
 
       inkBtn.onclick = () => {
-        inkState.eraser = false;
-        inkState.on = !(inkState.on && !inkState.eraser);
+        inkState.mode = inkState.mode === "pen" ? "off" : "pen";
         refreshInkButtons();
       };
       inkEraserBtn.onclick = () => {
-        inkState.eraser = true;
-        inkState.on = !(inkState.on && inkState.eraser);
+        inkState.mode = inkState.mode === "eraser" ? "off" : "eraser";
         refreshInkButtons();
       };
       inkColorSel.onchange = () => {
         inkState.color = inkColorSel.value;
-        inkState.eraser = false;
+        if (inkState.mode === "eraser") inkState.mode = "pen";
         refreshInkButtons();
       };
       document.getElementById("inkClear").onclick = () => {
@@ -1352,14 +1356,15 @@
       }
 
       ink.addEventListener("pointerdown", (e) => {
-        if (!inkState.on) return;
+        if (!inkOn()) return;
+        if (ink.height < scoreViewport.scrollHeight || ink.width !== scoreViewport.clientWidth) sizeInk();
         inkDrawing = true;
         ink.setPointerCapture(e.pointerId);
         inkStroke = {
           id: crypto.randomUUID(),
-          eraser: inkState.eraser,
+          eraser: inkState.mode === "eraser",
           color: inkState.color,
-          width: inkState.eraser ? 18 : 3,
+          width: inkState.mode === "eraser" ? 18 : 3,
           points: [inkPoint(e)],
         };
         inkStrokes().push(inkStroke);
@@ -1505,6 +1510,41 @@
         api.settings.display.scale = zoomLevel;
         api.updateSettings();
         api.render();
+      };
+
+      // Zoom changes are shared with the room (the handler above applies them on this screen).
+      zoom.addEventListener("change", () => window.roomSendZoom?.(parseInt(zoom.value)));
+      window.roomApplyZoom = (value) => {
+        if (zoom.value === String(value)) return;
+        zoom.value = String(value);
+        zoom.onchange();
+      };
+
+      // Scrolling is shared as a position from 0% to 100%, so screens of different sizes still line up.
+      let scrollApplying = false;
+      let scrollTimer = null;
+      const scrollFraction = () => {
+        const max = scoreViewport.scrollHeight - scoreViewport.clientHeight;
+        return max > 0 ? scoreViewport.scrollTop / max : 0;
+      };
+      function sendScroll() {
+        window.roomSendScroll?.(scrollFraction());
+      }
+      scoreViewport.addEventListener("scroll", () => {
+        if (scrollApplying) return;
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(sendScroll, 60);
+      });
+      window.roomApplyScroll = (fraction) => {
+        const max = scoreViewport.scrollHeight - scoreViewport.clientHeight;
+        scrollApplying = true;
+        scoreViewport.scrollTop = fraction * max;
+        setTimeout(() => (scrollApplying = false), 150);
+      };
+      window.roomCurrentView = () => ({ frac: scrollFraction(), zoom: parseInt(zoom.value) });
+      window.roomApplyView = (view) => {
+        if (view.zoom) window.roomApplyZoom(view.zoom);
+        if (typeof view.frac === "number") window.roomApplyScroll(view.frac);
       };
 
       const layout = wrapper.querySelector(".at-controls .at-layout select");

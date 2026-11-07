@@ -1580,6 +1580,10 @@ function sendRoom(payload) {
   room.channel.send({ type: "broadcast", event: "control", payload: { ...payload, from: room.me } });
 }
 
+// Scrolling and zoom are shared with the other person in the room.
+window.roomSendScroll = (frac) => sendRoom({ action: "scroll", frac });
+window.roomSendZoom = (value) => sendRoom({ action: "zoom", value });
+
 // The selected measures and the loop setting are shared with the other person in the room.
 window.roomSendRange = (range, looping) => sendRoom({ action: "range", range, looping });
 
@@ -1636,6 +1640,8 @@ function sendFullState() {
   sendRoom({ action: "inkAll", piece, strokes: window.roomGetInk?.(piece) || [] });
   const selection = window.roomCurrentRange?.();
   if (selection) sendRoom({ action: "range", range: selection.range, looping: selection.looping });
+  const view = window.roomCurrentView?.();
+  if (view) sendRoom({ action: "view", frac: view.frac, zoom: view.zoom });
 }
 
 // Opens the piece the other person has. The piece list may still be loading after a refresh, so retry briefly.
@@ -1682,6 +1688,15 @@ function applyRemote(p) {
     }
     case "range":
       window.roomApplyRange?.(p.range, p.looping);
+      break;
+    case "scroll":
+      window.roomApplyScroll?.(p.frac);
+      break;
+    case "zoom":
+      window.roomApplyZoom?.(p.value);
+      break;
+    case "view":
+      window.roomApplyView?.(p);
       break;
     case "inkPts":
       window.roomInkPoints?.(p.piece, p.meta, p.points || []);
