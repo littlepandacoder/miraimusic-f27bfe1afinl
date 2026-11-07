@@ -35,6 +35,15 @@ interface LibrarySong {
   created_at: string;
 }
 
+// A song waiting to be uploaded. Its title starts as the file name.
+interface Draft {
+  key: string;
+  file: File;
+  title: string;
+  composer: string;
+  thumb: File | null;
+}
+
 const formatSize = (bytes: number) =>
   bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
@@ -45,13 +54,9 @@ const ManageSheetMusic = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [composer, setComposer] = useState("");
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [categoryId, setCategoryId] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [thumb, setThumb] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
-  const [thumbInputKey, setThumbInputKey] = useState(0);
   const [newCategory, setNewCategory] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
@@ -237,41 +242,54 @@ const ManageSheetMusic = () => {
     await load();
   };
 
-  const handleUpload = async () => {
-    if (!title.trim() || !file || !thumb) {
-      toast({ title: "Add a title, a music file and a thumbnail image", variant: "destructive" });
-      return;
+  // Adds the chosen music files as pending songs. The title defaults to the file name.
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const added: Draft[] = [];
+    for (const file of Array.from(files)) {
+      if (!SONG_FILE.test(file.name)) {
+        toast({ title: "Skipped", description: `${file.name} is not a .musicxml, .xml or .mxl file.`, variant: "destructive" });
+        continue;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        toast({ title: "Skipped", description: `${file.name} is larger than 20 MB.`, variant: "destructive" });
+        continue;
+      }
+      added.push({
+        key: crypto.randomUUID(),
+        file,
+        title: file.name.replace(/\.[^.]+$/, ""),
+        composer: "",
+        thumb: null,
+      });
     }
-    if (!SONG_FILE.test(file.name)) {
-      toast({ title: "Unsupported music file", description: "Choose a .musicxml, .xml or .mxl file.", variant: "destructive" });
-      return;
-    }
-    if (!THUMB_FILE.test(thumb.name)) {
-      toast({ title: "Unsupported image", description: "Choose a .png, .jpg or .webp image.", variant: "destructive" });
-      return;
-    }
+    setDrafts((current) => [...current, ...added]);
+  };
 
-    setSaving(true);
+  const updateDraft = (key: string, changes: Partial<Draft>) => {
+    setDrafts((current) => current.map((d) => (d.key === key ? { ...d, ...changes } : d)));
+  };
+
+  // Uploads one song: thumbnail (optional), music file, then the database row. Cleans up on failure.
+  const uploadOne = async (draft: Draft, userId: string) => {
     const uploaded: { bucket: string; path: string }[] = [];
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      if (!userId) throw new Error("You are not signed in.");
-
       const id = crypto.randomUUID();
-      const isMxl = /\.mxl$/i.test(file.name);
+      const isMxl = /\.mxl$/i.test(draft.file.name);
       const songPath = `${id}.${isMxl ? "mxl" : "musicxml"}`;
-      const thumbExt = thumb.name.split(".").pop()!.toLowerCase();
-      const thumbPath = `${id}.${thumbExt}`;
+      let thumbPath: string | null = null;
+      if (draft.thumb) {
+        const thumbExt = draft.thumb.name.split(".").pop()!.toLowerCase();
+        thumbPath = `${id}.${thumbExt}`;
+        const { error: thumbError } = await supabase.storage.from(THUMB_BUCKET).upload(thumbPath, draft.thumb, {
+          contentType: draft.thumb.type || "image/png",
+          upsert: false,
+        });
+        if (thumbError) throw thumbError;
+        uploaded.push({ bucket: THUMB_BUCKET, path: thumbPath });
+      }
 
-      const { error: thumbError } = await supabase.storage.from(THUMB_BUCKET).upload(thumbPath, thumb, {
-        contentType: thumb.type || "image/png",
-        upsert: false,
-      });
-      if (thumbError) throw thumbError;
-      uploaded.push({ bucket: THUMB_BUCKET, path: thumbPath });
-
-      const { error: songError } = await supabase.storage.from(SONG_BUCKET).upload(songPath, file, {
+      const { error: songError } = await supabase.storage.from(SONG_BUCKET).upload(songPath, draft.file, {
         contentType: isMxl ? "application/vnd.recordare.musicxml" : "application/vnd.recordare.musicxml+xml",
         upsert: false,
       });
@@ -279,32 +297,54 @@ const ManageSheetMusic = () => {
       uploaded.push({ bucket: SONG_BUCKET, path: songPath });
 
       const { error: insertError } = await db.from("sheet_music_library").insert({
-        title: title.trim(),
-        composer: composer.trim() || null,
-        file_name: file.name,
+        title: draft.title.trim(),
+        composer: draft.composer.trim() || null,
+        file_name: draft.file.name,
         file_type: isMxl ? "mxl" : "musicxml",
-        file_size_bytes: file.size,
+        file_size_bytes: draft.file.size,
         storage_path: songPath,
         thumbnail_path: thumbPath,
         category_id: categoryId || null,
         uploaded_by: userId,
       });
       if (insertError) throw insertError;
-
-      toast({ title: "Sheet music added", description: "Students will see it in the Sheet Music library." });
-      setTitle("");
-      setComposer("");
-      setCategoryId("");
-      setFile(null);
-      setThumb(null);
-      setFileInputKey((k) => k + 1);
-      setThumbInputKey((k) => k + 1);
-      await load();
-    } catch (e: any) {
-      // Remove anything already uploaded so no orphan files are left behind.
+    } catch (e) {
       for (const item of uploaded) {
         await supabase.storage.from(item.bucket).remove([item.path]);
       }
+      throw e;
+    }
+  };
+
+  const handleUpload = async () => {
+    if (drafts.length === 0 || drafts.some((d) => !d.title.trim())) {
+      toast({ title: "Every song needs a title", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("You are not signed in.");
+
+      const failed: Draft[] = [];
+      let added = 0;
+      for (const draft of drafts) {
+        try {
+          await uploadOne(draft, userId);
+          added++;
+        } catch (e: any) {
+          failed.push(draft);
+          toast({ title: `Could not upload ${draft.file.name}`, description: e.message, variant: "destructive" });
+        }
+      }
+      if (added > 0) {
+        toast({ title: `${added} song${added === 1 ? "" : "s"} added`, description: "Students will see them in the Sheet Music library." });
+      }
+      setDrafts(failed);
+      setFileInputKey((k) => k + 1);
+      await load();
+    } catch (e: any) {
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
@@ -442,17 +482,23 @@ const ManageSheetMusic = () => {
           <CardTitle className="text-lg">Add sheet music</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Title *</label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Twinkle Twinkle" />
+              <label className="text-sm font-medium">MusicXML files *</label>
+              <Input
+                key={fileInputKey}
+                type="file"
+                multiple
+                accept=".musicxml,.xml,.mxl"
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <p className="text-xs text-muted-foreground">Choose one or many. Each file becomes a song, titled by its file name.</p>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Composer</label>
-              <Input value={composer} onChange={(e) => setComposer(e.target.value)} placeholder="Optional" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Category</label>
+              <label className="text-sm font-medium">Category (for all of these)</label>
               <select className={selectClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
                 <option value="">No category</option>
                 {categories.map((category) => (
@@ -463,31 +509,44 @@ const ManageSheetMusic = () => {
               </select>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">MusicXML file *</label>
-              <Input
-                key={fileInputKey}
-                type="file"
-                accept=".musicxml,.xml,.mxl"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-muted-foreground">.musicxml, .xml or .mxl, up to 20 MB</p>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Thumbnail image *</label>
-              <Input
-                key={thumbInputKey}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => setThumb(e.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-muted-foreground">.png, .jpg or .webp, up to 5 MB. Shown above the title.</p>
-            </div>
-          </div>
-          <Button onClick={handleUpload} disabled={saving || !title.trim() || !file || !thumb}>
+
+          {drafts.length > 0 && (
+            <ul className="divide-y divide-border rounded-md border border-border">
+              {drafts.map((draft) => (
+                <li key={draft.key} className="grid gap-3 p-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Title * ({draft.file.name})</label>
+                    <Input value={draft.title} onChange={(e) => updateDraft(draft.key, { title: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Composer</label>
+                    <Input value={draft.composer} onChange={(e) => updateDraft(draft.key, { composer: e.target.value })} placeholder="Optional" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Thumbnail {draft.thumb ? `(${draft.thumb.name})` : "(optional)"}</label>
+                    <Input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => updateDraft(draft.key, { thumb: e.target.files?.[0] ?? null })}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove ${draft.file.name}`}
+                    onClick={() => setDrafts((current) => current.filter((d) => d.key !== draft.key))}
+                    disabled={saving}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Button onClick={handleUpload} disabled={saving || drafts.length === 0 || drafts.some((d) => !d.title.trim())}>
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-            {saving ? "Uploading..." : "Upload to library"}
+            {saving ? "Uploading..." : `Upload ${drafts.length || ""} to library`.replace("  ", " ")}
           </Button>
         </CardContent>
       </Card>

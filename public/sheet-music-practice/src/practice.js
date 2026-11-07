@@ -166,8 +166,9 @@ function indexNoteClefs() {
 
 // alphaTab's event tick can differ from the beat start by a tick or two, so allow a small window.
 function clefOfNoteAt(tick, midi) {
+  const scoreTick = scoreTickAt(tick);
   for (const offset of [0, 1, -1, 2, -2]) {
-    const kind = noteClefs.get(`${tick + offset}:${midi}`);
+    const kind = noteClefs.get(`${scoreTick + offset}:${midi}`);
     if (kind) return kind;
   }
   return null;
@@ -252,6 +253,61 @@ function setFeedback(kind, text) {
   ui.feedback.textContent = text;
 }
 
+/** Playback order of the bars. A repeated section is played again (repeatCount more times), so
+    the checkpoints, metronome and clef lookups follow the order the music is actually played in. **/
+let playbackOrder = []; // { index, len, offset (playback tick), scoreStart (score tick) }
+
+function computePlaybackOrder() {
+  const bars = api.score?.masterBars ?? [];
+  const lengthOf = (i) => {
+    const next = bars[i + 1];
+    if (next) return next.start - bars[i].start;
+    return i > 0 ? bars[i].start - bars[i - 1].start : 0;
+  };
+  const order = [];
+  const played = new Map();
+  let repeatStart = 0;
+  let offset = 0;
+  let i = 0;
+  let guard = 0;
+  while (i < bars.length && guard++ < 100000) {
+    const bar = bars[i];
+    if (bar.isRepeatStart) repeatStart = i;
+    const len = lengthOf(i);
+    order.push({ index: i, len, offset, scoreStart: bar.start });
+    offset += len;
+    if (bar.isRepeatEnd) {
+      // alphaTab's repeatCount is the total number of times the section is played.
+      const count = played.get(i) ?? 0;
+      if (count < bar.repeatCount - 1) {
+        played.set(i, count + 1);
+        i = repeatStart;
+        continue;
+      }
+    }
+    i++;
+  }
+  playbackOrder = order;
+}
+
+// Playback tick -> score tick, so a note's clef can be found after a repeat.
+function scoreTickAt(tick) {
+  let lo = 0;
+  let hi = playbackOrder.length - 1;
+  let found = null;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (playbackOrder[mid].offset <= tick) {
+      found = playbackOrder[mid];
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  if (!found) return tick;
+  return found.scoreStart + Math.min(found.len, tick - found.offset);
+}
+
 /** Checkpoints from the alphaTab score model **/
 function buildCheckpoints() {
   const score = api.score;
@@ -302,12 +358,22 @@ function buildCheckpoints() {
     ticks = ticks.filter((tick) => starts.has(tick));
   }
 
-  return ticks.map((tick) => ({
+  const base = ticks.map((tick) => ({
     tick,
     midi: [...byTick.get(tick)].sort((a, b) => a - b),
     bar: barNumberAt(tick),
     time: null, // playback time (ms) of this checkpoint, recorded in sync mode
   }));
+  // Checkpoints follow the playback order, so a repeated section is checked again each time it plays.
+  const expanded = [];
+  for (const occurrence of playbackOrder) {
+    for (const cp of base) {
+      if (cp.tick >= occurrence.scoreStart && cp.tick < occurrence.scoreStart + occurrence.len) {
+        expanded.push({ ...cp, tick: occurrence.offset + (cp.tick - occurrence.scoreStart) });
+      }
+    }
+  }
+  return expanded;
 }
 
 // alphaTab Clef enum values: G2 = treble, F4 = bass, Neutral = inherit.
@@ -394,6 +460,9 @@ api.playerPositionChanged.on((e) => {
   practice.lastTime = e.currentTime;
   practice.lastWall = performance.now();
   if (!practice.enabled) return;
+  // While waiting for a note the player is parked. alphaTab can report a jump here (for example on a
+  // repeat sign), which must not drop the note being waited for, so position updates are ignored until it is answered.
+  if (practice.waiting) return;
 
   const seeked = practice.waiting
     ? Math.abs(tick - practice.checkpoints[practice.waiting.index].tick) > SEEK_FORWARD_TICKS
@@ -455,6 +524,7 @@ api.playerFinished.on(() => {
 });
 
 api.scoreLoaded.on(() => {
+  computePlaybackOrder();
   populateTracks();
   indexNoteClefs();
   rebuildCheckpoints(true);
@@ -1373,15 +1443,15 @@ const METRO_LOOKAHEAD_MS = 250;
 function buildMetronomeBeats() {
   metroBeats = [];
   const bars = api.score?.masterBars ?? [];
-  bars.forEach((bar, i) => {
-    const next = bars[i + 1];
-    const barTicks = next ? next.start - bar.start : (i > 0 ? bar.start - bars[i - 1].start : 0);
-    const beats = bar.timeSignatureNumerator || 4;
-    if (barTicks <= 0) return;
+  // Beats in playback order, so repeated bars click again.
+  for (const occurrence of playbackOrder) {
+    const barTicks = occurrence.len;
+    const beats = bars[occurrence.index]?.timeSignatureNumerator || 4;
+    if (barTicks <= 0) continue;
     for (let beat = 0; beat < beats; beat++) {
-      metroBeats.push({ tick: bar.start + beat * (barTicks / beats), accent: beat === 0, ticksPerBeat: barTicks / beats });
+      metroBeats.push({ tick: occurrence.offset + beat * (barTicks / beats), accent: beat === 0, ticksPerBeat: barTicks / beats });
     }
-  });
+  }
   metroScheduled.clear();
 }
 
