@@ -868,8 +868,12 @@
       }
       .sm-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
       .sm-btn:hover { border-color: var(--primary); }
+      /* Pen layer on top of the score. It only takes the pointer while the pen is on. */
+      .ink-layer { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+      .ink-layer.on { pointer-events: auto; cursor: crosshair; touch-action: none; }
       /* Upload bar: keep Loop, selection, status and "Showing" on one line on desktop */
       .upload-bar { flex-wrap: nowrap !important; align-items: center; }
+      .upload-bar button, .upload-bar select { white-space: nowrap; }
       .upload-bar .loop-status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; }
       .upload-bar .upload-status { white-space: nowrap; margin-left: auto; flex-shrink: 0; }
       /* Track selector removed: the score fills the full width */
@@ -920,6 +924,15 @@
       <button id="loopBtn" type="button">Loop: off</button>
       <button id="clearLoopBtn" type="button">Clear selection</button>
       <span id="loopStatus" class="loop-status"></span>
+      <button id="inkBtn" type="button">✎ Pen</button>
+      <select id="inkColor" aria-label="Pen colour">
+        <option value="#dc2626">Red</option>
+        <option value="#2563eb">Blue</option>
+        <option value="#16a34a">Green</option>
+        <option value="#111827">Black</option>
+      </select>
+      <button id="inkEraser" type="button">Eraser</button>
+      <button id="inkClear" type="button">Clear ink</button>
       <span class="upload-status">Showing: <strong id="fileName"></strong></span>
     </div>
     <div id="uploadError" class="upload-error" hidden></div>
@@ -1245,6 +1258,137 @@
       api.renderStarted.on(() => {
         overlay.style.display = "flex";
       });
+      /** Pen: draw notes on top of the score. Drawings are kept for the piece while the page is open. **/
+      const scoreViewport = wrapper.querySelector(".at-viewport");
+      const ink = document.createElement("canvas");
+      ink.className = "ink-layer";
+      scoreViewport.appendChild(ink);
+      const inkCtx = ink.getContext("2d");
+      const inkByPiece = new Map(); // piece -> strokes
+      const inkState = { on: false, eraser: false, color: "#dc2626" };
+      let inkStroke = null;
+      let inkDrawing = false;
+      const inkBtn = document.getElementById("inkBtn");
+      const inkEraserBtn = document.getElementById("inkEraser");
+      const inkColorSel = document.getElementById("inkColor");
+      const inkKey = () => currentSongId || "demo";
+      const inkStrokes = () => {
+        if (!inkByPiece.has(inkKey())) inkByPiece.set(inkKey(), []);
+        return inkByPiece.get(inkKey());
+      };
+
+      function drawInkSegment(a, b, stroke) {
+        inkCtx.save();
+        inkCtx.globalCompositeOperation = stroke.eraser ? "destination-out" : "source-over";
+        inkCtx.strokeStyle = stroke.color;
+        inkCtx.lineWidth = stroke.width;
+        inkCtx.lineCap = "round";
+        inkCtx.lineJoin = "round";
+        inkCtx.beginPath();
+        inkCtx.moveTo(a[0], a[1]);
+        inkCtx.lineTo(b[0], b[1]);
+        inkCtx.stroke();
+        inkCtx.restore();
+      }
+
+      function redrawInk() {
+        inkCtx.clearRect(0, 0, ink.width, ink.height);
+        for (const stroke of inkStrokes()) {
+          for (let i = 1; i < stroke.points.length; i++) drawInkSegment(stroke.points[i - 1], stroke.points[i], stroke);
+        }
+      }
+
+      // The layer covers the whole scrolling score, so drawings move with the music.
+      function sizeInk() {
+        const width = scoreViewport.clientWidth;
+        const height = Math.max(scoreViewport.scrollHeight, scoreViewport.clientHeight);
+        ink.width = width;
+        ink.height = height;
+        ink.style.width = `${width}px`;
+        ink.style.height = `${height}px`;
+        redrawInk();
+      }
+
+      function inkPoint(e) {
+        const rect = ink.getBoundingClientRect();
+        return [e.clientX - rect.left, e.clientY - rect.top];
+      }
+
+      function refreshInkButtons() {
+        ink.classList.toggle("on", inkState.on);
+        inkBtn.textContent = inkState.on && !inkState.eraser ? "✎ Pen on" : "✎ Pen";
+        inkEraserBtn.textContent = inkState.on && inkState.eraser ? "Eraser on" : "Eraser";
+      }
+
+      inkBtn.onclick = () => {
+        inkState.eraser = false;
+        inkState.on = !(inkState.on && !inkState.eraser);
+        refreshInkButtons();
+      };
+      inkEraserBtn.onclick = () => {
+        inkState.eraser = true;
+        inkState.on = !(inkState.on && inkState.eraser);
+        refreshInkButtons();
+      };
+      inkColorSel.onchange = () => {
+        inkState.color = inkColorSel.value;
+        inkState.eraser = false;
+        refreshInkButtons();
+      };
+      document.getElementById("inkClear").onclick = () => {
+        inkByPiece.set(inkKey(), []);
+        window.roomSendInkClear?.(inkKey());
+        redrawInk();
+      };
+
+      ink.addEventListener("pointerdown", (e) => {
+        if (!inkState.on) return;
+        inkDrawing = true;
+        ink.setPointerCapture(e.pointerId);
+        inkStroke = {
+          eraser: inkState.eraser,
+          color: inkState.color,
+          width: inkState.eraser ? 18 : 3,
+          points: [inkPoint(e)],
+        };
+        inkStrokes().push(inkStroke);
+      });
+      ink.addEventListener("pointermove", (e) => {
+        if (!inkDrawing || !inkStroke) return;
+        const point = inkPoint(e);
+        const last = inkStroke.points[inkStroke.points.length - 1];
+        inkStroke.points.push(point);
+        drawInkSegment(last, point, inkStroke);
+      });
+      const endInk = () => {
+        inkDrawing = false;
+        // A finished stroke goes to the other person in the room.
+        if (inkStroke) window.roomSendInk?.(inkKey(), inkStroke);
+        inkStroke = null;
+      };
+
+      // Strokes and clears from the other person in the room.
+      window.roomInkRemote = (piece, stroke) => {
+        if (!inkByPiece.has(piece)) inkByPiece.set(piece, []);
+        inkByPiece.get(piece).push(stroke);
+        if (piece === inkKey()) redrawInk();
+      };
+      window.roomInkClearRemote = (piece) => {
+        inkByPiece.set(piece, []);
+        if (piece === inkKey()) redrawInk();
+      };
+      window.roomGetInk = (piece) => inkByPiece.get(piece) || [];
+      window.roomSetInk = (piece, strokes) => {
+        inkByPiece.set(piece, strokes);
+        if (piece === inkKey()) redrawInk();
+      };
+      ink.addEventListener("pointerup", endInk);
+      ink.addEventListener("pointercancel", endInk);
+
+      api.renderFinished.on(sizeInk);
+      window.addEventListener("resize", sizeInk);
+      refreshInkButtons();
+
       api.renderFinished.on(() => {
         overlay.style.display = "none";
       });

@@ -1580,6 +1580,10 @@ function sendRoom(payload) {
   room.channel.send({ type: "broadcast", event: "control", payload: { ...payload, from: room.me } });
 }
 
+// Pen strokes and clears are shared with the other person in the room.
+window.roomSendInk = (piece, stroke) => sendRoom({ action: "ink", piece, stroke });
+window.roomSendInkClear = (piece) => sendRoom({ action: "inkClear", piece });
+
 // Keys played on this keyboard go to the other person in the room.
 function roomNote(midi, velocity, on) {
   if (room) sendRoom({ action: "note", midi, velocity, on });
@@ -1657,6 +1661,15 @@ function applyRemote(p) {
       }
       break;
     }
+    case "ink":
+      window.roomInkRemote?.(p.piece, p.stroke);
+      break;
+    case "inkClear":
+      window.roomInkClearRemote?.(p.piece);
+      break;
+    case "inkAll":
+      window.roomSetInk?.(p.piece, p.strokes || []);
+      break;
     case "snapshot":
       if (p.id && p.id !== currentSongId && songs.some((s) => s.id === p.id)) openSong(p.id);
       if (p.playing && api.playerState !== PlayerState.Playing) api.play();
@@ -1686,7 +1699,11 @@ async function startRoom() {
   room = { channel, id: roomId, me, role };
   channel.on("broadcast", { event: "control" }, ({ payload }) => applyRemote(payload));
   channel.on("broadcast", { event: "hello" }, () => {
-    if (role === "student") sendRoom(snapshot());
+    if (role === "student") {
+      sendRoom(snapshot());
+      const piece = typeof currentSongId === "string" && currentSongId.startsWith("lib-") ? currentSongId : "demo";
+      sendRoom({ action: "inkAll", piece, strokes: window.roomGetInk?.(piece) || [] });
+    }
   });
   channel.on("presence", { event: "sync" }, () => {
     const others = Object.keys(channel.presenceState()).filter((k) => k !== me);
