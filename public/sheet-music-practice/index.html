@@ -468,11 +468,6 @@
       /* Notes sounding in playback (from alphaTab's playback events) */
       .piano .key.sounding { background: #9b59b6; }
       /* A lit key gets a colour layer over its own surface (no glow outside the key) */
-      .piano .key.sounding { position: relative; }
-      .piano .key.sounding::after {
-        content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-        background: rgba(236, 72, 153, 0.55);
-      }
       .piano .key.black.sounding { background: #6c3483; }
       /** Sync-mode results pop-up (game-style score screen) **/
       .results-dialog {
@@ -802,8 +797,8 @@
       .piano .key.black.expected { background: #0284c7 !important; }
       .piano .key.black.held { background: #b45309 !important; }
       .piano .key.black.correct { background: #15803d !important; }
-      .piano .key.sounding { background: var(--primary) !important; }
-      .piano .key.black.sounding { background: #9d174d !important; }
+      .piano .key.sounding, .piano .key.black.sounding { background: #ec4899 !important; }
+      .piano .key.user-lit { background: var(--note-color) !important; }
 
       .results-dialog {
         background: var(--card) !important; color: var(--fg) !important;

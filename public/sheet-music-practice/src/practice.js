@@ -949,7 +949,7 @@ function showResults(r) {
 
 function noteOn(midi, velocity) {
   practice.held.add(midi);
-  lightKey(midi);
+  lightKey(midi, true);
   practice.lastMidiEvent = { midi, velocity, pressed: true };
   if (practice.enabled && practice.mode === "sync" && practice.perf.active) {
     practice.perf.presses.push({ t: playbackNowMs(), midi });
@@ -1253,13 +1253,21 @@ function refreshKeyboard() {
 // A key lights up while its note sounds (in front of the other keys). It also goes dark by itself
 // after a moment, so a missed note-off can never leave it stuck.
 const litTimers = new Map(); // MIDI number -> timer
+// Keys you play are coloured by note name, like a rainbow (C red ... B magenta).
+const RAINBOW = ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e",
+  "#14b8a6", "#06b6d4", "#3b82f6", "#6366f1", "#8b5cf6", "#d946ef"];
 function keyElement(midi) {
   return ui.keys.querySelector(`.key[data-midi="${midi}"]`);
 }
-function lightKey(midi) {
+function lightKey(midi, byUser = false) {
   const el = keyElement(midi);
   if (!el) return;
-  el.classList.add("sounding");
+  if (byUser) {
+    el.style.setProperty("--note-color", RAINBOW[midi % 12]);
+    el.classList.add("user-lit");
+  } else {
+    el.classList.add("sounding");
+  }
   clearTimeout(litTimers.get(midi));
   litTimers.set(midi, setTimeout(() => unlightKey(midi), 900));
 }
@@ -1267,7 +1275,7 @@ function unlightKey(midi) {
   const el = keyElement(midi);
   clearTimeout(litTimers.get(midi));
   litTimers.delete(midi);
-  if (el) el.classList.remove("sounding");
+  if (el) el.classList.remove("sounding", "user-lit");
 }
 
 /** Input from the on-screen keyboard and the computer keyboard **/
