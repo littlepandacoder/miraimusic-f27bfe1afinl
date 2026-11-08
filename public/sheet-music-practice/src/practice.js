@@ -1742,9 +1742,13 @@ async function startRoom() {
   });
   room = { channel, id: roomId, me, role };
   channel.on("broadcast", { event: "control" }, ({ payload }) => applyRemote(payload));
-  // Whoever connects asks for the other person's state, and both answer with their current state.
-  // So a refresh picks up where the room is, instead of starting from zero.
-  channel.on("broadcast", { event: "hello" }, () => sendFullState());
+  // A screen that connects asks for the other person's state. The student's screen is the room's
+  // base: when a teacher joins, the student answers and the teacher adopts it, so the student's
+  // sheet does not move. When the student reconnects, the teacher answers and the student adopts it.
+  channel.on("broadcast", { event: "hello" }, ({ payload }) => {
+    const from = payload?.role;
+    if ((role === "student" && from === "teacher") || (role === "teacher" && from === "student")) sendFullState();
+  });
   channel.on("presence", { event: "sync" }, () => {
     const others = Object.keys(channel.presenceState()).filter((k) => k !== me);
     if (role === "student") setRoomStatus(others.length ? "Teacher is in your room" : "You are online");
@@ -1753,7 +1757,7 @@ async function startRoom() {
   channel.subscribe(async (status) => {
     if (status !== "SUBSCRIBED") return;
     trackRoomPresence();
-    channel.send({ type: "broadcast", event: "hello", payload: {} });
+    channel.send({ type: "broadcast", event: "hello", payload: { role } });
   });
   setRoomStatus(role === "teacher" ? "Joining the student's room…" : "Connecting…");
   // While the score plays, send the position a few times a second so both screens stay together.
