@@ -31,6 +31,7 @@ interface LibrarySong {
   file_size_bytes: number;
   storage_path: string;
   thumbnail_path: string | null;
+  preview_url: string | null;
   category_id: string | null;
   created_at: string;
 }
@@ -98,7 +99,7 @@ const ManageSheetMusic = () => {
     await loadCategories();
     const { data, error } = await db
       .from("sheet_music_library")
-      .select("id, title, composer, file_name, file_size_bytes, storage_path, thumbnail_path, category_id, created_at")
+      .select("id, title, composer, file_name, file_size_bytes, storage_path, thumbnail_path, preview_url, category_id, created_at")
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "Error loading sheet music", description: error.message, variant: "destructive" });
@@ -377,7 +378,7 @@ const ManageSheetMusic = () => {
 
   // Fills missing thumbnails and composers for every song that lacks one, in small batches.
   const fillMissing = async () => {
-    const ids = songs.filter((s) => !s.thumbnail_path || !s.composer).map((s) => s.id);
+    const ids = songs.filter((s) => !s.thumbnail_path || !s.composer || !s.preview_url).map((s) => s.id);
     if (ids.length === 0) {
       toast({ title: "Nothing to fill in", description: "Every song already has a composer and thumbnail." });
       return;
