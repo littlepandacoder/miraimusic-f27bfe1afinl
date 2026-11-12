@@ -682,56 +682,23 @@
       }
 
       // Sound effects for the category carousel, made with Web Audio (no sound files needed).
-      const fx = (() => {
-        let ctx = null;
-        const get = () => {
-          if (!ctx) {
-            const Ctor = window.AudioContext || window.webkitAudioContext;
-            if (!Ctor) return null;
-            ctx = new Ctor();
-          }
-          if (ctx.state === "suspended") ctx.resume();
-          return ctx;
-        };
-        // A short bright tick for selecting a category.
-        const click = () => {
-          const c = get();
-          if (!c) return;
-          const t = c.currentTime;
-          const osc = c.createOscillator();
-          const gain = c.createGain();
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(1500, t);
-          osc.frequency.exponentialRampToValueAtTime(420, t + 0.05);
-          gain.gain.setValueAtTime(0.22, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-          osc.connect(gain).connect(c.destination);
-          osc.start(t);
-          osc.stop(t + 0.1);
-        };
-        // A soft filtered whoosh for swiping to another album.
-        const swipe = () => {
-          const c = get();
-          if (!c) return;
-          const t = c.currentTime;
-          const len = Math.floor(c.sampleRate * 0.25);
-          const buffer = c.createBuffer(1, len, c.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
-          const src = c.createBufferSource();
-          src.buffer = buffer;
-          const filter = c.createBiquadFilter();
-          filter.type = "bandpass";
-          filter.frequency.setValueAtTime(600, t);
-          filter.frequency.exponentialRampToValueAtTime(2400, t + 0.2);
-          const gain = c.createGain();
-          gain.gain.setValueAtTime(0.16, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-          src.connect(filter).connect(gain).connect(c.destination);
-          src.start(t);
-        };
-        return { click, swipe, unlock: get };
-      })();
+      // Sound effects from public/sounds (Pixabay UI sounds). Each play starts a fresh copy, so they can overlap.
+      function playSfx(file, volume = 0.6, maxSeconds = 0) {
+        const a = new Audio(`/sounds/${file}`);
+        a.volume = volume;
+        a.play().catch(() => {}); // browsers block sound until the page has had a click
+        if (maxSeconds > 0) setTimeout(() => a.pause(), maxSeconds * 1000);
+        return a;
+      }
+      const fx = {
+        click: () => playSfx("select-click.mp3", 0.8),
+        swipe: () => playSfx("swipe.mp3", 0.5, 0.4),
+        loaded: () => playSfx("loaded.mp3", 0.5),
+        songOfDay: () => playSfx("song-of-day.mp3", 0.6),
+        play: () => playSfx("play.mp3", 0.5),
+        close: () => playSfx("close.mp3", 0.5),
+        unlock: () => {},
+      };
       // The first click or tap on the page unlocks sound (browsers require it).
       document.addEventListener("pointerdown", () => fx.unlock(), { once: true });
       // Selecting an album (a click that was not a swipe) plays the click sound.
@@ -826,6 +793,7 @@
         setTimeout(() => {
           if (token !== catToken) return;
           renderCategorySongs(id);
+          fx.loaded();
           loader.classList.add("fade");
           setTimeout(() => { if (token === catToken) loader.hidden = true; showSongOfTheDay(); }, 650);
         }, 1400);
@@ -862,13 +830,15 @@
         }
         playBtn.onclick = () => {
           if (!sotdAudio) return;
+          fx.play();
           if (sotdAudio.paused) { sotdAudio.play(); playBtn.textContent = "❚❚ Pause preview"; }
           else { sotdAudio.pause(); playBtn.textContent = "▶ Play preview"; }
         };
         dialog.showModal();
+        fx.songOfDay();
         try { localStorage.setItem("sotdShown", today); } catch (e) {}
       }
-      document.getElementById("sotdClose").onclick = () => document.getElementById("songOfDay").close();
+      document.getElementById("sotdClose").onclick = () => { fx.close(); document.getElementById("songOfDay").close(); };
       document.getElementById("songOfDay").addEventListener("close", () => {
         if (sotdAudio) { sotdAudio.pause(); sotdAudio = null; }
       });
