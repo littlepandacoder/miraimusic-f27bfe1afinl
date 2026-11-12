@@ -1293,60 +1293,6 @@
       const api = new alphaTab.AlphaTabApi(main, settings);
       window.musicableApi = api; // used by src/practice.js (MIDI practice mode)
 
-      // Pinned clefs: the treble/bass clefs, key and time signature stay on the left while the score scrolls
-      // sideways. The column is exactly as wide as that header (up to the first note), and shows a copy of
-      // the first system's left edge, so nothing else of the score is covered.
-      const scoreScroller = wrapper.querySelector(".at-viewport");
-      const contentArea = wrapper.querySelector(".at-content");
-      const clefPin = document.createElement("div");
-      clefPin.className = "clef-pin";
-      clefPin.style.cssText =
-        "position:absolute;top:0;bottom:0;left:70px;overflow:hidden;z-index:5;pointer-events:none;display:none;";
-      contentArea.appendChild(clefPin);
-
-      // Width in px from the left edge of the first system to the first note of the first bar.
-      const clefHeaderWidth = () => {
-        const system = api.boundsLookup?.staffSystems?.[0];
-        const firstBeat = system?.bars?.[0]?.beats?.[0];
-        if (!system || !firstBeat) return 0;
-        return Math.max(0, Math.ceil(firstBeat.visualBounds.x - system.visualBounds.x) + 4);
-      };
-      const syncClefPin = () => {
-        const copy = clefPin.firstElementChild;
-        if (copy) copy.style.transform = `translateY(${-scoreScroller.scrollTop}px)`;
-      };
-      const pinClefs = () => {
-        clefPin.innerHTML = "";
-        // If alphaTab has not filled in its bounds yet, fall back to a typical clef + time signature width.
-        const width = clefHeaderWidth() || 110;
-        const firstSystem = main.querySelector(".at-surface-svg");
-        if (!firstSystem) {
-          clefPin.style.display = "none";
-          return;
-        }
-        const copy = firstSystem.cloneNode(true);
-        copy.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id")); // avoid duplicate ids
-        copy.style.position = "absolute";
-        copy.style.left = "0";
-        copy.style.top = "0";
-        clefPin.style.width = `${width}px`;
-        const scoreBackground = getComputedStyle(scoreScroller).backgroundColor;
-        const isTransparent = !scoreBackground || /rgba\(.*,\s*0\)$/.test(scoreBackground);
-        clefPin.style.background = isTransparent ? "#fff" : scoreBackground; // hide notes scrolling underneath
-        clefPin.appendChild(copy);
-        clefPin.style.display = "block";
-        syncClefPin();
-      };
-      // alphaTab's renderFinished does not always reach this listener, so also refresh after the post-render
-      // event and whenever the score's drawing changes.
-      api.renderFinished.on(pinClefs);
-      api.postRenderFinished.on(pinClefs);
-      let clefRefreshTimer = null;
-      new MutationObserver(() => {
-        clearTimeout(clefRefreshTimer);
-        clefRefreshTimer = setTimeout(pinClefs, 150);
-      }).observe(main, { childList: true, subtree: true });
-      scoreScroller.addEventListener("scroll", syncClefPin, { passive: true });
 
 
       // overlay logic
@@ -1664,6 +1610,24 @@
         api.updateSettings();
         api.render();
       };
+
+      // Big green button: switches between horizontal (one long line) and vertical (page, wrapped lines).
+      const layoutToggle = document.createElement("button");
+      layoutToggle.type = "button";
+      layoutToggle.className = "layout-toggle";
+      layoutToggle.style.cssText =
+        "background:#16a34a;color:#fff;font-weight:700;font-size:16px;padding:12px 22px;" +
+        "border:none;border-radius:12px;cursor:pointer;margin-right:12px;box-shadow:0 4px 12px rgba(22,163,74,.35);";
+      const syncLayoutToggle = () => {
+        layoutToggle.textContent = layout.value === "horizontal" ? "Vertical view" : "Horizontal view";
+      };
+      layoutToggle.onclick = () => {
+        layout.value = layout.value === "horizontal" ? "page" : "horizontal";
+        layout.onchange();
+        syncLayoutToggle();
+      };
+      layout.parentElement.insertBefore(layoutToggle, layout);
+      syncLayoutToggle();
 
       // player loading indicator
       const playerIndicator = wrapper.querySelector(
