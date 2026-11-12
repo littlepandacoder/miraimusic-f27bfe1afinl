@@ -192,8 +192,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
   const NavLink = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => {
     const isActive = !(item as any).external && location.pathname === item.href;
     const baseClass = isActive
-      ? "flex items-center gap-3 px-4 py-3 rounded-lg bg-primary text-primary-foreground font-semibold transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.35)]"
-      : "flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
+      ? "flex items-center gap-3 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold transition-colors shadow-[0_4px_20px_hsl(330_85%_55%/0.35)]"
+      : "flex items-center gap-3 px-4 py-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors";
 
     const isProtected = (item as any).locked && isProtectedFeature(item.href);
     const isLocked = isProtected && !subscription.hasActiveSubscription && role === "student";
@@ -277,11 +277,11 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
-              <div className="grid grid-cols-2 gap-y-5">
+              <div className="grid grid-cols-2 gap-y-2">
                 {orderGameTiles(studentGameIcons).map(({ href, img, labelKey, shadow }) => (
                   <div key={labelKey} className={href === "/piano-room" ? "col-span-2 flex justify-center" : "flex justify-center"}>
-                    <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5 w-[72px]">
-                      <div className="relative w-[68px] h-[68px] shrink-0">
+                    <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1 w-[64px]">
+                      <div className="relative w-[56px] h-[56px] shrink-0">
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
                         {href === "/piano-room" && <PianoRoomSparkle />}
                         <img
@@ -419,7 +419,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
           {role === "student" && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
-              <div className="grid grid-cols-2 gap-y-5">
+              <div className="grid grid-cols-2 gap-y-2">
                 {orderGameTiles(studentGameIcons).map(({ href, img, labelKey, shadow, locked }) => {
                   const isLocked = locked && !subscription.hasActiveSubscription;
                   const featureName = getFeatureName(href);
