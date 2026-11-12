@@ -96,7 +96,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/piano-room", icon: KeyboardMusic, label: "Piano Room",    external: false },
     { href: "/rhythm-quiz", icon: Gamepad2,      label: "Rhythm Quiz",   external: false },
     { href: "/note_naming.html",     icon: Gamepad2,      label: "Note Naming",   external: true },
-    { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Reading", external: true },
+    { href: "/sight-reading.html",   icon: Gamepad2,      label: "Sight Trainer", external: true },
     { href: "/piano-theory-game",    icon: Gamepad2,      label: "Piano Theory",  external: false },
     { href: "/note-quiz.html",          icon: Gamepad2,      label: "Note Quiz",     external: true },
     { href: "/musical-rest-quiz.html",  icon: Gamepad2,      label: "Rest Quiz",          external: true },
