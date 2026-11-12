@@ -391,7 +391,6 @@ const StudentHome = ({ onOpenReport }: { onOpenReport: () => void }) => {
               { label: t("student.gameNames.trebleTest"), href: "/sight-reading.html?mode=treble_test&clef=treble&from=C4&to=C5&count=20&autostart=1" },
               { label: t("student.gameNames.bassTest"),   href: "/sight-reading.html?mode=bass_test&clef=bass&from=C2&to=C4&count=20&autostart=1" },
             ]},
-            { key: "piano_hero",   label: t("student.gameNames.pianoHero"),    icon: <Piano className="w-5 h-5 text-purple-400" />, accentClass: "text-purple-400", bgClass: "bg-purple-500/10", href: "/piano_hero.html",    tests: null },
             { key: "rhythm_quiz",  label: t("student.gameNames.rhythmQuiz"),   icon: <Drum className="w-5 h-5 text-amber-400" />,   accentClass: "text-amber-400",  bgClass: "bg-amber-500/10",  href: "/rhythm-quiz.html",   tests: null,
               passThreshold: 70,
             },
