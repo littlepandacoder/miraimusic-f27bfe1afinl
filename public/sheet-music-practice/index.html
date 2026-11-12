@@ -1095,8 +1095,8 @@
           </div>
           <div class="at-layout">
             <select>
-              <option value="horizontal" selected>Horizontal</option>
-              <option value="page">Page</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="page" selected>Page</option>
             </select>
           </div>
         </div>
@@ -1281,8 +1281,8 @@
       const settings = {
         display: {
           scale: 1.5 * zoomCompensation(), // 150% zoom by default
-          // Horizontal: bars keep their natural width, so every measure is the same length at any zoom.
-          layoutMode: alphaTab.LayoutMode.Horizontal,
+          // Vertical (Page) is the default view. Horizontal keeps bars at their natural width.
+          layoutMode: alphaTab.LayoutMode.Page,
         },
         player: {
           enablePlayer: true,
