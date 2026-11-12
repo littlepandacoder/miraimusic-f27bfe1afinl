@@ -333,6 +333,9 @@
       .sotd-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
       .sotd-btn { border: none; border-radius: 999px; padding: 10px 18px; font-weight: 800; background: #f472b6; color: #fff; cursor: pointer;
         box-shadow: 0 0 16px 3px rgba(244,114,182,.45); }
+      .sotd-try { display: inline-block; text-decoration: none; padding: 12px 26px; font-size: 16px; letter-spacing: .08em;
+        background: linear-gradient(135deg, #f472b6, #c084fc); box-shadow: 0 0 22px 6px rgba(244,114,182,.55); }
+      .sotd-try:hover { box-shadow: 0 0 30px 10px rgba(244,114,182,.75); }
       .sotd-btn.ghost { background: transparent; color: var(--fg); border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
       /* Vinyl: only the grooves turn on hover; the cover stays still. */
       .thumb .grooves {
@@ -379,6 +382,7 @@
         <h2 id="sotdTitle" class="sotd-title"></h2>
         <p id="sotdComposer" class="sotd-composer"></p>
         <div class="sotd-actions">
+          <a id="sotdTry" class="sotd-btn sotd-try" href="#">TRY ME</a>
           <button type="button" id="sotdPlay" class="sotd-btn" hidden>▶ Play preview</button>
           <button type="button" id="sotdClose" class="sotd-btn ghost">Close</button>
         </div>
@@ -867,6 +871,8 @@
         document.getElementById("sotdComposer").textContent = pick.composer || "";
         const img = document.getElementById("sotdImg");
         if (songUrls[pick.id]) { img.src = songUrls[pick.id]; img.hidden = false; } else { img.hidden = true; }
+        const tryBtn = document.getElementById("sotdTry");
+        tryBtn.href = `/sheet-music-practice/index.html?song=${encodeURIComponent(`lib-${pick.id}`)}`;
         const playBtn = document.getElementById("sotdPlay");
         if (sotdAudio) { sotdAudio.pause(); sotdAudio = null; }
         playBtn.hidden = !pick.preview_url;
