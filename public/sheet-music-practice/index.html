@@ -1317,9 +1317,10 @@
       };
       const pinClefs = () => {
         clefPin.innerHTML = "";
-        const width = clefHeaderWidth();
+        // If alphaTab has not filled in its bounds yet, fall back to a typical clef + time signature width.
+        const width = clefHeaderWidth() || 110;
         const firstSystem = main.querySelector(".at-surface-svg");
-        if (!width || !firstSystem) {
+        if (!firstSystem) {
           clefPin.style.display = "none";
           return;
         }
@@ -1336,7 +1337,15 @@
         clefPin.style.display = "block";
         syncClefPin();
       };
+      // alphaTab's renderFinished does not always reach this listener, so also refresh after the post-render
+      // event and whenever the score's drawing changes.
       api.renderFinished.on(pinClefs);
+      api.postRenderFinished.on(pinClefs);
+      let clefRefreshTimer = null;
+      new MutationObserver(() => {
+        clearTimeout(clefRefreshTimer);
+        clefRefreshTimer = setTimeout(pinClefs, 150);
+      }).observe(main, { childList: true, subtree: true });
       scoreScroller.addEventListener("scroll", syncClefPin, { passive: true });
 
 
