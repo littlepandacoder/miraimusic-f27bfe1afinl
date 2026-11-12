@@ -692,6 +692,10 @@
           return api;
         };
 
+        // Browsers only allow sound after a click on the page. Create the player on the first click or tap, so
+        // previews that start on hover can be heard.
+        document.addEventListener("pointerdown", () => ensurePlayer(), { once: true, capture: true });
+
         const stopPreview = () => {
           clearTimeout(hoverTimer);
           clearTimeout(stopTimer);
