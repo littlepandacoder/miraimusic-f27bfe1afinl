@@ -62,6 +62,9 @@ const ManageSheetMusic = () => {
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
   const [catThumbUrls, setCatThumbUrls] = useState<Record<string, string>>({});
+  // The song being edited in place (one at a time). Thumbnail is optional: null keeps the current one.
+  const [editing, setEditing] = useState<{ id: string; title: string; composer: string; categoryId: string; thumb: File | null } | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "No category";
 
@@ -242,6 +245,67 @@ const ManageSheetMusic = () => {
     await load();
   };
 
+  const startEdit = (song: LibrarySong) => {
+    setEditing({
+      id: song.id,
+      title: song.title,
+      composer: song.composer ?? "",
+      categoryId: song.category_id ?? "",
+      thumb: null,
+    });
+  };
+
+  // Saves name, composer, category and (optionally) a new thumbnail. A new thumbnail gets a new path,
+  // so the old one is removed only after the database row points at the new one.
+  const saveEdit = async (song: LibrarySong) => {
+    if (!editing) return;
+    const title = editing.title.trim();
+    if (!title) {
+      toast({ title: "Every song needs a title", variant: "destructive" });
+      return;
+    }
+    let newThumbPath: string | null = null;
+    if (editing.thumb) {
+      if (!THUMB_FILE.test(editing.thumb.name)) {
+        toast({ title: "Unsupported image", description: "Choose a .png, .jpg or .webp image.", variant: "destructive" });
+        return;
+      }
+      const ext = editing.thumb.name.split(".").pop()!.toLowerCase();
+      newThumbPath = `${song.id}-${Date.now()}.${ext}`;
+      const { error: thumbError } = await supabase.storage.from(THUMB_BUCKET).upload(newThumbPath, editing.thumb, {
+        contentType: editing.thumb.type || "image/png",
+        upsert: false,
+      });
+      if (thumbError) {
+        toast({ title: "Could not upload the thumbnail", description: thumbError.message, variant: "destructive" });
+        return;
+      }
+    }
+
+    setSavingEdit(true);
+    const changes = {
+      title,
+      composer: editing.composer.trim() || null,
+      category_id: editing.categoryId || null,
+      ...(newThumbPath ? { thumbnail_path: newThumbPath } : {}),
+    };
+    const { data, error } = await db.from("sheet_music_library").update(changes).eq("id", song.id).select("id");
+    setSavingEdit(false);
+    if (error || !data || data.length === 0) {
+      if (newThumbPath) await supabase.storage.from(THUMB_BUCKET).remove([newThumbPath]);
+      toast({
+        title: "Could not save changes",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newThumbPath && song.thumbnail_path) await supabase.storage.from(THUMB_BUCKET).remove([song.thumbnail_path]);
+    setEditing(null);
+    toast({ title: "Song updated" });
+    await load();
+  };
+
   // Adds the chosen music files as pending songs. The title defaults to the file name.
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -371,6 +435,69 @@ const ManageSheetMusic = () => {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  // Inline editor for one song: name, composer, category and an optional new thumbnail.
+  const renderEditRow = (song: LibrarySong) => {
+    if (!editing) return null;
+    return (
+      <li key={song.id} className="grid gap-3 py-3 md:grid-cols-[auto_1fr_1fr_1fr] md:items-end">
+        {thumbUrls[song.id] ? (
+          <img src={thumbUrls[song.id]} alt="" className="w-16 h-20 rounded-md object-cover border border-border shrink-0" />
+        ) : (
+          <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted" />
+        )}
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Title *</label>
+          <Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Composer</label>
+          <Input
+            value={editing.composer}
+            onChange={(e) => setEditing({ ...editing, composer: e.target.value })}
+            placeholder="Optional"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Category</label>
+          <select
+            className={selectClass}
+            value={editing.categoryId}
+            onChange={(e) => setEditing({ ...editing, categoryId: e.target.value })}
+          >
+            <option value="">No category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1 md:col-span-4">
+          <label className="text-xs font-medium text-muted-foreground">
+            Thumbnail {editing.thumb ? `(new: ${editing.thumb.name})` : "(optional, leave empty to keep the current one)"}
+          </label>
+          <Input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={(e) => {
+              setEditing((current) => (current ? { ...current, thumb: e.target.files?.[0] ?? null } : current));
+              e.target.value = "";
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-2 md:col-span-4">
+          <Button onClick={() => saveEdit(song)} disabled={savingEdit || !editing.title.trim()}>
+            {savingEdit ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            Save changes
+          </Button>
+          <Button variant="outline" onClick={() => setEditing(null)} disabled={savingEdit}>
+            Cancel
+          </Button>
+        </div>
+      </li>
+    );
   };
 
   return (
@@ -562,7 +689,7 @@ const ManageSheetMusic = () => {
             <p className="text-sm text-muted-foreground">No sheet music yet.</p>
           ) : (
             <ul className="divide-y divide-border">
-              {songs.map((song) => (
+              {songs.map((song) => editing?.id === song.id ? renderEditRow(song) : (
                 <li key={song.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
                     {thumbUrls[song.id] ? (
@@ -598,6 +725,15 @@ const ManageSheetMusic = () => {
                         </option>
                       ))}
                     </select>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => startEdit(song)}
+                      disabled={editing !== null || deletingId !== null}
+                      aria-label={`Edit ${song.title}`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
