@@ -29,7 +29,41 @@
         padding: 14px 4vw; background: var(--card); border-bottom: 1px solid var(--border);
       }
       .brand { font-weight: 900; font-size: 18px; }
-      .brand span { color: var(--primary); }
+      /* Piano Room vibes: rainbow, glowing "Musicable" with a twinkling sparkle. */
+      .brand {
+        position: relative;
+        display: inline-block;
+        background: linear-gradient(90deg, #ff3b6b, #ff9f1c, #ffe600, #2ed573, #1e90ff, #a55eea, #ff3b6b);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: brand-rainbow 4s linear infinite;
+        filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.7)) drop-shadow(0 0 14px rgba(139, 92, 246, 0.5));
+      }
+      .brand span {
+        color: transparent;
+        background: inherit;
+        -webkit-background-clip: text;
+        background-clip: text;
+      }
+      .brand::after {
+        content: "✦";
+        position: absolute;
+        top: -6px;
+        right: -12px;
+        font-size: 9px;
+        color: #ffffff;
+        text-shadow: 0 0 6px #ffffff, 0 0 12px #f0abfc;
+        animation: brand-twinkle 1.6s ease-in-out infinite;
+      }
+      @keyframes brand-rainbow {
+        to { background-position: 300% 50%; }
+      }
+      @keyframes brand-twinkle {
+        0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.15) rotate(45deg); }
+      }
       .sub { color: var(--muted-fg); font-size: 13px; font-weight: 500; margin-left: 10px; }
       .back {
         color: var(--fg); text-decoration: none; font-weight: 600; font-size: 14px;
