@@ -1025,6 +1025,58 @@
         .at-controls .at-player-play-pause:has(.fa-pause) { animation: none; }
         .at-controls .btn:hover, .upload-bar button:hover, .practice-panel button:hover, .songs-panel button:hover { transform: none; }
       }
+      /* Pressed and selected keys: glowing glitter. */
+      .piano .key.user-lit, .piano .key.sounding, .piano .key.held, .piano .key.correct {
+        box-shadow: 0 0 12px 3px rgba(244, 114, 182, 0.7), 0 0 26px 6px rgba(192, 132, 252, 0.35);
+        animation: key-pulse 1.1s ease-in-out infinite;
+      }
+      .piano .key.user-lit::after, .piano .key.sounding::after, .piano .key.held::after, .piano .key.correct::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+        background:
+          radial-gradient(circle, #ffffff 1.2px, transparent 2.4px) 8% 18% / 14px 14px,
+          radial-gradient(circle, #fde68a 1px, transparent 2px) 62% 52% / 16px 16px,
+          radial-gradient(circle, #f0abfc 1.2px, transparent 2.4px) 30% 78% / 12px 12px;
+        animation: key-glitter 0.9s ease-in-out infinite;
+      }
+      @keyframes key-pulse {
+        0%, 100% { filter: brightness(1.05); }
+        50% { filter: brightness(1.25); }
+      }
+      @keyframes key-glitter {
+        0%, 100% { opacity: 0.45; }
+        50% { opacity: 1; }
+      }
+
+      /* Cute, interactive background: a spotlight that follows the cursor, and drifting notes and sparkles. */
+      body::before {
+        content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+        background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 30%),
+          rgba(244, 114, 182, 0.16), rgba(192, 132, 252, 0.08) 40%, transparent 70%);
+        transition: background 0.15s linear;
+      }
+      .practice-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+      .practice-bg span {
+        position: absolute; bottom: -40px; opacity: 0; color: rgba(244, 114, 182, 0.55);
+        text-shadow: 0 0 10px rgba(192, 132, 252, 0.6); animation: bg-float linear infinite;
+      }
+      .practice-bg .spark {
+        width: 6px; height: 6px; border-radius: 50%; background: #fff; color: transparent;
+        box-shadow: 0 0 8px 2px rgba(253, 230, 138, 0.8); animation-name: bg-twinkle;
+      }
+      @keyframes bg-float {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        15% { opacity: 0.8; }
+        100% { transform: translateY(-110vh) rotate(20deg); opacity: 0; }
+      }
+      @keyframes bg-twinkle {
+        0%, 100% { opacity: 0.2; transform: scale(0.6); }
+        50% { opacity: 1; transform: scale(1.3); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .piano .key.user-lit, .piano .key.sounding, .piano .key.held, .piano .key.correct,
+        .piano .key.user-lit::after, .piano .key.sounding::after, .piano .key.held::after, .piano .key.correct::after,
+        .practice-bg span { animation: none !important; }
+      }
     </style>
   </head>
 
@@ -2367,5 +2419,41 @@ document.addEventListener("keydown", (e) => {
       startup();
     </script>
     <script type="module" src="src/practice.js"></script>
+    <script>
+      // Cute background: notes and sparkles drift behind the page, and a soft spotlight follows the cursor.
+      (function () {
+        const bg = document.createElement("div");
+        bg.className = "practice-bg";
+        bg.setAttribute("aria-hidden", "true");
+        const notes = ["♪", "♫", "♬", "♩"];
+        for (let i = 0; i < 12; i++) {
+          const n = document.createElement("span");
+          n.textContent = notes[i % notes.length];
+          n.style.left = Math.round(Math.random() * 96) + "%";
+          n.style.fontSize = (16 + Math.random() * 18).toFixed(0) + "px";
+          n.style.animationDuration = (12 + Math.random() * 10).toFixed(1) + "s";
+          n.style.animationDelay = (-Math.random() * 20).toFixed(1) + "s";
+          bg.appendChild(n);
+        }
+        for (let i = 0; i < 18; i++) {
+          const sp = document.createElement("span");
+          sp.className = "spark";
+          sp.style.left = Math.round(Math.random() * 98) + "%";
+          sp.style.top = Math.round(Math.random() * 98) + "%";
+          sp.style.bottom = "auto";
+          sp.style.animationName = "bg-twinkle";
+          sp.style.animationDuration = (2 + Math.random() * 3).toFixed(1) + "s";
+          sp.style.animationDelay = (-Math.random() * 4).toFixed(1) + "s";
+          sp.style.opacity = "1";
+          bg.appendChild(sp);
+        }
+        document.body.prepend(bg);
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        window.addEventListener("pointermove", (e) => {
+          document.body.style.setProperty("--mx", e.clientX + "px");
+          document.body.style.setProperty("--my", e.clientY + "px");
+        }, { passive: true });
+      })();
+    </script>
   </body>
 </html>
