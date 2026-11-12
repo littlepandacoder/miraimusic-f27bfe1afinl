@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ConversationProvider } from "@elevenlabs/react";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SongSuggestionPopup } from "@/components/SongSuggestionPopup";
+import { GlobalClickSound } from "@/components/GlobalClickSound";
 import { Capacitor } from "@capacitor/core";
 import { PageTracking } from "@/hooks/usePageTracking";
 import Index from "./pages/Index";
@@ -54,6 +55,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <GlobalClickSound />
           {!Capacitor.isNativePlatform() && <NotificationSetup />}
           <BrowserRouter>
             <PageTracking />
