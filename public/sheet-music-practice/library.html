@@ -148,9 +148,56 @@
       @media (max-width: 480px) {
         .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
       }
+
+      /* ── Piano Room: lively, interactive library ── */
+      .notes-bg { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+      .notes-bg span {
+        position: absolute; bottom: -40px; font-size: 22px; opacity: 0;
+        color: rgba(244, 114, 182, 0.55); text-shadow: 0 0 10px rgba(192, 132, 252, 0.6);
+        animation: note-float linear infinite;
+      }
+      @keyframes note-float {
+        0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+        15% { opacity: 0.9; }
+        100% { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
+      }
+      body > *:not(.notes-bg) { position: relative; z-index: 1; }
+      .topbar { position: relative; overflow: hidden; }
+      .topbar::before {
+        content: ""; position: absolute; inset: -40% -10%; pointer-events: none; opacity: 0.22;
+        background: linear-gradient(100deg, transparent 20%, #ff3b6b 35%, #ffe600 45%, #2ed573 55%, #1e90ff 65%, #a55eea 75%, transparent 85%);
+        animation: band-sweep 8s ease-in-out infinite;
+      }
+      @keyframes band-sweep { 0%, 100% { transform: translateX(-12%); } 50% { transform: translateX(12%); } }
+      .card { transform-style: preserve-3d; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; will-change: transform; }
+      .card:hover, .card:focus-visible {
+        box-shadow: 0 0 0 1px rgba(244, 114, 182, 0.6), 0 0 26px 4px rgba(192, 132, 252, 0.45), 0 0 46px 10px rgba(253, 230, 138, 0.18);
+      }
+      .section-title {
+        background: linear-gradient(90deg, #f472b6, #c084fc, #fde68a, #f472b6);
+        background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+        animation: brand-rainbow 6s linear infinite; display: inline-block; position: relative;
+      }
+      .section-title::after {
+        content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 3px; border-radius: 3px;
+        background: linear-gradient(90deg, #f472b6, #c084fc, #fde68a); box-shadow: 0 0 10px rgba(244, 114, 182, 0.7);
+      }
+      .burst-spark {
+        position: fixed; width: 8px; height: 8px; border-radius: 50%; pointer-events: none; z-index: 50;
+        background: radial-gradient(circle, #ffffff, #f0abfc 40%, transparent 70%);
+        box-shadow: 0 0 8px #f0abfc; animation: burst-fly 0.8s ease-out forwards;
+      }
+      @keyframes burst-fly {
+        0% { transform: translate(0, 0) scale(1); opacity: 1; }
+        100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .notes-bg, .topbar::before, .section-title, .brand, .card, .burst-spark { animation: none !important; transition: none !important; }
+      }
     </style>
   </head>
   <body>
+    <div class="notes-bg" aria-hidden="true"></div>
     <header class="topbar">
       <div><span class="brand">Musicable<span>.</span></span><span class="sub">Sheet Music Library</span></div>
       <a class="back" href="/dashboard">&larr; Back to dashboard</a>
@@ -528,6 +575,58 @@
       }
 
       load();
+    </script>
+    <script>
+      // Floating notes in the background.
+      (function () {
+        const bg = document.querySelector('.notes-bg');
+        if (!bg || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const notes = ['♪', '♫', '♬', '♩'];
+        for (let i = 0; i < 14; i++) {
+          const n = document.createElement('span');
+          n.textContent = notes[i % notes.length];
+          n.style.left = Math.round(Math.random() * 96) + '%';
+          n.style.animationDuration = (9 + Math.random() * 9).toFixed(1) + 's';
+          n.style.animationDelay = (-Math.random() * 14).toFixed(1) + 's';
+          n.style.fontSize = (16 + Math.random() * 22).toFixed(0) + 'px';
+          bg.appendChild(n);
+        }
+      })();
+
+      // Cards tilt toward the pointer.
+      (function () {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        let current = null;
+        document.addEventListener('pointermove', (e) => {
+          const card = e.target.closest && e.target.closest('.card');
+          if (current && current !== card) { current.style.transform = ''; current = null; }
+          if (!card || e.pointerType === 'touch') return;
+          const r = card.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5;
+          const py = (e.clientY - r.top) / r.height - 0.5;
+          card.style.transform = `perspective(700px) rotateX(${(-py * 8).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg) translateY(-3px)`;
+          current = card;
+        });
+        document.addEventListener('pointerleave', () => { if (current) { current.style.transform = ''; current = null; } });
+      })();
+
+      // Sparkle burst where a card is pressed.
+      document.addEventListener('pointerdown', (e) => {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!e.target.closest || !e.target.closest('.card')) return;
+        for (let i = 0; i < 10; i++) {
+          const s = document.createElement('span');
+          s.className = 'burst-spark';
+          const angle = (Math.PI * 2 * i) / 10;
+          const dist = 36 + Math.random() * 30;
+          s.style.left = e.clientX - 4 + 'px';
+          s.style.top = e.clientY - 4 + 'px';
+          s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+          s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+          document.body.appendChild(s);
+          setTimeout(() => s.remove(), 900);
+        }
+      });
     </script>
   </body>
 </html>
