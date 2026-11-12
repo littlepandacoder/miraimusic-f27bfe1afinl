@@ -359,6 +359,13 @@
       <p id="intro" class="intro">Tap a picture to open the sheet music and practise it.</p>
       <div id="state" class="state">Loading library…</div>
       <div id="sections"></div>
+      <div id="entryLoader" class="cat-loader" hidden role="status" aria-live="polite">
+        <span class="cat-note" style="left:22%;animation-delay:0s">♪</span>
+        <span class="cat-note" style="left:70%;animation-delay:-1.2s">♫</span>
+        <span class="cat-note" style="left:46%;animation-delay:-2.4s">♬</span>
+        <div class="cat-disc" aria-hidden="true"><div class="cat-label"></div></div>
+        <p class="cat-text">Warming up the piano…</p>
+      </div>
       <div id="catLoader" class="cat-loader" hidden role="status" aria-live="polite">
         <span class="cat-note" style="left:22%;animation-delay:0s">♪</span>
         <span class="cat-note" style="left:70%;animation-delay:-1.2s">♫</span>
@@ -441,6 +448,20 @@
 
       const stateEl = document.getElementById("state");
       const sections = document.getElementById("sections");
+      // Came from the Piano Room loading screen: keep that loader up until the library is ready.
+      const entryLoader = document.getElementById("entryLoader");
+      const cameFromPianoRoom = (() => { try { return sessionStorage.getItem("pianoRoomLoader") === "1"; } catch (e) { return false; } })();
+      try { sessionStorage.removeItem("pianoRoomLoader"); } catch (e) {}
+      if (cameFromPianoRoom) entryLoader.hidden = false;
+      const entryStart = performance.now();
+      function finishEntryLoader() {
+        if (entryLoader.hidden) return;
+        const wait = Math.max(0, 1600 - (performance.now() - entryStart));
+        setTimeout(() => {
+          entryLoader.classList.add("fade");
+          setTimeout(() => { entryLoader.hidden = true; entryLoader.classList.remove("fade"); }, 650);
+        }, wait);
+      }
 
 
       const showState = (html) => {
@@ -934,7 +955,7 @@
         }
       }
 
-      load();
+      load().finally(finishEntryLoader);
     </script>
     <script>
       // Floating notes in the background.

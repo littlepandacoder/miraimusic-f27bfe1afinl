@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
 
 const LIBRARY_URL = "/sheet-music-practice/library.html";
-const LOAD_MS = 1600; // how long the cute loading screen shows
-const FADE_MS = 700; // how long it takes to fade into the library
+const HANDOFF_MS = 900; // short pause, then the library takes over the same loading screen
 
 const NOTES = ["♪", "♫", "♬", "♩", "♪"];
 
 // The Piano Room entry: a cute loading screen, then a gentle fade into the sheet music library.
 export default function PianoRoomPage() {
-  const [fading, setFading] = useState(false);
-
   useEffect(() => {
     // Startup sound for the loading screen. If the browser blocks it until the page is clicked, it plays on the first click.
     const startup = new Audio("/sounds/page-load.mp3");
@@ -18,11 +15,11 @@ export default function PianoRoomPage() {
       document.addEventListener("pointerdown", () => startup.play().catch(() => {}), { once: true, capture: true });
     });
 
-    const fadeTimer = window.setTimeout(() => setFading(true), LOAD_MS);
-    const goTimer = window.setTimeout(() => window.location.replace(LIBRARY_URL), LOAD_MS + FADE_MS);
+    // The library shows the same loading screen and keeps it up until its content is ready.
+    try { sessionStorage.setItem("pianoRoomLoader", "1"); } catch (e) {}
+    const goTimer = window.setTimeout(() => window.location.replace(LIBRARY_URL), HANDOFF_MS);
     return () => {
       startup.pause();
-      window.clearTimeout(fadeTimer);
       window.clearTimeout(goTimer);
     };
   }, []);
@@ -30,10 +27,6 @@ export default function PianoRoomPage() {
   return (
     <div
       className="pr-loader"
-      style={{
-        opacity: fading ? 0 : 1,
-        transition: `opacity ${FADE_MS}ms ease`,
-      }}
       role="status"
       aria-live="polite"
     >
