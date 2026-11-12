@@ -61,6 +61,14 @@
         right: 0;
         bottom: 0;
         padding-right: 20px;
+        /* Centre the score vertically with equal space above and below; auto margins stop it being cut off when it is taller than the card. */
+        display: flex;
+        flex-direction: column;
+      }
+      .at-viewport > .at-main {
+        margin-top: auto;
+        margin-bottom: auto;
+        flex-shrink: 0;
       }
 
       .at-footer {
@@ -1284,6 +1292,36 @@
       };
       const api = new alphaTab.AlphaTabApi(main, settings);
       window.musicableApi = api; // used by src/practice.js (MIDI practice mode)
+
+      // Pinned clef column: the treble/bass clefs and time signature stay on the left while the score
+      // scrolls sideways. It shows a copy of the first system's left edge, clipped to the clef area.
+      const CLEF_COLUMN_WIDTH = 95; // px, wide enough for the clef and time signature
+      const scoreScroller = wrapper.querySelector(".at-viewport");
+      const contentArea = wrapper.querySelector(".at-content");
+      const clefPin = document.createElement("div");
+      clefPin.className = "clef-pin";
+      clefPin.style.cssText =
+        `position:absolute;top:0;bottom:0;left:70px;width:${CLEF_COLUMN_WIDTH}px;` +
+        "overflow:hidden;background:#fff;z-index:5;pointer-events:none;border-right:1px solid rgba(0,0,0,0.08);";
+      contentArea.appendChild(clefPin);
+      const syncClefPin = () => {
+        const copy = clefPin.firstElementChild;
+        if (copy) copy.style.transform = `translateY(${-scoreScroller.scrollTop}px)`;
+      };
+      const pinClefs = () => {
+        clefPin.innerHTML = "";
+        const firstSystem = main.querySelector(".at-surface-svg");
+        if (!firstSystem) return;
+        const copy = firstSystem.cloneNode(true);
+        copy.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id")); // avoid duplicate ids
+        copy.style.position = "absolute";
+        copy.style.left = "0";
+        copy.style.top = "0";
+        clefPin.appendChild(copy);
+        syncClefPin();
+      };
+      api.renderFinished.on(pinClefs);
+      scoreScroller.addEventListener("scroll", syncClefPin, { passive: true });
 
       // overlay logic
       const overlay = wrapper.querySelector(".at-overlay");
