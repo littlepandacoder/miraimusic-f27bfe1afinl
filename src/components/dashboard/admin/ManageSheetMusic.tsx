@@ -551,8 +551,9 @@ const ManageSheetMusic = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <label className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-accent" title="Upload category image" aria-label={`Upload image for ${category.name}`}>
+                        <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent" title={catThumbUrls[category.id] ? "Change the category picture" : "Set the category picture"} aria-label={`${catThumbUrls[category.id] ? "Change" : "Set"} picture for ${category.name}`}>
                           <Upload className="w-4 h-4" />
+                          {catThumbUrls[category.id] ? "Change picture" : "Set picture"}
                           <input
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
