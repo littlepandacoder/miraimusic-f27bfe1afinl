@@ -230,38 +230,6 @@
       .composer { font-size: 11px; }
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
-      /* Tonearm (the "playing pin"): a small silver turntable arm, like an enamel pin. It rests off the record and swings onto it on hover. */
-      .disc-wrap { position: relative; }
-      .tonearm {
-        position: absolute; top: 3%; right: 3%; width: 32%; height: 0;
-        transform-origin: 100% 0; transform: rotate(24deg);
-        transition: transform .7s cubic-bezier(.3, .7, .3, 1); z-index: 4; pointer-events: none;
-      }
-      .tonearm .shaft {
-        position: absolute; right: 0; top: 0; width: 100%; height: 3px; border-radius: 3px;
-        background: linear-gradient(90deg, #f9fafb, #9ca3af 55%, #e5e7eb);
-        transform: translateY(-1.5px); box-shadow: 0 1px 2px rgba(0, 0, 0, .45);
-      }
-      .tonearm .head {
-        position: absolute; left: -6px; top: -4px; width: 11px; height: 8px; border-radius: 2px;
-        background: linear-gradient(160deg, #f3f4f6, #6b7280);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), 0 1px 3px rgba(0, 0, 0, .5);
-      }
-      .tonearm .head::after {
-        content: ""; position: absolute; left: 3px; top: 2px; width: 4px; height: 3px; border-radius: 1px; background: #111827;
-      }
-      .tonearm .pivot {
-        position: absolute; right: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%;
-        background: radial-gradient(circle at 35% 30%, #ffffff, #d1d5db 45%, #6b7280);
-        box-shadow: 0 0 0 2px #9ca3af, 0 2px 4px rgba(0, 0, 0, .5);
-      }
-      .tonearm .pivot::after {
-        content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px;
-        border-radius: 50%; background: #374151;
-      }
-      .card:hover .tonearm, .card:focus-visible .tonearm { transform: rotate(-4deg); }
-      .card:hover .tonearm .pivot { box-shadow: 0 0 0 2px #e5e7eb, 0 0 8px 2px rgba(255, 255, 255, .45); }
-      @media (prefers-reduced-motion: reduce) { .tonearm { transition: none; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
   </head>
@@ -507,15 +475,7 @@
           info.appendChild(composer);
         }
 
-        // Record-player tonearm: rests off the disc, swings onto the grooves when the card is hovered.
-        const disc = document.createElement("div");
-        disc.className = "disc-wrap";
-        const arm = document.createElement("div");
-        arm.className = "tonearm";
-        arm.setAttribute("aria-hidden", "true");
-        arm.innerHTML = '<span class="shaft"></span><span class="head"></span><span class="pivot"></span>';
-        disc.append(thumb, arm);
-        card.append(disc, info);
+        card.append(thumb, info);
         return card;
       }
 
