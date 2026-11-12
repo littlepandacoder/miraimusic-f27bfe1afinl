@@ -188,15 +188,13 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     const isProtected = (item as any).locked && isProtectedFeature(item.href);
     const isLocked = isProtected && !subscription.hasActiveSubscription && role === "student";
     const lockClass = isLocked ? "opacity-30 cursor-not-allowed grayscale" : "";
-    // Rainbow background so the Sheet Music entry stands out in the sidebar.
-    const rainbowStyle =
+    // Soft brand gradient (pink to violet, low opacity) so the Sheet Music entry stands out without shouting.
+    const brandHighlightStyle =
       item.label === "Sheet Music"
         ? {
-            background: "linear-gradient(90deg, #ff3b6b, #ff9f1c, #ffe600, #2ed573, #1e90ff, #a55eea, #ff3b6b)",
-            backgroundSize: "200% 100%",
-            color: "#ffffff",
-            fontWeight: 700,
-            boxShadow: "0 4px 18px rgba(255, 60, 120, 0.35)",
+            background: "linear-gradient(90deg, rgba(236, 72, 153, 0.16), rgba(139, 92, 246, 0.16))",
+            border: "1px solid rgba(236, 72, 153, 0.35)",
+            fontWeight: 600,
           }
         : undefined;
 
@@ -218,7 +216,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         href={item.href}
         onClick={handleClick}
         className={`${baseClass} ${lockClass}`}
-        style={rainbowStyle}
+        style={brandHighlightStyle}
         {...(isLocked && { onClick: (e) => { e.preventDefault(); handleClick(e); } })}
       >
         {(item as any).img ? (
@@ -230,7 +228,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </a>
     ) : (
-      <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`} style={rainbowStyle}>
+      <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`} style={brandHighlightStyle}>
         {(item as any).img ? (
           <img src={(item as any).img} alt="" className="w-7 h-7 shrink-0 object-contain" />
         ) : (
