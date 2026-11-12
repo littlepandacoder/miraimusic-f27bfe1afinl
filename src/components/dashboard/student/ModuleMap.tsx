@@ -246,7 +246,10 @@ const ModuleMap = ({ onModuleComplete }: ModuleMapProps) => {
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
                   lockedBySRTest ? "bg-yellow-500/5 border-yellow-500/40 opacity-80" : getStatusStyles(module.status),
-                  index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full"
+                  index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full",
+                  // Rainbow glitter on the module in progress, and on any unlocked module under the pointer.
+                  module.status !== "locked" && "module-card",
+                  module.status === "in-progress" && "is-current"
                 )}
                 onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
               >
