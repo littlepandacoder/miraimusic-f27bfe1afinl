@@ -1552,8 +1552,9 @@
       // Vertical (page) view: manual vertical scrolling is turned off.
       const isPageLayout = () => api.settings.display.layoutMode === alphaTab.LayoutMode.Page;
       const viewportEl = wrapper.querySelector(".at-viewport");
-      // Ignore mouse-wheel and trackpad scrolling in vertical view.
-      viewportEl.addEventListener("wheel", (e) => { if (isPageLayout()) e.preventDefault(); }, { passive: false });
+      // Vertical view: ignore mouse-wheel and trackpad scrolling on the whole page, so neither the score nor the
+      // card around it moves up or down. Horizontal view keeps normal scrolling.
+      window.addEventListener("wheel", (e) => { if (isPageLayout()) e.preventDefault(); }, { passive: false, capture: true });
       const applyZoom = () => {
         api.settings.display.scale = (parseInt(zoom.value) / 100) * zoomCompensation();
         wrapper.classList.toggle("page-view", isPageLayout());
