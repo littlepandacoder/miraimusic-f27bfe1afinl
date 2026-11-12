@@ -155,6 +155,14 @@ const HeroSection = () => {
   return (
     <section id="home" className="relative min-h-screen pt-16 sm:pt-24 pb-8 sm:pb-16 flex flex-col justify-center overflow-hidden">
       <MusicNotesBackground />
+      {/* Musicable beaver mascot: shown on tablets and up, beside the headline. */}
+      <img
+        src="/images/beaver-hero.png"
+        alt="Musicable beaver mascot"
+        className="hidden md:block absolute right-[2%] lg:right-[5%] bottom-[4%] w-[220px] lg:w-[300px] xl:w-[340px] pointer-events-none select-none z-[5]"
+        style={{ animation: "beaver-bob 4s ease-in-out infinite", filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.35))" }}
+        draggable={false}
+      />
       <div className="container mx-auto px-3 sm:px-4 relative z-10">
         <div className="text-center mb-4 sm:mb-8">
           <h1 className="font-black text-foreground mb-3 sm:mb-6 animate-slide-up leading-tight" style={{ fontSize: "clamp(65px, 6vw, 7rem)" }}>
