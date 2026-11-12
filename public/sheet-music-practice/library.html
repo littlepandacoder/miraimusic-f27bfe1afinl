@@ -224,11 +224,15 @@
       .thumb.placeholder.named { padding: 0; }
       .thumb.placeholder.named::after { z-index: 1; }
       .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
-      .card:hover .thumb { animation: vinyl-spin 3.5s linear infinite; box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 26px 6px rgba(244,114,182,.45), 0 0 46px 12px rgba(253,230,138,.18); }
+      .card:hover .thumb { animation: glitter-glow 1.6s ease-in-out infinite; }
       .info { padding: 12px 6px 0; }
       .title { font-size: 14px; }
       .composer { font-size: 11px; }
-      @keyframes vinyl-spin { to { transform: rotate(360deg); } }
+      /* Hover: the cover keeps still and pulses with a pink and gold glitter glow. */
+      @keyframes glitter-glow {
+        0%, 100% { box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 16px 4px rgba(244,114,182,.35), 0 0 30px 8px rgba(253,230,138,.12); }
+        50% { box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 30px 10px rgba(244,114,182,.7), 0 0 56px 16px rgba(253,230,138,.35); }
+      }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
       /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
       .carousel { position: relative; width: 100%; }
