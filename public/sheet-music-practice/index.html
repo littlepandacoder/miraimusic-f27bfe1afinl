@@ -1075,8 +1075,8 @@
         100% { transform: translateY(-110vh) rotate(20deg); opacity: 0; }
       }
       @keyframes bg-twinkle {
-        0%, 100% { opacity: 0.2; transform: scale(0.6); }
-        50% { opacity: 1; transform: scale(1.3); }
+        0%, 100% { opacity: 0.06; transform: scale(0.6); }
+        50% { opacity: 0.3; transform: scale(1.1); }
       }
       @media (prefers-reduced-motion: reduce) {
         .piano .key.user-lit, .piano .key.sounding, .piano .key.held, .piano .key.correct,
@@ -2445,7 +2445,8 @@ document.addEventListener("keydown", (e) => {
         for (let i = 0; i < 26; i++) {
           const n = document.createElement("span");
           n.textContent = notes[i % notes.length];
-          n.style.left = Math.round(Math.random() * 96) + "%";
+          // Notes sit at the left and right edges, beside the centred content, so they stay visible.
+          n.style.left = (i % 2 === 0 ? Math.random() * 9 : 91 + Math.random() * 8).toFixed(1) + "%";
           n.style.fontSize = (16 + Math.random() * 18).toFixed(0) + "px";
           n.style.animationDuration = (12 + Math.random() * 10).toFixed(1) + "s";
           n.style.animationDelay = (-Math.random() * 20).toFixed(1) + "s";
