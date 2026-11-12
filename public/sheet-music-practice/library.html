@@ -230,29 +230,29 @@
       .composer { font-size: 11px; }
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
-      /* Tonearm (the "playing pin"): rests off the record, swings onto it on hover. */
+      /* Tonearm (the "playing pin"): a small brand-pink arm that rests off the record and swings onto it on hover. */
       .disc-wrap { position: relative; }
       .tonearm {
-        position: absolute; top: 4%; right: 2%; width: 44%; height: 0;
-        transform-origin: 100% 0; transform: rotate(22deg);
+        position: absolute; top: 3%; right: 3%; width: 30%; height: 0;
+        transform-origin: 100% 0; transform: rotate(24deg);
         transition: transform .7s cubic-bezier(.3, .7, .3, 1); z-index: 4; pointer-events: none;
       }
       .tonearm .shaft {
-        position: absolute; right: 0; top: 0; width: 100%; height: 4px; border-radius: 3px;
-        background: linear-gradient(90deg, #e5e7eb, #9ca3af); transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0,0,0,.35);
+        position: absolute; right: 0; top: 0; width: 100%; height: 2px; border-radius: 2px;
+        background: linear-gradient(90deg, #f9a8d4, #c084fc); transform: translateY(-1px);
+        box-shadow: 0 1px 3px rgba(192, 132, 252, .5);
       }
       .tonearm .head {
-        position: absolute; left: -6px; top: -6px; width: 14px; height: 12px; border-radius: 3px;
-        background: linear-gradient(135deg, #f9fafb, #cbd5e1); box-shadow: 0 2px 4px rgba(0,0,0,.4);
+        position: absolute; left: -4px; top: -4px; width: 8px; height: 6px; border-radius: 50% 50% 40% 40%;
+        background: linear-gradient(135deg, #fbcfe8, #f472b6); box-shadow: 0 0 6px rgba(244, 114, 182, .7);
       }
       .tonearm .pivot {
-        position: absolute; right: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, #f9fafb, #9ca3af 60%, #6b7280);
-        box-shadow: 0 2px 6px rgba(0,0,0,.45);
+        position: absolute; right: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fdf2f8, #f472b6 55%, #a855f7);
+        box-shadow: 0 0 0 2px rgba(15, 23, 42, .6), 0 0 8px rgba(244, 114, 182, .6);
       }
       .card:hover .tonearm, .card:focus-visible .tonearm { transform: rotate(-4deg); }
-      .card:hover .tonearm .head { box-shadow: 0 0 8px 2px rgba(244,114,182,.7); }
+      .card:hover .tonearm .head { box-shadow: 0 0 10px 3px rgba(244, 114, 182, .9); }
       @media (prefers-reduced-motion: reduce) { .tonearm { transition: none; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
