@@ -82,7 +82,7 @@ export default function PianoRoomPage() {
         .pr-bar > span {
           display: block; height: 100%; width: 0; border-radius: 6px;
           background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #34d399, #fde68a);
-          animation: pr-fill ${LOAD_MS}ms ease-out forwards;
+          animation: pr-fill ${HANDOFF_MS}ms ease-out forwards;
         }
         @keyframes pr-fill { to { width: 100%; } }
         @media (prefers-reduced-motion: reduce) {
