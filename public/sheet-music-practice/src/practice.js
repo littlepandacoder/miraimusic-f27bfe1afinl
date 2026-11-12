@@ -977,12 +977,16 @@ function noteOff(midi) {
 
 function checkInput(midi) {
   // Before the song has started: playing the first checkpoint's note correctly starts it.
+  const firstCheckpoint = practice.checkpoints[0];
   if (
     practice.enabled &&
+    practice.mode === "wait" &&
     !practice.waiting &&
-    practice.nextIndex === 0 &&
+    firstCheckpoint &&
+    waitLog.size === 0 &&
     api.playerState !== PlayerState.Playing &&
-    practice.checkpoints[0]?.midi.includes(midi)
+    api.tickPosition <= firstCheckpoint.tick &&
+    firstCheckpoint.midi.includes(midi)
   ) {
     practice.waiting = { index: 0, pressed: new Set(), windowStart: null };
     practice.nextIndex = 1;
