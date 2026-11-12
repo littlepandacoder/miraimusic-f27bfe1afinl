@@ -2442,7 +2442,7 @@ document.addEventListener("keydown", (e) => {
         bg.className = "practice-bg";
         bg.setAttribute("aria-hidden", "true");
         const notes = ["♪", "♫", "♬", "♩"];
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 26; i++) {
           const n = document.createElement("span");
           n.textContent = notes[i % notes.length];
           n.style.left = Math.round(Math.random() * 96) + "%";
