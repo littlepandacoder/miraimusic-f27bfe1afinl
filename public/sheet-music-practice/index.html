@@ -1262,6 +1262,14 @@
       const wrapper = document.querySelector(".at-wrap");
       const main = wrapper.querySelector(".at-main");
 
+      // alphaTab lays bars out to the width of the element it renders into, and re-lays out whenever that
+      // width changes. Browser zoom changes the CSS width, so bars got stretched at 150%. Use a fixed width
+      // instead (980px, alphaTab's default page width): the layout stays the same at every zoom level, and
+      // the viewport scrolls sideways when the window is narrower.
+      const ALPHATAB_LAYOUT_WIDTH = 980;
+      main.style.width = ALPHATAB_LAYOUT_WIDTH + "px";
+      wrapper.querySelector(".at-viewport").style.overflowX = "auto";
+
       // initialize alphatab
       const settings = {
         display: {

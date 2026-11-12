@@ -18,6 +18,9 @@ export class ScoreRenderer {
     this.autoScroll = options.autoScroll ?? true;
     this.cursorColor = options.cursorColor ?? 'rgba(255, 45, 120, 0.5)'; // Pink with transparency
     this.cursorWidth = options.cursorWidth ?? 3;
+    // Fixed layout width in CSS pixels. The score is laid out at this width no matter how the window
+    // or browser zoom changes, so measures keep the same size (zoom scales the whole page, like any web page).
+    this.layoutWidth = options.layoutWidth ?? 1000;
   }
 
   /**
@@ -25,9 +28,16 @@ export class ScoreRenderer {
    */
   async loadScore(musicxmlUrl) {
     try {
-      // Create OSMD instance
-      this.osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(this.container, {
-        autoResize: true,
+      // OSMD lays out to the width of the element it renders into. Give it a fixed-width box, and
+      // let the container scroll sideways instead of re-flowing the notes to fit the window.
+      this.container.style.overflowX = 'auto';
+      this.layoutHost = document.createElement('div');
+      this.layoutHost.style.width = `${this.layoutWidth}px`;
+      this.container.appendChild(this.layoutHost);
+
+      // Create OSMD instance (autoResize off: no re-layout when the window or zoom changes)
+      this.osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(this.layoutHost, {
+        autoResize: false,
         backend: 'canvas'
       });
 
@@ -37,9 +47,6 @@ export class ScoreRenderer {
 
       // Set up the canvas cursor styling
       this._setupCursor();
-
-      // Handle window resize
-      window.addEventListener('resize', () => this._handleResize());
 
       console.log('[ScoreRenderer] Score loaded successfully');
       return this.osmd;
