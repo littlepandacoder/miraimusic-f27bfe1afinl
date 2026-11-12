@@ -1516,6 +1516,16 @@ let metroBeats = []; // { tick, accent, ticksPerBeat } sorted by tick
 let metroPosition = null; // { time (ms), tick, bpm, wall (performance.now()) } from the latest position update
 let metroScheduled = new Set(); // ticks already queued for a click
 const METRO_LOOKAHEAD_MS = 250;
+// alphaTab counts 960 ticks per quarter note, and the tempo in the .xml file is in quarter notes.
+const TICKS_PER_QUARTER = 960;
+
+// Number of clicks per bar and the length of one click, taken from the time signature in the .xml file.
+// Compound metres (6/8, 9/8, 12/8) click once per dotted quarter: 6/8 is 2 clicks, 9/8 is 3, 12/8 is 4.
+function metronomeBeatsForBar(numerator, denominator, barTicks) {
+  const compound = denominator === 8 && numerator % 3 === 0 && numerator > 3;
+  const count = compound ? numerator / 3 : numerator;
+  return { count, ticksPerBeat: barTicks / count };
+}
 
 function buildMetronomeBeats() {
   metroBeats = [];
@@ -1523,10 +1533,15 @@ function buildMetronomeBeats() {
   // Beats in playback order, so repeated bars click again.
   for (const occurrence of playbackOrder) {
     const barTicks = occurrence.len;
-    const beats = bars[occurrence.index]?.timeSignatureNumerator || 4;
     if (barTicks <= 0) continue;
-    for (let beat = 0; beat < beats; beat++) {
-      metroBeats.push({ tick: occurrence.offset + beat * (barTicks / beats), accent: beat === 0, ticksPerBeat: barTicks / beats });
+    const masterBar = bars[occurrence.index];
+    const { count, ticksPerBeat } = metronomeBeatsForBar(
+      masterBar?.timeSignatureNumerator || 4,
+      masterBar?.timeSignatureDenominator || 4,
+      barTicks,
+    );
+    for (let beat = 0; beat < count; beat++) {
+      metroBeats.push({ tick: occurrence.offset + beat * ticksPerBeat, accent: beat === 0, ticksPerBeat });
     }
   }
   metroScheduled.clear();
@@ -1535,8 +1550,7 @@ function buildMetronomeBeats() {
 // Seconds from now until a tick is due, based on the latest position update and the playback speed.
 function metronomeDelaySeconds(tick) {
   if (!metroPosition) return 0;
-  const beat = metroBeats.find((b) => b.tick >= metroPosition.tick) ?? metroBeats[metroBeats.length - 1];
-  const msPerTick = 60000 / (metroPosition.bpm * (beat ? beat.ticksPerBeat : 480));
+  const msPerTick = 60000 / (metroPosition.bpm * TICKS_PER_QUARTER);
   const dueMs = metroPosition.time + (tick - metroPosition.tick) * msPerTick;
   const elapsedReal = performance.now() - metroPosition.wall;
   const remainingRealMs = (dueMs - metroPosition.time) / (api.playbackSpeed || 1) - elapsedReal;
@@ -1546,7 +1560,7 @@ function metronomeDelaySeconds(tick) {
 function scheduleMetronome() {
   if (!metroPosition || api.metronomeVolume <= 0 || api.playerState !== PlayerState.Playing) return;
   if (!audioReady()) return; // wait until the browser allows sound (after the first click on the page)
-  const lookaheadTicks = (METRO_LOOKAHEAD_MS / 1000) * (metroPosition.bpm / 60) * (metroBeats[0]?.ticksPerBeat ? metroBeats[0].ticksPerBeat : 480);
+  const lookaheadTicks = (METRO_LOOKAHEAD_MS / 1000) * (metroPosition.bpm / 60) * TICKS_PER_QUARTER;
   for (const beat of metroBeats) {
     if (beat.tick < metroPosition.tick - 1) continue;
     if (beat.tick > metroPosition.tick + lookaheadTicks) break;
@@ -1563,7 +1577,8 @@ api.playerPositionChanged.on((e) => {
   metroPosition = {
     time: e.currentTime,
     tick: e.currentTick,
-    bpm: e.modifiedTempo || e.currentTempo || 120,
+    // Tempo from the .xml file (its quarter-note tempo), unless alphaTab reports a changed tempo.
+    bpm: e.modifiedTempo || e.currentTempo || api.score?.tempo || 120,
     wall: performance.now(),
   };
   scheduleMetronome();
