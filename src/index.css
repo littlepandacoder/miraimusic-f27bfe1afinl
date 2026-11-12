@@ -253,18 +253,12 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { img[alt="Musicable beaver mascot"] { animation: none !important; } }
 
-/* Module map: the module in progress (and any unlocked module under the pointer) gets the same rotating
-   rainbow ring as the Piano Room tile, around its border. */
-.module-card { position: relative; isolation: isolate; transition: transform 0.2s ease; }
-.module-card::before {
-  content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1; pointer-events: none;
-  padding: 3px; opacity: 0; transition: opacity 0.25s ease;
-  background: conic-gradient(from 0deg, #ff3b6b, #ff9f1c, #ffe600, #2ed573, #1e90ff, #a55eea, #ff3b6b);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: piano-room-spin 3s linear infinite;
+/* Module map: the module in progress (and any unlocked module under the pointer) pops up and glows, like a selected card. */
+.module-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.module-card:hover, .module-card.is-current {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 0 20px 4px rgba(244, 114, 182, 0.5), 0 0 40px 8px rgba(192, 132, 252, 0.25);
 }
-.module-card:hover::before, .module-card.is-current::before { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .module-card::before { animation: none; }
+  .module-card:hover, .module-card.is-current { transform: none; }
 }
