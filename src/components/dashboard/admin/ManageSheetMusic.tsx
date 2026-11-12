@@ -445,7 +445,9 @@ const ManageSheetMusic = () => {
         {thumbUrls[song.id] ? (
           <img src={thumbUrls[song.id]} alt="" className="w-16 h-20 rounded-md object-cover border border-border shrink-0" />
         ) : (
-          <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted" />
+          <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted flex items-center justify-center p-1 text-center text-[10px] font-semibold leading-tight overflow-hidden break-words">
+            {editing.title}
+          </div>
         )}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">Title *</label>
@@ -699,7 +701,9 @@ const ManageSheetMusic = () => {
                         className="w-16 h-20 rounded-md object-cover border border-border shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted" />
+                      <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted flex items-center justify-center p-1 text-center text-[10px] font-semibold leading-tight overflow-hidden break-words">
+                        {song.title}
+                      </div>
                     )}
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{song.title}</p>
