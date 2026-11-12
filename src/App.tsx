@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ConversationProvider } from "@elevenlabs/react";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SongSuggestionPopup } from "@/components/SongSuggestionPopup";
 import { Capacitor } from "@capacitor/core";
 import { PageTracking } from "@/hooks/usePageTracking";
 import Index from "./pages/Index";
@@ -91,6 +92,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
+            <SongSuggestionPopup />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
