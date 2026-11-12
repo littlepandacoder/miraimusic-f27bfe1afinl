@@ -194,6 +194,42 @@
       @media (prefers-reduced-motion: reduce) {
         .notes-bg, .topbar::before, .section-title, .brand, .card, .burst-spark { animation: none !important; transition: none !important; }
       }
+      /* Song cards as vinyl records: the cover is the label on a grooved disc that spins on hover. */
+      .card { background: transparent; border: none; overflow: visible; text-align: center; padding: 8px 4px 4px; }
+      .card:hover, .card:focus-visible { transform: translateY(-4px); box-shadow: none; border: none; }
+      .thumb {
+        width: 100%; aspect-ratio: 1 / 1; border-radius: 50%; position: relative; overflow: hidden;
+        background:
+          repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px),
+          #111827;
+        box-shadow: 0 0 0 4px #0b0f1a, 0 12px 26px rgba(0, 0, 0, 0.45), 0 0 18px rgba(192, 132, 252, 0.25);
+        transition: box-shadow .3s;
+      }
+      .thumb::after {
+        content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none; z-index: 1;
+        background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.2) 50%, transparent 62%);
+      }
+      .thumb::before {
+        content: ""; position: absolute; top: 50%; left: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+        border-radius: 50%; background: #0b0f1a; z-index: 3;
+      }
+      .thumb img {
+        position: absolute; top: 50%; left: 50%; width: 56%; height: 56%; transform: translate(-50%, -50%);
+        border-radius: 50%; object-fit: cover; z-index: 2; box-shadow: 0 0 0 2px #0b0f1a;
+      }
+      .thumb.placeholder {
+        background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px), #111827;
+        color: var(--fg); font-size: 14px;
+      }
+      .thumb.placeholder.named { padding: 0; }
+      .thumb.placeholder.named::after { z-index: 1; }
+      .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
+      .card:hover .thumb { animation: vinyl-spin 3.5s linear infinite; box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 26px 6px rgba(244,114,182,.45), 0 0 46px 12px rgba(253,230,138,.18); }
+      .info { padding: 12px 6px 0; }
+      .title { font-size: 14px; }
+      .composer { font-size: 11px; }
+      @keyframes vinyl-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
     </style>
   </head>
   <body>
