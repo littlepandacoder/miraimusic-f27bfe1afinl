@@ -233,8 +233,8 @@
       /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
       .carousel { position: relative; width: 100%; }
       .carousel-track {
-        display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
-        padding: 64px calc(50% - 125px) 64px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        display: flex; gap: 56px; overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 110px calc(50% - 125px) 110px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
         cursor: grab; user-select: none; touch-action: pan-x pan-y;
       }
       .carousel-track::-webkit-scrollbar { display: none; }
@@ -613,7 +613,7 @@
             const d = Math.abs(r.left + r.width / 2 - mid) / (track.clientWidth / 2);
             // k is 1 for the centred album and 0 for albums about one album-width away: a strong size contrast.
             const k = Math.max(0, 1 - Math.min(d, 1) * 2);
-            el.style.transform = `scale(${(0.55 + 0.75 * k).toFixed(3)})`;
+            el.style.transform = `scale(${(0.55 + 1.14 * k).toFixed(3)})`;
             el.style.opacity = (0.5 + 0.5 * k).toFixed(3);
           }
         };
