@@ -33,6 +33,10 @@ interface DashboardLayoutProps {
   headerActions?: ReactNode;
 }
 
+// Piano Room goes first so it can sit alone on its own centred row; the other game tiles follow.
+const orderGameTiles = <T extends { href: string }>(items: T[]) =>
+  [...items].sort((a, b) => (a.href === "/piano-room" ? -1 : 0) - (b.href === "/piano-room" ? -1 : 0));
+
 // Rainbow halo and sparkles for the Piano Room tile. Render inside a `relative` tile box.
 const PianoRoomSparkle = () => (
   <>
@@ -274,8 +278,8 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
               <div className="grid grid-cols-2 gap-y-5">
-                {studentGameIcons.map(({ href, img, labelKey, shadow }) => (
-                  <div key={labelKey} className="flex justify-center">
+                {orderGameTiles(studentGameIcons).map(({ href, img, labelKey, shadow }) => (
+                  <div key={labelKey} className={href === "/piano-room" ? "col-span-2 flex justify-center" : "flex justify-center"}>
                     <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5 w-[72px]">
                       <div className="relative w-[68px] h-[68px] shrink-0">
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
@@ -416,7 +420,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-widest px-1 mb-3">{t("dashboard.games")}</p>
               <div className="grid grid-cols-2 gap-y-5">
-                {studentGameIcons.map(({ href, img, labelKey, shadow, locked }) => {
+                {orderGameTiles(studentGameIcons).map(({ href, img, labelKey, shadow, locked }) => {
                   const isLocked = locked && !subscription.hasActiveSubscription;
                   const featureName = getFeatureName(href);
 
@@ -432,7 +436,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                   };
 
                   return (
-                    <div key={labelKey} className="flex justify-center">
+                    <div key={labelKey} className={href === "/piano-room" ? "col-span-2 flex justify-center" : "flex justify-center"}>
                       <a
                         href={isLocked ? "#" : href}
                         title={t(labelKey)}
