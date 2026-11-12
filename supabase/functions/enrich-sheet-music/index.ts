@@ -62,8 +62,18 @@ export async function findTrack(title: string): Promise<{ artUrl: string; artist
   const res = await fetch("https://itunes.apple.com/search?" + params, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) throw new Error(`iTunes ${res.status}`);
   const results: any[] = (await res.json())?.results ?? [];
-  const wanted = title.toLowerCase();
-  const exact = results.find((r) => String(r.trackName ?? "").toLowerCase() === wanted && r.artworkUrl100);
+  // Loose matching: ignore case and punctuation, and accept a track name that appears inside the title
+  // (library titles are often slugs like "shake it off taylor swift"). Prefer the longest, most exact match.
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const wanted = norm(title);
+  const candidates = results
+    .filter((r) => r.artworkUrl100 && norm(String(r.trackName ?? "")).length >= 3)
+    .filter((r) => {
+      const t = norm(String(r.trackName));
+      return t === wanted || wanted.includes(t);
+    })
+    .sort((a, b) => norm(String(b.trackName)).length - norm(String(a.trackName)).length);
+  const exact = candidates.find((r) => norm(String(r.trackName)) === wanted) ?? candidates[0];
   if (!exact) return null;
   return {
     artUrl: String(exact.artworkUrl100).replace("100x100bb", "600x600bb"),
