@@ -230,10 +230,36 @@
       .composer { font-size: 11px; }
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
+      /* Tonearm (the "playing pin"): rests off the record, swings onto it on hover. */
+      .disc-wrap { position: relative; }
+      .tonearm {
+        position: absolute; top: 4%; right: 2%; width: 44%; height: 0;
+        transform-origin: 100% 0; transform: rotate(22deg);
+        transition: transform .7s cubic-bezier(.3, .7, .3, 1); z-index: 4; pointer-events: none;
+      }
+      .tonearm .shaft {
+        position: absolute; right: 0; top: 0; width: 100%; height: 4px; border-radius: 3px;
+        background: linear-gradient(90deg, #e5e7eb, #9ca3af); transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,.35);
+      }
+      .tonearm .head {
+        position: absolute; left: -6px; top: -6px; width: 14px; height: 12px; border-radius: 3px;
+        background: linear-gradient(135deg, #f9fafb, #cbd5e1); box-shadow: 0 2px 4px rgba(0,0,0,.4);
+      }
+      .tonearm .pivot {
+        position: absolute; right: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #f9fafb, #9ca3af 60%, #6b7280);
+        box-shadow: 0 2px 6px rgba(0,0,0,.45);
+      }
+      .card:hover .tonearm, .card:focus-visible .tonearm { transform: rotate(-4deg); }
+      .card:hover .tonearm .head { box-shadow: 0 0 8px 2px rgba(244,114,182,.7); }
+      @media (prefers-reduced-motion: reduce) { .tonearm { transition: none; } }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
   </head>
   <body>
     <div class="notes-bg" aria-hidden="true"></div>
+    <div id="previewHost" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:800px;height:200px"></div>
     <header class="topbar">
       <div><span class="brand">Musicable<span>.</span></span><span class="sub">Sheet Music Library</span></div>
       <a class="back" href="/dashboard">&larr; Back to dashboard</a>
@@ -438,6 +464,8 @@
 
       function makeCard(song, thumbUrl) {
         const card = document.createElement("a");
+        card.dataset.songId = song.id;
+        card._song = song;
         card.className = "card";
         card.href = `index.html?song=${encodeURIComponent(`lib-${song.id}`)}`;
         card.addEventListener("click", (event) => {
@@ -471,7 +499,15 @@
           info.appendChild(composer);
         }
 
-        card.append(thumb, info);
+        // Record-player tonearm: rests off the disc, swings onto the grooves when the card is hovered.
+        const disc = document.createElement("div");
+        disc.className = "disc-wrap";
+        const arm = document.createElement("div");
+        arm.className = "tonearm";
+        arm.setAttribute("aria-hidden", "true");
+        arm.innerHTML = '<span class="shaft"></span><span class="head"></span><span class="pivot"></span>';
+        disc.append(thumb, arm);
+        card.append(disc, info);
         return card;
       }
 
@@ -586,7 +622,7 @@
 
           const { data, error } = await sb
             .from("sheet_music_library")
-            .select("id, title, composer, thumbnail_path, category_id, created_at")
+            .select("id, title, composer, storage_path, thumbnail_path, category_id, created_at")
             .order("created_at", { ascending: false });
           if (error) throw error;
           songs = data || [];
@@ -663,6 +699,68 @@
           setTimeout(() => s.remove(), 900);
         }
       });
+    </script>
+    <script>
+      // Hover a record to hear a 15-second preview. One shared player, so starting a new preview stops the last one.
+      (function () {
+        const host = document.getElementById("previewHost");
+        let api = null;
+        let activeId = null;
+        let hoverTimer = null;
+        let stopTimer = null;
+
+        const ensurePlayer = () => {
+          if (api) return api;
+          api = new alphaTab.AlphaTabApi(host, {
+            core: { useWorkers: false },
+            player: {
+              enablePlayer: true,
+              soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
+            },
+          });
+          api.playerReady.on(() => { if (activeId) api.play(); });
+          api.scoreLoaded.on(() => { if (activeId) api.play(); });
+          return api;
+        };
+
+        const stopPreview = () => {
+          clearTimeout(hoverTimer);
+          clearTimeout(stopTimer);
+          activeId = null;
+          if (api) api.stop();
+        };
+
+        const startPreview = async (song) => {
+          if (!song || !song.storage_path || typeof sb === "undefined") return;
+          activeId = song.id;
+          const { data, error } = await sb.storage.from("sheet-music-library").download(song.storage_path);
+          if (error || !data || activeId !== song.id) return;
+          const bytes = new Uint8Array(await data.arrayBuffer());
+          if (activeId !== song.id) return;
+          ensurePlayer().load(bytes);
+          clearTimeout(stopTimer);
+          stopTimer = setTimeout(stopPreview, 15000);
+        };
+
+        document.addEventListener("pointerover", (e) => {
+          if (e.pointerType !== "mouse") return; // touch taps open the song instead
+          const card = e.target.closest && e.target.closest(".card[data-song-id]");
+          if (!card || card.dataset.songId === activeId) return;
+          clearTimeout(hoverTimer);
+          hoverTimer = setTimeout(() => startPreview(card._song), 350);
+        });
+
+        document.addEventListener("pointerout", (e) => {
+          if (e.pointerType !== "mouse") return;
+          const card = e.target.closest && e.target.closest(".card[data-song-id]");
+          if (!card) return;
+          const next = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".card[data-song-id]");
+          if (next === card) return;
+          stopPreview();
+        });
+
+        window.addEventListener("pagehide", stopPreview);
+      })();
     </script>
   </body>
 </html>
