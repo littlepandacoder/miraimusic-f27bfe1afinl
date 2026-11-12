@@ -57,7 +57,7 @@ async function wikiGet(params: Record<string, string>) {
 
 // Finds the song on iTunes by exact title. Returns its artwork URL and the performing artist, which
 // is used to pick the right Wikipedia article (many songs share a title).
-export async function findTrack(title: string): Promise<{ artUrl: string; artist: string } | null> {
+export async function findTrack(title: string): Promise<{ artUrl: string; artist: string; previewUrl: string | null } | null> {
   const params = new URLSearchParams({ term: title, entity: "song", limit: "25" });
   const res = await fetch("https://itunes.apple.com/search?" + params, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) throw new Error(`iTunes ${res.status}`);
@@ -68,6 +68,7 @@ export async function findTrack(title: string): Promise<{ artUrl: string; artist
   return {
     artUrl: String(exact.artworkUrl100).replace("100x100bb", "600x600bb"),
     artist: String(exact.artistName ?? ""),
+    previewUrl: exact.previewUrl ? String(exact.previewUrl) : null,
   };
 }
 
@@ -118,7 +119,7 @@ export async function handleSong(
 ): Promise<Record<string, unknown>> {
   const { data: row, error } = await supabase
     .from("sheet_music_library")
-    .select("id, title, composer, thumbnail_path")
+    .select("id, title, composer, thumbnail_path, preview_url")
     .eq("id", id)
     .single();
   if (error || !row) return { id, error: error?.message ?? "Song not found" };
@@ -133,8 +134,8 @@ export async function handleSong(
   }
 
   // One iTunes lookup gives both the artwork and the performing artist, used to find the composer.
-  let track: { artUrl: string; artist: string } | null = null;
-  if (!row.composer || !row.thumbnail_path) {
+  let track: { artUrl: string; artist: string; previewUrl: string | null } | null = null;
+  if (!row.composer || !row.thumbnail_path || !row.preview_url) {
     try {
       track = await findTrack(title);
     } catch (e) {
@@ -176,6 +177,12 @@ export async function handleSong(
     } catch (e) {
       summary.thumbnailError = (e as Error).message;
     }
+  }
+
+  // The 30-second iTunes preview, played on hover in the library.
+  if (!row.preview_url && track?.previewUrl) {
+    updates.preview_url = track.previewUrl;
+    summary.preview = "found";
   }
 
   if (Object.keys(updates).length > 0) {
