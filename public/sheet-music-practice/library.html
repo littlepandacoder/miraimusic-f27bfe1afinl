@@ -230,6 +230,43 @@
       .composer { font-size: 11px; }
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
+      /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
+      .carousel { position: relative; margin: 0 -16px; }
+      .carousel-track {
+        display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 26px calc(50% - 125px) 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        cursor: grab; user-select: none; touch-action: pan-x pan-y;
+      }
+      .carousel-track::-webkit-scrollbar { display: none; }
+      .carousel-track.dragging { cursor: grabbing; scroll-snap-type: none; }
+      .album {
+        position: relative; flex: 0 0 250px; scroll-snap-align: center; transition: transform .3s ease, opacity .3s ease;
+        transform-origin: center center;
+      }
+      .album::before {
+        content: ""; position: absolute; top: 14px; right: -46px; width: 230px; height: 230px; border-radius: 50%;
+        background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px), #111827;
+        box-shadow: 0 0 0 3px #0b0f1a, 0 10px 24px rgba(0,0,0,.5); z-index: 0;
+      }
+      .album .thumb {
+        position: relative; z-index: 1; width: 100%; aspect-ratio: 1 / 1; border-radius: 12px;
+        background: #111827; box-shadow: 0 16px 34px rgba(0,0,0,.55), 0 0 26px rgba(244,114,182,.3);
+      }
+      .album .thumb img { border-radius: 12px; width: 100%; height: 100%; }
+      .album .thumb.placeholder.named { font-size: 22px; }
+      .album .info { text-align: center; padding: 14px 4px 0; }
+      .album .title { font-size: 17px; }
+      .album .composer { font-size: 13px; }
+      .carousel-arrow {
+        position: absolute; top: 50%; transform: translateY(-50%); z-index: 5; width: 44px; height: 44px; border-radius: 50%;
+        border: 1px solid rgba(244,114,182,.5); background: rgba(15,23,42,.8); color: #fff; font-size: 26px; line-height: 1;
+        cursor: pointer; box-shadow: 0 0 14px rgba(244,114,182,.35);
+      }
+      .carousel-arrow.prev { left: 8px; }
+      .carousel-arrow.next { right: 8px; }
+      .carousel-arrow:hover { background: rgba(244,114,182,.25); }
+      .carousel-hint { text-align: center; color: var(--muted-fg); font-size: 13px; margin: 6px 0 0; }
+      @media (max-width: 600px) { .carousel-arrow { display: none; } .album { flex-basis: 200px; } .album::before { width: 186px; height: 186px; right: -34px; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
   </head>
@@ -529,16 +566,76 @@
         sections.innerHTML = "";
         const groups = categories.map((c) => ({ id: c.id, name: c.name }));
         if (songsIn("other").length > 0) groups.push({ id: "other", name: "Other" });
-        const grid = document.createElement("div");
-        grid.className = "grid";
+        // Categories are album covers in a swipeable carousel, centred on screen.
+        const carousel = document.createElement("div");
+        carousel.className = "carousel";
+        const prev = document.createElement("button");
+        prev.type = "button";
+        prev.className = "carousel-arrow prev";
+        prev.setAttribute("aria-label", "Previous category");
+        prev.textContent = "‹";
+        const next = document.createElement("button");
+        next.type = "button";
+        next.className = "carousel-arrow next";
+        next.setAttribute("aria-label", "Next category");
+        next.textContent = "›";
+        const track = document.createElement("div");
+        track.className = "carousel-track";
         for (const group of groups) {
           const inside = songsIn(group.id);
           const firstWithPicture = inside.find((s) => songUrls[s.id]);
           const picture = categoryUrls[group.id] || (firstWithPicture ? songUrls[firstWithPicture.id] : null);
           const count = `${inside.length} song${inside.length === 1 ? "" : "s"}`;
-          grid.appendChild(makeTile(group.name, count, picture, `#cat=${group.id}`));
+          const tile = makeTile(group.name, count, picture, `#cat=${group.id}`);
+          tile.classList.add("album");
+          track.appendChild(tile);
         }
-        sections.appendChild(grid);
+        carousel.append(prev, track, next);
+        sections.appendChild(carousel);
+        const hint = document.createElement("p");
+        hint.className = "carousel-hint";
+        hint.textContent = "Swipe to explore";
+        sections.appendChild(hint);
+        setupCarousel(track, prev, next);
+      }
+
+      // Swipe (touch), drag (mouse) or arrows. The centred album grows; the others shrink and fade.
+      function setupCarousel(track, prev, next) {
+        const albums = () => [...track.querySelectorAll(".album")];
+        const updateFocus = () => {
+          const mid = track.getBoundingClientRect().left + track.clientWidth / 2;
+          for (const el of albums()) {
+            const r = el.getBoundingClientRect();
+            const d = Math.abs(r.left + r.width / 2 - mid) / (track.clientWidth / 2);
+            const k = Math.max(0, 1 - Math.min(d, 1));
+            el.style.transform = `scale(${(0.82 + 0.18 * k).toFixed(3)})`;
+            el.style.opacity = (0.45 + 0.55 * k).toFixed(3);
+          }
+        };
+        track.addEventListener("scroll", () => requestAnimationFrame(updateFocus), { passive: true });
+        window.addEventListener("resize", updateFocus);
+        prev.onclick = () => track.scrollBy({ left: -280, behavior: "smooth" });
+        next.onclick = () => track.scrollBy({ left: 280, behavior: "smooth" });
+        // Mouse drag to scroll. A drag never counts as a click on the album.
+        let dragging = false, startX = 0, startLeft = 0, moved = 0;
+        track.addEventListener("pointerdown", (e) => {
+          if (e.pointerType !== "mouse") return;
+          dragging = true; startX = e.clientX; startLeft = track.scrollLeft; moved = 0;
+          track.classList.add("dragging");
+        });
+        window.addEventListener("pointermove", (e) => {
+          if (!dragging) return;
+          moved = Math.max(moved, Math.abs(e.clientX - startX));
+          track.scrollLeft = startLeft - (e.clientX - startX);
+        });
+        window.addEventListener("pointerup", () => {
+          if (!dragging) return;
+          dragging = false;
+          track.classList.remove("dragging");
+        });
+        track.addEventListener("click", (e) => { if (moved > 6) { e.preventDefault(); e.stopPropagation(); } }, true);
+        // Start with the first album centred.
+        requestAnimationFrame(() => { updateFocus(); });
       }
 
       function renderCategorySongs(id) {
