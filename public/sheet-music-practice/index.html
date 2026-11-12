@@ -802,6 +802,9 @@
       .at-controls .btn.at-player-play-pause { color: var(--primary) !important; }
       .at-song-info, .at-song-position, .at-player-progress { color: var(--muted-fg) !important; }
       .at-controls select { background: var(--secondary) !important; color: var(--fg) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
+      /* Footer spacing: space between the zoom icon and its dropdown, and between footer buttons. */
+      .at-zoom { display: inline-flex; align-items: center; gap: 10px; margin-left: 14px; }
+      .at-controls-right { gap: 6px; }
       .at-overlay { background: rgba(10,15,28,.6) !important; }
       .at-overlay-content { background: var(--card) !important; color: var(--fg) !important; border: 1px solid var(--border); border-radius: 12px; }
       .at-wrap.upload-dragover { outline-color: var(--primary) !important; }
@@ -1649,8 +1652,8 @@
       layoutToggle.type = "button";
       layoutToggle.className = "layout-toggle";
       layoutToggle.style.cssText =
-        "background:#16a34a;color:#fff;font-weight:700;font-size:16px;padding:12px 22px;" +
-        "border:none;border-radius:12px;cursor:pointer;margin-right:12px;box-shadow:0 4px 12px rgba(22,163,74,.35);";
+        "background:#16a34a;color:#fff;font-weight:700;font-size:15px;padding:10px 18px;white-space:nowrap;line-height:1.2;" +
+        "border:none;border-radius:12px;cursor:pointer;margin-right:14px;box-shadow:0 4px 12px rgba(22,163,74,.35);";
       const syncLayoutToggle = () => {
         layoutToggle.textContent = layout.value === "horizontal" ? "Vertical view" : "Horizontal view";
       };
