@@ -269,6 +269,7 @@
       @media (max-width: 600px) { .carousel-arrow { display: none; } .album { flex-basis: 200px; } .album::before { width: 186px; height: 186px; right: -34px; } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
   </head>
   <body>
     <div class="notes-bg" aria-hidden="true"></div>
@@ -765,6 +766,11 @@
         }
       });
     </script>
+    <script type="module">
+      // The same Salamander Grand Piano sampler the Music Sheet page plays the score with.
+      import { startKeySound, stopKeySound, silencePiano } from "/sheet-music-practice/src/keySampler.js";
+      window.pianoSound = { startKeySound, stopKeySound, silencePiano };
+    </script>
     <script>
       // Hover a record to hear a 15-second preview. One shared player, so starting a new preview stops the last one.
       (function () {
@@ -784,6 +790,9 @@
               soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
             },
           });
+          api.masterVolume = 0; // alphaTab's built-in synth stays silent; the piano sampler makes the sound
+          api.midiEventsPlayedFilter = [alphaTab.midi.MidiEventType.NoteOn, alphaTab.midi.MidiEventType.NoteOff];
+          api.midiEventsPlayed.on(playPreviewNotes);
           api.playerReady.on(() => { if (activeId) api.play(); });
           api.scoreLoaded.on(() => { if (activeId) api.play(); });
           return api;
@@ -793,10 +802,37 @@
         // previews that start on hover can be heard.
         document.addEventListener("pointerdown", () => ensurePlayer(), { once: true, capture: true });
 
+        // Piano voices still sounding, per track and pitch, so each note-off releases the right one.
+        const voices = new Map();
+        let serial = 0;
+        const playPreviewNotes = (e) => {
+          const piano = window.pianoSound;
+          if (!piano) return;
+          for (const event of e.events) {
+            const isOn = event.command === alphaTab.midi.MidiEventType.NoteOn && event.noteVelocity > 0;
+            const isOff = event.command === alphaTab.midi.MidiEventType.NoteOff
+              || (event.command === alphaTab.midi.MidiEventType.NoteOn && event.noteVelocity === 0);
+            if (!isOn && !isOff) continue;
+            if (api.score && api.score.tracks[event.track] && api.score.tracks[event.track].isPercussion) continue;
+            const key = `${event.track}-${event.noteKey}`;
+            if (isOn) {
+              const id = `preview-${++serial}`;
+              if (!voices.has(key)) voices.set(key, []);
+              voices.get(key).push(id);
+              piano.startKeySound(event.noteKey, event.noteVelocity, id);
+            } else {
+              const queue = voices.get(key);
+              if (queue && queue.length) piano.stopKeySound(event.noteKey, queue.shift());
+            }
+          }
+        };
+
         const stopPreview = () => {
           clearTimeout(hoverTimer);
           clearTimeout(stopTimer);
           activeId = null;
+          voices.clear();
+          if (window.pianoSound) window.pianoSound.silencePiano();
           if (api) api.stop();
         };
 
