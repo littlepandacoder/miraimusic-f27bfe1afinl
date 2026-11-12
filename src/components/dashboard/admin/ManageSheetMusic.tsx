@@ -65,6 +65,7 @@ const ManageSheetMusic = () => {
   // The song being edited in place (one at a time). Thumbnail is optional: null keeps the current one.
   const [editing, setEditing] = useState<{ id: string; title: string; composer: string; categoryId: string; thumb: File | null } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [filling, setFilling] = useState(false);
 
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "No category";
 
@@ -365,6 +366,33 @@ const ManageSheetMusic = () => {
     setDrafts((current) => current.map((d) => (d.key === key ? { ...d, ...changes } : d)));
   };
 
+  // Calls the enrich-sheet-music function: cleans titles, fills empty composers and thumbnails, then reloads.
+  const enrichSongs = async (ids: string[]) => {
+    const { error } = await supabase.functions.invoke("enrich-sheet-music", { body: { ids } });
+    if (error) {
+      toast({ title: "Could not fill in composer or thumbnail", description: error.message, variant: "destructive" });
+    }
+    await load();
+  };
+
+  // Fills missing thumbnails and composers for every song that lacks one, in small batches.
+  const fillMissing = async () => {
+    const ids = songs.filter((s) => !s.thumbnail_path || !s.composer).map((s) => s.id);
+    if (ids.length === 0) {
+      toast({ title: "Nothing to fill in", description: "Every song already has a composer and thumbnail." });
+      return;
+    }
+    setFilling(true);
+    try {
+      for (let i = 0; i < ids.length; i += 5) {
+        await enrichSongs(ids.slice(i, i + 5));
+      }
+      toast({ title: "Done filling in songs" });
+    } finally {
+      setFilling(false);
+    }
+  };
+
   // Uploads one song: thumbnail (optional), music file, then the database row. Cleans up on failure.
   const uploadOne = async (draft: Draft, userId: string) => {
     const uploaded: { bucket: string; path: string }[] = [];
@@ -391,7 +419,7 @@ const ManageSheetMusic = () => {
       if (songError) throw songError;
       uploaded.push({ bucket: SONG_BUCKET, path: songPath });
 
-      const { error: insertError } = await db.from("sheet_music_library").insert({
+      const { data: inserted, error: insertError } = await db.from("sheet_music_library").insert({
         title: draft.title.trim(),
         composer: draft.composer.trim() || null,
         file_name: draft.file.name,
@@ -401,8 +429,10 @@ const ManageSheetMusic = () => {
         thumbnail_path: thumbPath,
         category_id: categoryId || null,
         uploaded_by: userId,
-      });
+      }).select("id").single();
       if (insertError) throw insertError;
+      // Cleans the title and fills in the composer and thumbnail in the background.
+      void enrichSongs([inserted.id]);
     } catch (e) {
       for (const item of uploaded) {
         await supabase.storage.from(item.bucket).remove([item.path]);
@@ -717,7 +747,13 @@ const ManageSheetMusic = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">In the library ({songs.length})</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-lg">In the library ({songs.length})</CardTitle>
+            <Button variant="outline" size="sm" onClick={fillMissing} disabled={filling}>
+              {filling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Fill missing thumbnails &amp; composers
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
