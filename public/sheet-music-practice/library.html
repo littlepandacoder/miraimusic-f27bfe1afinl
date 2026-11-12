@@ -337,7 +337,10 @@
       /* Vinyl: only the grooves turn on hover; the cover stays still. */
       .thumb .grooves {
         position: absolute; inset: 0; border-radius: 50%; z-index: 0; pointer-events: none;
-        background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px);
+        /* Concentric grooves look the same when turned, so a bright spoke shows the spin. */
+        background:
+          conic-gradient(from 0deg, transparent 0deg 84deg, rgba(255,255,255,.55) 88deg, transparent 92deg 360deg),
+          repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px);
       }
       .thumb .label-text { position: relative; z-index: 2; }
       .card:hover .thumb .grooves { animation: vinyl-spin 3.5s linear infinite; }
