@@ -615,6 +615,7 @@
             const k = Math.max(0, 1 - Math.min(d, 1) * 2);
             el.style.transform = `scale(${(0.55 + 1.14 * k).toFixed(3)})`;
             el.style.opacity = (0.5 + 0.5 * k).toFixed(3);
+            el.style.zIndex = String(Math.round(k * 100)); // the centred album sits in front of the others
           }
         };
         track.addEventListener("scroll", () => requestAnimationFrame(updateFocus), { passive: true });
