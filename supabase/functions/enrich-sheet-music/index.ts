@@ -19,8 +19,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 const BUCKET = "sheet-music-thumbs";
 const USER_AGENT = "MusicableSheetMusic/1.0 (admin tool)";
 
+// Browsers send a preflight check before this call, so the function must answer with these headers.
+// Access is still controlled by the admin login token, not by the origin.
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
 export function cleanTitle(title: string): string {
   return title.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
@@ -209,6 +216,7 @@ export async function handleSong(
 }
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const authHeader = req.headers.get("Authorization");
