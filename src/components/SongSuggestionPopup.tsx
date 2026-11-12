@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Pause, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,8 @@ interface SuggestedSong {
 
 // Shown once per login session: suggests a random song from the sheet music library (the Piano Room).
 export const SongSuggestionPopup = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const location = useLocation();
   const [song, setSong] = useState<SuggestedSong | null>(null);
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -49,18 +51,24 @@ export const SongSuggestionPopup = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Show the suggestion only after the dashboard has loaded: signed in, auth settled, on a dashboard page,
+  // and a moment after it renders. Once per login session.
   useEffect(() => {
-    if (!user) return;
+    if (loading || !user || !location.pathname.startsWith("/dashboard")) return;
     const key = `songSuggested:${user.id}`;
     try {
-      if (sessionStorage.getItem(key)) return; // already suggested in this login session
-      sessionStorage.setItem(key, "1");
+      if (sessionStorage.getItem(key)) return;
     } catch {
       // storage unavailable: still show the suggestion
     }
 
     let cancelled = false;
-    (async () => {
+    const timer = window.setTimeout(async () => {
+      try {
+        sessionStorage.setItem(key, "1");
+      } catch {
+        // ignore
+      }
       const db = supabase as any;
       const { data, error } = await db
         .from("sheet_music_library")
@@ -80,12 +88,13 @@ export const SongSuggestionPopup = () => {
       setSong(pick);
       setThumbUrl(url);
       setOpen(true);
-    })();
+    }, 1200);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [user?.id]);
+  }, [user?.id, loading, location.pathname]);
 
   if (!song) return null;
 
