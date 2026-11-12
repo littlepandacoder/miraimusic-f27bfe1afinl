@@ -99,7 +99,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     { href: "/rhythm-quiz",    img: "/game-icons/rhythm_quiz.png",   labelKey: "dashboard.nav.rhythmQuiz",   shadow: "0 0 14px 4px rgba(20,184,166,0.55)" },
     { href: "/musical-rest-quiz.html",  img: "/game-icons/musical_rest.svg", labelKey: "dashboard.nav.restQuiz",       shadow: "0 0 14px 4px rgba(255,45,120,0.55)" },
     { href: "/chord-boss-battle.html", img: "/game-icons/chord_boss.svg",  labelKey: "dashboard.nav.chordBoss",  shadow: "0 0 14px 4px rgba(239,68,68,0.55)" },
-    { href: "/sheet-music-practice/library.html", img: "/game-icons/sheet_music.svg", labelKey: "dashboard.nav.sheetMusic", shadow: "0 0 14px 4px rgba(236,72,153,0.55)" },
   ];
 
   const getNavItems = () => {
@@ -117,7 +116,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
         { href: "/dashboard/sheet-music",     icon: Music,         label: "Sheet Music Library" },
-        { href: "/sheet-music-practice/library.html", icon: Music, img: "/game-icons/sheet_music.svg", label: "Music Sheet", external: true },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
         { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },
         { href: "/dashboard/assignments",     icon: Users,         label: "Teacher Assignment" },
@@ -131,7 +129,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         ...baseItems,
         { href: "/dashboard/my-students",  icon: Users,           label: t("dashboard.nav.myStudents") },
         { href: "/dashboard/live-students", icon: Radio,           label: "Live Students" },
-        { href: "/sheet-music-practice/library.html", icon: Music, img: "/game-icons/sheet_music.svg", label: "Music Sheet", external: true },
         { href: "/dashboard/lesson-plans", icon: BookOpen,        label: t("dashboard.nav.lessonPlans") },
         { href: "/dashboard/schedule",     icon: Calendar,        label: t("dashboard.nav.schedule") },
         { href: "/dashboard/slots",        icon: ClipboardList,   label: t("dashboard.nav.mySlots") },
