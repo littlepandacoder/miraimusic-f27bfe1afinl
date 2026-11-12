@@ -1547,9 +1547,12 @@
       };
 
       const zoom = wrapper.querySelector(".at-controls .at-zoom select");
+      // Vertical (page) view: manual vertical scrolling is turned off.
+      const isPageLayout = () => api.settings.display.layoutMode === alphaTab.LayoutMode.Page;
+      const viewportEl = wrapper.querySelector(".at-viewport");
       const applyZoom = () => {
-        const zoomLevel = (parseInt(zoom.value) / 100) * zoomCompensation();
-        api.settings.display.scale = zoomLevel;
+        api.settings.display.scale = (parseInt(zoom.value) / 100) * zoomCompensation();
+        viewportEl.style.overflowY = isPageLayout() ? "hidden" : "auto";
         api.updateSettings();
         api.render();
       };
@@ -1628,6 +1631,15 @@
       };
       layout.parentElement.insertBefore(layoutToggle, layout);
       syncLayoutToggle();
+
+      // Vertical view: the player's own scrolling still follows the cursor, so the notes being played stay on
+      // screen and centred. Manual scrolling is turned off (no mouse wheel or scrollbar).
+      // Switching layout re-applies the scale and the scrolling rule for that layout.
+      const baseLayoutChange = layout.onchange;
+      layout.onchange = () => {
+        baseLayoutChange();
+        applyZoom();
+      };
 
       // player loading indicator
       const playerIndicator = wrapper.querySelector(
