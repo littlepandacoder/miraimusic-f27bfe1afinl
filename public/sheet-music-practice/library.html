@@ -608,14 +608,19 @@
         const albums = () => [...track.querySelectorAll(".album")];
         const updateFocus = () => {
           const mid = track.getBoundingClientRect().left + track.clientWidth / 2;
+          // The album nearest the centre is the selected one. It stays big until another album is selected.
+          let selected = null;
+          let best = Infinity;
           for (const el of albums()) {
             const r = el.getBoundingClientRect();
-            const d = Math.abs(r.left + r.width / 2 - mid) / (track.clientWidth / 2);
-            // k is 1 for the centred album and 0 for albums about one album-width away: a strong size contrast.
-            const k = Math.max(0, 1 - Math.min(d, 1) * 2);
-            el.style.transform = `scale(${(0.55 + 1.14 * k).toFixed(3)})`;
-            el.style.opacity = "1"; // no transparency: the centred album fully covers the ones behind it
-            el.style.zIndex = String(Math.round(k * 100)); // the centred album sits in front of the others
+            const d = Math.abs(r.left + r.width / 2 - mid);
+            if (d < best) { best = d; selected = el; }
+          }
+          for (const el of albums()) {
+            const isSelected = el === selected;
+            el.style.transform = `scale(${isSelected ? 1.69 : 0.55})`;
+            el.style.opacity = "1"; // no transparency: the selected album covers the ones behind it
+            el.style.zIndex = isSelected ? "100" : "10";
           }
         };
         track.addEventListener("scroll", () => requestAnimationFrame(updateFocus), { passive: true });
