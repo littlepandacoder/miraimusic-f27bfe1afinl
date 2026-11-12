@@ -281,7 +281,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                 {orderGameTiles(studentGameIcons).map(({ href, img, labelKey, shadow }) => (
                   <div key={labelKey} className={href === "/piano-room" ? "col-span-2 flex justify-center" : "flex justify-center"}>
                     <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1 w-[64px]">
-                      <div className="relative w-[56px] h-[56px] shrink-0">
+                      <div className={`relative shrink-0 ${href === "/piano-room" ? "w-[84px] h-[84px]" : "w-[56px] h-[56px]"}`}>
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
                         {href === "/piano-room" && <PianoRoomSparkle />}
                         <img
@@ -446,7 +446,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                         }}
                         className={`group flex flex-col items-center gap-1.5 w-[68px] ${isLocked ? "cursor-not-allowed opacity-40" : ""}`}
                       >
-                        <div className="relative w-[64px] h-[64px] shrink-0">
+                        <div className={`relative shrink-0 ${href === "/piano-room" ? "w-[88px] h-[88px]" : "w-[64px] h-[64px]"}`}>
                           <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: isLocked ? 0.1 : 0.6 }} />
                           {href === "/piano-room" && <PianoRoomSparkle />}
                           <img
