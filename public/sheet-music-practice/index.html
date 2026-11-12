@@ -1093,6 +1093,29 @@
       .sm-topbar > * { position: relative; z-index: 1; }
       @keyframes sm-band-sweep { 0%, 100% { transform: translateX(-12%); } 50% { transform: translateX(12%); } }
       @media (prefers-reduced-motion: reduce) { .sm-topbar::before { animation: none !important; } }
+      /* ── Buttons in the Musicable brand: navy with a thin border, pink for the main actions, a soft pink glow on hover. ── */
+      .upload-bar button, .practice-panel button, .songs-panel button, .results-dialog button, .at-controls .btn {
+        border-radius: 10px;
+        font-weight: 700;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+      }
+      .upload-bar button:hover:not(:disabled), .practice-panel button:hover:not(:disabled),
+      .songs-panel button:hover:not(:disabled), .results-dialog button:hover:not(:disabled),
+      .at-controls .btn:hover:not(.disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 0 14px 2px rgba(236, 72, 153, 0.35);
+        border-color: rgba(236, 72, 153, 0.6);
+      }
+      .upload-bar button:active:not(:disabled), .practice-panel button:active:not(:disabled),
+      .songs-panel button:active:not(:disabled), .results-dialog button:active:not(:disabled),
+      .at-controls .btn:active:not(.disabled) {
+        transform: scale(0.97);
+      }
+      .upload-bar button:focus-visible, .practice-panel button:focus-visible, .songs-panel button:focus-visible,
+      .at-controls .btn:focus-visible { outline: 2px solid #ec4899; outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) {
+        .upload-bar button:hover, .practice-panel button:hover, .songs-panel button:hover, .at-controls .btn:hover { transform: none; }
+      }
     </style>
   </head>
 
