@@ -750,7 +750,12 @@ const ManageSheetMusic = () => {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-lg">In the library ({songs.length})</CardTitle>
-            <Button variant="outline" size="sm" onClick={fillMissing} disabled={filling}>
+            <Button
+              size="sm"
+              onClick={fillMissing}
+              disabled={filling}
+              className="text-white font-bold border-0 bg-gradient-to-r from-violet-600 via-indigo-500 to-blue-500 hover:from-violet-500 hover:to-blue-400 shadow-[0_0_18px_4px_rgba(139,92,246,0.6)] hover:shadow-[0_0_28px_8px_rgba(59,130,246,0.7)] transition-shadow"
+            >
               {filling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Fill missing thumbnails &amp; composers
             </Button>
