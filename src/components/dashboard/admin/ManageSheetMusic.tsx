@@ -67,6 +67,8 @@ const ManageSheetMusic = () => {
   const [editing, setEditing] = useState<{ id: string; title: string; composer: string; categoryId: string; thumb: File | null } | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [filling, setFilling] = useState(false);
+  const [fillProgress, setFillProgress] = useState({ done: 0, total: 0, startedAt: 0 });
+  const [fillTick, setFillTick] = useState(0); // re-renders once a second while filling, so the timer moves
 
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "No category";
 
@@ -384,12 +386,17 @@ const ManageSheetMusic = () => {
       return;
     }
     setFilling(true);
+    setFillProgress({ done: 0, total: ids.length, startedAt: Date.now() });
+    const timer = window.setInterval(() => setFillTick((t) => t + 1), 1000);
     try {
       for (let i = 0; i < ids.length; i += 5) {
-        await enrichSongs(ids.slice(i, i + 5));
+        const batch = ids.slice(i, i + 5);
+        await enrichSongs(batch);
+        setFillProgress((p) => ({ ...p, done: Math.min(p.total, i + batch.length) }));
       }
       toast({ title: "Done filling in songs" });
     } finally {
+      window.clearInterval(timer);
       setFilling(false);
     }
   };
@@ -748,6 +755,32 @@ const ManageSheetMusic = () => {
 
       <Card>
         <CardHeader>
+          {filling && (() => {
+            // fillTick is read so this block re-renders every second and the elapsed time moves.
+            void fillTick;
+            const pct = fillProgress.total ? Math.round((fillProgress.done / fillProgress.total) * 100) : 0;
+            const seconds = Math.max(0, Math.round((Date.now() - fillProgress.startedAt) / 1000));
+            const mm = String(Math.floor(seconds / 60));
+            const ss = String(seconds % 60).padStart(2, "0");
+            return (
+              <div className="mb-3 space-y-1">
+                <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                  <span>
+                    Filling in songs: {fillProgress.done} of {fillProgress.total} ({pct}%)
+                  </span>
+                  <span>
+                    Elapsed {mm}:{ss}
+                  </span>
+                </div>
+                <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-violet-600 via-indigo-500 to-blue-500 shadow-[0_0_10px_2px_rgba(99,102,241,0.6)] transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-lg">In the library ({songs.length})</CardTitle>
             <Button
