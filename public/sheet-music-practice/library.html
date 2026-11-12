@@ -621,6 +621,9 @@
             el.style.transform = `scale(${isSelected ? 1.69 : 0.55})`;
             el.style.opacity = "1"; // no transparency: the selected album covers the ones behind it
             el.style.zIndex = isSelected ? "100" : "10";
+            // Only the selected album can be hovered, clicked or reached by the keyboard.
+            el.style.pointerEvents = isSelected ? "" : "none";
+            el.tabIndex = isSelected ? 0 : -1;
           }
         };
         track.addEventListener("scroll", () => requestAnimationFrame(updateFocus), { passive: true });
