@@ -70,6 +70,8 @@
         margin-bottom: auto;
         flex-shrink: 0;
       }
+      /* Vertical view: no manual scrolling up or down (playback still scrolls the score). */
+      .at-wrap.page-view .at-viewport { overflow-y: hidden !important; touch-action: pan-x; }
 
       .at-footer {
         flex: 0 0 auto;
@@ -1550,8 +1552,11 @@
       // Vertical (page) view: manual vertical scrolling is turned off.
       const isPageLayout = () => api.settings.display.layoutMode === alphaTab.LayoutMode.Page;
       const viewportEl = wrapper.querySelector(".at-viewport");
+      // Ignore mouse-wheel and trackpad scrolling in vertical view.
+      viewportEl.addEventListener("wheel", (e) => { if (isPageLayout()) e.preventDefault(); }, { passive: false });
       const applyZoom = () => {
         api.settings.display.scale = (parseInt(zoom.value) / 100) * zoomCompensation();
+        wrapper.classList.toggle("page-view", isPageLayout());
         viewportEl.style.overflowY = isPageLayout() ? "hidden" : "auto";
         api.updateSettings();
         api.render();
