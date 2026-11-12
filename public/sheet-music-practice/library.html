@@ -224,21 +224,35 @@
       .thumb.placeholder.named { padding: 0; }
       .thumb.placeholder.named::after { z-index: 1; }
       .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
-      .card:hover .thumb { animation: glitter-glow 1.6s ease-in-out infinite; }
+      .card:hover .thumb { animation: rainbow-glow 2.4s linear infinite; }
       .info { padding: 12px 6px 0; }
       .title { font-size: 14px; }
       .composer { font-size: 11px; }
-      /* Hover: the cover keeps still and pulses with a pink and gold glitter glow. */
-      @keyframes glitter-glow {
-        0%, 100% { box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 16px 4px rgba(244,114,182,.35), 0 0 30px 8px rgba(253,230,138,.12); }
-        50% { box-shadow: 0 0 0 4px #0b0f1a, 0 14px 30px rgba(0,0,0,.5), 0 0 30px 10px rgba(244,114,182,.7), 0 0 56px 16px rgba(253,230,138,.35); }
+      /* Hover: the cover stays still. Equal rainbow rings and glitter glow all round, with the colours shifting. */
+      @keyframes rainbow-glow {
+        0%   { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ff3b6b, 0 0 0 9px #ffe600, 0 0 0 12px #2ed573, 0 0 0 15px #1e90ff, 0 0 0 18px #a55eea, 0 0 28px 16px rgba(244,114,182,.45); }
+        33%  { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ffe600, 0 0 0 9px #2ed573, 0 0 0 12px #1e90ff, 0 0 0 15px #a55eea, 0 0 0 18px #ff3b6b, 0 0 28px 16px rgba(253,230,138,.45); }
+        66%  { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #2ed573, 0 0 0 9px #1e90ff, 0 0 0 12px #a55eea, 0 0 0 15px #ff3b6b, 0 0 0 18px #ffe600, 0 0 28px 16px rgba(165,94,234,.45); }
+        100% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ff3b6b, 0 0 0 9px #ffe600, 0 0 0 12px #2ed573, 0 0 0 15px #1e90ff, 0 0 0 18px #a55eea, 0 0 28px 16px rgba(244,114,182,.45); }
+      }
+      /* Glitter: sparkle speckles over the cover that twinkle on hover. */
+      .album .thumb::after {
+        background:
+          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 0 0 / 22px 22px,
+          linear-gradient(115deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%);
+        opacity: 0.55;
+      }
+      .card:hover .album .thumb::after, .album:hover .thumb::after { animation: glitter-twinkle 1.2s ease-in-out infinite; }
+      @keyframes glitter-twinkle {
+        0%, 100% { opacity: 0.35; background-position: 0 0, 0 0; }
+        50% { opacity: 1; background-position: 11px 11px, 0 0; }
       }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
       /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
       .carousel { position: relative; width: 100%; }
       .carousel-track {
         display: flex; gap: 56px; overflow-x: auto; scroll-snap-type: x mandatory;
-        padding: 110px calc(50% - 125px) 110px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        padding: 150px calc(50% - 125px) 150px; margin: -40px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch;
         cursor: grab; user-select: none; touch-action: pan-x pan-y;
       }
       .carousel-track::-webkit-scrollbar { display: none; }
