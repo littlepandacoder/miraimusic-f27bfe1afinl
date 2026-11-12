@@ -245,6 +245,37 @@ const ManageSheetMusic = () => {
     await load();
   };
 
+  // Clicking a song's thumbnail in the list: uploads the chosen image and saves it straight away.
+  const replaceSongThumb = async (song: LibrarySong, image: File) => {
+    if (!THUMB_FILE.test(image.name)) {
+      toast({ title: "Unsupported image", description: "Choose a .png, .jpg or .webp image.", variant: "destructive" });
+      return;
+    }
+    const ext = image.name.split(".").pop()!.toLowerCase();
+    const newPath = `${song.id}-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from(THUMB_BUCKET).upload(newPath, image, {
+      contentType: image.type || "image/png",
+      upsert: false,
+    });
+    if (uploadError) {
+      toast({ title: "Could not upload the thumbnail", description: uploadError.message, variant: "destructive" });
+      return;
+    }
+    const { data, error } = await db.from("sheet_music_library").update({ thumbnail_path: newPath }).eq("id", song.id).select("id");
+    if (error || !data || data.length === 0) {
+      await supabase.storage.from(THUMB_BUCKET).remove([newPath]);
+      toast({
+        title: "Could not save the thumbnail",
+        description: error?.message ?? "Check that you are signed in as an admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (song.thumbnail_path) await supabase.storage.from(THUMB_BUCKET).remove([song.thumbnail_path]);
+    toast({ title: "Thumbnail updated" });
+    await load();
+  };
+
   const startEdit = (song: LibrarySong) => {
     setEditing({
       id: song.id,
@@ -484,8 +515,11 @@ const ManageSheetMusic = () => {
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => {
-              setEditing((current) => (current ? { ...current, thumb: e.target.files?.[0] ?? null } : current));
+              // Read the file before clearing the input: clearing it empties e.target.files, and the
+              // state updater below runs after this handler returns.
+              const file = e.target.files?.[0] ?? null;
               e.target.value = "";
+              setEditing((current) => (current ? { ...current, thumb: file } : current));
             }}
           />
         </div>
@@ -695,17 +729,33 @@ const ManageSheetMusic = () => {
               {songs.map((song) => editing?.id === song.id ? renderEditRow(song) : (
                 <li key={song.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
-                    {thumbUrls[song.id] ? (
-                      <img
-                        src={thumbUrls[song.id]}
-                        alt=""
-                        className="w-16 h-20 rounded-md object-cover border border-border shrink-0"
+                    <label
+                      className="cursor-pointer shrink-0 rounded-md transition-opacity hover:opacity-80"
+                      title="Click to change the thumbnail"
+                      aria-label={`Change thumbnail for ${song.title}`}
+                    >
+                      {thumbUrls[song.id] ? (
+                        <img
+                          src={thumbUrls[song.id]}
+                          alt=""
+                          className="w-16 h-20 rounded-md object-cover border border-border"
+                        />
+                      ) : (
+                        <div className="w-16 h-20 rounded-md border border-border bg-muted flex items-center justify-center p-1 text-center text-[10px] font-semibold leading-tight overflow-hidden break-words">
+                          {song.title}
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const image = e.target.files?.[0];
+                          e.target.value = "";
+                          if (image) replaceSongThumb(song, image);
+                        }}
                       />
-                    ) : (
-                      <div className="w-16 h-20 rounded-md border border-border shrink-0 bg-muted flex items-center justify-center p-1 text-center text-[10px] font-semibold leading-tight overflow-hidden break-words">
-                        {song.title}
-                      </div>
-                    )}
+                    </label>
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{song.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
