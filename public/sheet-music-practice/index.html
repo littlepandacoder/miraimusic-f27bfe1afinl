@@ -1262,18 +1262,17 @@
       const wrapper = document.querySelector(".at-wrap");
       const main = wrapper.querySelector(".at-main");
 
-      // alphaTab lays bars out to the width of the element it renders into, and re-lays out whenever that
-      // width changes. Browser zoom changes the CSS width, so bars got stretched at 150%. Use a fixed width
-      // instead (980px, alphaTab's default page width): the layout stays the same at every zoom level, and
-      // the viewport scrolls sideways when the window is narrower.
-      const ALPHATAB_LAYOUT_WIDTH = 980;
-      main.style.width = ALPHATAB_LAYOUT_WIDTH + "px";
-      wrapper.querySelector(".at-viewport").style.overflowX = "auto";
+      // Browser zoom changes CSS pixel sizes, so alphaTab's bars were stretched or squeezed with the window.
+      // The compensation is the device pixel ratio at page load divided by the current one: at browser 150%
+      // it is 1/1.5, which keeps bars the same physical size at every browser zoom level while the score
+      // still fills the card width.
+      const baseDpr = window.devicePixelRatio || 1;
+      const zoomCompensation = () => baseDpr / (window.devicePixelRatio || 1);
 
       // initialize alphatab
       const settings = {
         display: {
-          scale: 1.5, // 150% zoom by default
+          scale: 1.5 * zoomCompensation(), // 150% zoom by default
         },
         player: {
           enablePlayer: true,
@@ -1536,12 +1535,20 @@
       };
 
       const zoom = wrapper.querySelector(".at-controls .at-zoom select");
-      zoom.onchange = () => {
-        const zoomLevel = parseInt(zoom.value) / 100;
+      const applyZoom = () => {
+        const zoomLevel = (parseInt(zoom.value) / 100) * zoomCompensation();
         api.settings.display.scale = zoomLevel;
         api.updateSettings();
         api.render();
       };
+      zoom.onchange = applyZoom;
+      // Browser zoom changes the device pixel ratio: re-render so bars keep their size.
+      let lastDpr = window.devicePixelRatio;
+      window.addEventListener("resize", () => {
+        if (window.devicePixelRatio === lastDpr) return;
+        lastDpr = window.devicePixelRatio;
+        applyZoom();
+      });
 
       // Zoom changes are shared with the room (the handler above applies them on this screen).
       zoom.addEventListener("change", () => window.roomSendZoom?.(parseInt(zoom.value)));
