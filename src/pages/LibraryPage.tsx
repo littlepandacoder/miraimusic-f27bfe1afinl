@@ -31,7 +31,7 @@ const LibraryPage = () => {
   // Students see library
   if (isStudent) {
     return (
-      <DashboardLayout title="Resource Library" role="student">
+      <DashboardLayout title="Sheet Music" role="student">
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <StudentLibrary />
         </div>
@@ -40,7 +40,7 @@ const LibraryPage = () => {
   }
 
   return (
-    <DashboardLayout title="Resource Library" role="student">
+    <DashboardLayout title="Sheet Music" role="student">
       <div className="text-center">Access denied</div>
     </DashboardLayout>
   );

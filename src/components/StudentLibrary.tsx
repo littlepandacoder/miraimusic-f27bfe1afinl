@@ -130,7 +130,7 @@ export function StudentLibrary() {
     <div className="space-y-4 md:space-y-6 px-4 md:px-0">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Resource Library</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Sheet Music</h1>
         <p className="text-xs md:text-sm text-muted-foreground">
           Download practice materials, sheet music, and learning resources
         </p>
