@@ -245,7 +245,7 @@
       }
       /* The vinyl peeks out to the right (46px), so the sleeve shifts left by half of that to keep the whole
          album visually centred on its track position. */
-      .album > .thumb, .album > .info { transform: translateX(-23px); }
+      .album > .thumb, .album > .info { position: relative; left: -23px; }
       .album::before {
         content: ""; position: absolute; top: 14px; right: -46px; width: 230px; height: 230px; border-radius: 50%;
         background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px), #111827;
@@ -746,7 +746,9 @@
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         let current = null;
         document.addEventListener('pointermove', (e) => {
-          const card = e.target.closest && e.target.closest('.card');
+          let card = e.target.closest && e.target.closest('.card');
+          // Carousel albums keep their own size; the tilt would reset their scale on hover.
+          if (card && card.classList.contains('album')) card = null;
           if (current && current !== card) { current.style.transform = ''; current = null; }
           if (!card || e.pointerType === 'touch') return;
           const r = card.getBoundingClientRect();
