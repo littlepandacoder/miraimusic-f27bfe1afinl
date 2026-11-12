@@ -228,6 +228,22 @@
       .at-song-title {
         font-weight: bold;
       }
+      /* Song name in the player bar: fixed width. Long names scroll like a marquee instead of pushing the controls. */
+      .at-song-info {
+        display: inline-block;
+        max-width: 260px;
+        overflow: hidden;
+        white-space: nowrap;
+        vertical-align: middle;
+      }
+      .at-song-track { display: inline-block; padding-right: 2.5em; }
+      .at-song-info.scrolling .at-song-track {
+        animation: at-song-marquee 12s linear infinite;
+      }
+      @keyframes at-song-marquee {
+        0%, 15% { transform: translateX(0); }
+        85%, 100% { transform: translateX(calc(-1 * var(--marquee-shift, 0px))); }
+      }
 
       .at-cursor-bar {
         /* Defines the color of the bar background when a bar is played */
@@ -1061,8 +1077,10 @@
           </a>
           <span class="at-player-progress">0%</span>
           <div class="at-song-info">
-            <span class="at-song-title"></span> -
-            <span class="at-song-artist"></span>
+            <span class="at-song-track">
+              <span class="at-song-title"></span> -
+              <span class="at-song-artist"></span>
+            </span>
           </div>
           <div class="at-song-position">00:00 / 00:00</div>
         </div>
@@ -1514,6 +1532,7 @@
       api.scoreLoaded.on((score) => {
         wrapper.querySelector(".at-song-title").innerText = score.title;
         wrapper.querySelector(".at-song-artist").innerText = score.artist;
+        updateSongMarquee();
       });
 
       const countIn = wrapper.querySelector('.at-controls .at-count-in');
@@ -1526,6 +1545,17 @@
         }
       };
       
+      // Scrolls the song name only when it is wider than its box.
+      function updateSongMarquee() {
+        const info = wrapper.querySelector(".at-song-info");
+        const track = wrapper.querySelector(".at-song-track");
+        if (!info || !track) return;
+        const overflow = Math.max(0, track.scrollWidth - info.clientWidth);
+        info.classList.toggle("scrolling", overflow > 0);
+        info.style.setProperty("--marquee-shift", overflow + "px");
+      }
+      window.addEventListener("resize", updateSongMarquee);
+
       const metronome = wrapper.querySelector(".at-controls .at-metronome");
       metronome.onclick = () => {
         metronome.classList.toggle("active");
