@@ -188,6 +188,17 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     const isProtected = (item as any).locked && isProtectedFeature(item.href);
     const isLocked = isProtected && !subscription.hasActiveSubscription && role === "student";
     const lockClass = isLocked ? "opacity-30 cursor-not-allowed grayscale" : "";
+    // Rainbow background so the Sheet Music entry stands out in the sidebar.
+    const rainbowStyle =
+      item.label === "Sheet Music"
+        ? {
+            background: "linear-gradient(90deg, #ff3b6b, #ff9f1c, #ffe600, #2ed573, #1e90ff, #a55eea, #ff3b6b)",
+            backgroundSize: "200% 100%",
+            color: "#ffffff",
+            fontWeight: 700,
+            boxShadow: "0 4px 18px rgba(255, 60, 120, 0.35)",
+          }
+        : undefined;
 
     if (isLocked) {
       console.log("[NavLink] Locked item:", item.label);
@@ -207,6 +218,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         href={item.href}
         onClick={handleClick}
         className={`${baseClass} ${lockClass}`}
+        style={rainbowStyle}
         {...(isLocked && { onClick: (e) => { e.preventDefault(); handleClick(e); } })}
       >
         {(item as any).img ? (
@@ -218,7 +230,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         {isLocked && <Lock className="w-4 h-4 shrink-0" />}
       </a>
     ) : (
-      <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`}>
+      <Link to={item.href} onClick={handleClick} className={`${baseClass} ${lockClass}`} style={rainbowStyle}>
         {(item as any).img ? (
           <img src={(item as any).img} alt="" className="w-7 h-7 shrink-0 object-contain" />
         ) : (
