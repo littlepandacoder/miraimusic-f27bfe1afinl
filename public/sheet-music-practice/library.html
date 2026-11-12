@@ -231,7 +231,7 @@
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
       /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
-      .carousel { position: relative; margin: 0 -16px; }
+      .carousel { position: relative; width: 100%; }
       .carousel-track {
         display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
         padding: 26px calc(50% - 125px) 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -243,6 +243,9 @@
         position: relative; flex: 0 0 250px; scroll-snap-align: center; transition: transform .3s ease, opacity .3s ease;
         transform-origin: center center;
       }
+      /* The vinyl peeks out to the right (46px), so the sleeve shifts left by half of that to keep the whole
+         album visually centred on its track position. */
+      .album > .thumb, .album > .info { transform: translateX(-23px); }
       .album::before {
         content: ""; position: absolute; top: 14px; right: -46px; width: 230px; height: 230px; border-radius: 50%;
         background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px), #111827;
