@@ -182,6 +182,10 @@ const ModuleMap = ({ onModuleComplete }: ModuleMapProps) => {
     );
   }
 
+  // The current module: the first one in progress, or else the first one the student can open.
+  const currentModuleId =
+    (modules.find(m => m.status === "in-progress") ?? modules.find(m => m.status === "available"))?.id ?? null;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -249,7 +253,7 @@ const ModuleMap = ({ onModuleComplete }: ModuleMapProps) => {
                   index % 2 === 0 ? "ml-0 mr-auto md:max-w-md w-full" : "ml-auto mr-0 md:max-w-md w-full",
                   // Rainbow glitter on the module in progress, and on any unlocked module under the pointer.
                   module.status !== "locked" && "module-card",
-                  module.status === "in-progress" && "is-current"
+                  module.id === currentModuleId && "is-current"
                 )}
                 onClick={() => module.status !== "locked" && navigate(`/dashboard/foundation/lesson-plan/${module.id}`)}
               >
