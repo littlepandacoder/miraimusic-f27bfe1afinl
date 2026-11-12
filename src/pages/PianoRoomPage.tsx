@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
 const LIBRARY_URL = "/sheet-music-practice/library.html";
-const LOADER_MS = 7800; // about the length of the startup sound: the loader stays up until it finishes
-const FALLBACK_MS = LOADER_MS + 1200; // if the browser blocks the sound, go on anyway
+const LOADER_MS = 3000; // the short startup sound: it fades out, then the library opens
+const FALLBACK_MS = LOADER_MS + 1500; // if the browser blocks the sound, go on anyway
 
 const NOTES = ["♪", "♫", "♬", "♩", "♪"];
 
