@@ -1077,6 +1077,16 @@
         .piano .key.user-lit::after, .piano .key.sounding::after, .piano .key.held::after, .piano .key.correct::after,
         .practice-bg span { animation: none !important; }
       }
+      /* Same look as the Piano Room: a slow rainbow band sweeps across the top bar. */
+      .sm-topbar { position: relative; overflow: hidden; }
+      .sm-topbar::before {
+        content: ""; position: absolute; inset: -40% -10%; pointer-events: none; opacity: 0.22; z-index: 0;
+        background: linear-gradient(100deg, transparent 20%, #ff3b6b 35%, #ffe600 45%, #2ed573 55%, #1e90ff 65%, #a55eea 75%, transparent 85%);
+        animation: sm-band-sweep 8s ease-in-out infinite;
+      }
+      .sm-topbar > * { position: relative; z-index: 1; }
+      @keyframes sm-band-sweep { 0%, 100% { transform: translateX(-12%); } 50% { transform: translateX(12%); } }
+      @media (prefers-reduced-motion: reduce) { .sm-topbar::before { animation: none !important; } }
     </style>
   </head>
 
