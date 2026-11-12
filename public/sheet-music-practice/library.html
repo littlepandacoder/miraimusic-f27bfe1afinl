@@ -319,6 +319,21 @@
       /* Songs of the day: a short row of picks that stays the same for everyone all day. */
       .suggest-row { margin-bottom: 28px; }
       .suggest-row .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      /* Song of the day pop-up: one song with its 30-second preview. */
+      .sotd {
+        border: 1px solid rgba(244,114,182,.5); border-radius: 18px; padding: 26px 24px 22px; max-width: 340px; width: calc(100% - 32px);
+        background: #111827; color: var(--fg); text-align: center; box-shadow: 0 0 40px 8px rgba(244,114,182,.3);
+      }
+      .sotd::backdrop { background: rgba(2,6,23,.7); }
+      .sotd-kicker { margin: 0 0 14px; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #f472b6; }
+      .sotd-img { width: 170px; height: 170px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px;
+        box-shadow: 0 0 0 4px #0b0f1a, 0 0 26px 6px rgba(244,114,182,.45); }
+      .sotd-title { margin: 0; font-size: 20px; font-weight: 900; }
+      .sotd-composer { margin: 6px 0 0; font-size: 14px; color: var(--muted-fg); min-height: 1em; }
+      .sotd-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+      .sotd-btn { border: none; border-radius: 999px; padding: 10px 18px; font-weight: 800; background: #f472b6; color: #fff; cursor: pointer;
+        box-shadow: 0 0 16px 3px rgba(244,114,182,.45); }
+      .sotd-btn.ghost { background: transparent; color: var(--fg); border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
     </style>
   </head>
   <body>
@@ -339,6 +354,16 @@
         <div class="cat-disc" aria-hidden="true"><div class="cat-label"></div></div>
         <p class="cat-text">Finding your next song…</p>
       </div>
+      <dialog id="songOfDay" class="sotd" aria-labelledby="sotdTitle">
+        <p class="sotd-kicker">Song of the day</p>
+        <img id="sotdImg" class="sotd-img" alt="" hidden />
+        <h2 id="sotdTitle" class="sotd-title"></h2>
+        <p id="sotdComposer" class="sotd-composer"></p>
+        <div class="sotd-actions">
+          <button type="button" id="sotdPlay" class="sotd-btn" hidden>▶ Play preview</button>
+          <button type="button" id="sotdClose" class="sotd-btn ghost">Close</button>
+        </div>
+      </dialog>
     </main>
 
     <dialog id="settings" class="settings">
@@ -778,20 +803,6 @@
         back.href = "#";
         back.textContent = "← All categories";
         sections.appendChild(back);
-        const picks = songsOfTheDay();
-        if (picks.length > 0) {
-          const suggest = document.createElement("div");
-          suggest.className = "suggest-row";
-          const heading = document.createElement("h2");
-          heading.className = "section-title";
-          heading.textContent = "Songs of the day";
-          suggest.appendChild(heading);
-          const row = document.createElement("div");
-          row.className = "grid";
-          picks.forEach((song) => row.appendChild(makeCard(song, songUrls[song.id])));
-          suggest.appendChild(row);
-          sections.appendChild(suggest);
-        }
         const inside = songsIn(id);
         const grid = document.createElement("div");
         grid.className = "grid";
@@ -816,7 +827,7 @@
           if (token !== catToken) return;
           renderCategorySongs(id);
           loader.classList.add("fade");
-          setTimeout(() => { if (token === catToken) loader.hidden = true; }, 650);
+          setTimeout(() => { if (token === catToken) loader.hidden = true; showSongOfTheDay(); }, 650);
         }, 1400);
       }
 
@@ -825,6 +836,42 @@
         if (match) openCategoryWithLoader(decodeURIComponent(match[1]));
         else { catToken++; document.getElementById("catLoader").hidden = true; renderCategories(); }
       }
+
+      // Song of the day pop-up: one library song for today, with its 30-second preview. Shown once per day.
+      let sotdAudio = null;
+      function showSongOfTheDay() {
+        const today = new Date().toLocaleDateString("en-CA");
+        try { if (localStorage.getItem("sotdShown") === today) return; } catch (e) {}
+        const pick = songsOfTheDay(1)[0];
+        if (!pick) return;
+        const dialog = document.getElementById("songOfDay");
+        document.getElementById("sotdTitle").textContent = pick.title;
+        document.getElementById("sotdComposer").textContent = pick.composer || "";
+        const img = document.getElementById("sotdImg");
+        if (songUrls[pick.id]) { img.src = songUrls[pick.id]; img.hidden = false; } else { img.hidden = true; }
+        const playBtn = document.getElementById("sotdPlay");
+        if (sotdAudio) { sotdAudio.pause(); sotdAudio = null; }
+        playBtn.hidden = !pick.preview_url;
+        playBtn.textContent = "▶ Play preview";
+        if (pick.preview_url) {
+          sotdAudio = new Audio(pick.preview_url);
+          sotdAudio.volume = 0.9;
+          sotdAudio.onended = () => { playBtn.textContent = "▶ Play preview"; };
+          sotdAudio.play().catch(() => {}); // the category click counts as a gesture, so this usually plays
+          playBtn.textContent = "❚❚ Pause preview";
+        }
+        playBtn.onclick = () => {
+          if (!sotdAudio) return;
+          if (sotdAudio.paused) { sotdAudio.play(); playBtn.textContent = "❚❚ Pause preview"; }
+          else { sotdAudio.pause(); playBtn.textContent = "▶ Play preview"; }
+        };
+        dialog.showModal();
+        try { localStorage.setItem("sotdShown", today); } catch (e) {}
+      }
+      document.getElementById("sotdClose").onclick = () => document.getElementById("songOfDay").close();
+      document.getElementById("songOfDay").addEventListener("close", () => {
+        if (sotdAudio) { sotdAudio.pause(); sotdAudio = null; }
+      });
 
       // Songs of the day: a few library songs picked with a shuffle seeded by today's date.
       function songsOfTheDay(count = 4) {
