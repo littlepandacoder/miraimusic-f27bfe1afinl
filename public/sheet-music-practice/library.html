@@ -716,6 +716,14 @@
         if (maxSeconds > 0) setTimeout(() => a.pause(), maxSeconds * 1000);
         return a;
       }
+      // Startup sound when the library opens. If the browser blocks it until the page is clicked, it plays on the first click.
+      (function playStartup() {
+        const audio = new Audio("/sounds/page-load.mp3");
+        audio.volume = 0.5;
+        audio.play().catch(() => {
+          document.addEventListener("pointerdown", () => audio.play().catch(() => {}), { once: true, capture: true });
+        });
+      })();
       const fx = {
         click: () => playSfx("select-click.mp3", 0.8),
         swipe: () => playSfx("swipe.mp3", 0.5, 0.4),
