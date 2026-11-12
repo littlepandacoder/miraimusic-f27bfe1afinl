@@ -993,6 +993,38 @@
         .upload-bar button, .upload-bar select { flex-shrink: 0; }
         .upload-bar .loop-status { white-space: normal !important; flex: 1 1 200px; }
       }
+      /* ── More interactive controls: lift and glow on hover, press on click, pulse while playing ── */
+      .at-controls .btn, .upload-bar button, .practice-panel button, .songs-panel button, .at-zoom select, .at-layout select, .at-controls select {
+        transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease;
+      }
+      .at-controls .btn:hover:not(.disabled), .upload-bar button:hover:not(:disabled), .practice-panel button:hover:not(:disabled),
+      .songs-panel button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 0 14px 3px rgba(244, 114, 182, 0.45);
+      }
+      .at-controls .btn:active:not(.disabled), .upload-bar button:active:not(:disabled), .practice-panel button:active:not(:disabled),
+      .songs-panel button:active:not(:disabled) {
+        transform: scale(0.95);
+        box-shadow: 0 0 6px 1px rgba(244, 114, 182, 0.35);
+      }
+      .at-controls .btn:focus-visible, .upload-bar button:focus-visible, .practice-panel button:focus-visible, .songs-panel button:focus-visible {
+        outline: 2px solid #f472b6; outline-offset: 2px;
+      }
+      /* The play button pulses while the score is playing (the icon shows a pause sign then). */
+      .at-controls .at-player-play-pause:has(.fa-pause) {
+        animation: play-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes play-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(244, 114, 182, 0.0); }
+        50% { box-shadow: 0 0 16px 4px rgba(244, 114, 182, 0.6); }
+      }
+      /* Tempo slider: a glowing thumb that grows when touched. */
+      .speed-control input[type="range"] { transition: filter .2s; }
+      .speed-control input[type="range"]:hover { filter: drop-shadow(0 0 6px rgba(244, 114, 182, 0.7)); }
+      @media (prefers-reduced-motion: reduce) {
+        .at-controls .at-player-play-pause:has(.fa-pause) { animation: none; }
+        .at-controls .btn:hover, .upload-bar button:hover, .practice-panel button:hover, .songs-panel button:hover { transform: none; }
+      }
     </style>
   </head>
 
