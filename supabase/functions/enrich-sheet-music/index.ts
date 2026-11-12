@@ -70,7 +70,10 @@ export async function findTrack(title: string): Promise<{ artUrl: string; artist
     .filter((r) => r.artworkUrl100 && norm(String(r.trackName ?? "")).length >= 3)
     .filter((r) => {
       const t = norm(String(r.trackName));
-      return t === wanted || wanted.includes(t);
+      if (t === wanted) return true;
+      // A loose match also needs the performing artist in the title, so "Taylor Swift" by another artist is not taken.
+      const artist = norm(String(r.artistName ?? ""));
+      return wanted.includes(t) && artist.length > 0 && wanted.includes(artist);
     })
     .sort((a, b) => norm(String(b.trackName)).length - norm(String(a.trackName)).length);
   const exact = candidates.find((r) => norm(String(r.trackName)) === wanted) ?? candidates[0];
