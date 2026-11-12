@@ -224,16 +224,14 @@
       .thumb.placeholder.named { padding: 0; }
       .thumb.placeholder.named::after { z-index: 1; }
       .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
-      .card:hover .thumb { animation: rainbow-glow 2.4s linear infinite; }
+      .card:hover .thumb { animation: pulse-glow 1.8s ease-in-out infinite; }
       .info { padding: 12px 6px 0; }
       .title { font-size: 14px; }
       .composer { font-size: 11px; }
-      /* Hover: the cover stays still. Equal rainbow rings and glitter glow all round, with the colours shifting. */
-      @keyframes rainbow-glow {
-        0%   { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ff3b6b, 0 0 0 9px #ffe600, 0 0 0 12px #2ed573, 0 0 0 15px #1e90ff, 0 0 0 18px #a55eea, 0 0 28px 16px rgba(244,114,182,.45); }
-        33%  { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ffe600, 0 0 0 9px #2ed573, 0 0 0 12px #1e90ff, 0 0 0 15px #a55eea, 0 0 0 18px #ff3b6b, 0 0 28px 16px rgba(253,230,138,.45); }
-        66%  { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #2ed573, 0 0 0 9px #1e90ff, 0 0 0 12px #a55eea, 0 0 0 15px #ff3b6b, 0 0 0 18px #ffe600, 0 0 28px 16px rgba(165,94,234,.45); }
-        100% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 0 6px #ff3b6b, 0 0 0 9px #ffe600, 0 0 0 12px #2ed573, 0 0 0 15px #1e90ff, 0 0 0 18px #a55eea, 0 0 28px 16px rgba(244,114,182,.45); }
+      /* Hover: the cover stays still and gives a soft pink pulse glow, the same on every side. */
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 14px 4px rgba(244,114,182,.35), 0 0 28px 8px rgba(244,114,182,.15); }
+        50% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 22px 8px rgba(244,114,182,.7), 0 0 44px 14px rgba(244,114,182,.3); }
       }
       /* Glitter: sparkle speckles over the cover that twinkle on hover. */
       .album .thumb::after {
