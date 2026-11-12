@@ -1093,6 +1093,12 @@
       .sm-topbar > * { position: relative; z-index: 1; }
       @keyframes sm-band-sweep { 0%, 100% { transform: translateX(-12%); } 50% { transform: translateX(12%); } }
       @media (prefers-reduced-motion: reduce) { .sm-topbar::before { animation: none !important; } }
+      /* Player panels are see-through, so the background shows through them. */
+      .at-wrap { background: rgba(251, 251, 253, 0.55) !important; backdrop-filter: blur(3px); }
+      .at-controls { background: rgba(15, 23, 42, 0.4) !important; backdrop-filter: blur(4px); }
+      .upload-bar, .songs-panel, .practice-panel, .piano-wrap {
+        background: rgba(20, 28, 48, 0.4) !important; backdrop-filter: blur(4px);
+      }
     </style>
   </head>
 
