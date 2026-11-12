@@ -1,5 +1,4 @@
 import { startKeySound, stopKeySound, silencePiano, playWoodblock, audioReady } from "./keySampler.js";
-import { checkMidiConnection } from "./midiCheck.mjs";
 
 /*
  * Musicable MIDI practice mode.
@@ -37,8 +36,7 @@ const isBlackKey = (midi) => [1, 3, 6, 8, 10].includes(midi % 12);
 
 const $ = (id) => document.getElementById(id);
 const ui = {
-  connectBtn: $("midiConnectBtn"),
-  testBtn: $("midiTestBtn"),
+  midiDot: $("midiDot"),
   deviceSelect: $("midiDeviceSelect"),
   midiStatus: $("midiStatus"),
   practiceToggle: $("practiceToggle"),
@@ -1099,31 +1097,9 @@ async function connectMidi() {
   }
 }
 
-// Runs the step-by-step MIDI check (browser, permission, keyboard, key press) and reports each step.
-async function testMidiConnection() {
-  let granted = null;
-  setFeedback("info", "Testing the MIDI connection. Press any key on the keyboard within 10 seconds.");
-  const steps = await checkMidiConnection({
-    midi: {
-      supported: !!navigator.requestMIDIAccess,
-      requestAccess: async (options) => (granted = await navigator.requestMIDIAccess(options)),
-    },
-    timeoutMs: 10000,
-  });
-  // Keep the access the test obtained, so the keyboard is connected without a second permission prompt.
-  if (granted && !practice.midiAccess) {
-    practice.midiAccess = granted;
-    granted.onstatechange = refreshDevices;
-    refreshDevices();
-  }
-  const passed = steps.every((s) => s.ok);
-  const report = steps.map((s) => `${s.ok ? "✓" : "✗"} ${s.name}${s.detail ? `: ${s.detail}` : ""}`).join("  ");
-  setFeedback(passed ? "correct" : "wrong", `MIDI test ${passed ? "passed" : "failed"}. ${report}`);
-  refreshUi();
-}
-
-ui.connectBtn.onclick = connectMidi;
-ui.testBtn.onclick = testMidiConnection;
+// Connect automatically: the browser asks for MIDI permission once, then keyboards are picked up as they are
+// plugged in or removed (see refreshDevices, called from onstatechange).
+connectMidi();
 ui.deviceSelect.onchange = () => selectDevice(ui.deviceSelect.value);
 
 /** Controls **/
@@ -1418,18 +1394,13 @@ function updateMidiBar() {
 function refreshUi() {
   updateMidiBar();
   flushAccompaniment();
-  // Connection status
-  if (practice.error) {
-    ui.midiStatus.textContent = practice.error;
-  } else if (practice.device) {
-    ui.midiStatus.textContent = `Connected: ${practice.device.name || practice.device.id}`;
-  } else if (practice.midiAccess) {
-    ui.midiStatus.textContent = "MIDI enabled, but no device found. Connect a keyboard.";
-  } else {
-    ui.midiStatus.textContent = "Disconnected";
-  }
-  ui.connectBtn.disabled = !!practice.midiAccess;
-  ui.connectBtn.textContent = practice.midiAccess ? "MIDI keyboard access granted" : "Connect MIDI Keyboard";
+  // Connection status: a glowing dot and a short label. The full detail is in the tooltip.
+  const connected = !!practice.device;
+  ui.midiDot.classList.toggle("on", connected);
+  ui.midiStatus.textContent = connected ? "MIDI connected" : "MIDI not connected";
+  ui.midiStatus.parentElement.title = connected
+    ? `Connected: ${practice.device.name || practice.device.id}`
+    : practice.error || "Connect a MIDI keyboard. It is detected automatically.";
 
   // Practice state
   ui.stateLabel.textContent = stateLabel();

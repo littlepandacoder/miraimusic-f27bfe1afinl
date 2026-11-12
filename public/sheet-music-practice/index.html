@@ -802,6 +802,21 @@
       .at-controls .btn.at-player-play-pause { color: var(--primary) !important; }
       .at-song-info, .at-song-position, .at-player-progress { color: var(--muted-fg) !important; }
       .at-controls select { background: var(--secondary) !important; color: var(--fg) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; }
+      /* MIDI status: a glowing green dot when a keyboard is connected, grey when not. */
+      .midi-indicator { display: inline-flex; align-items: center; gap: 8px; }
+      .midi-dot {
+        width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+        background: #6b7280; box-shadow: none; transition: background 0.2s, box-shadow 0.2s;
+      }
+      .midi-dot.on {
+        background: #22c55e;
+        animation: midi-glow 1.8s ease-in-out infinite;
+      }
+      @keyframes midi-glow {
+        0%, 100% { box-shadow: 0 0 6px 2px rgba(34, 197, 94, 0.55); }
+        50% { box-shadow: 0 0 14px 6px rgba(34, 197, 94, 0.9); }
+      }
+
       /* Footer spacing: space between the zoom icon and its dropdown, and between footer buttons. */
       .at-wrap .at-controls { padding-top: 14px !important; padding-bottom: 14px !important; }
       .at-zoom { display: inline-flex; align-items: center; gap: 10px; margin-left: 14px; }
@@ -996,10 +1011,11 @@
     </section>
     <section class="practice-panel">
       <div class="practice-row">
-        <button id="midiConnectBtn" type="button">Connect MIDI Keyboard</button>
-        <button id="midiTestBtn" type="button">Test MIDI connection</button>
         <select id="midiDeviceSelect" hidden></select>
-        <span id="midiStatus" class="practice-status">Disconnected</span>
+        <span class="midi-indicator" title="MIDI keyboard status">
+          <span id="midiDot" class="midi-dot" aria-hidden="true"></span>
+          <span id="midiStatus" class="practice-status">MIDI not connected</span>
+        </span>
         <label class="speed-control">
         Tempo
         <input id="speedSlider" type="range" min="50" max="150" step="5" value="100" />
