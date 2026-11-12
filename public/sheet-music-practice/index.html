@@ -973,6 +973,26 @@
         .at-wrap, .upload-bar, .songs-panel, .practice-panel, .piano-wrap { margin-left: 16px !important; margin-right: 16px !important; }
         .at-wrap { height: 60vh !important; }
       }
+      /* Responsive: the footer, upload bar and piano keys fit narrower screens (tablets, split windows). */
+      .at-controls { flex-wrap: wrap; row-gap: 8px; }
+      .at-controls-right { flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; max-width: 100%; }
+      .at-song-info { max-width: min(260px, 32vw); }
+      .upload-bar { flex-wrap: wrap; max-width: 100%; box-sizing: border-box; min-width: 0; }
+      .upload-bar > * { min-width: 0; max-width: 100%; }
+      .upload-status { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+      .upload-bar #fileName { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+      .piano-wrap, #pianoKeys { max-width: 100%; }
+      .piano-wrap { overflow-x: auto; }
+      @media (max-width: 900px) {
+        .at-controls-left, .at-controls-right { flex-wrap: wrap; }
+        .at-song-info { max-width: 40vw; }
+      }
+      /* Narrower screens: the top toolbar wraps onto more rows instead of squeezing its buttons together. */
+      @media (max-width: 1000px) {
+        .upload-bar { flex-wrap: wrap !important; gap: 8px; }
+        .upload-bar button, .upload-bar select { flex-shrink: 0; }
+        .upload-bar .loop-status { white-space: normal !important; flex: 1 1 200px; }
+      }
     </style>
   </head>
 
@@ -1585,6 +1605,66 @@
           api.metronomeVolume = 0;
         }
       };
+
+      // Touch screens and iPads: alphaTab selects loop bars with mouse drags only, and a touch drag sends no
+      // mouse moves. Long-press a bar, then drag, and the touches are passed to alphaTab as mouse events.
+      // A quick drag still scrolls the score.
+      (function enableTouchLoopSelection() {
+        const HOLD_MS = 350;   // press and hold before a drag becomes a selection
+        const MOVE_TOLERANCE = 10; // px a finger can move while holding before it counts as a scroll
+        let holdTimer = null;
+        let start = null;
+        let selecting = false;
+        let last = null;
+
+        const mouseEvent = (type, t, buttons) =>
+          new MouseEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            view: window,
+            clientX: t.clientX,
+            clientY: t.clientY,
+            button: 0,
+            buttons,
+          });
+
+        main.addEventListener("touchstart", (e) => {
+          if (e.touches.length !== 1) return;
+          const t = e.touches[0];
+          start = { clientX: t.clientX, clientY: t.clientY };
+          last = start;
+          selecting = false;
+          clearTimeout(holdTimer);
+          holdTimer = setTimeout(() => {
+            selecting = true;
+            main.dispatchEvent(mouseEvent("mousedown", start, 1));
+          }, HOLD_MS);
+        }, { passive: true });
+
+        main.addEventListener("touchmove", (e) => {
+          if (e.touches.length !== 1) return;
+          const t = e.touches[0];
+          last = t;
+          if (!selecting) {
+            // Moving before the hold finishes means a scroll, so cancel the selection.
+            if (start && Math.hypot(t.clientX - start.clientX, t.clientY - start.clientY) > MOVE_TOLERANCE) {
+              clearTimeout(holdTimer);
+            }
+            return;
+          }
+          e.preventDefault(); // stop the page scrolling while a loop is being selected
+          main.dispatchEvent(mouseEvent("mousemove", t, 1));
+        }, { passive: false });
+
+        const finish = () => {
+          clearTimeout(holdTimer);
+          if (selecting && last) main.dispatchEvent(mouseEvent("mouseup", last, 0));
+          selecting = false;
+          start = null;
+        };
+        main.addEventListener("touchend", finish, { passive: true });
+        main.addEventListener("touchcancel", finish, { passive: true });
+      })();
 
       const loop = wrapper.querySelector(".at-controls .at-loop");
       loop.onclick = () => {
