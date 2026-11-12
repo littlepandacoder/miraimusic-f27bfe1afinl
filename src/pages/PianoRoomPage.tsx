@@ -1,26 +1,36 @@
 import { useEffect, useState } from "react";
 
 const LIBRARY_URL = "/sheet-music-practice/library.html";
-const HANDOFF_MS = 900; // short pause, then the library takes over the same loading screen
+const LOADER_MS = 7800; // about the length of the startup sound: the loader stays up until it finishes
+const FALLBACK_MS = LOADER_MS + 1200; // if the browser blocks the sound, go on anyway
 
 const NOTES = ["♪", "♫", "♬", "♩", "♪"];
 
 // The Piano Room entry: a cute loading screen, then a gentle fade into the sheet music library.
 export default function PianoRoomPage() {
   useEffect(() => {
-    // Startup sound for the loading screen. If the browser blocks it until the page is clicked, it plays on the first click.
+    // Startup sound for the loading screen. The library opens when the sound has finished. If the browser
+    // blocks it until the page is clicked, it plays on the first click, and the fallback timer still moves on.
     const startup = new Audio("/sounds/page-load.mp3");
     startup.volume = 0.5;
+    let done = false;
+    const goToLibrary = () => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(fallbackTimer);
+      // The library shows the same loading screen and keeps it up until its content is ready.
+      try { sessionStorage.setItem("pianoRoomLoader", "1"); } catch (e) {}
+      window.location.replace(LIBRARY_URL);
+    };
+    startup.onended = goToLibrary;
     startup.play().catch(() => {
       document.addEventListener("pointerdown", () => startup.play().catch(() => {}), { once: true, capture: true });
     });
-
-    // The library shows the same loading screen and keeps it up until its content is ready.
-    try { sessionStorage.setItem("pianoRoomLoader", "1"); } catch (e) {}
-    const goTimer = window.setTimeout(() => window.location.replace(LIBRARY_URL), HANDOFF_MS);
+    const fallbackTimer = window.setTimeout(goToLibrary, FALLBACK_MS);
     return () => {
+      done = true;
       startup.pause();
-      window.clearTimeout(goTimer);
+      window.clearTimeout(fallbackTimer);
     };
   }, []);
 
@@ -82,7 +92,7 @@ export default function PianoRoomPage() {
         .pr-bar > span {
           display: block; height: 100%; width: 0; border-radius: 6px;
           background: linear-gradient(90deg, #f472b6, #c084fc, #60a5fa, #34d399, #fde68a);
-          animation: pr-fill ${HANDOFF_MS}ms ease-out forwards;
+          animation: pr-fill ${LOADER_MS}ms ease-out forwards;
         }
         @keyframes pr-fill { to { width: 100%; } }
         @media (prefers-reduced-motion: reduce) {
