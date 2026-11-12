@@ -220,3 +220,28 @@ body {
     @apply bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/50 transition-all duration-300 hover:border-primary/50 hover:bg-card/80;
   }
 }
+/* Piano Room tile: rotating rainbow halo with twinkling sparkles. */
+.piano-room-halo {
+  background: conic-gradient(from 0deg, #ff3b6b, #ff9f1c, #ffe600, #2ed573, #1e90ff, #a55eea, #ff3b6b);
+  filter: blur(7px);
+  opacity: 0.85;
+  z-index: 0;
+  animation: piano-room-spin 3s linear infinite;
+}
+.piano-room-sparkle {
+  position: absolute;
+  z-index: 2;
+  font-size: 10px;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 0 6px #ffffff, 0 0 12px #f0abfc;
+  pointer-events: none;
+  animation: piano-room-twinkle 1.6s ease-in-out infinite;
+}
+@keyframes piano-room-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes piano-room-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(45deg); }
+}

@@ -33,6 +33,20 @@ interface DashboardLayoutProps {
   headerActions?: ReactNode;
 }
 
+// Rainbow halo and sparkles for the Piano Room tile. Render inside a `relative` tile box.
+const PianoRoomSparkle = () => (
+  <>
+    <div className="piano-room-halo absolute inset-[-7px] rounded-full pointer-events-none" aria-hidden="true" />
+    {([["6%", "10%", 0], ["80%", "4%", 0.6], ["88%", "72%", 1.2], ["8%", "82%", 1.8], ["46%", "-8%", 0.9]] as const).map(
+      ([left, top, delay], i) => (
+        <span key={i} className="piano-room-sparkle" style={{ left, top, animationDelay: `${delay}s` }} aria-hidden="true">
+          ✦
+        </span>
+      ),
+    )}
+  </>
+);
+
 const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayoutProps) => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
@@ -267,6 +281,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                     <a href={href} title={t(labelKey)} className="group flex flex-col items-center gap-1.5 w-[72px]">
                       <div className="relative w-[68px] h-[68px] shrink-0">
                         <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: 0.6 }} />
+                        {href === "/piano-room" && <PianoRoomSparkle />}
                         <img
                           src={img}
                           alt={t(labelKey)}
@@ -431,6 +446,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
                       >
                         <div className="relative w-[64px] h-[64px] shrink-0">
                           <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: shadow, opacity: isLocked ? 0.1 : 0.6 }} />
+                          {href === "/piano-room" && <PianoRoomSparkle />}
                           <img
                             src={img}
                             alt={t(labelKey)}
