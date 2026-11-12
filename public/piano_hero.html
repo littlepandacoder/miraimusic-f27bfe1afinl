@@ -5967,21 +5967,16 @@ window.openSheetMusicModal = function(songId) {
   const container = document.getElementById('smEmbedContainer');
 
   if (embedUrl) {
+    container.style.display = 'flex';
+    container.style.padding = '1rem';
     container.innerHTML = `<iframe id="score-iframe" width="100%" height="500" src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
     document.getElementById('smEmbedUrl').value = embedUrl;
   } else {
-    if (isAdmin) {
-      container.innerHTML = `<div style="text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.9rem">
-        <div style="margin-bottom:1rem">No sheet music added yet</div>
-        <div style="font-size:0.8rem;color:var(--muted)">Add a MuseScore embed URL below to get started</div>
-      </div>`;
-      document.getElementById('smEmbedUrl').value = '';
-    } else {
-      container.innerHTML = `<div style="text-align:center;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.9rem">
-        <div style="margin-bottom:1rem">No sheet music available for this song</div>
-        <div style="font-size:0.8rem;color:var(--muted)">Check back later or contact your teacher</div>
-      </div>`;
-    }
+    // No MuseScore link for this song: show the sheet music library (same list and viewer as the Music Sheet page).
+    container.style.display = 'block';
+    container.style.padding = '0';
+    container.innerHTML = `<iframe id="library-iframe" src="/sheet-music-practice/library.html" width="100%" height="640" style="border:0;border-radius:8px;background:#fbfbfd;display:block" title="Sheet music library"></iframe>`;
+    document.getElementById('smEmbedUrl').value = '';
   }
 
   // Show modal
