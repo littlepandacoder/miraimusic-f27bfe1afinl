@@ -234,7 +234,7 @@
       .carousel { position: relative; width: 100%; }
       .carousel-track {
         display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
-        padding: 26px calc(50% - 125px) 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+        padding: 64px calc(50% - 125px) 64px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
         cursor: grab; user-select: none; touch-action: pan-x pan-y;
       }
       .carousel-track::-webkit-scrollbar { display: none; }
@@ -611,9 +611,10 @@
           for (const el of albums()) {
             const r = el.getBoundingClientRect();
             const d = Math.abs(r.left + r.width / 2 - mid) / (track.clientWidth / 2);
-            const k = Math.max(0, 1 - Math.min(d, 1));
-            el.style.transform = `scale(${(0.82 + 0.18 * k).toFixed(3)})`;
-            el.style.opacity = (0.45 + 0.55 * k).toFixed(3);
+            // k is 1 for the centred album and 0 for albums about one album-width away: a strong size contrast.
+            const k = Math.max(0, 1 - Math.min(d, 1) * 2);
+            el.style.transform = `scale(${(0.55 + 0.75 * k).toFixed(3)})`;
+            el.style.opacity = (0.5 + 0.5 * k).toFixed(3);
           }
         };
         track.addEventListener("scroll", () => requestAnimationFrame(updateFocus), { passive: true });
