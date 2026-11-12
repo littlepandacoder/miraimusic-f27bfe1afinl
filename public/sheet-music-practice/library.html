@@ -293,6 +293,7 @@
         transition: opacity .6s ease;
       }
       .cat-loader.fade { opacity: 0; pointer-events: none; }
+      .cat-loader[hidden] { display: none; } /* the flex rule above would otherwise keep it on screen */
       .cat-note {
         position: absolute; bottom: -40px; font-size: 26px; color: #f472b6; text-shadow: 0 0 10px rgba(192,132,252,.8);
         animation: cat-float 8s linear infinite; opacity: 0;
