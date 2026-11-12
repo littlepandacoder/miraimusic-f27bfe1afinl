@@ -655,9 +655,66 @@
         setupCarousel(track, prev, next);
       }
 
+      // Sound effects for the category carousel, made with Web Audio (no sound files needed).
+      const fx = (() => {
+        let ctx = null;
+        const get = () => {
+          if (!ctx) {
+            const Ctor = window.AudioContext || window.webkitAudioContext;
+            if (!Ctor) return null;
+            ctx = new Ctor();
+          }
+          if (ctx.state === "suspended") ctx.resume();
+          return ctx;
+        };
+        // A short bright tick for selecting a category.
+        const click = () => {
+          const c = get();
+          if (!c) return;
+          const t = c.currentTime;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(1500, t);
+          osc.frequency.exponentialRampToValueAtTime(420, t + 0.05);
+          gain.gain.setValueAtTime(0.22, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+          osc.connect(gain).connect(c.destination);
+          osc.start(t);
+          osc.stop(t + 0.1);
+        };
+        // A soft filtered whoosh for swiping to another album.
+        const swipe = () => {
+          const c = get();
+          if (!c) return;
+          const t = c.currentTime;
+          const len = Math.floor(c.sampleRate * 0.25);
+          const buffer = c.createBuffer(1, len, c.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+          const src = c.createBufferSource();
+          src.buffer = buffer;
+          const filter = c.createBiquadFilter();
+          filter.type = "bandpass";
+          filter.frequency.setValueAtTime(600, t);
+          filter.frequency.exponentialRampToValueAtTime(2400, t + 0.2);
+          const gain = c.createGain();
+          gain.gain.setValueAtTime(0.16, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          src.connect(filter).connect(gain).connect(c.destination);
+          src.start(t);
+        };
+        return { click, swipe, unlock: get };
+      })();
+      // The first click or tap on the page unlocks sound (browsers require it).
+      document.addEventListener("pointerdown", () => fx.unlock(), { once: true });
+      // Selecting an album (a click that was not a swipe) plays the click sound.
+      document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest(".album")) fx.click(); });
+
       // Swipe (touch), drag (mouse) or arrows. The centred album grows; the others shrink and fade.
       function setupCarousel(track, prev, next) {
         const albums = () => [...track.querySelectorAll(".album")];
+        let lastSelected = null;
         const updateFocus = () => {
           const mid = track.getBoundingClientRect().left + track.clientWidth / 2;
           // The album nearest the centre is the selected one. It stays big until another album is selected.
@@ -668,6 +725,9 @@
             const d = Math.abs(r.left + r.width / 2 - mid);
             if (d < best) { best = d; selected = el; }
           }
+          // Swiping to another album plays the swipe sound (not on the first layout).
+          if (lastSelected && selected !== lastSelected) fx.swipe();
+          lastSelected = selected;
           for (const el of albums()) {
             const isSelected = el === selected;
             el.style.transform = `scale(${isSelected ? 1.69 : 0.55})`;
