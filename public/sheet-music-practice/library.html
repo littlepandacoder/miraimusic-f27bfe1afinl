@@ -334,6 +334,15 @@
       .sotd-btn { border: none; border-radius: 999px; padding: 10px 18px; font-weight: 800; background: #f472b6; color: #fff; cursor: pointer;
         box-shadow: 0 0 16px 3px rgba(244,114,182,.45); }
       .sotd-btn.ghost { background: transparent; color: var(--fg); border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
+      /* Vinyl: only the grooves turn on hover; the cover stays still. */
+      .thumb .grooves {
+        position: absolute; inset: 0; border-radius: 50%; z-index: 0; pointer-events: none;
+        background: repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px);
+      }
+      .thumb .label-text { position: relative; z-index: 2; }
+      .card:hover .thumb .grooves { animation: vinyl-spin 3.5s linear infinite; }
+      @keyframes vinyl-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .card:hover .thumb .grooves { animation: none; } }
     </style>
   </head>
   <body>
@@ -557,6 +566,21 @@
         window.location.href = `index.html?${params.toString()}`;
       });
 
+      // Grooves are their own layer so they can spin on hover while the cover stays still.
+      function addGrooves(thumb) {
+        if (!thumb.querySelector("img")) {
+          const text = document.createElement("span");
+          text.className = "label-text";
+          text.textContent = thumb.textContent;
+          thumb.textContent = "";
+          thumb.append(text);
+        }
+        const grooves = document.createElement("span");
+        grooves.className = "grooves";
+        grooves.setAttribute("aria-hidden", "true");
+        thumb.insertBefore(grooves, thumb.firstChild);
+      }
+
       function makeCard(song, thumbUrl) {
         const card = document.createElement("a");
         card.dataset.songId = song.id;
@@ -594,6 +618,7 @@
           info.appendChild(composer);
         }
 
+        addGrooves(thumb);
         card.append(thumb, info);
         return card;
       }
@@ -633,6 +658,7 @@
           sub.textContent = subtitle;
           info.appendChild(sub);
         }
+        addGrooves(thumb);
         tile.append(thumb, info);
         return tile;
       }
