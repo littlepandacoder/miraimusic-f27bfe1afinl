@@ -118,7 +118,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
         { href: "/dashboard/sheet-music",     icon: Music,         label: "Sheet Music Library" },
         { href: "/sheet-music-practice/library.html", icon: Music, img: "/game-icons/sheet_music.svg", label: "Music Sheet", external: true },
-        { href: "/library",                   icon: Library,       label: "Sheet Music" },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
         { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },
         { href: "/dashboard/assignments",     icon: Users,         label: "Teacher Assignment" },
@@ -137,7 +136,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/schedule",     icon: Calendar,        label: t("dashboard.nav.schedule") },
         { href: "/dashboard/slots",        icon: ClipboardList,   label: t("dashboard.nav.mySlots") },
         { href: "/dashboard/foundation",   icon: Gamepad2,        label: t("dashboard.nav.foundationModules") },
-        { href: "/library",                icon: Library,         label: "Sheet Music" },
         { href: "/dashboard/chat",         icon: MessageSquare,   label: "Chat" },
         ...gameItems,
       ];
@@ -146,7 +144,6 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
     return [
       ...baseItems,
       { href: "/dashboard/foundation",   icon: Gamepad2,      label: t("dashboard.nav.foundation") },
-      { href: "/library",                icon: Library,       label: "Sheet Music" },
       { href: "/dashboard/resources",    icon: BookOpen,      label: t("dashboard.nav.aiTeacher") },
       { href: "/dashboard/chat",         icon: MessageSquare, label: "Chat with Teacher" },
     ];
