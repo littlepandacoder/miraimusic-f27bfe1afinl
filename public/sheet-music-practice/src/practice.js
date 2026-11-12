@@ -1560,7 +1560,8 @@ function metronomeDelaySeconds(tick) {
 function scheduleMetronome() {
   if (!metroPosition || api.metronomeVolume <= 0 || api.playerState !== PlayerState.Playing) return;
   if (!audioReady()) return; // wait until the browser allows sound (after the first click on the page)
-  const lookaheadTicks = (METRO_LOOKAHEAD_MS / 1000) * (metroPosition.bpm / 60) * TICKS_PER_QUARTER;
+  // The look-ahead is 250ms of real time, which is more score time when playing faster.
+  const lookaheadTicks = (METRO_LOOKAHEAD_MS / 1000) * (api.playbackSpeed || 1) * (metroPosition.bpm / 60) * TICKS_PER_QUARTER;
   for (const beat of metroBeats) {
     if (beat.tick < metroPosition.tick - 1) continue;
     if (beat.tick > metroPosition.tick + lookaheadTicks) break;
@@ -1577,8 +1578,9 @@ api.playerPositionChanged.on((e) => {
   metroPosition = {
     time: e.currentTime,
     tick: e.currentTick,
-    // Tempo from the .xml file (its quarter-note tempo), unless alphaTab reports a changed tempo.
-    bpm: e.modifiedTempo || e.currentTempo || api.score?.tempo || 120,
+    // The .xml file's tempo in quarter notes. alphaTab's modifiedTempo already includes the playback speed,
+    // so it is not used here; the speed is applied once when converting to real time.
+    bpm: e.currentTempo || api.score?.tempo || 120,
     wall: performance.now(),
   };
   scheduleMetronome();
