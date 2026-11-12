@@ -1099,6 +1099,50 @@
       .upload-bar, .songs-panel, .practice-panel, .piano-wrap {
         background: rgba(20, 28, 48, 0.4) !important; backdrop-filter: blur(4px);
       }
+      /* ── Cute, game-style buttons: chunky 3D pills with a glossy shine that bounce on hover and squish on press. ── */
+      .upload-bar button, .practice-panel button, .songs-panel button, .results-dialog button, .at-controls .btn {
+        position: relative; overflow: hidden;
+        border-radius: 999px !important; border: none !important;
+        font-weight: 800 !important; letter-spacing: 0.02em;
+        color: #fff !important;
+        background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%) !important;
+        box-shadow: 0 5px 0 #4c1d95, 0 8px 18px rgba(124, 58, 237, 0.35) !important;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.2s ease;
+        cursor: pointer;
+      }
+      .upload-bar button::after, .practice-panel button::after, .songs-panel button::after,
+      .results-dialog button::after, .at-controls .btn::after {
+        content: ""; position: absolute; left: 8%; right: 8%; top: 4px; height: 45%; pointer-events: none;
+        border-radius: 999px; background: linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
+      }
+      .upload-bar button:hover:not(:disabled), .practice-panel button:hover:not(:disabled),
+      .songs-panel button:hover:not(:disabled), .results-dialog button:hover:not(:disabled),
+      .at-controls .btn:hover:not(.disabled) {
+        transform: translateY(-3px) rotate(-0.5deg);
+        box-shadow: 0 8px 0 #4c1d95, 0 0 22px 4px rgba(244, 114, 182, 0.55) !important;
+        filter: brightness(1.08);
+      }
+      .upload-bar button:active:not(:disabled), .practice-panel button:active:not(:disabled),
+      .songs-panel button:active:not(:disabled), .results-dialog button:active:not(:disabled),
+      .at-controls .btn:active:not(.disabled) {
+        transform: translateY(4px) scale(0.97);
+        box-shadow: 0 1px 0 #4c1d95 !important;
+      }
+      /* Primary actions (the ones you press to start or continue) are pink. */
+      .upload-bar button.on, #uploadBtn, #practiceResumeBtn, #finishPerfBtn, #settingsStart, .practice-panel button.primary {
+        background: linear-gradient(180deg, #f9a8d4 0%, #ec4899 100%) !important;
+        box-shadow: 0 5px 0 #9d174d, 0 8px 18px rgba(236, 72, 153, 0.4) !important;
+      }
+      .upload-bar button:disabled, .practice-panel button:disabled, .songs-panel button:disabled,
+      .at-controls .btn.disabled {
+        background: #374151 !important; box-shadow: 0 3px 0 #111827 !important; opacity: 0.55 !important; transform: none !important;
+      }
+      .at-controls .btn { min-width: 40px; justify-content: center; }
+      .at-controls .btn:focus-visible, .upload-bar button:focus-visible, .practice-panel button:focus-visible,
+      .songs-panel button:focus-visible { outline: 3px solid #fde68a; outline-offset: 3px; }
+      @media (prefers-reduced-motion: reduce) {
+        .upload-bar button:hover, .practice-panel button:hover, .songs-panel button:hover, .at-controls .btn:hover { transform: none !important; }
+      }
     </style>
   </head>
 
