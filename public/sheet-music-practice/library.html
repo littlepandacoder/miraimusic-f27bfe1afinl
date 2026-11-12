@@ -479,7 +479,8 @@
 
       // Tile choices. null = nothing selected in that group, so the default is used.
       const DEFAULTS = { mode: "wait", checkpoints: "note", clef: "both" };
-      const choice = { mode: null, checkpoints: null, clef: null, require: true };
+      // The defaults are shown as selected, so it is clear what will start. Tapping a selected tile clears it back to the default.
+      const choice = { mode: DEFAULTS.mode, checkpoints: DEFAULTS.checkpoints, clef: DEFAULTS.clef, require: true };
 
       function refreshOptions() {
         document.querySelectorAll("[data-group]").forEach((group) => {
