@@ -349,6 +349,26 @@
       .card:hover .thumb .grooves { animation: vinyl-spin 3.5s linear infinite; }
       @keyframes vinyl-spin { to { transform: rotate(360deg); } }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb .grooves { animation: none; } }
+      /* Practice settings: buttons centred; Start practice is a glittering Musicable rainbow. */
+      .settings-foot { justify-content: center !important; }
+      #settingsStart {
+        position: relative; overflow: hidden; border: none !important; color: #fff !important; font-weight: 800 !important;
+        background: linear-gradient(90deg, #f472b6, #fbbf24, #34d399, #60a5fa, #c084fc, #f472b6) !important;
+        background-size: 300% 100% !important;
+        animation: brand-rainbow 4s linear infinite;
+        box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.55) !important;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+      }
+      #settingsStart::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+        background:
+          radial-gradient(circle, #ffffff 1.2px, transparent 2.4px) 10% 30% / 16px 16px,
+          radial-gradient(circle, #fde68a 1.2px, transparent 2.4px) 60% 70% / 20px 20px,
+          radial-gradient(circle, #ffffff 1px, transparent 2px) 85% 25% / 14px 14px;
+        animation: start-glitter 1.2s ease-in-out infinite;
+      }
+      @keyframes start-glitter { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after { animation: none !important; } }
     </style>
   </head>
   <body>
