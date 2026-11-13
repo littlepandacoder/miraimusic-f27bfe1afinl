@@ -1443,6 +1443,19 @@
       const psDialog = document.getElementById("practiceSettings");
       const psChoice = { mode: null, checkpoints: null, clef: null, track: null, require: true };
       const PS_DEFAULTS = { mode: "wait", checkpoints: "note", clef: "both", track: "all" };
+      // Settings chosen in the library pop-up arrive in the URL: show them as selected here too.
+      (function syncLaunchChoices() {
+        const q = new URLSearchParams(location.search);
+        if (!q.has("song")) return;
+        const m = q.get("mode");
+        if (m === "play" || m === "wait" || m === "sync") psChoice.mode = m;
+        const c = q.get("checkpoints");
+        if (c === "note" || c === "measure") psChoice.checkpoints = c;
+        const k = q.get("clef");
+        if (k === "both" || k === "treble" || k === "bass") psChoice.clef = k;
+        psChoice.require = q.get("require") !== "0";
+        psRefresh();
+      })();
       const psControl = (id) => document.getElementById(id);
 
       function psRefresh() {
