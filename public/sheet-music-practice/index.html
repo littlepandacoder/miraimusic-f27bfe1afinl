@@ -1190,6 +1190,14 @@
       @media (prefers-reduced-motion: reduce) {
         .practice-feedback:not(:empty), .practice-feedback.wrong:not(:empty) { animation: none !important; }
       }
+      /* Practice settings: no emoji icons, and tight enough to fit on screen without scrolling. */
+      #practiceSettings .settings-head { padding: 14px 64px 2px 22px !important; }
+      #practiceSettings .settings-body { padding: 8px 22px !important; gap: 8px !important; }
+      #practiceSettings .group-title { margin-bottom: 4px !important; }
+      #practiceSettings .tiles { gap: 6px !important; }
+      #practiceSettings .tile { padding: 8px 10px !important; gap: 2px !important; }
+      #practiceSettings .tile .hint { font-size: 11px; }
+      #practiceSettings .settings-foot { padding: 4px 22px 14px !important; }
     </style>
   </head>
 
@@ -1376,30 +1384,30 @@
         <div>
           <div class="group-title">Note input</div>
           <div class="tiles">
-            <button type="button" class="tile" data-toggle="require"><span class="icon">🎹</span><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
+            <button type="button" class="tile" data-toggle="require"><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
           </div>
         </div>
         <div>
           <div class="group-title">Practice mode</div>
           <div class="tiles" data-group="mode">
-            <button type="button" class="tile" data-value="wait"><span class="icon">⏸</span><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
-            <button type="button" class="tile" data-value="sync"><span class="icon">▶️</span><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
-            <button type="button" class="tile" data-value="play"><span class="icon">🔊</span><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
+            <button type="button" class="tile" data-value="wait"><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
+            <button type="button" class="tile" data-value="sync"><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
+            <button type="button" class="tile" data-value="play"><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
           </div>
         </div>
         <div>
           <div class="group-title">Checkpoints</div>
           <div class="tiles" data-group="checkpoints">
-            <button type="button" class="tile" data-value="note"><span class="icon">♩</span><span class="label">Every note</span></button>
-            <button type="button" class="tile" data-value="measure"><span class="icon">𝄀</span><span class="label">Every measure</span></button>
+            <button type="button" class="tile" data-value="note"><span class="label">Every note</span></button>
+            <button type="button" class="tile" data-value="measure"><span class="label">Every measure</span></button>
           </div>
         </div>
         <div>
           <div class="group-title">Clef</div>
           <div class="tiles" data-group="clef">
-            <button type="button" class="tile" data-value="both"><span class="icon">𝄞 𝄢</span><span class="label">Treble + bass</span></button>
-            <button type="button" class="tile" data-value="treble"><span class="icon">𝄞</span><span class="label">Treble only</span></button>
-            <button type="button" class="tile" data-value="bass"><span class="icon">𝄢</span><span class="label">Bass only</span></button>
+            <button type="button" class="tile" data-value="both"><span class="label">Treble + bass</span></button>
+            <button type="button" class="tile" data-value="treble"><span class="label">Treble only</span></button>
+            <button type="button" class="tile" data-value="bass"><span class="label">Bass only</span></button>
           </div>
         </div>
         <div>
@@ -1480,7 +1488,7 @@
           btn.type = "button";
           btn.className = "tile";
           btn.dataset.value = opt.value;
-          btn.innerHTML = '<span class="icon">🎸</span><span class="label"></span>';
+          btn.innerHTML = '<span class="label"></span>';
           btn.querySelector(".label").textContent = opt.textContent;
           btn.onclick = () => psPick("track", opt.value);
           tiles.appendChild(btn);
