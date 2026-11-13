@@ -369,22 +369,16 @@
         box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.55) !important;
         text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
       }
-      /* Glitter floats around the button, outside its edges, not on it. */
-      #settingsStart::after {
-        content: ""; position: absolute; inset: -16px; pointer-events: none; z-index: -1;
-        background:
-          radial-gradient(circle, #ffffff 1.6px, transparent 3px) 0% 0% / 12px 12px no-repeat,
-          radial-gradient(circle, #fde68a 1.6px, transparent 3px) 100% 0% / 12px 12px no-repeat,
-          radial-gradient(circle, #ffffff 1.4px, transparent 2.8px) 0% 100% / 12px 12px no-repeat,
-          radial-gradient(circle, #fbcfe8 1.6px, transparent 3px) 100% 100% / 12px 12px no-repeat,
-          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 50% 0% / 10px 10px no-repeat,
-          radial-gradient(circle, #fde68a 1.3px, transparent 2.6px) 50% 100% / 10px 10px no-repeat,
-          radial-gradient(circle, #fbcfe8 1.3px, transparent 2.6px) 0% 50% / 10px 10px no-repeat,
-          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 100% 50% / 10px 10px no-repeat;
-        animation: start-glitter 1.2s ease-in-out infinite;
+      /* Sparkles like the Musicable logo star: glowing four-point stars floating around the button, not on it. */
+      #settingsStart::before, #settingsStart::after {
+        content: "✦"; position: absolute; pointer-events: none; color: #ffffff; line-height: 1;
+        text-shadow: 0 0 6px #ffffff, 0 0 12px #f0abfc;
+        animation: start-glitter 1.6s ease-in-out infinite;
       }
-      @keyframes start-glitter { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after { animation: none !important; } }
+      #settingsStart::after { top: -12px; right: -8px; font-size: 13px; }
+      #settingsStart::before { bottom: -8px; left: -6px; font-size: 9px; animation-delay: -0.8s; }
+      @keyframes start-glitter { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(45deg); } }
+      @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after, #settingsStart::before { animation: none !important; } }
     </style>
   </head>
   <body>
