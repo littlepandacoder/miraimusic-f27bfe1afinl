@@ -389,6 +389,15 @@
       }
       @keyframes glitter-blink { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after, #settingsStart::before { animation: none !important; } }
+      /* Covers have no grooves of their own; only the record peeking out beside the cover is shown, and it twirls on hover. */
+      .album .thumb .grooves, .album .thumb::before { display: none; }
+      .album::before {
+        background:
+          conic-gradient(from 0deg, transparent 0deg 84deg, rgba(255,255,255,.5) 88deg, transparent 92deg 360deg),
+          repeating-radial-gradient(circle, #0b0f1a 0 2px, #1f2937 3px 4px), #111827;
+      }
+      .album:hover::before { animation: vinyl-spin 3s linear infinite; }
+      @media (prefers-reduced-motion: reduce) { .album:hover::before { animation: none; } }
     </style>
   </head>
   <body>
