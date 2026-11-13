@@ -635,7 +635,10 @@
       document.getElementById("settingsForm").addEventListener("submit", (event) => {
         event.preventDefault();
         if (!chosenSong) return;
-        playSfx("start-practice.mp3", 0.6); // level-up sound when practice starts
+        // Let the level-up sound play before the practice page opens (navigating at once would cut it off).
+        if (window.__startingPractice) return;
+        window.__startingPractice = true;
+        const sfx = playSfx("start-practice.mp3", 0.6);
         const params = new URLSearchParams({
           song: `lib-${chosenSong.id}`,
           mode: choice.mode ?? DEFAULTS.mode,
@@ -644,7 +647,9 @@
           chord: document.getElementById("setChord").value || "250",
           require: choice.require ? "1" : "0",
         });
-        window.location.href = `index.html?${params.toString()}`;
+        const go = () => { window.location.href = `index.html?${params.toString()}`; };
+        sfx.onended = go;
+        setTimeout(go, 2200); // fallback if the sound is blocked or does not end
       });
 
       // Titles always start with a capital letter (the rest is left as it was).
