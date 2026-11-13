@@ -1137,6 +1137,59 @@
       }
       /* The empty feedback bar is hidden; a message still appears here when there is one. */
       .practice-feedback:empty { display: none; }
+      /* ── Practice feedback: a pill with an icon, a glow in the message's colour, and a small entrance. ── */
+      .practice-feedback:not(:empty) {
+        display: flex; align-items: center; gap: 10px;
+        width: 100%; box-sizing: border-box; min-height: 0;
+        padding: 10px 16px 10px 12px; border-radius: 999px;
+        font-weight: 700; font-size: 14px; letter-spacing: 0.01em;
+        border: 1px solid transparent;
+        animation: feedback-in 0.35s cubic-bezier(.2,.9,.3,1.2);
+        transition: box-shadow .3s ease, background-color .3s ease;
+      }
+      .practice-feedback:not(:empty)::before {
+        content: "ℹ"; flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 900; background: rgba(255,255,255,.14);
+      }
+      .practice-feedback.correct:not(:empty)::before { content: "✓"; }
+      .practice-feedback.wrong:not(:empty)::before { content: "✕"; }
+      .practice-feedback.partial:not(:empty)::before { content: "◐"; }
+      .practice-feedback.correct:not(:empty) {
+        background: linear-gradient(90deg, rgba(57,217,138,.22), rgba(57,217,138,.08)) !important;
+        border-color: rgba(57,217,138,.55) !important; color: #6ee7a8 !important;
+        box-shadow: 0 0 16px 2px rgba(57,217,138,.35) !important;
+      }
+      .practice-feedback.wrong:not(:empty) {
+        background: linear-gradient(90deg, rgba(239,68,68,.24), rgba(239,68,68,.08)) !important;
+        border-color: rgba(239,68,68,.6) !important; color: #fca5a5 !important;
+        box-shadow: 0 0 16px 2px rgba(239,68,68,.35) !important;
+        animation: feedback-in 0.35s cubic-bezier(.2,.9,.3,1.2), feedback-shake 0.45s ease;
+      }
+      .practice-feedback.partial:not(:empty) {
+        background: linear-gradient(90deg, rgba(245,158,11,.24), rgba(245,158,11,.08)) !important;
+        border-color: rgba(245,158,11,.6) !important; color: #fcd34d !important;
+        box-shadow: 0 0 16px 2px rgba(245,158,11,.3) !important;
+      }
+      .practice-feedback.info:not(:empty) {
+        background: linear-gradient(90deg, rgba(0,212,255,.18), rgba(0,212,255,.06)) !important;
+        border-color: rgba(0,212,255,.5) !important; color: #7dd3fc !important;
+        box-shadow: 0 0 14px 1px rgba(0,212,255,.25) !important;
+      }
+      @keyframes feedback-in {
+        0% { opacity: 0; transform: translateY(-6px) scale(0.96); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes feedback-shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(3px); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .practice-feedback:not(:empty), .practice-feedback.wrong:not(:empty) { animation: none !important; }
+      }
     </style>
   </head>
 
