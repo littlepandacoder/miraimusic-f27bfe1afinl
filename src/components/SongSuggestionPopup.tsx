@@ -162,7 +162,7 @@ export const SongSuggestionPopup = () => {
               )}
             </div>
           )}
-          <p className="mt-4 text-lg font-semibold">{song.title}</p>
+          <p className="mt-4 text-lg font-semibold">{song.title.charAt(0).toUpperCase() + song.title.slice(1)}</p>
           {song.composer && <p className="text-sm text-muted-foreground">{song.composer}</p>}
 
           <div className="mt-6 flex flex-col gap-2">

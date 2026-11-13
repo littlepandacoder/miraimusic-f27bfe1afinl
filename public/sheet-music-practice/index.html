@@ -1712,7 +1712,7 @@
 
       /** Controls **/
       api.scoreLoaded.on((score) => {
-        wrapper.querySelector(".at-song-title").innerText = score.title;
+        wrapper.querySelector(".at-song-title").innerText = score.title ? score.title.charAt(0).toUpperCase() + score.title.slice(1) : score.title;
         wrapper.querySelector(".at-song-artist").innerText = score.artist;
         updateSongMarquee();
       });

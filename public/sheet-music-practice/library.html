@@ -606,7 +606,7 @@
         chosenSong = song;
         refreshOptions();
         autoCheckMidi();
-        document.getElementById("settingsTitle").textContent = song.title;
+        document.getElementById("settingsTitle").textContent = capTitle(song.title);
         settingsDialog.showModal();
       }
 
@@ -626,6 +626,8 @@
         window.location.href = `index.html?${params.toString()}`;
       });
 
+      // Titles always start with a capital letter (the rest is left as it was).
+      const capTitle = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t);
       // Grooves are their own layer so they can spin on hover while the cover stays still.
       function addGrooves(thumb) {
         if (!thumb.querySelector("img")) {
@@ -669,7 +671,7 @@
         info.className = "info";
         const title = document.createElement("p");
         title.className = "title";
-        title.textContent = song.title;
+        title.textContent = capTitle(song.title);
         info.appendChild(title);
         if (song.composer) {
           const composer = document.createElement("p");
@@ -710,7 +712,7 @@
         info.className = "info";
         const titleEl = document.createElement("p");
         titleEl.className = "title";
-        titleEl.textContent = title;
+        titleEl.textContent = capTitle(title);
         info.appendChild(titleEl);
         if (subtitle) {
           const sub = document.createElement("p");
@@ -899,7 +901,7 @@
         const pick = songsOfTheDay(1)[0];
         if (!pick) return;
         const dialog = document.getElementById("songOfDay");
-        document.getElementById("sotdTitle").textContent = pick.title;
+        document.getElementById("sotdTitle").textContent = capTitle(pick.title);
         document.getElementById("sotdComposer").textContent = pick.composer || "";
         const img = document.getElementById("sotdImg");
         if (songUrls[pick.id]) { img.src = songUrls[pick.id]; img.hidden = false; } else { img.hidden = true; }
