@@ -432,19 +432,19 @@
          is connected, and lights up pink and bobs when one is. */
       .midi-piano { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 4px 0; }
       .piano-icon { width: 80px; height: 40px; transition: filter .3s ease, opacity .3s ease; opacity: .55; filter: grayscale(1); }
-      .piano-icon .keys-white { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1; }
-      .piano-icon .keys-line { stroke: #cbd5e1; stroke-width: 1; fill: none; }
-      .piano-icon .keys-black { fill: #334155; }
+      .piano-icon .keys-white { fill: #ffffff; stroke: #1e293b; stroke-width: 1.4; }
+      .piano-icon .keys-line { stroke: #1e293b; stroke-width: 1.2; fill: none; }
+      .piano-icon .keys-black { fill: #334155; stroke: #0b0f1a; stroke-width: 1.2; }
       .midi-piano.on .piano-icon { opacity: 1; filter: drop-shadow(0 0 8px rgba(236,72,153,.6)); animation: piano-bob 2.4s ease-in-out infinite; }
-      .midi-piano.on .piano-icon .keys-white { stroke: #f9a8d4; }
-      .midi-piano.on .piano-icon .keys-line { stroke: #f9a8d4; }
+      .midi-piano.on .piano-icon .keys-white { stroke: #be185d; }
+      .midi-piano.on .piano-icon .keys-line { stroke: #be185d; }
       .midi-piano.on .piano-icon .keys-black { fill: #ec4899; }
       .midi-piano.warn .piano-icon { opacity: .8; filter: none; }
-      .midi-piano.warn .piano-icon .keys-black { fill: #f59e0b; }
+      .midi-piano.warn .piano-icon .keys-black { fill: #ec4899; }
       @keyframes piano-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
       .midi-piano .midi-text { font-size: 12px; color: var(--muted-fg); max-width: 420px; }
       .midi-piano.on .midi-text { color: #6ee7b7; font-weight: 700; }
-      .midi-piano.warn .midi-text { color: #fcd34d; }
+      .midi-piano.warn .midi-text { color: #f9a8d4; }
       .midi-piano .btn { padding: 6px 12px; font-size: 12px; }
       @media (prefers-reduced-motion: reduce) { .midi-piano.on .piano-icon { animation: none; } }
     </style>
