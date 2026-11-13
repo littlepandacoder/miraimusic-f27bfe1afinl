@@ -234,17 +234,10 @@
         0%, 100% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 14px 4px rgba(244,114,182,.35), 0 0 28px 8px rgba(244,114,182,.15); }
         50% { box-shadow: 0 0 0 3px #0b0f1a, 0 0 22px 8px rgba(244,114,182,.7), 0 0 44px 14px rgba(244,114,182,.3); }
       }
-      /* Glitter: sparkle speckles over the cover that twinkle on hover. */
+      /* Covers keep a soft sheen only; no speckle dots. */
       .album .thumb::after {
-        background:
-          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 0 0 / 22px 22px,
-          linear-gradient(115deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%);
-        opacity: 0.55;
-      }
-      .card:hover .album .thumb::after, .album:hover .thumb::after { animation: glitter-twinkle 1.2s ease-in-out infinite; }
-      @keyframes glitter-twinkle {
-        0%, 100% { opacity: 0.35; background-position: 0 0, 0 0; }
-        50% { opacity: 1; background-position: 11px 11px, 0 0; }
+        background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.22) 50%, transparent 62%);
+        opacity: 1;
       }
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb { animation: none; } }
       /* Category carousel: album covers with a vinyl peeking out, swipeable and centred. */
