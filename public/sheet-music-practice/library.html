@@ -428,6 +428,22 @@
       .tile .hint { font-size: 11px; }
       .settings-foot { padding: 4px 22px 14px !important; }
       #setChord { padding: 6px 10px; }
+      /* MIDI indicator: a small piano, centred, grey when no keyboard is connected, coloured with its status below when one is. */
+      .midi-piano { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 4px 0; }
+      .piano-icon { width: 72px; height: 36px; transition: filter .3s ease; }
+      .piano-icon .keys-white { fill: #374151; stroke: #6b7280; stroke-width: 1; }
+      .piano-icon .keys-line { stroke: #6b7280; stroke-width: 1; fill: none; }
+      .piano-icon .keys-black { fill: #111827; }
+      .midi-piano.on .piano-icon .keys-white { fill: #f5f5f7; stroke: #ec4899; }
+      .midi-piano.on .piano-icon .keys-line { stroke: #ec4899; }
+      .midi-piano.on .piano-icon .keys-black { fill: #ec4899; }
+      .midi-piano.on .piano-icon { filter: drop-shadow(0 0 8px rgba(236,72,153,.6)); }
+      .midi-piano.warn .piano-icon .keys-white { fill: #374151; stroke: #f59e0b; }
+      .midi-piano.warn .piano-icon .keys-black { fill: #f59e0b; }
+      .midi-piano .midi-text { font-size: 12px; color: var(--muted-fg); max-width: 420px; }
+      .midi-piano.on .midi-text { color: #6ee7b7; font-weight: 700; }
+      .midi-piano.warn .midi-text { color: #fcd34d; }
+      .midi-piano .btn { padding: 6px 12px; font-size: 12px; }
     </style>
   </head>
   <body>
@@ -476,8 +492,15 @@
           <p>Choose how you want to practise, then start.</p>
         </div>
         <div class="settings-body">
-          <div id="midiBar" class="midi-bar">
-            <span class="dot"></span>
+          <div id="midiBar" class="midi-piano">
+            <svg class="piano-icon" viewBox="0 0 72 36" aria-hidden="true">
+              <rect class="keys-white" x="1" y="1" width="70" height="34" rx="4"/>
+              <path class="keys-line" d="M13 1V35M25 1V35M37 1V35M49 1V35M61 1V35"/>
+              <rect class="keys-black" x="9" y="1" width="8" height="20" rx="1.5"/>
+              <rect class="keys-black" x="21" y="1" width="8" height="20" rx="1.5"/>
+              <rect class="keys-black" x="45" y="1" width="8" height="20" rx="1.5"/>
+              <rect class="keys-black" x="57" y="1" width="8" height="20" rx="1.5"/>
+            </svg>
             <span id="midiText" class="midi-text">Checking MIDI…</span>
             <button type="button" class="btn" id="midiCheckBtn" hidden>Check now</button>
           </div>
@@ -593,7 +616,7 @@
       let midiAccess = null;
 
       function setMidiBar(state, message) {
-        midiBar.className = `midi-bar ${state}`;
+        midiBar.className = `midi-piano ${state}`;
         midiText.textContent = message;
       }
 
