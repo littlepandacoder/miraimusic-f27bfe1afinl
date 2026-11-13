@@ -369,15 +369,14 @@
         box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.55) !important;
         text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
       }
-      /* Sparkles like the Musicable logo star: glowing four-point stars floating around the button, not on it. */
+      /* Glitter: many tiny specks floating around the button, outside its edges, in two twinkling groups. */
       #settingsStart::before, #settingsStart::after {
-        content: "✦"; position: absolute; pointer-events: none; color: #ffffff; line-height: 1;
-        text-shadow: 0 0 6px #ffffff, 0 0 12px #f0abfc;
-        animation: start-glitter 1.6s ease-in-out infinite;
+        content: ""; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; border-radius: 50%;
+        pointer-events: none; background: #ffffff;
       }
-      #settingsStart::after { top: -12px; right: -8px; font-size: 13px; }
-      #settingsStart::before { bottom: -8px; left: -6px; font-size: 9px; animation-delay: -0.8s; }
-      @keyframes start-glitter { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(45deg); } }
+      #settingsStart::before { box-shadow: -104px -26px 0 #fff, -96px 24px 0 #fde68a, -120px 4px 0 #fff, -62px -30px 0 #fbcfe8, -14px -34px 0 #fff, 40px -32px 0 #fde68a, 96px -28px 0 #fff, 112px 6px 0 #fbcfe8, 104px 30px 0 #fff, 48px 34px 0 #fde68a, -40px 36px 0 #fff, -100px 30px 0 #fde68a; animation: glitter-blink 1.4s ease-in-out infinite; }
+      #settingsStart::after { box-shadow: -112px -8px 0 #f0abfc, -74px 30px 0 #a5f3fc, -28px -30px 0 #f0abfc, 18px 30px 0 #a5f3fc, 72px -30px 0 #fbcfe8, 118px -12px 0 #a5f3fc, 120px 20px 0 #f0abfc, -50px -34px 0 #ffffff, 66px 36px 0 #ffffff, -86px -30px 0 #fbcfe8; animation: glitter-blink 1.7s ease-in-out infinite -0.7s; }
+      @keyframes glitter-blink { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after, #settingsStart::before { animation: none !important; } }
     </style>
   </head>
