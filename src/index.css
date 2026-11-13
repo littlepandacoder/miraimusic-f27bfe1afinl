@@ -253,24 +253,13 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { img[alt="Musicable beaver mascot"] { animation: none !important; } }
 
-/* Module map: the current module (in progress, or the next one to open) glows and sparkles all the time.
+/* Module map: the current module (in progress, or the next one to open) glows all the time.
    Any unlocked module pops up and glows under the pointer. */
 .module-card { position: relative; isolation: isolate; transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .module-card:hover, .module-card.is-current {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 0 20px 4px rgba(244, 114, 182, 0.5), 0 0 40px 8px rgba(192, 132, 252, 0.25);
 }
-.module-card.is-current::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2;
-  background:
-    radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 8% 22% / 18px 20px,
-    radial-gradient(circle, #fde68a 1.2px, transparent 2.4px) 62% 62% / 22px 22px,
-    radial-gradient(circle, #f0abfc 1.3px, transparent 2.6px) 88% 24% / 16px 18px,
-    radial-gradient(circle, #a5f3fc 1.1px, transparent 2.2px) 30% 80% / 20px 20px;
-  animation: module-glitter 1.2s ease-in-out infinite;
-}
-@keyframes module-glitter { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .module-card:hover, .module-card.is-current { transform: none; }
-  .module-card.is-current::after { animation: none; }
 }
