@@ -399,6 +399,26 @@
       }
       .album:hover::before { animation: vinyl-spin 3s linear infinite; }
       @media (prefers-reduced-motion: reduce) { .album:hover::before { animation: none; } }
+      /* Cuter choice tiles: rounder, a soft gradient, the icon in a bubble, bounce on hover, a glow when chosen. */
+      .tile {
+        border-radius: 20px !important;
+        background: linear-gradient(160deg, rgba(56,40,92,.45), rgba(20,28,48,.9)) !important;
+        border: 1.5px solid rgba(192,132,252,.25) !important;
+        transition: transform .18s cubic-bezier(.3,.9,.4,1.4), box-shadow .25s ease, border-color .25s ease !important;
+      }
+      .tile:hover { transform: translateY(-3px) scale(1.02); border-color: rgba(244,114,182,.7) !important; box-shadow: 0 8px 20px rgba(244,114,182,.25); }
+      .tile:active { transform: scale(.96); }
+      .tile .icon {
+        width: 40px; height: 40px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(255,255,255,.08); font-size: 20px; margin-bottom: 6px;
+      }
+      .tile[aria-pressed="true"] {
+        background: linear-gradient(160deg, rgba(236,72,153,.35), rgba(139,92,246,.22)) !important;
+        border-color: #f472b6 !important;
+        box-shadow: 0 0 18px 2px rgba(244,114,182,.5);
+      }
+      .tile[aria-pressed="true"] .icon { background: rgba(244,114,182,.35); }
+      @media (prefers-reduced-motion: reduce) { .tile:hover, .tile:active { transform: none; } }
     </style>
   </head>
   <body>
