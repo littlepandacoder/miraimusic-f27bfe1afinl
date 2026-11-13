@@ -116,7 +116,8 @@
         padding: 0; width: min(460px, 92vw); box-shadow: 0 24px 60px rgba(0,0,0,.5);
       }
       dialog.settings::backdrop { background: rgba(10,15,28,.7); }
-      .settings-head { padding: 20px 22px 6px; }
+      .settings-head { padding: 20px 64px 6px 22px; } /* right padding keeps long titles clear of the × button */
+      .settings-head h2 { overflow-wrap: anywhere; }
       .settings-head h2 { margin: 0; font-size: 18px; }
       .settings-head p { margin: 4px 0 0; color: var(--muted-fg); font-size: 14px; }
       .settings-body { padding: 14px 22px; display: grid; gap: 14px; }
