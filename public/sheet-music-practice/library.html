@@ -351,6 +351,16 @@
       @media (prefers-reduced-motion: reduce) { .card:hover .thumb .grooves { animation: none; } }
       /* Practice settings: buttons centred; Start practice is a glittering Musicable rainbow. */
       .settings-foot { justify-content: center !important; }
+      /* Close button: a round × in the top-right corner of the settings window. */
+      dialog.settings { position: relative; }
+      .settings-x {
+        position: absolute; top: 14px; right: 14px; z-index: 5; width: 36px; height: 36px; border-radius: 50%;
+        border: 1px solid rgba(244, 114, 182, 0.5); background: rgba(15, 23, 42, 0.9); color: #fff;
+        font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+      }
+      .settings-x:hover { transform: rotate(90deg); background: rgba(244, 114, 182, 0.3); box-shadow: 0 0 14px 3px rgba(244, 114, 182, 0.5); }
+      .settings-x:focus-visible { outline: 2px solid #f472b6; outline-offset: 2px; }
       #settingsStart {
         position: relative; overflow: hidden; border: none !important; color: #fff !important; font-weight: 800 !important;
         background: linear-gradient(90deg, #f472b6, #fbbf24, #34d399, #60a5fa, #c084fc, #f472b6) !important;
@@ -410,6 +420,7 @@
     </main>
 
     <dialog id="settings" class="settings">
+      <button type="button" class="settings-x" id="settingsCancel" aria-label="Close">✕</button>
       <form method="dialog" id="settingsForm">
         <div class="settings-head">
           <h2 id="settingsTitle">Practice settings</h2>
@@ -455,7 +466,7 @@
           </label>
         </div>
         <div class="settings-foot">
-          <button type="button" class="btn" id="settingsCancel">Cancel</button>
+
           <button type="submit" class="btn primary" id="settingsStart">Start practice</button>
         </div>
       </form>
