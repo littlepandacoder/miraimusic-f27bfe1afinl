@@ -362,19 +362,25 @@
       .settings-x:hover { transform: rotate(90deg); background: rgba(244, 114, 182, 0.3); box-shadow: 0 0 14px 3px rgba(244, 114, 182, 0.5); }
       .settings-x:focus-visible { outline: 2px solid #f472b6; outline-offset: 2px; }
       #settingsStart {
-        position: relative; overflow: hidden; border: none !important; color: #fff !important; font-weight: 800 !important;
+        position: relative; border: none !important; color: #fff !important; font-weight: 800 !important;
         background: linear-gradient(90deg, #f472b6, #fbbf24, #34d399, #60a5fa, #c084fc, #f472b6) !important;
         background-size: 300% 100% !important;
         animation: brand-rainbow 4s linear infinite;
         box-shadow: 0 0 18px 4px rgba(244, 114, 182, 0.55) !important;
         text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
       }
+      /* Glitter floats around the button, outside its edges, not on it. */
       #settingsStart::after {
-        content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+        content: ""; position: absolute; inset: -16px; pointer-events: none; z-index: -1;
         background:
-          radial-gradient(circle, #ffffff 1.2px, transparent 2.4px) 10% 30% / 16px 16px,
-          radial-gradient(circle, #fde68a 1.2px, transparent 2.4px) 60% 70% / 20px 20px,
-          radial-gradient(circle, #ffffff 1px, transparent 2px) 85% 25% / 14px 14px;
+          radial-gradient(circle, #ffffff 1.6px, transparent 3px) 0% 0% / 12px 12px no-repeat,
+          radial-gradient(circle, #fde68a 1.6px, transparent 3px) 100% 0% / 12px 12px no-repeat,
+          radial-gradient(circle, #ffffff 1.4px, transparent 2.8px) 0% 100% / 12px 12px no-repeat,
+          radial-gradient(circle, #fbcfe8 1.6px, transparent 3px) 100% 100% / 12px 12px no-repeat,
+          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 50% 0% / 10px 10px no-repeat,
+          radial-gradient(circle, #fde68a 1.3px, transparent 2.6px) 50% 100% / 10px 10px no-repeat,
+          radial-gradient(circle, #fbcfe8 1.3px, transparent 2.6px) 0% 50% / 10px 10px no-repeat,
+          radial-gradient(circle, #ffffff 1.3px, transparent 2.6px) 100% 50% / 10px 10px no-repeat;
         animation: start-glitter 1.2s ease-in-out infinite;
       }
       @keyframes start-glitter { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
