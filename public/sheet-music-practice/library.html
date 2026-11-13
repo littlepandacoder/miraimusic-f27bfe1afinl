@@ -677,6 +677,7 @@
           const img = document.createElement("img");
           img.alt = "";
           img.loading = "lazy";
+          img.decoding = "async";
           img.src = thumbUrl;
           thumb.appendChild(img);
         } else {
@@ -719,6 +720,7 @@
           const img = document.createElement("img");
           img.alt = "";
           img.loading = "lazy";
+          img.decoding = "async";
           img.src = thumbUrl;
           thumb.appendChild(img);
         } else {
@@ -994,11 +996,19 @@
           songs = data || [];
 
           // Private thumbnails: short-lived signed links for songs and categories.
-          const sign = (path) => sb.storage.from(THUMB_BUCKET).createSignedUrl(path, 3600).then(({ data: signed }) => (signed ? signed.signedUrl : null));
-          const songLinks = await Promise.all(songs.map((song) => (song.thumbnail_path ? sign(song.thumbnail_path) : null)));
-          const categoryLinks = await Promise.all(categories.map((c) => (c.thumbnail_path ? sign(c.thumbnail_path) : null)));
-          songUrls = Object.fromEntries(songs.map((song, i) => [song.id, songLinks[i]]));
-          categoryUrls = Object.fromEntries(categories.map((c, i) => [c.id, categoryLinks[i]]));
+          // One request signs every thumbnail link at once (instead of one request per picture).
+          const signMany = async (paths) => {
+            const unique = [...new Set(paths.filter(Boolean))];
+            const out = {};
+            if (unique.length === 0) return out;
+            const { data: signed } = await sb.storage.from(THUMB_BUCKET).createSignedUrls(unique, 3600);
+            for (const r of signed || []) if (r && r.signedUrl) out[r.path] = r.signedUrl;
+            return out;
+          };
+          const songSigned = await signMany(songs.map((song) => song.thumbnail_path));
+          const categorySigned = await signMany(categories.map((c) => c.thumbnail_path));
+          songUrls = Object.fromEntries(songs.map((song) => [song.id, song.thumbnail_path ? songSigned[song.thumbnail_path] ?? null : null]));
+          categoryUrls = Object.fromEntries(categories.map((c) => [c.id, c.thumbnail_path ? categorySigned[c.thumbnail_path] ?? null : null]));
 
           if (songs.length === 0 && categories.length === 0) {
             showState("No sheet music in the library yet.");
