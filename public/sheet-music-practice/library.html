@@ -377,6 +377,23 @@
       }
       #settingsStart::before { box-shadow: -78px -20px 0 #fff, -72px 18px 0 #fde68a, -90px 3px 0 #fff, -46px -22px 0 #fbcfe8, -10px -26px 0 #fff, 30px -24px 0 #fde68a, 72px -21px 0 #fff, 84px 4px 0 #fbcfe8, 78px 22px 0 #fff, 36px 26px 0 #fde68a, -30px 27px 0 #fff, -75px 22px 0 #fde68a; animation: glitter-blink 1.4s ease-in-out infinite; }
       #settingsStart::after { box-shadow: -84px -6px 0 #f0abfc, -56px 22px 0 #a5f3fc, -21px -22px 0 #f0abfc, 14px 22px 0 #a5f3fc, 54px -22px 0 #fbcfe8, 88px -9px 0 #a5f3fc, 90px 15px 0 #f0abfc, -38px -26px 0 #ffffff, 50px 27px 0 #ffffff, -64px -22px 0 #fbcfe8; animation: glitter-blink 1.7s ease-in-out infinite -0.7s; }
+      /* Start practice wiggles on hover, and squashes then bounces when pressed. */
+      #settingsStart:hover:not(:disabled) {
+        animation: brand-rainbow 4s linear infinite, start-wiggle 0.6s ease-in-out infinite;
+      }
+      #settingsStart:active:not(:disabled) {
+        animation: brand-rainbow 4s linear infinite, start-press 0.35s ease-out;
+      }
+      @keyframes start-wiggle {
+        0%, 100% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(-3deg) scale(1.03); }
+        75% { transform: rotate(3deg) scale(1.03); }
+      }
+      @keyframes start-press {
+        0% { transform: scale(0.9); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+      }
       @keyframes glitter-blink { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
       @media (prefers-reduced-motion: reduce) { #settingsStart, #settingsStart::after, #settingsStart::before { animation: none !important; } }
     </style>
