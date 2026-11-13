@@ -419,6 +419,15 @@
       }
       .tile[aria-pressed="true"] .icon { background: rgba(244,114,182,.35); }
       @media (prefers-reduced-motion: reduce) { .tile:hover, .tile:active { transform: none; } }
+      /* Practice settings fit on screen without scrolling: tighter spacing. */
+      .settings-head { padding: 14px 64px 2px 22px !important; }
+      .settings-body { padding: 8px 22px !important; gap: 8px !important; }
+      .group-title { margin-bottom: 4px !important; }
+      .tiles { gap: 6px !important; }
+      .tile { padding: 8px 10px !important; gap: 2px !important; }
+      .tile .hint { font-size: 11px; }
+      .settings-foot { padding: 4px 22px 14px !important; }
+      #setChord { padding: 6px 10px; }
     </style>
   </head>
   <body>
@@ -475,30 +484,30 @@
           <div>
             <div class="group-title">Note input</div>
             <div class="tiles">
-              <button type="button" class="tile" data-toggle="require"><span class="icon">🎹</span><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
+              <button type="button" class="tile" data-toggle="require"><span class="label">Require note input</span><span class="hint">Wait until the right note is played</span></button>
             </div>
           </div>
           <div>
             <div class="group-title">Practice mode</div>
             <div class="tiles" data-group="mode">
-              <button type="button" class="tile" data-value="wait"><span class="icon">⏸</span><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
-              <button type="button" class="tile" data-value="sync"><span class="icon">▶️</span><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
-              <button type="button" class="tile" data-value="play"><span class="icon">🔊</span><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
+              <button type="button" class="tile" data-value="wait"><span class="label">Wait for note</span><span class="hint">Stops at each note</span></button>
+              <button type="button" class="tile" data-value="sync"><span class="label">Sync performance</span><span class="hint">Plays on, results at the end</span></button>
+              <button type="button" class="tile" data-value="play"><span class="label">Just play</span><span class="hint">Plays the score, no checks or results</span></button>
             </div>
           </div>
           <div>
             <div class="group-title">Checkpoints</div>
             <div class="tiles" data-group="checkpoints">
-              <button type="button" class="tile" data-value="note"><span class="icon">♩</span><span class="label">Every note</span></button>
-              <button type="button" class="tile" data-value="measure"><span class="icon">𝄀</span><span class="label">Every measure</span></button>
+              <button type="button" class="tile" data-value="note"><span class="label">Every note</span></button>
+              <button type="button" class="tile" data-value="measure"><span class="label">Every measure</span></button>
             </div>
           </div>
           <div>
             <div class="group-title">Clef</div>
             <div class="tiles" data-group="clef">
-              <button type="button" class="tile" data-value="both"><span class="icon">𝄞 𝄢</span><span class="label">Treble + bass</span></button>
-              <button type="button" class="tile" data-value="treble"><span class="icon">𝄞</span><span class="label">Treble only</span></button>
-              <button type="button" class="tile" data-value="bass"><span class="icon">𝄢</span><span class="label">Bass only</span></button>
+              <button type="button" class="tile" data-value="both"><span class="label">Treble + bass</span></button>
+              <button type="button" class="tile" data-value="treble"><span class="label">Treble only</span></button>
+              <button type="button" class="tile" data-value="bass"><span class="label">Bass only</span></button>
             </div>
           </div>
           <label class="group-title" style="display:grid;gap:6px">Chord window (ms)
@@ -1152,6 +1161,19 @@
         });
 
         window.addEventListener("pagehide", stopPreview);
+      })();
+    </script>
+    <script>
+      // A click sound on every button, link and tile on this page. Album covers and Start practice have their own sounds.
+      (function () {
+        const CLICKABLE = 'button, a, [role="button"], .tile, input[type="checkbox"], input[type="radio"]';
+        document.addEventListener("click", (e) => {
+          const el = e.target && e.target.closest ? e.target.closest(CLICKABLE) : null;
+          if (!el || el.disabled || el.closest(".album") || el.id === "settingsStart") return;
+          const audio = new Audio("/sounds/select-click.mp3");
+          audio.volume = 0.5;
+          audio.play().catch(() => {});
+        }, true);
       })();
     </script>
   </body>
