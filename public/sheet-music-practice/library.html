@@ -635,6 +635,7 @@
       document.getElementById("settingsForm").addEventListener("submit", (event) => {
         event.preventDefault();
         if (!chosenSong) return;
+        playSfx("start-practice.mp3", 0.6); // level-up sound when practice starts
         const params = new URLSearchParams({
           song: `lib-${chosenSong.id}`,
           mode: choice.mode ?? DEFAULTS.mode,
