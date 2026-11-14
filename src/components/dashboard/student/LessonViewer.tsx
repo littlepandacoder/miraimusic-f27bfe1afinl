@@ -22,12 +22,25 @@ interface Video {
   duration?: number;
 }
 
+// Module categories are the Foundation levels. Each video is labelled with where it sits in that progression.
+const LEVEL_NAMES: Record<string, string> = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" };
+
+// e.g. "Beginner · Step 2 of 5 · After: Hand position"
+const progressionLabel = (lesson: LessonContent, idx: number): string => {
+  const parts: string[] = [];
+  if (lesson.level) parts.push(LEVEL_NAMES[lesson.level] ?? lesson.level);
+  parts.push(`Step ${idx + 1} of ${lesson.videos.length}`);
+  parts.push(idx === 0 ? "Start here" : `After: ${lesson.videos[idx - 1].title}`);
+  return parts.join(" · ");
+};
+
 interface LessonContent {
   id: string;
   title: string;
   description: string;
   duration: number;
   moduleTitle: string;
+  level?: string;
   videos: Video[];
   notes: string;
   learningObjectives: string[];
@@ -165,14 +178,16 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
             : { data: [] };
 
           let moduleTitle = moduleId || "";
+          let moduleLevel: string | undefined;
           const modId = source.module_id;
           if (modId) {
             const { data: mod } = await (supabase as any)
               .from("foundation_modules")
-              .select("title")
+              .select("title, level")
               .eq("id", modId)
               .maybeSingle();
             if (mod?.title) moduleTitle = mod.title;
+            moduleLevel = mod?.level ?? undefined;
           }
 
           setDbLesson({
@@ -181,6 +196,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
             description: source.description || "",
             duration: source.duration_minutes || 20,
             moduleTitle,
+            level: moduleLevel,
             videos: (videos || []).map((v: any) => ({
               id: v.id,
               title: v.title,
@@ -551,6 +567,7 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                         <p className="font-semibold text-sm truncate">
                           {idx + 1}. {video.title}
                         </p>
+                        <p className="text-xs text-primary truncate">{progressionLabel(lesson, idx)}</p>
                         {video.duration && (
                           <p className="text-xs text-muted-foreground">
                             {Math.floor(video.duration / 60)} minutes
@@ -712,6 +729,9 @@ const LessonViewer = ({ lesson: passedLesson }: LessonViewerProps) => {
                     {selectedVideoIndex + 1}/{lesson.videos.length || 1}
                   </span>
                 </div>
+                {lesson.videos.length > 0 && (
+                  <p className="text-xs text-primary mb-2">{progressionLabel(lesson, selectedVideoIndex)}</p>
+                )}
                 <Progress
                   value={lesson.videos.length ? ((selectedVideoIndex + 1) / lesson.videos.length) * 100 : 100}
                 />

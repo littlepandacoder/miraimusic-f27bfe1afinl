@@ -626,6 +626,7 @@ function finishPerformance() {
   practice.perf.active = false;
   const results = scorePerformance(practice.checkpoints, practice.perf.presses);
   showResults(results);
+  saveSession("sync", results);
   refreshUi();
 }
 
@@ -736,7 +737,50 @@ function finishWaitPractice() {
   const results = scoreWaitPractice(practice.checkpoints, waitLog);
   waitLog = new Map();
   showWaitResults(results);
+  saveSession("wait", results);
   refreshUi();
+}
+
+// Saves the finished session (plays, scores and analysis) and then adds the song's play summary to the results.
+function saveSession(mode, r) {
+  const num = (x) => (Number.isFinite(x) ? Math.round(x * 100) / 100 : null);
+  const entry = mode === "sync"
+    ? {
+        mode,
+        score: num(r.overall),
+        pitch_accuracy: num(r.pitchAccuracy),
+        rhythm_accuracy: num(r.rhythmAccuracy),
+        notes_total: r.expected,
+        notes_right: r.hits,
+        wrong_presses: r.wrong,
+        late_count: r.late,
+        early_count: r.early,
+        on_time_count: r.onTimeCount,
+        analysis: { averageDeviation: num(r.averageDeviation), averageAbsoluteDeviation: num(r.averageAbsoluteDeviation) },
+      }
+    : {
+        mode,
+        score: num(r.accuracy),
+        notes_total: r.total,
+        notes_right: r.rightFirst,
+        wrong_presses: r.wrongPresses,
+        analysis: { reached: r.reached, fixed: r.fixed, unresolved: r.unresolved, skipped: r.skipped, mistakes: r.rows },
+      };
+  Promise.resolve(window.musicableRecordSession?.(entry)).then((summary) => {
+    if (summary) addPlaySummary(summary);
+  });
+}
+
+function addPlaySummary(s) {
+  const body = document.querySelector("#resultsBody .results-body");
+  if (!body || !s.plays) return;
+  const pct = (v) => (v == null ? "—" : `${Math.round(v)}%`);
+  const text = `Played ${s.plays} time${s.plays === 1 ? "" : "s"} · best ${pct(s.best)} · last ${pct(s.last)}`
+    + ` · wait mode ${s.waitPlays}× (avg ${pct(s.waitAvg)}) · sync mode ${s.syncPlays}× (avg ${pct(s.syncAvg)})`;
+  const line = document.createElement("div");
+  line.className = "res-sub";
+  line.textContent = text;
+  body.appendChild(line);
 }
 
 // Pure scoring for wait mode. A "mistake" is each wrong key press while a checkpoint waits.

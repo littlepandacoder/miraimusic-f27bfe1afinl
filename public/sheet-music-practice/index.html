@@ -1233,6 +1233,7 @@
         <select id="songSelect"></select>
       </label>
       <button id="deleteSongBtn" type="button">Delete selected song</button>
+      <button id="progressBtn" type="button">My progress</button>
     </section>
     <section class="practice-panel">
       <div class="practice-row">
@@ -1424,6 +1425,10 @@
       </div>
     </dialog>
 
+    <dialog id="progressDialog" class="results-dialog">
+      <div id="progressBody"></div>
+      <form method="dialog"><button type="submit">Close</button></form>
+    </dialog>
     <dialog id="resultsDialog" class="results-dialog">
       <div id="resultsBody"></div>
       <form method="dialog"><button type="submit">Continue</button></form>
@@ -2258,6 +2263,137 @@
         showName(DEMO_NAME);
         renderSongList();
       }
+
+      // Plays and scores for a song: plays = finished sessions, split by "wait" and "sync" mode.
+      function summariseSessions(rows) {
+        const avg = (list) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
+        const of = (mode) => rows.filter((r) => r.mode === mode);
+        return {
+          plays: rows.length,
+          best: rows.length ? Math.max(...rows.map((r) => Number(r.score))) : null,
+          last: rows.length ? Number(rows[0].score) : null, // rows are newest first
+          waitPlays: of("wait").length,
+          waitAvg: avg(of("wait").map((r) => Number(r.score))),
+          syncPlays: of("sync").length,
+          syncAvg: avg(of("sync").map((r) => Number(r.score))),
+        };
+      }
+
+      async function songSummary(songKey) {
+        const { data, error } = await sb
+          .from("sheet_music_sessions")
+          .select("mode, score, created_at")
+          .eq("song_key", songKey)
+          .order("created_at", { ascending: false });
+        if (error || !data) return null;
+        return summariseSessions(data);
+      }
+
+      // Called by src/practice.js when a session finishes. Saves it for the signed-in student and returns the
+      // song's play summary. The demo score and guests are not saved.
+      window.musicableRecordSession = async (entry) => {
+        try {
+          if (currentSongId == null) return null;
+          const user = await currentUser();
+          if (!user) return null;
+          const songKey = String(currentSongId);
+          const song = songs.find((s) => s.id === currentSongId);
+          const { error } = await sb.from("sheet_music_sessions").insert({
+            user_id: user.id,
+            song_key: songKey,
+            song_title: song ? song.name : songKey,
+            ...entry,
+          });
+          if (error) throw error;
+          return await songSummary(songKey);
+        } catch (e) {
+          console.warn("[practice] session not saved:", e);
+          return null;
+        }
+      };
+
+      // "My progress": plays, best/last scores and wait/sync averages for each song the student has finished.
+      async function openProgress() {
+        const body = document.getElementById("progressBody");
+        const dialog = document.getElementById("progressDialog");
+        body.innerHTML = "";
+        const pct = (v) => (v == null ? "—" : `${Math.round(v)}%`);
+        const line = (text, cls) => {
+          const p = document.createElement("p");
+          if (cls) p.className = cls;
+          p.textContent = text;
+          body.appendChild(p);
+        };
+        const user = await currentUser().catch(() => null);
+        if (!user) {
+          line("Sign in to see your progress.");
+          dialog.showModal();
+          return;
+        }
+        const { data, error } = await sb
+          .from("sheet_music_sessions")
+          .select("song_key, song_title, mode, score, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+        if (error) {
+          line(`Could not load progress: ${error.message}`);
+        } else if (!data || data.length === 0) {
+          line("No finished songs yet. Finish a song to see your progress here.");
+        } else {
+          const bySong = new Map();
+          data.forEach((r) => {
+            if (!bySong.has(r.song_key)) bySong.set(r.song_key, { title: r.song_title, rows: [] });
+            bySong.get(r.song_key).rows.push(r);
+          });
+          bySong.forEach(({ title, rows }, songKey) => {
+            const s = summariseSessions(rows);
+            const card = document.createElement("div");
+            card.style.cssText = "margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12)";
+            const name = document.createElement("strong");
+            name.textContent = title.charAt(0).toUpperCase() + title.slice(1);
+            card.appendChild(name);
+            const a = document.createElement("div");
+            a.textContent = `Played ${s.plays} time${s.plays === 1 ? "" : "s"} · best ${pct(s.best)} · last ${pct(s.last)}`;
+            const b = document.createElement("div");
+            b.textContent = `Wait mode: ${s.waitPlays}× (avg ${pct(s.waitAvg)}) · Sync mode: ${s.syncPlays}× (avg ${pct(s.syncAvg)})`;
+            // On demand: a short coaching note from Melody, based on this song's numbers.
+            const coach = document.createElement("button");
+            coach.type = "button";
+            coach.textContent = "Get coaching note";
+            coach.style.cssText = "margin-top:8px";
+            const note = document.createElement("p");
+            note.style.cssText = "margin-top:6px;font-style:italic";
+            coach.addEventListener("click", async () => {
+              coach.disabled = true;
+              note.textContent = "Thinking…";
+              try {
+                const { data: sess } = await sb.auth.getSession();
+                const token = sess.session?.access_token;
+                if (!token) throw new Error("sign in again");
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/sheet-music-coach`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ song_key: songKey }),
+                });
+                const out = await res.json();
+                if (!res.ok || out.error) throw new Error(out.error || res.statusText);
+                note.textContent = out.reply;
+              } catch (e) {
+                note.textContent = `Could not get a note: ${e.message}`;
+              }
+              coach.disabled = false;
+            });
+            card.append(a, b, coach, note);
+            body.appendChild(card);
+          });
+        }
+        dialog.showModal();
+      }
+      document.getElementById("progressBtn").addEventListener("click", openProgress);
 
       async function openSong(id) {
         showError("");

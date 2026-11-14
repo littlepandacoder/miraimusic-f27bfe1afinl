@@ -223,6 +223,9 @@
         color: var(--fg); font-size: 14px;
       }
       .thumb.placeholder.named { padding: 0; }
+/* Module 1: the cassette stands alone, without the vinyl disc, its centre dot or the shine. */
+.thumb.cassette-thumb { background: none; box-shadow: none; border-radius: 0; }
+.thumb.cassette-thumb::before, .thumb.cassette-thumb::after { display: none; }
       .thumb.placeholder.named::after { z-index: 1; }
       .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
       .card:hover .thumb { animation: pulse-glow 1.8s ease-in-out infinite; }
@@ -715,11 +718,17 @@
           thumb.textContent = "";
           thumb.append(text);
         }
-        const grooves = document.createElement("span");
-        grooves.className = "grooves";
-        grooves.setAttribute("aria-hidden", "true");
-        thumb.insertBefore(grooves, thumb.firstChild);
+        // Module 1 cassette cards have no vinyl grooves.
+        if (!thumb.classList.contains("cassette-thumb")) {
+          const grooves = document.createElement("span");
+          grooves.className = "grooves";
+          grooves.setAttribute("aria-hidden", "true");
+          thumb.insertBefore(grooves, thumb.firstChild);
+        }
       }
+
+      // Cassette designs used for Module 1 cards.
+      const CASSETTE_IMAGES = ["cassette-1.png", "cassette-2.png", "cassette-3.png", "cassette-4.png", "cassette-5.png", "cassette-6.png"];
 
       function makeCard(song, thumbUrl) {
         const card = document.createElement("a");
@@ -733,7 +742,18 @@
         });
 
         const thumb = document.createElement("div");
-        if (thumbUrl) {
+        // Only the "Module 1" category uses the cassette tape and lesson labels.
+        const inModule1 = categories.find((c) => c.id === song.category_id)?.name === "Module 1";
+        if (inModule1) {
+          // Module 1 lessons: the cassette tape replaces the thumbnail picture on the disc.
+          thumb.className = "thumb cassette-thumb";
+          const img = document.createElement("img");
+          img.alt = "";
+          // A different cassette design for each card, picked at random.
+          img.src = CASSETTE_IMAGES[Math.floor(Math.random() * CASSETTE_IMAGES.length)];
+          img.style.cssText = "width:84%;height:auto;border-radius:0;box-shadow:none;object-fit:contain";
+          thumb.appendChild(img);
+        } else if (thumbUrl) {
           thumb.className = "thumb";
           const img = document.createElement("img");
           img.alt = "";
@@ -751,6 +771,12 @@
         const title = document.createElement("p");
         title.className = "title";
         title.textContent = capTitle(song.title);
+        if (inModule1 && song.progression_step != null) {
+          const step = document.createElement("p");
+          step.style.cssText = "margin:0 0 4px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f472b6";
+          step.textContent = `Lesson ${song.progression_step}`;
+          info.appendChild(step);
+        }
         info.appendChild(title);
         if (song.composer) {
           const composer = document.createElement("p");
@@ -938,7 +964,8 @@
         back.href = "#";
         back.textContent = "← All categories";
         sections.appendChild(back);
-        const inside = songsIn(id);
+        // Songs with a progression step come first, in step order; the rest keep their normal order.
+        const inside = songsIn(id).slice().sort((a, b) => (a.progression_step ?? Infinity) - (b.progression_step ?? Infinity));
         const grid = document.createElement("div");
         grid.className = "grid";
         if (inside.length === 0) {
@@ -1066,7 +1093,7 @@
 
           const { data, error } = await sb
             .from("sheet_music_library")
-            .select("id, title, composer, storage_path, thumbnail_path, preview_url, category_id, created_at")
+            .select("id, title, composer, storage_path, thumbnail_path, preview_url, category_id, created_at, progression_step")
             .order("created_at", { ascending: false });
           if (error) throw error;
           songs = data || [];
@@ -1174,6 +1201,8 @@
 
         const startPreview = (song) => {
           if (!song || !song.preview_url) return;
+          // Module 1 has no hover preview.
+          if (categories.find((c) => c.id === song.category_id)?.name === "Module 1") return;
           stopPreview();
           activeId = song.id;
           audio = new Audio(song.preview_url);
