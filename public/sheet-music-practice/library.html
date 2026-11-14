@@ -226,6 +226,21 @@
 /* Module 1: the cassette stands alone, without the vinyl disc, its centre dot or the shine. */
 .thumb.cassette-thumb { background: none; box-shadow: none; border-radius: 0; }
 .thumb.cassette-thumb::before, .thumb.cassette-thumb::after { display: none; }
+/* Module 1 in the category carousel: the cassette stands alone, with no vinyl peeking out. */
+.album.cassette-album::before { display: none; }
+.album.cassette-album > .thumb, .album.cassette-album > .info { left: 0; }
+.album.cassette-album .thumb { aspect-ratio: auto; background: none; box-shadow: none; border-radius: 0; }
+.album.cassette-album .thumb img { position: static; transform: none; width: 100%; height: auto; border-radius: 0; transition: filter .3s ease; }
+/* Lesson cassettes lean a little, alternating left and right, like tapes dropped on a shelf. */
+.album.cassette-album:nth-child(odd) { rotate: -3deg; }
+.album.cassette-album:nth-child(even) { rotate: 2.5deg; }
+/* The chosen cassette lights up pink. */
+.album.cassette-album[style*="scale(1.95)"] .thumb img { filter: drop-shadow(0 0 18px rgba(244,114,182,.7)) drop-shadow(0 14px 22px rgba(0,0,0,.5)); }
+/* "Lesson n" as a pink tape-label tag. */
+.album.cassette-album .info > p:first-child {
+  display: inline-block; background: #f472b6; color: #fff !important; border-radius: 999px;
+  padding: 3px 12px; margin: 0 0 6px; box-shadow: 0 4px 12px -4px rgba(244,114,182,.8);
+}
       .thumb.placeholder.named::after { z-index: 1; }
       .thumb.placeholder.named > span, .thumb.placeholder.named { display: flex; align-items: center; justify-content: center; }
       .card:hover .thumb { animation: pulse-glow 1.8s ease-in-out infinite; }
@@ -751,7 +766,7 @@
           img.alt = "";
           // A different cassette design for each card, picked at random.
           img.src = CASSETTE_IMAGES[Math.floor(Math.random() * CASSETTE_IMAGES.length)];
-          img.style.cssText = "width:84%;height:auto;border-radius:0;box-shadow:none;object-fit:contain";
+          img.style.cssText = "width:100%;height:auto;border-radius:0;box-shadow:none;object-fit:contain";
           thumb.appendChild(img);
         } else if (thumbUrl) {
           thumb.className = "thumb";
@@ -778,7 +793,8 @@
           info.appendChild(step);
         }
         info.appendChild(title);
-        if (song.composer) {
+        // Module 1 cards show no composer line.
+        if (song.composer && !inModule1) {
           const composer = document.createElement("p");
           composer.className = "composer";
           composer.textContent = song.composer;
@@ -917,7 +933,9 @@
           lastSelected = selected;
           for (const el of albums()) {
             const isSelected = el === selected;
-            el.style.transform = `scale(${isSelected ? 1.69 : 0.55})`;
+            // Cassettes grow a little more when selected than the category albums do.
+            const bigScale = el.classList.contains("cassette-album") ? 1.95 : 1.69;
+            el.style.transform = `scale(${isSelected ? bigScale : 0.55})`;
             el.style.opacity = "1"; // no transparency: the selected album covers the ones behind it
             el.style.zIndex = isSelected ? "100" : "10";
             // Only the selected album can be hovered, clicked or reached by the keyboard.
@@ -966,15 +984,46 @@
         sections.appendChild(back);
         // Songs with a progression step come first, in step order; the rest keep their normal order.
         const inside = songsIn(id).slice().sort((a, b) => (a.progression_step ?? Infinity) - (b.progression_step ?? Infinity));
-        const grid = document.createElement("div");
-        grid.className = "grid";
-        if (inside.length === 0) {
-          showState("No songs in this category yet.");
-        } else {
+        if (name === "Module 1" && inside.length > 0) {
+          // Module 1: cassettes in the same swipeable carousel as the category selector.
           showState("");
-          inside.forEach((song) => grid.appendChild(makeCard(song, songUrls[song.id])));
+          const carousel = document.createElement("div");
+          carousel.className = "carousel";
+          const prev = document.createElement("button");
+          prev.type = "button";
+          prev.className = "carousel-arrow prev";
+          prev.setAttribute("aria-label", "Previous lesson");
+          prev.textContent = "‹";
+          const next = document.createElement("button");
+          next.type = "button";
+          next.className = "carousel-arrow next";
+          next.setAttribute("aria-label", "Next lesson");
+          next.textContent = "›";
+          const track = document.createElement("div");
+          track.className = "carousel-track";
+          inside.forEach((song) => {
+            const card = makeCard(song, null);
+            card.classList.add("album", "cassette-album");
+            track.appendChild(card);
+          });
+          carousel.append(prev, track, next);
+          sections.appendChild(carousel);
+          const hint = document.createElement("p");
+          hint.className = "carousel-hint";
+          hint.textContent = "Slide through the lessons";
+          sections.appendChild(hint);
+          setupCarousel(track, prev, next);
+        } else {
+          const grid = document.createElement("div");
+          grid.className = "grid";
+          if (inside.length === 0) {
+            showState("No songs in this category yet.");
+          } else {
+            showState("");
+            inside.forEach((song) => grid.appendChild(makeCard(song, songUrls[song.id])));
+          }
+          sections.appendChild(grid);
         }
-        sections.appendChild(grid);
       }
 
       let catToken = 0;
