@@ -975,7 +975,10 @@
 
       // Song of the day pop-up: one library song for today, with its 30-second preview. Shown once per day.
       let sotdAudio = null;
+      // Admins and teachers never see the "Try me" pop-up; set from the signed-in user's roles in load().
+      let isStaff = false;
       function showSongOfTheDay() {
+        if (isStaff) return;
         const today = new Date().toLocaleDateString("en-CA");
         try { if (localStorage.getItem("sotdShown") === today) return; } catch (e) {}
         const pick = songsOfTheDay(1)[0];
@@ -1040,6 +1043,18 @@
             showState('Sign in to see the sheet music library. <a href="/login">Sign in</a>');
             return;
           }
+
+          // Roles: same RPC the website uses; falls back to the user_roles table.
+          let roleNames = [];
+          try {
+            const { data: roleData, error: roleError } = await sb.rpc("get_my_roles");
+            if (!roleError && Array.isArray(roleData)) roleNames = roleData;
+            if (roleNames.length === 0) {
+              const { data: rows } = await sb.from("user_roles").select("role").eq("user_id", sessionData.session.user.id);
+              roleNames = (rows || []).map((r) => r.role);
+            }
+          } catch (e) { /* no roles known: treat as a regular user */ }
+          isStaff = roleNames.includes("admin") || roleNames.includes("teacher");
 
           const { data: categoryRows, error: categoryError } = await sb
             .from("sheet_music_categories")

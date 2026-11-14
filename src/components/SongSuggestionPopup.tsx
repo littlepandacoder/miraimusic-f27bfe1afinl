@@ -16,8 +16,10 @@ interface SuggestedSong {
 
 // Shown once per login session: suggests a random song from the sheet music library (the Piano Room).
 export const SongSuggestionPopup = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, hasRole } = useAuth();
   const location = useLocation();
+  // Admins and teachers never see the "Try me" suggestion.
+  const isStaff = hasRole("admin") || hasRole("teacher");
   const [song, setSong] = useState<SuggestedSong | null>(null);
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -54,7 +56,7 @@ export const SongSuggestionPopup = () => {
   // Show the suggestion only after the dashboard has loaded: signed in, auth settled, on a dashboard page,
   // and a moment after it renders. Once per login session.
   useEffect(() => {
-    if (loading || !user || !location.pathname.startsWith("/dashboard")) return;
+    if (loading || !user || isStaff || !location.pathname.startsWith("/dashboard")) return;
     const key = `songSuggested:${user.id}`;
     try {
       if (sessionStorage.getItem(key)) return;
@@ -94,9 +96,9 @@ export const SongSuggestionPopup = () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [user?.id, loading, location.pathname]);
+  }, [user?.id, loading, isStaff, location.pathname]);
 
-  if (!song) return null;
+  if (!song || isStaff) return null;
 
   const playSong = () => {
     window.location.href = `/sheet-music-practice/index.html?song=${encodeURIComponent(`lib-${song.id}`)}`;
