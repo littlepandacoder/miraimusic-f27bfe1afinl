@@ -1,4 +1,4 @@
-import { startKeySound, stopKeySound, silencePiano, playWoodblock, audioReady } from "./keySampler.js";
+import { startKeySound, stopKeySound, silencePiano, playWoodblock, audioReady, setKeyboardMuted, isKeyboardMuted } from "./keySampler.js";
 
 /*
  * Musicable MIDI practice mode.
@@ -81,6 +81,20 @@ const practice = {
 };
 
 /** Keys sounding during playback, from alphaTab's own note events **/
+// Mute keyboard button: silences the piano key sounds. The choice is remembered on this browser.
+const keyboardMuteBtn = $("keyboardMuteBtn");
+function paintKeyboardMute() {
+  keyboardMuteBtn.textContent = isKeyboardMuted() ? "Unmute keyboard" : "Mute keyboard";
+  keyboardMuteBtn.setAttribute("aria-pressed", String(isKeyboardMuted()));
+}
+keyboardMuteBtn.addEventListener("click", () => {
+  setKeyboardMuted(!isKeyboardMuted());
+  try { localStorage.setItem("keyboardMuted", isKeyboardMuted() ? "1" : "0"); } catch (e) {}
+  paintKeyboardMute();
+});
+try { if (localStorage.getItem("keyboardMuted") === "1") setKeyboardMuted(true); } catch (e) {}
+paintKeyboardMute();
+
 const soundingCounts = new Map(); // MIDI number -> number of notes currently sounding
 const MidiEventTypes = window.alphaTab.midi.MidiEventType;
 // Metronome clicks are reported too, so they can still be heard while the score is muted in practice.

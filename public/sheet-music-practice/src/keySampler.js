@@ -176,6 +176,17 @@ export function silencePiano() {
   }, 300);
 }
 
+// Mute for the keyboard (piano samples). It only silences Tone.js output, so the metronome and the score's own playback are not affected.
+let keyboardMuted = false;
+export function setKeyboardMuted(muted) {
+  keyboardMuted = !!muted;
+  if (window.Tone && window.Tone.Destination) window.Tone.Destination.mute = keyboardMuted;
+  if (keyboardMuted) silencePiano();
+}
+export function isKeyboardMuted() {
+  return keyboardMuted;
+}
+
 export function stopKeySound(midi, id = midi) {
   const entry = sampled.get(id);
   if (!entry) return;
