@@ -132,6 +132,7 @@ const DashboardLayout = ({ children, title, role, headerActions }: DashboardLayo
         { href: "/dashboard/foundation",      icon: Gamepad2,      label: t("dashboard.nav.foundationModules") },
         { href: "/dashboard/piano-hero",      icon: KeyboardMusic, label: t("dashboard.nav.pianoHeroSongs") },
         { href: "/dashboard/sheet-music",     icon: Music,         label: "Sheet Music Library" },
+        { href: "/dashboard/review-videos",   icon: Film,          label: "Review Videos" },
         { href: "/dashboard/student-videos",  icon: Film,          label: "Our Students Videos" },
         { href: "/dashboard/districts",       icon: Settings,      label: "Districts" },
         { href: "/dashboard/assignments",     icon: Users,         label: "Teacher Assignment" },

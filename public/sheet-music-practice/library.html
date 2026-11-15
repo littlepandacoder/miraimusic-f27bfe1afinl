@@ -348,6 +348,17 @@
       .sotd-try { display: inline-block; text-decoration: none; padding: 12px 26px; font-size: 16px; letter-spacing: .08em;
         background: linear-gradient(135deg, #f472b6, #c084fc); box-shadow: 0 0 22px 6px rgba(244,114,182,.55); }
       .sotd-try:hover { box-shadow: 0 0 30px 10px rgba(244,114,182,.75); }
+      /* REVIEW LESSON pop-up for Module 1 songs */
+      .review-dialog { width: min(92vw, 560px); border: 1px solid rgba(244,114,182,.45); border-radius: 18px; background: #0f172a; color: #fff; padding: 22px; }
+      .review-dialog::backdrop { background: rgba(10,15,28,.75); }
+      .review-kicker { margin: 0; font-size: .75rem; font-weight: 900; letter-spacing: .18em; color: #f472b6; }
+      .review-title { margin: 4px 0 12px; font-size: 1.3rem; font-weight: 800; }
+      .review-dialog video { width: 100%; border-radius: 12px; background: #000; display: block; }
+      .review-note { color: #AEB4BE; font-size: .9rem; margin: 10px 0; }
+      .review-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+      .review-actions button { padding: 10px 18px; border-radius: 999px; font-weight: 800; cursor: pointer; font-family: inherit; border: none; }
+      .review-play { background: #f472b6; color: #fff; }
+      .review-close { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.3) !important; }
       .sotd-btn.ghost { background: transparent; color: var(--fg); border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
       /* Vinyl: only the grooves turn on hover; the cover stays still. */
       .thumb .grooves {
@@ -692,6 +703,32 @@
 
       midiCheckBtn.onclick = checkMidi;
 
+      // Module 1 lessons open the sheet music first; the player then shows the REVIEW LESSON pop-up.
+      // Other categories go to the settings as before.
+      function openWithReview(song) {
+        if (categories.find((c) => c.id === song.category_id)?.name !== "Module 1") {
+          openSettings(song);
+          return;
+        }
+        const params = new URLSearchParams({ song: `lib-${song.id}` });
+        if (song.review_video_url) {
+          params.set("review", song.review_video_url);
+          params.set("reviewTitle", song.review_video_title || capTitle(song.title));
+        }
+        // The next lesson in Module 1, so the results screen can offer NEXT LESSON.
+        const nextSong = songs.find((s) => s.category_id === song.category_id
+          && s.progression_step != null && s.progression_step === song.progression_step + 1);
+        if (nextSong) {
+          params.set("next", `lib-${nextSong.id}`);
+          params.set("nextTitle", capTitle(nextSong.title));
+          if (nextSong.review_video_url) {
+            params.set("nextReview", nextSong.review_video_url);
+            params.set("nextReviewTitle", nextSong.review_video_title || capTitle(nextSong.title));
+          }
+        }
+        window.location.href = `index.html?${params.toString()}`;
+      }
+
       function openSettings(song) {
         chosenSong = song;
         refreshOptions();
@@ -753,7 +790,7 @@
         card.href = `index.html?song=${encodeURIComponent(`lib-${song.id}`)}`;
         card.addEventListener("click", (event) => {
           event.preventDefault();
-          openSettings(song);
+          openWithReview(song);
         });
 
         const thumb = document.createElement("div");
@@ -1142,7 +1179,7 @@
 
           const { data, error } = await sb
             .from("sheet_music_library")
-            .select("id, title, composer, storage_path, thumbnail_path, preview_url, category_id, created_at, progression_step")
+            .select("id, title, composer, storage_path, thumbnail_path, preview_url, category_id, created_at, progression_step, review_video_title, review_video_url")
             .order("created_at", { ascending: false });
           if (error) throw error;
           songs = data || [];

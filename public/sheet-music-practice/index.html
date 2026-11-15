@@ -493,6 +493,29 @@
       .piano .key.sounding { background: #9b59b6; }
       /* A lit key gets a colour layer over its own surface (no glow outside the key) */
       .piano .key.black.sounding { background: #6c3483; }
+      /* REVIEW LESSON pop-up, shown after a Module 1 song has loaded */
+      .review-dialog { position: relative; width: min(92vw, 560px); border: 1px solid rgba(244,114,182,.45); border-radius: 18px; background: #0f172a; color: #fff; padding: 22px; }
+      .review-x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; font-family: inherit; }
+      .review-x:hover { background: rgba(244,114,182,.25); }
+      /* NEXT LESSON: a rainbow that slowly shifts colour */
+      .results-dialog .next-lesson {
+        background: linear-gradient(90deg, #f472b6, #fb923c, #fde047, #4ade80, #38bdf8, #a78bfa, #f472b6) !important;
+        background-size: 300% 100% !important;
+        border: none !important;
+        color: #fff !important;
+        animation: next-lesson-rainbow 4s linear infinite;
+        box-shadow: 0 6px 18px -6px rgba(168,85,247,.7);
+      }
+      .results-dialog .next-lesson:hover:not(:disabled) { transform: scale(1.04); }
+      @keyframes next-lesson-rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
+      @media (prefers-reduced-motion: reduce) { .next-lesson { animation: none; } }
+      .review-dialog::backdrop { background: rgba(10,15,28,.75); }
+      .review-kicker { margin: 0; font-size: .75rem; font-weight: 900; letter-spacing: .18em; color: #f472b6; }
+      .review-title { margin: 4px 0 12px; font-size: 1.3rem; font-weight: 800; }
+      .review-dialog video { width: 100%; border-radius: 12px; background: #000; display: block; }
+      .review-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
+      .review-start { padding: 10px 18px; border-radius: 999px; font-weight: 800; cursor: pointer; font-family: inherit; border: none; background: #f472b6; color: #fff; }
+
       /** Sync-mode results pop-up (game-style score screen) **/
       .results-dialog {
         width: min(600px, 94vw);
@@ -1425,13 +1448,21 @@
       </div>
     </dialog>
 
+    <dialog id="reviewDialog" class="review-dialog">
+      <button type="button" id="reviewClose" class="review-x" aria-label="Close review lesson">&times;</button>
+      <p class="review-kicker">REVIEW LESSON</p>
+      <h2 id="reviewLessonTitle" class="review-title"></h2>
+      <video id="reviewVideo" controls playsinline preload="metadata"></video>
+      <div class="review-actions">
+        <button type="button" id="reviewStart" class="review-start">Start practising</button>
+      </div>
+    </dialog>
     <dialog id="progressDialog" class="results-dialog">
       <div id="progressBody"></div>
       <form method="dialog"><button type="submit">Close</button></form>
     </dialog>
     <dialog id="resultsDialog" class="results-dialog">
       <div id="resultsBody"></div>
-      <form method="dialog"><button type="submit">Continue</button></form>
     </dialog>
 
     <template id="at-track-template">
@@ -2395,6 +2426,49 @@
       }
       document.getElementById("progressBtn").addEventListener("click", openProgress);
 
+      // The lesson after the one being played (same category, next progression step), or null.
+      window.musicableNextLesson = async () => {
+        if (currentSongId == null || !String(currentSongId).startsWith("lib-")) return null;
+        const { data: cur } = await sb
+          .from("sheet_music_library")
+          .select("category_id, progression_step")
+          .eq("id", String(currentSongId).slice(4))
+          .maybeSingle();
+        if (!cur || cur.progression_step == null) return null;
+        const { data: next } = await sb
+          .from("sheet_music_library")
+          .select("id, title, review_video_title, review_video_url")
+          .eq("category_id", cur.category_id)
+          .eq("progression_step", cur.progression_step + 1)
+          .maybeSingle();
+        if (!next) return null;
+        return {
+          key: `lib-${next.id}`,
+          review: next.review_video_url,
+          reviewTitle: next.review_video_title || next.title,
+        };
+      };
+
+      // REVIEW LESSON pop-up: shown once a Module 1 song has loaded. The library passes ?review=<video url>.
+      function showReviewPopup() {
+        const q = new URLSearchParams(location.search);
+        const url = q.get("review");
+        if (!url) return;
+        const dialog = document.getElementById("reviewDialog");
+        const video = document.getElementById("reviewVideo");
+        document.getElementById("reviewLessonTitle").textContent = q.get("reviewTitle") || "Review lesson";
+        video.src = url;
+        dialog.showModal();
+      }
+      document.getElementById("reviewStart").addEventListener("click", () => document.getElementById("reviewDialog").close());
+      document.getElementById("reviewClose").addEventListener("click", () => document.getElementById("reviewDialog").close());
+      document.getElementById("reviewDialog").addEventListener("close", () => {
+        const video = document.getElementById("reviewVideo");
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      });
+
       async function openSong(id) {
         showError("");
         try {
@@ -2565,7 +2639,10 @@
           // Opened from the library: show the requested song.
           const requested = new URLSearchParams(location.search).get("song");
           if (requested && songs.some((s) => s.id === requested)) {
-            if (await openSong(requested)) return;
+            if (await openSong(requested)) {
+              showReviewPopup(); // the sheet music is loaded, now the review video
+              return;
+            }
           }
           const current = await readCurrent();
           if (current && current.songId != null && songs.some((s) => s.id === current.songId)) {

@@ -627,6 +627,7 @@ function finishPerformance() {
   const results = scorePerformance(practice.checkpoints, practice.perf.presses);
   showResults(results);
   saveSession("sync", results);
+  addNextLesson();
   refreshUi();
 }
 
@@ -738,6 +739,7 @@ function finishWaitPractice() {
   waitLog = new Map();
   showWaitResults(results);
   saveSession("wait", results);
+  addNextLesson();
   refreshUi();
 }
 
@@ -769,6 +771,33 @@ function saveSession(mode, r) {
   Promise.resolve(window.musicableRecordSession?.(entry)).then((summary) => {
     if (summary) addPlaySummary(summary);
   });
+}
+
+// NEXT LESSON button on the results screen. Only Module 1 lessons carry a ?next= lesson (set by the library).
+async function addNextLesson() {
+  const body = document.querySelector("#resultsBody .results-body");
+  if (!body || !window.musicableNextLesson) return;
+  let next = null;
+  try {
+    next = await window.musicableNextLesson();
+  } catch (e) {
+    return;
+  }
+  if (!next) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "next-lesson";
+  button.textContent = "NEXT LESSON";
+  button.style.cssText = "display:block;margin:28px auto 28px;padding:23px 62px;border:none;border-radius:999px;color:#fff;font-size:1.625rem;font-weight:900;letter-spacing:.1em;cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.35)";
+  button.addEventListener("click", () => {
+    const params = new URLSearchParams({ song: next.key });
+    if (next.review) {
+      params.set("review", next.review);
+      params.set("reviewTitle", next.reviewTitle);
+    }
+    window.location.href = `index.html?${params.toString()}`;
+  });
+  body.appendChild(button);
 }
 
 function addPlaySummary(s) {
